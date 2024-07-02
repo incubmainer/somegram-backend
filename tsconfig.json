@@ -17,6 +17,13 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@app/databases": [
+        "libs/databases/src"
+      ],
+      "@app/databases/*": [
+        "libs/databases/src/*"
+      ]
+    }
   }
 }

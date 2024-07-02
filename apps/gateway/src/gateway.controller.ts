@@ -1,12 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { GatewayService } from './gateway.service';
+import { User } from '@prisma/gateway';
 
 @Controller()
 export class GatewayController {
-  constructor(private readonly gatewayService: GatewayService) {}
+  constructor(private readonly gatewayService: GatewayService) { }
 
   @Get()
-  getHello(): string {
-    return this.gatewayService.getHello();
+  async getUsers(): Promise<User[]> {
+    const user = await this.gatewayService.getUsers();
+    return user;
   }
 }
