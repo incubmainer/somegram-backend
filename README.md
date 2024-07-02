@@ -71,3 +71,43 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## Structure project
+
+```
+src
+--fetures
+----blogs
+------api
+--------dto
+----------input
+------------create-blog.input-dto.ts
+----------output
+------------create-blog.output-dto.ts
+--------blogs.controller.ts
+--------blogs.controller.spec.ts
+------application
+--------use-cases
+----------events-handlers
+------------blog-created.event-handler.ts
+----------create-blog.use-case.ts
+------domain
+--------events
+----------blog-created.event.ts
+--------blog.entity.ts
+------infrastructure
+--------blog.repository.ts
+--------blog.query-repository.ts
+--test
+----get-application.ts
+------blogs
+--------funcs
+----------create-blog.ts
+------blogs.e2e-spec.ts
+--app-setting
+----add-swagger-to-app.ts
+----add-exception-filter-to-app.ts
+----app-setting.ts
+--main.js
+
+```
