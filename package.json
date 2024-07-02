@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/somegram-backend/test/jest-e2e.json",
+    "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json",
     "prisma:gen:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma",
     "prisma:migrate:gateway": "prisma migrate dev --schema prisma/gateway/gateway-schema.prisma"
   },
