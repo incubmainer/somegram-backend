@@ -18,7 +18,8 @@ WORKDIR /home/node/dist/${SERVICE}
 COPY --chown=node package*.json ./
 COPY --chown=node yarn.lock ./
 
-RUN yarn install
+RUN yarn install && \
+  yarn prisma:gen:gateway
 
 # Bundle app source code
 COPY --chown=node ../.. .
