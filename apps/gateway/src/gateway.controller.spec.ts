@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
-import { PrismaClient } from '@prisma/gateway';
+import { PrismaClient } from '@prisma/client';
 
 describe('GatewayController', () => {
   let gatewayController: GatewayController;
