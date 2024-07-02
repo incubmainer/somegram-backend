@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient, User } from '@prisma/gateway';
 
+//service
 @Injectable()
 export class GatewayService {
   constructor(private readonly prisma: PrismaClient) { }
