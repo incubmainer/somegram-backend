@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { GatewayService } from './gateway.service';
-import { User } from '@prisma/gateway';
+import { User } from '@prisma/client';
 
 @Controller()
 export class GatewayController {
