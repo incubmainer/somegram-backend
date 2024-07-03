@@ -6,18 +6,11 @@ ENV SERVICE=$service
 ENV PORT=$port
 # Set to a non-root built-in user `node`
 
+RUN mkdir -p /app-${SERVICE}
+
 USER node
 
-# Create app directory (with user `node`)
-RUN mkdir -p /home/node/dist/${SERVICE}
-
-WORKDIR /home/node/dist/${SERVICE}
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-
-
+WORKDIR /app-${SERVICE}
 
 COPY --chown=node package*.json ./
 
