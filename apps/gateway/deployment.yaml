@@ -22,8 +22,8 @@ spec:
             - containerPort: PORT_CONTAINER
 
           env:
-            - name: PORT
+            - name: APP_PORT
               valueFrom:
                 secretKeyRef:
                   name: somegram-backend-production-config-secret
-                  key: PORT
+                  key: APP_PORT
