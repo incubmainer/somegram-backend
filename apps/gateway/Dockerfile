@@ -28,6 +28,9 @@ COPY --chown=node apps/gateway .
 
 COPY --chown=node prisma/gateway .
 
+# debug
+RUN ls -la
+
 RUN npm run build:${SERVICE}
 
 # Bind to all network interfaces so that it can be mapped to the host OS
