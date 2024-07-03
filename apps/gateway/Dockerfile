@@ -26,7 +26,7 @@ RUN npm install
 # Bundle app source code
 COPY --chown=node apps/gateway .
 
-COPY --chown=node prisma/gateway .
+COPY --chown=node prisma/gateway ./prisma/gateway
 
 # debug
 RUN ls -la
