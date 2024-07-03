@@ -7,6 +7,7 @@ ENV PORT=$port
 # Set to a non-root built-in user `node`
 
 RUN mkdir -p /app-${SERVICE}
+RUN chown node:node /app-${SERVICE}
 
 USER node
 
