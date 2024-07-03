@@ -8,7 +8,7 @@ export class GatewayController {
 
   @Get()
   async getUsers(): Promise<User[]> {
-    const user = await this.gatewayService.getUsers();
-    return user;
+    const users = await this.gatewayService.getUsers();
+    return users;
   }
 }
