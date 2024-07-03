@@ -3,7 +3,7 @@ FROM node:20.11-alpine
 ARG port
 ARG service
 ENV SERVICE=$service
-ENV APP_PORT=$port
+ENV PORT=$port
 # Set to a non-root built-in user `node`
 
 RUN mkdir -p /app-${SERVICE}
@@ -21,9 +21,6 @@ RUN npm install
 COPY --chown=node apps/gateway .
 
 COPY --chown=node prisma/gateway ./prisma/gateway
-
-# debug
-RUN ls -la
 
 RUN npm run build:${SERVICE}
 
