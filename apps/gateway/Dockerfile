@@ -3,7 +3,7 @@ FROM node:20.11-alpine
 ARG port
 ARG service
 ENV SERVICE=$service
-ENV PORT=$port
+ENV APP_PORT=$port
 # Set to a non-root built-in user `node`
 
 RUN mkdir -p /app-${SERVICE}
