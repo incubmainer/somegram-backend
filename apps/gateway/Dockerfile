@@ -37,4 +37,4 @@ RUN npm run build:${SERVICE}
 
 EXPOSE ${PORT}
 
-CMD npm run 'start:gateway'
+CMD npm run node node dist/src/main.js 
