@@ -1,0 +1,27 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: ./apps/gateway/Dockerfile
+      args:
+        - service=gateway
+        - port=3000
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - GATEWAY_DATABASE_URL=postgres://user:admin@db:5432/nodejs_db
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: nodejs_db
+    volumes:
+      - local_pgdata:/var/lib/postgresql/data
+
+volumes:
+  local_pgdata:

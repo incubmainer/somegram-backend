@@ -16,8 +16,19 @@ spec:
         project: PROJECT
     spec:
       containers:
-         - name: PROJECT
-           image: REGISTRY_HOSTNAME/PROJECT:TAG_VERSION
-           ports:
-             - containerPort: PORT_CONTAINER
+        - name: PROJECT
+          image: REGISTRY_HOSTNAME/PROJECT:TAG_VERSION
+          ports:
+            - containerPort: PORT_CONTAINER
 
+          env:
+            - name: GATEWAY_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: somegram-backend-production-config-secret
+                  key: GATEWAY_DATABASE_URL
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: somegram-backend-production-config-secret
+                  key: PORT
