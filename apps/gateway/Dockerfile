@@ -6,26 +6,22 @@ ENV SERVICE=$service
 ENV PORT=$port
 # Set to a non-root built-in user `node`
 
-RUN mkdir -p /app-${SERVICE}
-RUN chown node:node /app-${SERVICE}
+RUN mkdir -p /app
+RUN chown node:node /app
 
 USER node
 
-WORKDIR /app-${SERVICE}
+WORKDIR /app
 
-COPY --chown=node package*.json ./
+COPY --chown=node package.json ./
+COPY --chown=node yarn.lock ./
 
-RUN npm install
+RUN yarn install --frozen-lockfile
 
-# Bundle app source code
-COPY --chown=node apps/gateway .
+COPY . .
 
-COPY --chown=node prisma/gateway ./prisma/gateway
-
-RUN npm run build:${SERVICE}
-
-# Bind to all network interfaces so that it can be mapped to the host OS
+RUN yarn build:${SERVICE}
 
 EXPOSE ${PORT}
 
-CMD node dist/src/main.js 
+CMD yarn start:${SERVICE}
