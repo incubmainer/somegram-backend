@@ -31,4 +31,4 @@ RUN npm run build:${SERVICE}
 
 EXPOSE ${PORT}
 
-CMD npm run node node dist/src/main.js 
+CMD node dist/src/main.js 
