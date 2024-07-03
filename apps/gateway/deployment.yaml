@@ -22,6 +22,11 @@ spec:
             - containerPort: PORT_CONTAINER
 
           env:
+            - name: GATEWAY_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: somegram-backend-production-config-secret
+                  key: GATEWAY_DATABASE_URL
             - name: PORT
               valueFrom:
                 secretKeyRef:
