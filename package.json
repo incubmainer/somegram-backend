@@ -19,7 +19,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json",
     "prisma:gen:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma",
-    "prisma:migrate:gateway": "prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
+    "prisma:gen-watch:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma --watch",
+    "prisma:migrate-dev:gateway": "prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
+    "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "yarn prisma:gen:gateway && nest start gateway --watch",
     "start:gateway": "node dist/apps/gateway/main"
