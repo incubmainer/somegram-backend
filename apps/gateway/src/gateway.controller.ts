@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { GatewayService } from './gateway.service';
 import { User } from '@prisma/gateway';
 
-@Controller('users')
+@Controller('*')
 export class GatewayController {
   constructor(private readonly gatewayService: GatewayService) { }
 
