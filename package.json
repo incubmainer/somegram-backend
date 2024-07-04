@@ -24,7 +24,7 @@
     "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "NODE_ENV=development nest start gateway --watch",
-    "start:gateway": "node dist/apps/gateway/main"
+    "start:gateway": "NODE_ENV=production node dist/apps/gateway/main"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
