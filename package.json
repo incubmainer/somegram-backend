@@ -20,14 +20,15 @@
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json",
     "prisma:gen:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma",
     "prisma:gen-watch:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma --watch",
-    "prisma:migrate-dev:gateway": "prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
+    "prisma:migrate-dev:gateway": "dotenv -e ./apps/gateway/.env.dev -- prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
     "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
-    "start:dev:gateway": "yarn prisma:gen:gateway && nest start gateway --watch",
-    "start:gateway": "node dist/apps/gateway/main"
+    "start:dev:gateway": "NODE_ENV=development nest start gateway --watch",
+    "start:gateway": "NODE_ENV=production node dist/apps/gateway/main"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.0.0",
     "@nestjs/microservices": "^10.3.10",
     "@nestjs/platform-express": "^10.0.0",
@@ -45,6 +46,7 @@
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
