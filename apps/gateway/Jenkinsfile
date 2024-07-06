@@ -51,7 +51,7 @@ pipeline {
                 echo "PORT: ${env.PORT}"
                 echo "APP_PORT: ${env.APP_PORT}"
                     script {
-                       app = docker.build("${env.DOCKER_BUILD_NAME}", "--build-arg service=${env.SERVICE} --build-arg port=${env.PORT} -f ./apps/${env.SERVICE}/Dockerfile ./")
+                       app = docker.build("${env.DOCKER_BUILD_NAME}", "--build-arg port=${env.PORT} -f ./apps/${env.SERVICE}/Dockerfile ./")
                     }
                 echo "Build image finished..."
             }
