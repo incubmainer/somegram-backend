@@ -679,6 +679,16 @@
   resolved "https://registry.yarnpkg.com/@lukeed/csprng/-/csprng-1.1.0.tgz#1e3e4bd05c1cc7a0b2ddbd8a03f39f6e4b5e6cfe"
   integrity sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==
 
+"@nestjs-cls/transactional-adapter-prisma@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@nestjs-cls/transactional-adapter-prisma/-/transactional-adapter-prisma-1.2.2.tgz#658db8de2badfda5166e0529e42f08927bcd16b6"
+  integrity sha512-Z6arx88uvQ78plmM+igLXeSJk2J6fEUwnBqbGMhIweamQScFhvmLvSi6T13WIwyCb7tVZ8vAY3yerOSLLiojeA==
+
+"@nestjs-cls/transactional@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@nestjs-cls/transactional/-/transactional-2.4.0.tgz#763a6cdc0da4d96713bc2a46ff556102f335f2e4"
+  integrity sha512-ZwkA9winTuzDBzQ/ln2+kEP7XbxXCqGhAMiHZwZcbO8r48d3K59XiXhbhsgYbEx/JTTORKu4nooA591hk6bCUQ==
+
 "@nestjs/cli@^10.0.0":
   version "10.3.2"
   resolved "https://registry.yarnpkg.com/@nestjs/cli/-/cli-10.3.2.tgz#42d2764ead6633e278c55d42de871b4cc1db002b"
@@ -3778,6 +3788,11 @@ neo-async@^2.6.2:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
+
+nestjs-cls@^4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/nestjs-cls/-/nestjs-cls-4.3.0.tgz#1d8e8f5db8557392c6c8ff1eafd590e5d11d7815"
+  integrity sha512-MVTun6tqCZih8AJXRj8uBuuFyJhQrIA9m9fStiQjbBXUkE3BrlMRvmLzyw8UcneB3xtFFTfwkAh5PYKRulyaOg==
 
 node-abort-controller@^3.0.1:
   version "3.1.1"

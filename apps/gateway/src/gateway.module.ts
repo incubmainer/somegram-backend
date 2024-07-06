@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
-import { PrismaClient } from '@prisma/gateway';
 import { ConfigModule } from '@nestjs/config';
 import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { finalConfig } from './common/config/config';
+import { GatewayPrismaModule } from '@app/databases/gateway/gateway-prisma.module';
+import { ClsModule } from 'nestjs-cls';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { GatewayPrismaService } from '@app/databases/gateway/gateway-prisma.service';
+import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 
 @Module({
   imports: [
@@ -14,8 +18,19 @@ import { finalConfig } from './common/config/config';
       envFilePath: loadEnvFileNames(),
       load: [finalConfig],
     }),
+    ClsModule.forRoot({
+      plugins: [
+        new ClsPluginTransactional({
+          imports: [GatewayPrismaModule],
+          adapter: new TransactionalAdapterPrisma({
+            prismaInjectionToken: GatewayPrismaService,
+          }),
+        }),
+      ],
+    }),
+    GatewayPrismaModule,
   ],
   controllers: [GatewayController],
-  providers: [GatewayService, PrismaClient],
+  providers: [GatewayService],
 })
 export class GatewayModule { }
