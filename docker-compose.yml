@@ -3,25 +3,17 @@ services:
     build:
       context: .
       dockerfile: ./apps/gateway/Dockerfile
-      target: development
       args:
+        - service=gateway
         - port=3000
-    entrypoint: sh -c 'yarn install --frozen-lockfile && yarn prisma:gen:gateway && yarn start:dev:gateway'
-    depends_on:
-      - db
-    networks:
-      - api-network
     ports:
       - '3000:3000'
     environment:
+      - NODE_ENV=development
       - GATEWAY_DATABASE_URL=postgres://user:admin@db:5432/nodejs_db
-    volumes:
-      - .:/usr/src/app
   db:
     image: postgres
     restart: always
-    networks:
-      - api-network
     ports:
       - '5432:5432'
     environment:
@@ -33,7 +25,3 @@ services:
 
 volumes:
   local_pgdata:
-
-networks:
-  api-network:
-    driver: bridge
