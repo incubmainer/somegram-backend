@@ -27,12 +27,15 @@
     "start:gateway": "NODE_ENV=production node dist/apps/gateway/main"
   },
   "dependencies": {
+    "@nestjs-cls/transactional": "^2.4.0",
+    "@nestjs-cls/transactional-adapter-prisma": "^1.2.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.0.0",
     "@nestjs/microservices": "^10.3.10",
     "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "5.16.1",
+    "nestjs-cls": "^4.3.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
   },
