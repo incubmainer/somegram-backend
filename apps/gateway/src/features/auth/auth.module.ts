@@ -1,33 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './api/auth.controller';
-import { RegisterUseCase } from './application/register/use-case';
-import { CryptoAuthService as CryptoAuthServiceI } from './domain/crypto-auth.service';
-import { CryptoAuthService } from './infrastructure/crypto-auth.service';
-import { UserRepository } from './domain/user.repository';
-import { PrismaUserRepository } from './infrastructure/prisma-user.repository';
 import { CqrsModule } from '@nestjs/cqrs';
-import { UserRegisteredEventHandler } from './application/event-handlers/user-registered.event-handler';
-import { EmailServiceI } from './domain/email.service';
-import { EmailService } from './infrastructure/email.service';
+import { AuthController } from './api/auth.controller';
+import { RegistrationUseCase } from './application/use-cases/registration.use-case';
+import { UserRepository } from './infrastructure/user.repository';
+import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
+import { CryptoAuthService } from './infrastructure/crypto-auth.service';
+import { CryptoService } from '../../common/utils/crypto.service';
+import { EmailAuthService } from './infrastructure/email-auth.service';
+import { EmailModule } from '../../common/modules/email.module';
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, ClsTransactionalModule, EmailModule],
   controllers: [AuthController],
   providers: [
-    RegisterUseCase,
-    UserRegisteredEventHandler,
-    {
-      provide: CryptoAuthServiceI,
-      useClass: CryptoAuthService,
-    },
-    {
-      provide: UserRepository,
-      useClass: PrismaUserRepository,
-    },
-    {
-      provide: EmailServiceI,
-      useClass: EmailService,
-    },
+    UserRepository,
+    RegistrationUseCase,
+    CryptoAuthService,
+    CryptoService,
+    EmailAuthService,
   ],
 })
 export class AuthModule { }

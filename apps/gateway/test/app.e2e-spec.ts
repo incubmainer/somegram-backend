@@ -27,6 +27,5 @@ describe('GatewayController (e2e)', () => {
         password: 'abcABC123+',
         username: 'SomeName',
       });
-    console.log(req.body);
   });
 });

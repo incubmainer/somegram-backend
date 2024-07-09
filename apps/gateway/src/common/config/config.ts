@@ -12,9 +12,6 @@ export const finalConfig = (): FinalConfig => {
   return {
     db: dbConfig(),
     app: appConfig(),
-    email:
-      process.env.NODE_ENV === 'production'
-        ? emailConfig()
-        : ({} as EmailConfig),
+    email: emailConfig(),
   };
 };

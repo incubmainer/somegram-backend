@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
-// import { createTransport, SendMailOptions, Transporter } from 'nodemailer';
-// import { EmailConfig } from '../../common/config/email.config';
+import { createTransport, SendMailOptions, Transporter } from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
+import { EmailConfig } from '../config/configs/email.config';
 
 @Injectable()
 export class EmailSender {
-  // private transporter: Transporter;
-  // private emailSenderAddress: string;
+  private transporter: Transporter;
+  private emailSenderAddress: string;
 
   constructor(config: ConfigService) {
-    // const emailConfig = config.get<EmailConfig>('email');
-    // this.emailSenderAddress = emailConfig.user;
-    // const transporter = createTransport({
-    //   service: emailConfig.service,
-    //   auth: {
-    //     user: emailConfig.user,
-    //     pass: emailConfig.password,
-    //   },
-    // });
-    // this.transporter = transporter;
+    const emailConfig = config.get<EmailConfig>('email');
+    this.emailSenderAddress = emailConfig.user;
+    const transporter = createTransport({
+      service: emailConfig.service,
+      auth: {
+        user: emailConfig.user,
+        pass: emailConfig.password,
+      },
+    });
+    this.transporter = transporter;
   }
 
   async sendLetter(
@@ -26,13 +26,13 @@ export class EmailSender {
     subject: string,
     message: string,
   ): Promise<void> {
-    // const mailOptions: SendMailOptions = {
-    //   from: this.emailSenderAddress,
-    //   to: toEmail,
-    //   subject: subject,
-    //   text: message,
-    // };
-    // await this.transporter.sendMail(mailOptions);
+    const mailOptions: SendMailOptions = {
+      from: this.emailSenderAddress,
+      to: toEmail,
+      subject: subject,
+      text: message,
+    };
+    await this.transporter.sendMail(mailOptions);
   }
 
   async sendHtml(
@@ -40,12 +40,12 @@ export class EmailSender {
     subject: string,
     htmlCode: string,
   ): Promise<void> {
-    // const mailOptions: SendMailOptions = {
-    //   from: this.emailSenderAddress,
-    //   to: toEmail,
-    //   subject: subject,
-    //   html: htmlCode,
-    // };
-    // await this.transporter.sendMail(mailOptions);
+    const mailOptions: SendMailOptions = {
+      from: this.emailSenderAddress,
+      to: toEmail,
+      subject: subject,
+      html: htmlCode,
+    };
+    await this.transporter.sendMail(mailOptions);
   }
 }
