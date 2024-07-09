@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 
+export const GatewayPrismaServiceToken = Symbol('GatewayPrismaServiceToken');
+
 @Injectable()
 export class GatewayPrismaService
   extends GatewayPrismaClient

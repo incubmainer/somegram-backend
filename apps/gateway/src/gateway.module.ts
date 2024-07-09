@@ -7,8 +7,9 @@ import { finalConfig } from './common/config/config';
 import { GatewayPrismaModule } from '@app/databases/gateway/gateway-prisma.module';
 import { ClsModule } from 'nestjs-cls';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { GatewayPrismaService } from '@app/databases/gateway/gateway-prisma.service';
+import { GatewayPrismaServiceToken } from '@app/databases/gateway/gateway-prisma.service';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
+import { AuthModule } from './features/auth/auth.module';
 
 @Module({
   imports: [
@@ -23,12 +24,13 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
         new ClsPluginTransactional({
           imports: [GatewayPrismaModule],
           adapter: new TransactionalAdapterPrisma({
-            prismaInjectionToken: GatewayPrismaService,
+            prismaInjectionToken: GatewayPrismaServiceToken,
           }),
         }),
       ],
     }),
     GatewayPrismaModule,
+    AuthModule,
   ],
   controllers: [GatewayController],
   providers: [GatewayService],
