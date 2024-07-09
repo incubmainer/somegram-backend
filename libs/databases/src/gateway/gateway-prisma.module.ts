@@ -1,8 +1,16 @@
 import { Module } from '@nestjs/common';
-import { GatewayPrismaService } from './gateway-prisma.service';
+import {
+  GatewayPrismaService,
+  GatewayPrismaServiceToken,
+} from './gateway-prisma.service';
 
 @Module({
-  providers: [GatewayPrismaService],
-  exports: [GatewayPrismaService],
+  providers: [
+    {
+      provide: GatewayPrismaServiceToken,
+      useClass: GatewayPrismaService,
+    },
+  ],
+  exports: [GatewayPrismaServiceToken],
 })
 export class GatewayPrismaModule { }
