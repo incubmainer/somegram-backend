@@ -8,6 +8,7 @@ import { CryptoAuthService } from './infrastructure/crypto-auth.service';
 import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
 import { EmailModule } from '../../common/modules/email.module';
+import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule, EmailModule],
@@ -15,6 +16,7 @@ import { EmailModule } from '../../common/modules/email.module';
   providers: [
     UserRepository,
     RegistrationUseCase,
+    RegistrationConfirmationUseCase,
     CryptoAuthService,
     CryptoService,
     EmailAuthService,
