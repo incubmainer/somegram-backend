@@ -6,6 +6,9 @@ import * as request from 'supertest';
 describe('GatewayController (e2e)', () => {
   let app: INestApplication;
 
+  let aTokenUser01;
+  let rTokenUser01;
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [GatewayModule],
@@ -27,5 +30,19 @@ describe('GatewayController (e2e)', () => {
         password: 'abcABC123+',
         username: 'SomeName',
       });
+  });
+
+  it('should Log in user ', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'some@mail.com',
+        password: 'abcABC123+',
+      })
+      .expect(200);
+    aTokenUser01 = response.body.accessToken;
+    rTokenUser01 = response.headers['set-cookie'][0];
+    expect(aTokenUser01).toBeDefined();
+    expect(rTokenUser01).toContain('refreshToken=');
   });
 });

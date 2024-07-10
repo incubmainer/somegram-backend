@@ -24,6 +24,7 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Response } from 'express';
 import { LoginUserWithDeviceDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
+import { LoginSwagger } from './swagger/login.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -68,11 +69,18 @@ export class AuthController {
   }
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @LoginSwagger()
   @Post('login')
   async login(@Request() req, @Res() response: Response) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     if (!ip) {
-      throw new NotFoundException({ message: 'unknown ip adress' });
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
     }
     const title = req.headers['user-agent'] || 'Mozilla';
     const user = req.user;
@@ -81,7 +89,6 @@ export class AuthController {
     const accesAndRefreshTokens = await this.commandBus.execute(
       new LoginUserCommand(loginUserWithDeviceDto),
     );
-    //ss
 
     return response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
