@@ -13,7 +13,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
+  ) {}
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {

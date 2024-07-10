@@ -6,6 +6,10 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Post,
+  Res,
+  Request,
+  UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -16,11 +20,15 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
+import { Response } from 'express';
+import { LoginUserWithDeviceDto } from './dto/input-dto/login-user-with-device.dto';
+import { LoginUserCommand } from '../application/use-cases/login-use-case';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) { }
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -57,5 +65,29 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  async login(@Request() req, @Res() response: Response) {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (!ip) {
+      throw new NotFoundException({ message: 'unknown ip adress' });
+    }
+    const title = req.headers['user-agent'] || 'Mozilla';
+    const user = req.user;
+    const loginUserWithDeviceDto = new LoginUserWithDeviceDto(user, ip, title);
+
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(loginUserWithDeviceDto),
+    );
+    //ss
+
+    return response
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send(accesAndRefreshTokens.accessToken);
   }
 }
