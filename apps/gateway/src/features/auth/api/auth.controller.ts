@@ -18,11 +18,14 @@ import {
 } from '../application/use-cases/registration.use-case';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Response } from 'express';
-import { LoginUserWithDeviceDto } from './dto/input-dto/login-user-with-device.dto';
+import {
+  LoginDto,
+  LoginUserWithDeviceDto,
+} from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
 import { LoginSwagger } from './swagger/login.swagger';
 
@@ -70,6 +73,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
+  @ApiBody({ type: LoginDto })
   @Post('login')
   async login(@Request() req, @Res() response: Response) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
