@@ -20,12 +20,9 @@ export function LoginSwagger() {
       description: 'Wrong UserName or Password',
       schema: {
         example: {
+          statusCode: 401,
           error: 'login_failed',
           message: 'Login failed.',
-          details: {
-            email: 'Wrong email',
-            password: 'wrong password.',
-          },
         },
       },
     }),

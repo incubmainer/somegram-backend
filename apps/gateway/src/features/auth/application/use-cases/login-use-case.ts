@@ -13,7 +13,6 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
   async execute(command: LoginUserCommand): Promise<any> {
     const { loginUserWithDeviceDto } = command;
     const deviceId = randomUUID();
-    console.log('🚀 ~ LoginUserUseCase ~ execute ~ deviceId:', deviceId);
     const refreshToken = await this.authService.createRefreshToken(
       loginUserWithDeviceDto.user,
       deviceId,

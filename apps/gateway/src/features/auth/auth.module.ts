@@ -14,6 +14,9 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { AuthService } from './application/auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginUserUseCase } from './application/use-cases/login-use-case';
+import { SecurityDevicesRepository } from '../security-devices/infrastructure/security-devices.repository';
+import { SecurityDevicesService } from '../security-devices/application/security-devices.service';
+import { SecurityDevicesController } from '../security-devices/api/security-devices.controller';
 
 const useCases = [LoginUserUseCase];
 @Module({
@@ -27,7 +30,7 @@ const useCases = [LoginUserUseCase];
       signOptions: { expiresIn: tokensLivesConstants['2hours'] },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, SecurityDevicesController],
   providers: [
     LocalStrategy,
     JwtStrategy,
@@ -37,6 +40,8 @@ const useCases = [LoginUserUseCase];
     CryptoService,
     EmailAuthService,
     AuthService,
+    SecurityDevicesRepository,
+    SecurityDevicesService,
     ...useCases,
   ],
 })
