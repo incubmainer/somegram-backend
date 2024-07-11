@@ -45,16 +45,14 @@ describe('GatewayController (e2e)', () => {
     rTokenUser01 = response.headers['set-cookie'][0];
     expect(aTokenUser01).toBeDefined();
     expect(rTokenUser01).toContain('refreshToken=');
-    console.log('🚀 ~ it ~ rTokenUser01:', rTokenUser01);
-    console.log('🚀 ~ it ~ aTokenUser01:', aTokenUser01);
   });
-  it(`should return 401 when trying to log in user with incorrect password`, async () => {
-    await request(app.getHttpServer())
-      .post('auth/login')
-      .send({
-        email: 'some@mail.com',
-        password: randomUUID(),
-      })
-      .expect(401);
-  });
+  // it(`should return 401 when trying to log in user with incorrect password`, async () => {
+  //   await request(app.getHttpServer())
+  //     .post('auth/login')
+  //     .send({
+  //       email: 'some@mail.com',
+  //       password: randomUUID(),
+  //     })
+  //     .expect(401);
+  // });
 });

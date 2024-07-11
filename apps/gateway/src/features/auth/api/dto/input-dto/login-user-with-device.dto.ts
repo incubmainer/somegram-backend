@@ -29,3 +29,11 @@ export class LoginDto {
   @IsUserPassword()
   password: string;
 }
+
+export class DeviceDto {
+  deviceId: string;
+  ip: string;
+  title: string;
+  lastActiveDate: string;
+  userId: string;
+}
