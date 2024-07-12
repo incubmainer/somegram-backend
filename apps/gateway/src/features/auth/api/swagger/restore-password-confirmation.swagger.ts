@@ -1,36 +1,37 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-export function RestorePasswordSwagger() {
+export function RestorePasswordConfirmationSwagger() {
   return applyDecorators(
     ApiTags('auth'),
-    ApiOperation({ summary: 'Restore Password' }),
+    ApiOperation({ summary: 'Restore Password Confirmation' }),
     ApiResponse({
       status: 200,
-      description: 'Restore password successful',
+      description: 'Restore password confirmation successful',
       schema: {
         example: {
           statusCode: 200,
-          message: 'Restore password successful',
+          message: 'Restore password confirmation successful',
         },
       },
     }),
     ApiResponse({
       status: 400,
-      description: 'Restore password failed',
+      description: 'Restore password confirmation failed due to expired code',
       schema: {
         oneOf: [
           {
             example: {
-              error: 'invalid_recaptcha_token',
+              error: 'restore_password_confirmation_failed',
               message:
-                'Restore password failed due to invalid recaptcha token.',
+                'Restore password confirmation failed due to expired code.',
             },
           },
           {
             example: {
-              error: 'user_not_found',
-              message: 'Restore password failed due to user not found.',
+              error: 'restore_password_confirmation_failed',
+              message:
+                'Restore password confirmation failed due to invalid code.',
             },
           },
         ],
@@ -45,9 +46,9 @@ export function RestorePasswordSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'email',
+              property: 'code',
               constraints: {
-                IsEmail: 'some message',
+                IsString: 'some message',
               },
             },
           ],
@@ -59,6 +60,7 @@ export function RestorePasswordSwagger() {
       description: 'Transaction error',
       schema: {
         example: {
+          statusCode: 500,
           message: 'Transaction error',
         },
       },

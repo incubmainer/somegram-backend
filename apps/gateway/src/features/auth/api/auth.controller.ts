@@ -28,6 +28,12 @@ import {
   RestorePasswordCommand,
 } from '../application/use-cases/restore-password.use-case';
 import { RestorePasswordSwagger } from './swagger/restore-password.swagger';
+import {
+  RestorePasswordConfirmationCodes,
+  RestorePasswordConfirmationCommand,
+} from '../application/use-cases/restore-password-confirmation.use-case';
+import { RestorePasswordConfirmationBodyInputDto } from './dto/input-dto/restore-password-confirmation.body.input-dto';
+import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-confirmation.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -126,6 +132,37 @@ export class AuthController {
         message: 'Restore password failed due to user not found.',
       });
     if (code === RestorePasswordCodes.TransactionError)
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+  }
+
+  @Post('restore-password-confirmation')
+  @HttpCode(HttpStatus.OK)
+  @RestorePasswordConfirmationSwagger()
+  public async restorePasswordConfirmation(
+    @Body() body: RestorePasswordConfirmationBodyInputDto,
+  ) {
+    const notification: Notification<null> = await this.commandBus.execute(
+      new RestorePasswordConfirmationCommand(body.code, body.password),
+    );
+    const code = notification.getCode();
+    if (code === RestorePasswordConfirmationCodes.Success)
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Restore password confirmation successful',
+      };
+    if (code === RestorePasswordConfirmationCodes.ExpiredCode)
+      throw new BadRequestException({
+        error: 'restore_password_confirmation_failed',
+        message: 'Restore password confirmation failed due to expired code.',
+      });
+    if (code === RestorePasswordConfirmationCodes.UnvalidCode)
+      throw new BadRequestException({
+        error: 'restore_password_confirmation_failed',
+        message: 'Restore password confirmation failed due to unvalid code.',
+      });
+    if (code === RestorePasswordConfirmationCodes.TransactionError)
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });

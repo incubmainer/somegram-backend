@@ -119,4 +119,34 @@ export class UserRepository {
       },
     });
   }
+  public async getUserByRestorePasswordCode(code: string) {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        resetPasswordCode: {
+          code,
+        },
+      },
+      include: {
+        resetPasswordCode: true,
+      },
+    });
+    return user;
+  }
+  public async deleteRestorePasswordCode(userId: User['id']) {
+    return this.txHost.tx.userResetPasswordCode.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+  public async updateUserPassword(userId: User['id'], hashPassword: string) {
+    return this.txHost.tx.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashPassword,
+      },
+    });
+  }
 }
