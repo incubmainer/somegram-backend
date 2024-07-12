@@ -23,7 +23,7 @@ export class LoginUserCommand {
 export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
   constructor(
     private readonly authService: AuthService,
-    private readonly SecurityDevicesRepo: SecurityDevicesRepository,
+    private readonly securityDevicesRepo: SecurityDevicesRepository,
   ) {}
   async execute(
     command: LoginUserCommand,
@@ -36,7 +36,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
     );
     const accessToken = await this.authService.login(userId);
     const lastActiveDate = new Date().toISOString();
-    await this.SecurityDevicesRepo.addDevice(
+    await this.securityDevicesRepo.addDevice(
       userId,
       deviceId,
       ip,

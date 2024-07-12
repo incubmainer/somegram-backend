@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { CryptoService } from '../../../common/utils/crypto.service';
-import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
 import {
   jwtConstants,
   tokensLivesConstants,
@@ -17,17 +16,13 @@ export class AuthService {
   ) {}
   async validateUser(email: string, pass: string) {
     const user = await this.userRepository.getUserByEmail(email);
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
-    const password = await this.cryptoService.validatePassword(
+    const isValidPassword = await this.cryptoService.validatePassword(
       pass,
-      user?.hashPassword,
+      user.hashPassword,
     );
-    if (!password) {
-      return null;
-    }
+    if (!isValidPassword) return null;
 
     return user;
   }
