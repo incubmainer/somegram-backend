@@ -20,6 +20,7 @@ import {
   jwtConstants,
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
+import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
 
 const useCases = [LoginUserUseCase];
 @Module({
@@ -39,6 +40,7 @@ const useCases = [LoginUserUseCase];
     JwtStrategy,
     UserRepository,
     RegistrationUseCase,
+    RegistrationConfirmationUseCase,
     CryptoAuthService,
     CryptoService,
     EmailAuthService,

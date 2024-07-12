@@ -62,4 +62,34 @@ export class UserRepository {
       },
     });
   }
+  public async findUserByToken(token: string) {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        confirmationToken: {
+          token,
+        },
+      },
+      include: {
+        confirmationToken: true,
+      },
+    });
+    return user;
+  }
+  public deleteConfirmationToken(token: string) {
+    return this.txHost.tx.userConfirmationToken.deleteMany({
+      where: {
+        token,
+      },
+    });
+  }
+  public confirmUser(id: User['id']) {
+    return this.txHost.tx.user.update({
+      where: {
+        id,
+      },
+      data: {
+        isConfirmed: true,
+      },
+    });
+  }
 }

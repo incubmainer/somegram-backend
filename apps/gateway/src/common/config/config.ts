@@ -1,11 +1,16 @@
 import { appConfig, AppConfig } from './configs/app.config';
 import { dbConfig, DbConfig } from './configs/db.config';
 import { EmailConfig, emailConfig } from './configs/email.config';
+import {
+  FrontendUrlsConfig,
+  frontendUrlsConfig,
+} from './configs/frontend-urls';
 
 class FinalConfig {
   readonly db: DbConfig;
   readonly app: AppConfig;
   readonly email: EmailConfig;
+  readonly frontendUrls: FrontendUrlsConfig;
 }
 
 export const finalConfig = (): FinalConfig => {
@@ -13,5 +18,6 @@ export const finalConfig = (): FinalConfig => {
     db: dbConfig(),
     app: appConfig(),
     email: emailConfig(),
+    frontendUrls: frontendUrlsConfig(),
   };
 };
