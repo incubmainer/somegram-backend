@@ -31,6 +31,9 @@ import {
   RegistrationConfirmationCommand,
 } from '../application/use-cases/registration-confirmation.use-case';
 import { RegistrationConfirmationSwagger } from './swagger/registration-confirmation.swagger';
+import { CurrentUserId } from './decorators/current-user-id-param.decorator';
+import { IpAddress } from './decorators/ip-address.decorator';
+import { UserAgent } from './decorators/user-agent.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -73,36 +76,6 @@ export class AuthController {
         message: 'Transaction error',
       });
   }
-  
-  @UseGuards(LocalAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @LoginSwagger()
-  @ApiBody({ type: LoginDto })
-  @Post('login')
-  async login(@Request() req, @Res() response: Response) {
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    if (!ip) {
-      throw new NotFoundException({
-        error: 'login failed',
-        message: 'Unknown ip address',
-        details: {
-          ip: 'Invlid ip address',
-        },
-      });
-    }
-    const title = req.headers['user-agent'] || 'Mozilla';
-    const user = req.user;
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(user, ip, title),
-    );
-
-    return response
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-      })
-      .send(accesAndRefreshTokens.accessToken);
-  }
 
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.OK)
@@ -133,5 +106,38 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @LoginSwagger()
+  @ApiBody({ type: LoginDto })
+  @Post('login')
+  async login(
+    @CurrentUserId() userId: string,
+    @IpAddress() ip: string,
+    @UserAgent() userAgent: string | undefined,
+    @Res() response: Response,
+  ) {
+    if (!ip) {
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
+    }
+    const title = userAgent || 'Mozilla';
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(userId, ip, title),
+    );
+
+    response
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send({ accessToken: accesAndRefreshTokens.accessToken });
   }
 }

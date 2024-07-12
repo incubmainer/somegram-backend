@@ -32,8 +32,8 @@ export class AuthService {
     return user;
   }
 
-  async login(user: User) {
-    const payload = { userName: user.username, sub: user.id };
+  async login(userId: string) {
+    const payload = { sub: userId };
 
     return {
       accessToken: await this.jwtService.signAsync(payload, {
@@ -42,8 +42,8 @@ export class AuthService {
       }),
     };
   }
-  async createRefreshToken(user: User, deviceId: string) {
-    const payload = { sub: user.id, deviceId: deviceId };
+  async createRefreshToken(userId: string, deviceId: string) {
+    const payload = { sub: userId, deviceId: deviceId };
     return await this.jwtService.signAsync(payload, {
       secret: jwtConstants.REFRESH_TOKEN_SECRET,
       expiresIn: tokensLivesConstants['2hours'],
