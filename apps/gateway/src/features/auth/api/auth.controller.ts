@@ -6,6 +6,10 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Post,
+  Res,
+  Request,
+  UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -14,19 +18,27 @@ import {
 } from '../application/use-cases/registration.use-case';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
+import { Response } from 'express';
+import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
+import { LoginUserCommand } from '../application/use-cases/login-use-case';
+import { LoginSwagger } from './swagger/login.swagger';
 import { RegistrationConfirmationBodyInputDto } from './dto/input-dto/registration-confirmation.body.input-dto';
 import {
   RegistrationConfirmationCodes,
   RegistrationConfirmationCommand,
 } from '../application/use-cases/registration-confirmation.use-case';
 import { RegistrationConfirmationSwagger } from './swagger/registration-confirmation.swagger';
+import { CurrentUserId } from './decorators/current-user-id-param.decorator';
+import { IpAddress } from './decorators/ip-address.decorator';
+import { UserAgent } from './decorators/user-agent.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) { }
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -94,5 +106,38 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @LoginSwagger()
+  @ApiBody({ type: LoginDto })
+  @Post('login')
+  async login(
+    @CurrentUserId() userId: string,
+    @IpAddress() ip: string,
+    @UserAgent() userAgent: string | undefined,
+    @Res() response: Response,
+  ) {
+    if (!ip) {
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
+    }
+    const title = userAgent || 'Mozilla';
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(userId, ip, title),
+    );
+
+    response
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send({ accessToken: accesAndRefreshTokens.accessToken });
   }
 }

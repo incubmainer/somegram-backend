@@ -6,6 +6,7 @@ COPY --chown=node:node package.json yarn.lock /usr/src/app/
 RUN yarn install --frozen-lockfile
 COPY --chown=node:node . .
 
+
 FROM node:20-alpine AS build
 WORKDIR /usr/src/app
 RUN chown node:node /usr/src/app
