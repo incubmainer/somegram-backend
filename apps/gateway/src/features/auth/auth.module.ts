@@ -9,6 +9,9 @@ import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
 import { EmailModule } from '../../common/modules/email.module';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
+import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
+import { RecapchaService } from '../../common/utils/recapcha.service';
+import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule, EmailModule],
@@ -17,9 +20,17 @@ import { RegistrationConfirmationUseCase } from './application/use-cases/registr
     UserRepository,
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
+    RestorePasswordUseCase,
+    {
+      provide: RecapchaService,
+      useClass:
+        process.env.NODE_ENV === 'production'
+          ? RecapchaService
+          : MockRecapchaService,
+    },
     CryptoAuthService,
     CryptoService,
     EmailAuthService,
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

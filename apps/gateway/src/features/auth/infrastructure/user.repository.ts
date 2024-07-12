@@ -5,6 +5,7 @@ import {
   PrismaClient as GatewayPrismaClient,
   User,
   UserConfirmationToken,
+  UserResetPasswordCode,
 } from '@prisma/gateway';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
+  ) {}
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -89,6 +90,32 @@ export class UserRepository {
       },
       data: {
         isConfirmed: true,
+      },
+    });
+  }
+  public async updateRestorePasswordCode(dto: {
+    userId: User['id'];
+    restorePasswordCode: UserResetPasswordCode['code'];
+    restorePasswordCodeCreatedAt: UserResetPasswordCode['createdAt'];
+    restorePasswordCodeExpiresAt: UserResetPasswordCode['expiredAt'];
+  }) {
+    await this.txHost.tx.userResetPasswordCode.deleteMany({
+      where: {
+        userId: dto.userId,
+      },
+    });
+    return this.txHost.tx.user.update({
+      where: {
+        id: dto.userId,
+      },
+      data: {
+        resetPasswordCode: {
+          create: {
+            code: dto.restorePasswordCode,
+            createdAt: dto.restorePasswordCodeCreatedAt,
+            expiredAt: dto.restorePasswordCodeExpiresAt,
+          },
+        },
       },
     });
   }
