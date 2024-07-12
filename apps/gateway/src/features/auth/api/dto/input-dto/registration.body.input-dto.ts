@@ -7,7 +7,7 @@ export class RegistrationBodyInputDto {
   @ApiProperty({
     type: String,
     description: 'this is name of user',
-    example: 'alex',
+    example: 'Rayan_Ghosling',
     pattern: '^[0-9A-Za-z_-]+$',
     minLength: 6,
     maxLength: 30,
@@ -25,7 +25,7 @@ export class RegistrationBodyInputDto {
     type: String,
     description:
       'this is password of user. Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
-    example: 'password',
+    example: 'Password_123',
     minLength: 6,
     maxLength: 20,
   })

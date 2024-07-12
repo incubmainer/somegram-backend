@@ -12,6 +12,7 @@ import { RegistrationConfirmationUseCase } from './application/use-cases/registr
 import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
 import { RecapchaService } from '../../common/utils/recapcha.service';
 import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
+import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule, EmailModule],
@@ -28,6 +29,7 @@ import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
           ? RecapchaService
           : MockRecapchaService,
     },
+    RestorePasswordConfirmationUseCase,
     CryptoAuthService,
     CryptoService,
     EmailAuthService,
