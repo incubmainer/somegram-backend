@@ -5,7 +5,6 @@ import {
   PrismaClient as GatewayPrismaClient,
   SecurityDevices,
 } from '@prisma/gateway';
-import { DeviceDto } from '../../auth/api/dto/input-dto/login-user-with-device.dto';
 @Injectable()
 export class SecurityDevicesRepository {
   constructor(
@@ -14,14 +13,20 @@ export class SecurityDevicesRepository {
     >,
   ) {}
 
-  public async addDevice(deviceDto: DeviceDto) {
+  public async addDevice(
+    userId: string,
+    deviceId: string,
+    ip: string,
+    lastActiveDate: string,
+    title: string,
+  ) {
     await this.txHost.tx.securityDevices.create({
       data: {
-        userId: deviceDto.userId,
-        ip: deviceDto.ip,
-        deviceId: deviceDto.deviceId,
-        lastActiveDate: deviceDto.lastActiveDate,
-        title: deviceDto.title,
+        userId: userId,
+        ip: ip,
+        deviceId: deviceId,
+        lastActiveDate: lastActiveDate,
+        title: title,
       },
     });
   }

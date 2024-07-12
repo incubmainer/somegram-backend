@@ -22,10 +22,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Response } from 'express';
-import {
-  LoginDto,
-  LoginUserWithDeviceDto,
-} from './dto/input-dto/login-user-with-device.dto';
+import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
 import { LoginSwagger } from './swagger/login.swagger';
 
@@ -88,10 +85,8 @@ export class AuthController {
     }
     const title = req.headers['user-agent'] || 'Mozilla';
     const user = req.user;
-    const loginUserWithDeviceDto = new LoginUserWithDeviceDto(user, ip, title);
-
     const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(loginUserWithDeviceDto),
+      new LoginUserCommand(user, ip, title),
     );
 
     return response

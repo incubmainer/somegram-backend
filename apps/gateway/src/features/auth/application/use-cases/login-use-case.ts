@@ -1,14 +1,23 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  DeviceDto,
-  LoginUserWithDeviceDto,
-} from '../../api/dto/input-dto/login-user-with-device.dto';
 import { AuthService } from '../auth.service';
 import { randomUUID } from 'crypto';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { User } from '@prisma/gateway';
+
+export const LoginCodes = {
+  Success: Symbol('success'),
+  UserDoesntExist: Symbol('user_doesnt_exist'),
+  WrongPassword: Symbol('wrong_password'),
+  EmailAlreadyExists: Symbol('email_already_exists'),
+  TransactionError: Symbol('transaction_error'),
+};
 
 export class LoginUserCommand {
-  constructor(public loginUserWithDeviceDto: LoginUserWithDeviceDto) {}
+  constructor(
+    public user: User,
+    public ip: string,
+    public title: string,
+  ) {}
 }
 
 @CommandHandler(LoginUserCommand)
@@ -18,24 +27,21 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
     private readonly SecurityDevicesRepo: SecurityDevicesRepository,
   ) {}
   async execute(command: LoginUserCommand): Promise<any> {
-    const { loginUserWithDeviceDto } = command;
+    const { user, ip, title } = command;
     const deviceId = randomUUID();
     const refreshToken = await this.authService.createRefreshToken(
-      loginUserWithDeviceDto.user,
+      user,
       deviceId,
     );
-    const accessToken = await this.authService.login(
-      loginUserWithDeviceDto.user,
+    const accessToken = await this.authService.login(user);
+    const lastActiveDate = new Date().toISOString();
+    await this.SecurityDevicesRepo.addDevice(
+      user.id,
+      deviceId,
+      ip,
+      lastActiveDate,
+      title,
     );
-    const result = await this.authService.verifyRefreshToken(refreshToken);
-    const lastActiveDate = new Date(result.iat * 1000).toISOString();
-    const deviceDto = new DeviceDto();
-    deviceDto.deviceId = deviceId;
-    deviceDto.ip = loginUserWithDeviceDto.ip;
-    deviceDto.lastActiveDate = lastActiveDate;
-    deviceDto.title = loginUserWithDeviceDto.title;
-    deviceDto.userId = loginUserWithDeviceDto.user.id;
-    await this.SecurityDevicesRepo.addDevice(deviceDto);
     const accesAndRefreshTokens = { refreshToken, accessToken };
     return accesAndRefreshTokens;
   }

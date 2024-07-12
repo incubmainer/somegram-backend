@@ -18,7 +18,7 @@ model User {
   isConfirmed       Boolean
   confirmationToken UserConfirmationToken?
   resetPasswordCode UserResetPasswordCode?
-  securityDevices   SecurityDevices?
+  securityDevices   SecurityDevices[]
 
   @@index([username])
   @@index([email])
@@ -45,10 +45,10 @@ model UserResetPasswordCode {
 }
 
 model SecurityDevices {
-  userId         String @unique()
-  User           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String?
+  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   ip             String
-  deviceId       String
+  deviceId       String  @unique()
   lastActiveDate String
   title          String
 

@@ -8,7 +8,6 @@ import { CryptoAuthService } from './infrastructure/crypto-auth.service';
 import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
 import { EmailModule } from '../../common/modules/email.module';
-import { jwtConstants, tokensLivesConstants } from './constants/constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AuthService } from './application/auth.service';
@@ -17,6 +16,10 @@ import { LoginUserUseCase } from './application/use-cases/login-use-case';
 import { SecurityDevicesRepository } from '../security-devices/infrastructure/security-devices.repository';
 import { SecurityDevicesService } from '../security-devices/application/security-devices.service';
 import { SecurityDevicesController } from '../security-devices/api/security-devices.controller';
+import {
+  jwtConstants,
+  tokensLivesConstants,
+} from '../../common/config/constants/jwt-basic-constants';
 
 const useCases = [LoginUserUseCase];
 @Module({

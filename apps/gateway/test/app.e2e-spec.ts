@@ -43,6 +43,7 @@ describe('GatewayController (e2e)', () => {
       .expect(200);
     aTokenUser01 = response.body.accessToken;
     rTokenUser01 = response.headers['set-cookie'][0];
+    console.log('🚀 ~ it ~ response:', response.headers);
     expect(aTokenUser01).toBeDefined();
     expect(rTokenUser01).toContain('refreshToken=');
   });

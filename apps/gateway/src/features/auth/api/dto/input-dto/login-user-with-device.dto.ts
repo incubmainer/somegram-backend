@@ -1,14 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '@prisma/gateway';
 import { IsUserEmail } from '../../../application/decorators/is-user-email';
 import { IsUserPassword } from '../../../application/decorators/is-user-password';
-export class LoginUserWithDeviceDto {
-  constructor(
-    public user: User,
-    public ip: string,
-    public title: string,
-  ) {}
-}
 
 export class LoginDto {
   @ApiProperty({
@@ -30,10 +22,10 @@ export class LoginDto {
   password: string;
 }
 
-export class DeviceDto {
-  deviceId: string;
-  ip: string;
-  title: string;
-  lastActiveDate: string;
-  userId: string;
-}
+// export class DeviceDto {
+//   deviceId: string;
+//   ip: string;
+//   title: string;
+//   lastActiveDate: string;
+//   userId: string;
+// }

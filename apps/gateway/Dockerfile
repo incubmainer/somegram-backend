@@ -18,7 +18,6 @@ RUN yarn build:gateway && \
   yarn install --production --frozen-lockfile && \
   yarn prisma:gen:gateway && \
   yarn cache clean
-# CMD ["yarn", "test:e2e"]
 
 FROM node:20-alpine AS production
 WORKDIR /usr/src/app

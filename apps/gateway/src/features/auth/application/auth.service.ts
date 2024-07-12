@@ -1,9 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { jwtConstants, tokensLivesConstants } from '../constants/constants';
 import { UserRepository } from '../infrastructure/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { CryptoService } from '../../../common/utils/crypto.service';
 import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
+import {
+  jwtConstants,
+  tokensLivesConstants,
+} from '../../../common/config/constants/jwt-basic-constants';
 
 @Injectable()
 export class AuthService {
