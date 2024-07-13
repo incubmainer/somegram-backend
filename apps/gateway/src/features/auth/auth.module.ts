@@ -21,8 +21,9 @@ import {
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
+import { LogoutUseCase } from './application/use-cases/logout-use-case';
 
-const useCases = [LoginUserUseCase];
+const useCases = [LoginUserUseCase, LogoutUseCase];
 @Module({
   imports: [
     CqrsModule,
