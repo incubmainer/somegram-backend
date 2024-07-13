@@ -22,6 +22,10 @@ import {
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
 import { LogoutUseCase } from './application/use-cases/logout-use-case';
+import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
+import { RecapchaService } from '../../common/utils/recapcha.service';
+import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
+import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
 
 const useCases = [LoginUserUseCase, LogoutUseCase];
 @Module({
@@ -42,6 +46,15 @@ const useCases = [LoginUserUseCase, LogoutUseCase];
     UserRepository,
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
+    RestorePasswordUseCase,
+    {
+      provide: RecapchaService,
+      useClass:
+        process.env.NODE_ENV === 'production'
+          ? RecapchaService
+          : MockRecapchaService,
+    },
+    RestorePasswordConfirmationUseCase,
     CryptoAuthService,
     CryptoService,
     EmailAuthService,

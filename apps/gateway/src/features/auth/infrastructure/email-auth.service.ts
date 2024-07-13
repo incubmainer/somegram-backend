@@ -5,13 +5,16 @@ import { EmailSender } from 'apps/gateway/src/common/utils/email.sender';
 
 @Injectable()
 export class EmailAuthService {
-  frontedConfirmationUrl: string;
+  frontendConfirmationUrl: string;
+  frontendRestorePasswordUrl: string;
   constructor(
     private readonly emailSender: EmailSender,
     private readonly configService: ConfigService,
   ) {
     const config = this.configService.get<FrontendUrlsConfig>('frontendUrls');
-    this.frontedConfirmationUrl = config.FRONTEND_REGISTRATION_CONFIRMATION_URL;
+    this.frontendConfirmationUrl =
+      config.FRONTEND_REGISTRATION_CONFIRMATION_URL;
+    this.frontendRestorePasswordUrl = config.FRONTEND_RESTORE_PASSWORD_URL;
   }
   public async sendConfirmationEmail(dto: {
     email: string;
@@ -22,9 +25,22 @@ export class EmailAuthService {
       dto.email,
       'Confirm your email',
       `
-<p>Click <a href="${this.frontedConfirmationUrl}?token=${validToken}">here</a> to confirm your email</p>
-code: ${dto.confirmationToken}
-`,
+      <p>Click <a href="${this.frontendConfirmationUrl}?token=${validToken}">here</a> to confirm your email</p>
+      code: ${dto.confirmationToken}
+      `,
+    );
+  }
+  public async sendRestorePasswordCode(dto: {
+    email: string;
+    restorePasswordCode: string;
+  }) {
+    await this.emailSender.sendHtml(
+      dto.email,
+      'Restore password',
+      `
+        <Click <a href="${this.frontendRestorePasswordUrl}?code=${dto.restorePasswordCode}">here</a> to restore your password</p>
+        code: ${dto.restorePasswordCode}
+      `,
     );
   }
 }
