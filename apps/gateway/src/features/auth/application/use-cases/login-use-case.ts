@@ -34,8 +34,10 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       userId,
       deviceId,
     );
+    const payload = await this.authService.verifyRefreshToken(refreshToken);
     const accessToken = await this.authService.login(userId);
-    const lastActiveDate = new Date().toISOString();
+    const lastActiveDate = new Date(payload.iat * 1000).toISOString();
+
     await this.securityDevicesRepo.addDevice(
       userId,
       deviceId,

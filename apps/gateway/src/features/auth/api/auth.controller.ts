@@ -10,6 +10,7 @@ import {
   Request,
   UseGuards,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -46,6 +47,9 @@ import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-c
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
+import { LogoutCommand } from '../application/use-cases/logout-use-case';
+import { LogOutSwagger } from './swagger/logout.swagger';
+import { RefreshToken } from './decorators/refresh-token.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -178,7 +182,8 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
-      
+  }
+
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
@@ -210,5 +215,18 @@ export class AuthController {
         secure: true,
       })
       .send({ accessToken: accesAndRefreshTokens.accessToken });
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @LogOutSwagger()
+  async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
+    if (!refreshToken) {
+      throw new UnauthorizedException();
+    }
+    const result = await this.commandBus.execute(
+      new LogoutCommand(refreshToken),
+    );
+    return result;
   }
 }
