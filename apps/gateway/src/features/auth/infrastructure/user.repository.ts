@@ -5,6 +5,7 @@ import {
   PrismaClient as GatewayPrismaClient,
   User,
   UserConfirmationToken,
+  UserResetPasswordCode,
 } from '@prisma/gateway';
 
 @Injectable()
@@ -89,6 +90,62 @@ export class UserRepository {
       },
       data: {
         isConfirmed: true,
+      },
+    });
+  }
+  public async updateRestorePasswordCode(dto: {
+    userId: User['id'];
+    restorePasswordCode: UserResetPasswordCode['code'];
+    restorePasswordCodeCreatedAt: UserResetPasswordCode['createdAt'];
+    restorePasswordCodeExpiresAt: UserResetPasswordCode['expiredAt'];
+  }) {
+    await this.txHost.tx.userResetPasswordCode.deleteMany({
+      where: {
+        userId: dto.userId,
+      },
+    });
+    return this.txHost.tx.user.update({
+      where: {
+        id: dto.userId,
+      },
+      data: {
+        resetPasswordCode: {
+          create: {
+            code: dto.restorePasswordCode,
+            createdAt: dto.restorePasswordCodeCreatedAt,
+            expiredAt: dto.restorePasswordCodeExpiresAt,
+          },
+        },
+      },
+    });
+  }
+  public async getUserByRestorePasswordCode(code: string) {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        resetPasswordCode: {
+          code,
+        },
+      },
+      include: {
+        resetPasswordCode: true,
+      },
+    });
+    return user;
+  }
+  public async deleteRestorePasswordCode(userId: User['id']) {
+    return this.txHost.tx.userResetPasswordCode.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+  public async updateUserPassword(userId: User['id'], hashPassword: string) {
+    return this.txHost.tx.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashPassword,
       },
     });
   }

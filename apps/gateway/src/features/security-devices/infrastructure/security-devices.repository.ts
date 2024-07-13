@@ -30,4 +30,30 @@ export class SecurityDevicesRepository {
       },
     });
   }
+
+  public async deleteAllSessionForUser(userId: string): Promise<void> {
+    await this.txHost.tx.securityDevices.deleteMany({
+      where: { userId: userId },
+    });
+  }
+
+  public async isValidRefreshToken(
+    lastActiveDate: string,
+  ): Promise<SecurityDevices | null> {
+    const result = await this.txHost.tx.securityDevices.findFirst({
+      where: { lastActiveDate: lastActiveDate },
+    });
+    if (!result) return null;
+    return result;
+  }
+
+  public async deleteRefreshTokenWhenLogout(
+    deviceId: string,
+  ): Promise<boolean> {
+    const result = await this.txHost.tx.securityDevices.delete({
+      where: { deviceId: deviceId },
+    });
+    if (!result) return null;
+    return true;
+  }
 }

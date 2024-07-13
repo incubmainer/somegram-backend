@@ -11,6 +11,7 @@ import {
   UseGuards,
   NotFoundException,
   Get,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -32,10 +33,25 @@ import {
   RegistrationConfirmationCommand,
 } from '../application/use-cases/registration-confirmation.use-case';
 import { RegistrationConfirmationSwagger } from './swagger/registration-confirmation.swagger';
+import { RestorePasswordBodyInputDto } from './dto/input-dto/restore-password.body.input-dto';
+import {
+  RestorePasswordCodes,
+  RestorePasswordCommand,
+} from '../application/use-cases/restore-password.use-case';
+import { RestorePasswordSwagger } from './swagger/restore-password.swagger';
+import {
+  RestorePasswordConfirmationCodes,
+  RestorePasswordConfirmationCommand,
+} from '../application/use-cases/restore-password-confirmation.use-case';
+import { RestorePasswordConfirmationBodyInputDto } from './dto/input-dto/restore-password-confirmation.body.input-dto';
+import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-confirmation.swagger';
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
 import { GoogleAuthService } from '../infrastructure/google-auth.service';
+import { LogoutCommand } from '../application/use-cases/logout-use-case';
+import { LogOutSwagger } from './swagger/logout.swagger';
+import { RefreshToken } from './decorators/refresh-token.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -119,6 +135,65 @@ export class AuthController {
     console.log(url);
     res.redirect(url);
   }
+  @Post('restore-password')
+  @HttpCode(HttpStatus.OK)
+  @RestorePasswordSwagger()
+  public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
+    const notification: Notification<null> = await this.commandBus.execute(
+      new RestorePasswordCommand(body.email, body.recaptchaToken),
+    );
+    const code = notification.getCode();
+    if (code === RestorePasswordCodes.Success)
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Restore password successful',
+      };
+    if (code === RestorePasswordCodes.UnvalidRecaptcha)
+      throw new BadRequestException({
+        error: 'invalid_recaptcha_token',
+        message: 'Restore password failed due to invalid recaptcha token.',
+      });
+    if (code === RestorePasswordCodes.UserNotFound)
+      throw new BadRequestException({
+        error: 'user_not_found',
+        message: 'Restore password failed due to user not found.',
+      });
+    if (code === RestorePasswordCodes.TransactionError)
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+  }
+
+  @Post('restore-password-confirmation')
+  @HttpCode(HttpStatus.OK)
+  @RestorePasswordConfirmationSwagger()
+  public async restorePasswordConfirmation(
+    @Body() body: RestorePasswordConfirmationBodyInputDto,
+  ) {
+    const notification: Notification<null> = await this.commandBus.execute(
+      new RestorePasswordConfirmationCommand(body.code, body.password),
+    );
+    const code = notification.getCode();
+    if (code === RestorePasswordConfirmationCodes.Success)
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Restore password confirmation successful',
+      };
+    if (code === RestorePasswordConfirmationCodes.ExpiredCode)
+      throw new BadRequestException({
+        error: 'restore_password_confirmation_failed',
+        message: 'Restore password confirmation failed due to expired code.',
+      });
+    if (code === RestorePasswordConfirmationCodes.UnvalidCode)
+      throw new BadRequestException({
+        error: 'restore_password_confirmation_failed',
+        message: 'Restore password confirmation failed due to unvalid code.',
+      });
+    if (code === RestorePasswordConfirmationCodes.TransactionError)
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+  }
 
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -151,5 +226,18 @@ export class AuthController {
         secure: true,
       })
       .send({ accessToken: accesAndRefreshTokens.accessToken });
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @LogOutSwagger()
+  async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
+    if (!refreshToken) {
+      throw new UnauthorizedException();
+    }
+    const result = await this.commandBus.execute(
+      new LogoutCommand(refreshToken),
+    );
+    return result;
   }
 }
