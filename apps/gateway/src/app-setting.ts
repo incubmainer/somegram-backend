@@ -7,9 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig } from './common/config/configs/app.config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationError } from 'class-validator';
+import * as cookieParser from 'cookie-parser';
 
 export const appSetting = (app: INestApplication) => {
   const configService = app.get(ConfigService);
+  app.use(cookieParser());
   const appConfig = configService.get<AppConfig>('app');
   app.setGlobalPrefix(appConfig.GLOBAL_PREFIX);
   app.useGlobalPipes(

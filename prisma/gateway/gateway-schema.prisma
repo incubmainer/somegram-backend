@@ -18,6 +18,7 @@ model User {
   isConfirmed       Boolean
   confirmationToken UserConfirmationToken?
   resetPasswordCode UserResetPasswordCode?
+  securityDevices   SecurityDevices[]
 
   @@index([username])
   @@index([email])
@@ -41,4 +42,15 @@ model UserResetPasswordCode {
   createdAt DateTime
 
   @@index([code])
+}
+
+model SecurityDevices {
+  userId         String?
+  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip             String
+  deviceId       String  @unique()
+  lastActiveDate String
+  title          String
+
+  @@index([deviceId])
 }
