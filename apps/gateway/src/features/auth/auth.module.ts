@@ -21,6 +21,7 @@ import {
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
+import { GoogleAuthService } from './infrastructure/google-auth.service';
 
 const useCases = [LoginUserUseCase];
 @Module({
@@ -48,6 +49,7 @@ const useCases = [LoginUserUseCase];
     SecurityDevicesRepository,
     SecurityDevicesService,
     ...useCases,
+    GoogleAuthService,
   ],
 })
 export class AuthModule {}

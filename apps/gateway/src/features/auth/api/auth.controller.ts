@@ -10,6 +10,7 @@ import {
   Request,
   UseGuards,
   NotFoundException,
+  Get,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -34,11 +35,15 @@ import { RegistrationConfirmationSwagger } from './swagger/registration-confirma
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
+import { GoogleAuthService } from '../infrastructure/google-auth.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly googleAuthService: GoogleAuthService,
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -106,6 +111,13 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+
+  @Get('google-auth')
+  async googleAuth(@Res() res: Response): Promise<void> {
+    const url = this.googleAuthService.getGoogleAuthUrl();
+    console.log(url);
+    res.redirect(url);
   }
 
   @UseGuards(LocalAuthGuard)
