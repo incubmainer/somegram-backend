@@ -49,6 +49,7 @@ import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
+import { RefreshToken } from './decorators/refresh-token.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -181,7 +182,8 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
-      
+  }
+
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
@@ -218,8 +220,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogOutSwagger()
-  async logout(@Request() req): Promise<boolean> {
-    const refreshToken = req.cookies.refreshToken;
+  async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
     if (!refreshToken) {
       throw new UnauthorizedException();
     }
