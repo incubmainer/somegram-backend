@@ -31,6 +31,12 @@ export class SecurityDevicesRepository {
     });
   }
 
+  public async deleteAllSessionForUser(userId: string): Promise<void> {
+    await this.txHost.tx.securityDevices.deleteMany({
+      where: { userId: userId },
+    });
+  }
+
   public async isValidRefreshToken(
     lastActiveDate: string,
   ): Promise<SecurityDevices | null> {

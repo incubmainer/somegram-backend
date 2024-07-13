@@ -7,6 +7,7 @@ import { UserRepository } from '../../infrastructure/user.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsString, validateSync } from 'class-validator';
 import { IsUserPassword } from '../decorators/is-user-password';
+import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
 
 export const RestorePasswordConfirmationCodes = {
   Success: Symbol('success'),
@@ -38,6 +39,7 @@ export class RestorePasswordConfirmationUseCase
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly cryptoAuthService: CryptoAuthService,
+    private readonly securityDevicesRepository: SecurityDevicesRepository,
   ) {}
 
   public async execute(
@@ -68,6 +70,7 @@ export class RestorePasswordConfirmationUseCase
           await this.cryptoAuthService.hashPassword(password);
         await this.userRepository.deleteRestorePasswordCode(user.id);
         await this.userRepository.updateUserPassword(user.id, hashPassword);
+        await this.securityDevicesRepository.deleteAllSessionForUser(user.id);
       });
     } catch (e) {
       if (notification.getCode() === RestorePasswordConfirmationCodes.Success) {
