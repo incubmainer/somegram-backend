@@ -23,6 +23,47 @@ export class UserRepository {
     });
     return user;
   }
+  public async generateUniqueUsername(): Promise<string> {
+    const result = await this.txHost.tx
+      .$queryRaw`SELECT set_sequential_username() AS username`;
+    return result[0].username;
+  }
+  public async addGoogleInfoToUser(
+    userId: User['id'],
+    googleInfo: {
+      sub: string;
+      name: string;
+      given_name: string;
+      family_name: string;
+      picture: string;
+      email: string;
+      email_verified: boolean;
+    },
+  ) {
+    return this.txHost.tx.userGoogleInfo.create({
+      data: {
+        userId,
+        sub: googleInfo.sub,
+        name: googleInfo.name,
+        given_name: googleInfo.given_name,
+        family_name: googleInfo.family_name,
+        picture: googleInfo.picture,
+        email: googleInfo.email,
+        email_verified: googleInfo.email_verified,
+      },
+    });
+  }
+  public async getUserByEmailWithGoogleInfo(email: string) {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        email,
+      },
+      include: {
+        googleInfo: true,
+      },
+    });
+    return user;
+  }
   public async getUserByUsername(username: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -146,6 +187,50 @@ export class UserRepository {
       },
       data: {
         hashPassword,
+      },
+    });
+  }
+  public async getUserByGoogleSub(sub: string): Promise<User> {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        googleInfo: {
+          sub: sub,
+        },
+      },
+    });
+    return user;
+  }
+  public async createConfirmedUserWithGoogleInfo(dto: {
+    username: string;
+    email: string;
+    createdAt: Date;
+    googleInfo: {
+      sub: string;
+      name: string;
+      given_name: string;
+      family_name: string;
+      picture: string;
+      email: string;
+      email_verified: boolean;
+    };
+  }) {
+    await this.txHost.tx.user.create({
+      data: {
+        username: dto.username,
+        email: dto.email,
+        createdAt: dto.createdAt,
+        isConfirmed: true,
+        googleInfo: {
+          create: {
+            sub: dto.googleInfo.sub,
+            name: dto.googleInfo.name,
+            given_name: dto.googleInfo.given_name,
+            family_name: dto.googleInfo.family_name,
+            picture: dto.googleInfo.picture,
+            email: dto.googleInfo.email,
+            email_verified: dto.googleInfo.email_verified,
+          },
+        },
       },
     });
   }
