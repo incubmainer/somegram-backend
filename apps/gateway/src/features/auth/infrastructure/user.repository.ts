@@ -28,7 +28,7 @@ export class UserRepository {
       .$queryRaw`SELECT set_sequential_username() AS username`;
     return result[0].username;
   }
-  public async addGoogleInfoToUser(
+  public async addGoogleInfoToUserAndConfirm(
     userId: User['id'],
     googleInfo: {
       sub: string;
@@ -40,7 +40,7 @@ export class UserRepository {
       email_verified: boolean;
     },
   ) {
-    return this.txHost.tx.userGoogleInfo.create({
+    await this.txHost.tx.userGoogleInfo.create({
       data: {
         userId,
         sub: googleInfo.sub,
@@ -51,6 +51,10 @@ export class UserRepository {
         email: googleInfo.email,
         email_verified: googleInfo.email_verified,
       },
+    });
+    await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { isConfirmed: true },
     });
   }
   public async getUserByEmailWithGoogleInfo(email: string) {

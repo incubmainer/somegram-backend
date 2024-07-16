@@ -75,16 +75,18 @@ export class LoginByGoogleUseCase {
           throw new Error('Wrong email');
         }
         if (userByEmail) {
-          // Должны ли мы подтверждать пользователя на этом моменте, если он не подтвержден?
-          await this.userRepository.addGoogleInfoToUser(userByEmail.id, {
-            sub: googleUser.sub,
-            name: googleUser.name,
-            given_name: googleUser.given_name,
-            family_name: googleUser.family_name,
-            picture: googleUser.picture,
-            email: googleUser.email,
-            email_verified: googleUser.email_verified,
-          });
+          await this.userRepository.addGoogleInfoToUserAndConfirm(
+            userByEmail.id,
+            {
+              sub: googleUser.sub,
+              name: googleUser.name,
+              given_name: googleUser.given_name,
+              family_name: googleUser.family_name,
+              picture: googleUser.picture,
+              email: googleUser.email,
+              email_verified: googleUser.email_verified,
+            },
+          );
           notification.setData(userByEmail.id);
           notification.setCode(LoginByGoogleCodes.MergeAccountWithGoogle);
           return;

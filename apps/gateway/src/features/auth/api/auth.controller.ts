@@ -148,9 +148,6 @@ export class AuthController {
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ): Promise<void> {
-    // Как ты считаешь лучше сделать так или нужно чтобы LoginByGoogleCommand возвращал accessToken и refreshToken?
-    // По идее более правильно, чтобы он так и делал
-    // Я просто скопипастил код с this.login после того как сделал LoginByGoogleCommand
     const code = query.code;
     if (!code) {
       throw new BadRequestException('Code is not provided');
