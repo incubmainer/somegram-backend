@@ -217,8 +217,8 @@ export class UserRepository {
       email: string;
       email_verified: boolean;
     };
-  }) {
-    await this.txHost.tx.user.create({
+  }): Promise<User['id']> {
+    const user = await this.txHost.tx.user.create({
       data: {
         username: dto.username,
         email: dto.email,
@@ -237,5 +237,6 @@ export class UserRepository {
         },
       },
     });
+    return user.id;
   }
 }

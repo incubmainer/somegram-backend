@@ -52,7 +52,6 @@ export class LoginByGoogleUseCase {
           notification.setCode(LoginByGoogleCodes.UnvalidCode);
           throw new Error('Unvalid code');
         }
-        // Это нужно оставлять или нет? Как думаешь? Ответь на code review
         if (!googleUser.email_verified) {
           notification.setCode(LoginByGoogleCodes.NotVerifiedEmailGoogle);
           throw new Error('Not verified email');
@@ -94,20 +93,22 @@ export class LoginByGoogleUseCase {
 
         const uniqueUsername =
           await this.userRepository.generateUniqueUsername();
-        await this.userRepository.createConfirmedUserWithGoogleInfo({
-          username: uniqueUsername,
-          email: googleUser.email,
-          createdAt: currentDate,
-          googleInfo: {
-            sub: googleUser.sub,
-            name: googleUser.name,
-            given_name: googleUser.given_name,
-            family_name: googleUser.family_name,
-            picture: googleUser.picture,
+        const userId =
+          await this.userRepository.createConfirmedUserWithGoogleInfo({
+            username: uniqueUsername,
             email: googleUser.email,
-            email_verified: googleUser.email_verified,
-          },
-        });
+            createdAt: currentDate,
+            googleInfo: {
+              sub: googleUser.sub,
+              name: googleUser.name,
+              given_name: googleUser.given_name,
+              family_name: googleUser.family_name,
+              picture: googleUser.picture,
+              email: googleUser.email,
+              email_verified: googleUser.email_verified,
+            },
+          });
+        notification.setData(userId);
       });
     } catch (e) {
       if (notification.getCode() === LoginByGoogleCodes.Success) {
