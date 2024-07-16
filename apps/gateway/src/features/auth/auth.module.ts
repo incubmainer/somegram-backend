@@ -21,13 +21,15 @@ import {
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
+import { GoogleAuthService } from './infrastructure/google-auth.service';
 import { LogoutUseCase } from './application/use-cases/logout-use-case';
 import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
 import { RecapchaService } from '../../common/utils/recapcha.service';
 import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
 import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
+import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 
-const useCases = [LoginUserUseCase, LogoutUseCase];
+const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
 @Module({
   imports: [
     CqrsModule,
@@ -62,6 +64,7 @@ const useCases = [LoginUserUseCase, LogoutUseCase];
     SecurityDevicesRepository,
     SecurityDevicesService,
     ...useCases,
+    GoogleAuthService,
   ],
 })
 export class AuthModule {}

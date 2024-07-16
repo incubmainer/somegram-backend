@@ -7,10 +7,11 @@ import {
   InternalServerErrorException,
   Post,
   Res,
-  Request,
   UseGuards,
   NotFoundException,
+  Get,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -47,14 +48,23 @@ import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-c
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
+import { GoogleAuthService } from '../infrastructure/google-auth.service';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
+import { GoogleAuthCallbackQueryInputDto } from './dto/input-dto/google-auth-callback-query.input-dto';
+import {
+  LoginByGoogleCodes,
+  LoginByGoogleCommand,
+} from '../application/use-cases/login-by-google.use-case';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly googleAuthService: GoogleAuthService,
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -122,6 +132,57 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+
+  @Get('google-auth')
+  async googleAuth(@Res() res: Response): Promise<void> {
+    const url = this.googleAuthService.getGoogleAuthUrl();
+    console.log(url);
+    res.redirect(url);
+  }
+
+  @Get('login-by-google')
+  async googleAuthCallback(
+    @Query() query: GoogleAuthCallbackQueryInputDto,
+    @Res() response: Response,
+    @IpAddress() ip?: string,
+    @UserAgent() userAgent?: string,
+  ): Promise<void> {
+    const code = query.code;
+    if (!code) {
+      throw new BadRequestException('Code is not provided');
+    }
+
+    const notification: Notification<string> = await this.commandBus.execute(
+      new LoginByGoogleCommand(code),
+    );
+    const noteCode = notification.getCode();
+    if (noteCode === LoginByGoogleCodes.WrongEmail) {
+      throw new BadRequestException({
+        error: 'login_by_google_failed',
+        message: 'Login by google failed due to wrong email.',
+      });
+    }
+    const userId = notification.getDate();
+    if (!ip) {
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
+    }
+    const title = userAgent || 'Mozilla';
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(userId, ip, title),
+    );
+    response
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send({ accessToken: accesAndRefreshTokens.accessToken });
   }
 
   @Post('restore-password')

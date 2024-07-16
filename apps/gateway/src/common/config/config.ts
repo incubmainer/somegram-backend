@@ -6,6 +6,7 @@ import {
   FrontendUrlsConfig,
   frontendUrlsConfig,
 } from './configs/frontend-urls';
+import { googleConfig, GoogleConfig } from './configs/google.config';
 
 class FinalConfig {
   readonly db: DbConfig;
@@ -13,6 +14,7 @@ class FinalConfig {
   readonly email: EmailConfig;
   readonly frontendUrls: FrontendUrlsConfig;
   readonly auth: AuthConfig;
+  readonly google: GoogleConfig;
 }
 
 export const finalConfig = (): FinalConfig => {
@@ -22,5 +24,6 @@ export const finalConfig = (): FinalConfig => {
     email: emailConfig(),
     frontendUrls: frontendUrlsConfig(),
     auth: authConfig(),
+    google: googleConfig(),
   };
 };
