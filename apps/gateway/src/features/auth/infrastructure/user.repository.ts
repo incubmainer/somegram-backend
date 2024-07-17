@@ -4,9 +4,11 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import {
   PrismaClient as GatewayPrismaClient,
   User,
+  UserGithubInfo,
   UserConfirmationToken,
   UserResetPasswordCode,
 } from '@prisma/gateway';
+import { UserFromGithub } from '../api/dto/input-dto/user-from-github';
 
 @Injectable()
 export class UserRepository {
@@ -22,6 +24,22 @@ export class UserRepository {
       },
     });
     return user;
+  }
+  public async getUserWithGithubInfo(
+    email: string,
+  ): Promise<(User & { userGithubInfo: UserGithubInfo | null }) | null> {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        email: email,
+      },
+      include: { userGithubInfo: true },
+    });
+    return user;
+  }
+  public async generateUniqueUsername(): Promise<string> {
+    const result = await this.txHost.tx
+      .$queryRaw`SELECT set_sequential_username() AS username`;
+    return result[0].username;
   }
   public async getUserByUsername(username: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
@@ -148,5 +166,53 @@ export class UserRepository {
         hashPassword,
       },
     });
+  }
+
+  public async createConfirmedUserWithGithub(
+    user: UserFromGithub,
+    { username, email, createdAt },
+  ) {
+    const createdUser = await this.txHost.tx.user.create({
+      data: {
+        username: username,
+        email: email,
+        createdAt: createdAt,
+        isConfirmed: true,
+        hashPassword: 'null', //обязательно убрать!!!!!!!!!!! hashpasword вообще не должен тут быть!!!!!!!
+        userGithubInfo: {
+          create: {
+            githubId: user.githubId,
+            userName: user.username,
+            displayName: user.displayName,
+            email: user.email,
+          },
+        },
+      },
+    });
+    return createdUser;
+  }
+  public async addGithubInfo(
+    user: UserFromGithub,
+    userId: string,
+  ): Promise<UserGithubInfo> {
+    return await this.txHost.tx.userGithubInfo.create({
+      data: {
+        userId: userId,
+        githubId: user.githubId,
+        userName: user.username,
+        displayName: user.displayName,
+        email: user.email,
+      },
+    });
+  }
+  public async changeGithubEmail(id: string, user: UserFromGithub) {
+    return await this.txHost.tx.userGithubInfo.update({
+      where: { userId: id, githubId: user.githubId },
+      data: { email: user.email },
+    });
+  }
+  public async deleteAll() {
+    await this.txHost.tx.userGithubInfo.deleteMany({});
+    return await this.txHost.tx.user.deleteMany({});
   }
 }

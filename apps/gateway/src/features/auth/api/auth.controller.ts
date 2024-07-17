@@ -11,6 +11,8 @@ import {
   UseGuards,
   NotFoundException,
   UnauthorizedException,
+  Get,
+  Req,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -50,11 +52,21 @@ import { UserAgent } from './decorators/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from '../application/auth.service';
+import { UserRepository } from '../infrastructure/user.repository';
+import { UserFromGithub } from './dto/input-dto/user-from-github';
+import { AuthWithGithubCommand } from '../application/use-cases/auth-with-github-use-case';
+import { randomUUID } from 'crypto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly authService: AuthService,
+    private readonly usersRepository: UserRepository,
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -228,5 +240,43 @@ export class AuthController {
       new LogoutCommand(refreshToken),
     );
     return result;
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubAuth(@Req() req) {
+    // Инициирует процесс аутентификации через GitHub
+  }
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(@Req() req, @Res() res: Response) {
+    // Обрабатывает перенаправление после успешной аутентификации через GitHub
+    //  можно перенаправить пользователя на определенную страницу или вернуть JWT
+    const githubRefirectUri = process.env.GITHUB_REDIRECT_URI;
+    const origin = req.headers.origin;
+    console.log('Origin:', origin);
+    const user: UserFromGithub = req.user;
+    const deviceId = randomUUID();
+    const userNameAndId = await this.commandBus.execute(
+      new AuthWithGithubCommand(user),
+    );
+    const accesToken = await this.authService.createAccessToken(userNameAndId);
+    const refreshToken = await this.authService.createRefreshToken(
+      userNameAndId.id,
+      deviceId,
+    );
+    res
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .redirect(`${githubRefirectUri}?token=${accesToken.access_token}`);
+    //посмотреть от куда пришел зарос(заголовки типа origin ) и можно будет узнать от куда сделан запрос
+  }
+
+  @Post('delete-all')
+  async deleteAll() {
+    await this.usersRepository.deleteAll();
   }
 }

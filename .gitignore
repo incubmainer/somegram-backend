@@ -2,6 +2,8 @@
 /dist
 /node_modules
 /build
+apps/gateway/.env.dev
+apps/gateway/.env.test
 
 # Logs
 logs

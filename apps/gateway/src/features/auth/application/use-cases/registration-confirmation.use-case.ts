@@ -30,7 +30,7 @@ export class RegistrationConfirmationUseCase {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
+  ) {}
 
   public async execute(
     command: RegistrationConfirmationCommand,
