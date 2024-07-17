@@ -14,7 +14,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+  ) { }
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -33,9 +33,6 @@ export class UserRepository {
     googleInfo: {
       sub: string;
       name: string;
-      given_name: string;
-      family_name: string;
-      picture: string;
       email: string;
       email_verified: boolean;
     },
@@ -44,12 +41,8 @@ export class UserRepository {
       data: {
         userId,
         sub: googleInfo.sub,
-        name: googleInfo.name,
-        given_name: googleInfo.given_name,
-        family_name: googleInfo.family_name,
-        picture: googleInfo.picture,
         email: googleInfo.email,
-        email_verified: googleInfo.email_verified,
+        emailVerified: googleInfo.email_verified,
       },
     });
     await this.txHost.tx.user.update({
@@ -211,9 +204,6 @@ export class UserRepository {
     googleInfo: {
       sub: string;
       name: string;
-      given_name: string;
-      family_name: string;
-      picture: string;
       email: string;
       email_verified: boolean;
     };
@@ -227,12 +217,8 @@ export class UserRepository {
         googleInfo: {
           create: {
             sub: dto.googleInfo.sub,
-            name: dto.googleInfo.name,
-            given_name: dto.googleInfo.given_name,
-            family_name: dto.googleInfo.family_name,
-            picture: dto.googleInfo.picture,
             email: dto.googleInfo.email,
-            email_verified: dto.googleInfo.email_verified,
+            emailVerified: dto.googleInfo.email_verified,
           },
         },
       },
