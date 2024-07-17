@@ -61,6 +61,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
+import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -144,8 +145,8 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
+  @GoogleAuthCallbackSwagger()
   async googleAuthCallback(
-    @Req() req: Request,
     @GoogleUser() googleProfile: GoogleProfile | null,
     @Res() response: Response,
     @IpAddress() ip?: string,
