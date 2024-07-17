@@ -166,6 +166,11 @@ export class AuthController {
         message: 'Login by google failed due to wrong email.',
       });
     }
+    if (noteCode === LoginByGoogleCodes.TransactionError) {
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+    }
     const userId = notification.getDate();
     if (!ip) {
       throw new NotFoundException({
