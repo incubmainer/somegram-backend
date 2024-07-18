@@ -12,6 +12,7 @@ import {
   Get,
   UnauthorizedException,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -57,6 +58,10 @@ import {
   LoginByGoogleCodes,
   LoginByGoogleCommand,
 } from '../application/use-cases/login-by-google.use-case';
+import { AuthGuard } from '@nestjs/passport';
+import { GoogleProfile } from '../strategies/google.strategy';
+import { GoogleUser } from './decorators/google-user.decorator';
+import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -64,7 +69,7 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly googleAuthService: GoogleAuthService,
-  ) {}
+  ) { }
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -134,33 +139,37 @@ export class AuthController {
       });
   }
 
-  @Get('google-auth')
-  async googleAuth(@Res() res: Response): Promise<void> {
-    const url = this.googleAuthService.getGoogleAuthUrl();
-    console.log(url);
-    res.redirect(url);
-  }
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() { }
 
-  @Get('login-by-google')
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @GoogleAuthCallbackSwagger()
   async googleAuthCallback(
-    @Query() query: GoogleAuthCallbackQueryInputDto,
+    @GoogleUser() googleProfile: GoogleProfile | null,
     @Res() response: Response,
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
-  ): Promise<void> {
-    const code = query.code;
-    if (!code) {
-      throw new BadRequestException('Code is not provided');
-    }
-
+  ): Promise<any> {
     const notification: Notification<string> = await this.commandBus.execute(
-      new LoginByGoogleCommand(code),
+      new LoginByGoogleCommand(
+        googleProfile.id,
+        googleProfile.name,
+        googleProfile.email,
+        googleProfile.emailVerified,
+      ),
     );
     const noteCode = notification.getCode();
     if (noteCode === LoginByGoogleCodes.WrongEmail) {
       throw new BadRequestException({
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
+      });
+    }
+    if (noteCode === LoginByGoogleCodes.TransactionError) {
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
       });
     }
     const userId = notification.getDate();

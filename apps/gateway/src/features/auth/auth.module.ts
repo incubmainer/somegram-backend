@@ -28,6 +28,7 @@ import { RecapchaService } from '../../common/utils/recapcha.service';
 import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
 import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
 @Module({
@@ -45,6 +46,7 @@ const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
   providers: [
     LocalStrategy,
     JwtStrategy,
+    GoogleStrategy,
     UserRepository,
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
