@@ -10,8 +10,7 @@ export function LoginSwagger() {
       description: 'Login success',
       schema: {
         example: {
-          statusCode: 200,
-          message: 'Login successful',
+          accessToken: 'asdoifja3rfjl312r.aoifj23fl.jlwoif',
         },
       },
     }),
