@@ -7,11 +7,12 @@ import {
   InternalServerErrorException,
   Post,
   Res,
-  Request,
   UseGuards,
   NotFoundException,
+  Get,
   UnauthorizedException,
   Get,
+  Query,
   Req,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
@@ -49,6 +50,7 @@ import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-c
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
+import { GoogleAuthService } from '../infrastructure/google-auth.service';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
@@ -58,6 +60,15 @@ import { UserRepository } from '../infrastructure/user.repository';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
 import { AuthWithGithubCommand } from '../application/use-cases/auth-with-github-use-case';
 import { randomUUID } from 'crypto';
+import { GoogleAuthCallbackQueryInputDto } from './dto/input-dto/google-auth-callback-query.input-dto';
+import {
+  LoginByGoogleCodes,
+  LoginByGoogleCommand,
+} from '../application/use-cases/login-by-google.use-case';
+import { AuthGuard } from '@nestjs/passport';
+import { GoogleProfile } from '../strategies/google.strategy';
+import { GoogleUser } from './decorators/google-user.decorator';
+import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -66,7 +77,8 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly authService: AuthService,
     private readonly usersRepository: UserRepository,
-  ) {}
+    private readonly googleAuthService: GoogleAuthService,
+  ) { }
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -134,6 +146,61 @@ export class AuthController {
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() { }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @GoogleAuthCallbackSwagger()
+  async googleAuthCallback(
+    @GoogleUser() googleProfile: GoogleProfile | null,
+    @Res() response: Response,
+    @IpAddress() ip?: string,
+    @UserAgent() userAgent?: string,
+  ): Promise<any> {
+    const notification: Notification<string> = await this.commandBus.execute(
+      new LoginByGoogleCommand(
+        googleProfile.id,
+        googleProfile.name,
+        googleProfile.email,
+        googleProfile.emailVerified,
+      ),
+    );
+    const noteCode = notification.getCode();
+    if (noteCode === LoginByGoogleCodes.WrongEmail) {
+      throw new BadRequestException({
+        error: 'login_by_google_failed',
+        message: 'Login by google failed due to wrong email.',
+      });
+    }
+    if (noteCode === LoginByGoogleCodes.TransactionError) {
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+    }
+    const userId = notification.getDate();
+    if (!ip) {
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
+    }
+    const title = userAgent || 'Mozilla';
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(userId, ip, title),
+    );
+    response
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send({ accessToken: accesAndRefreshTokens.accessToken });
   }
 
   @Post('restore-password')
@@ -244,15 +311,11 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth(@Req() req) {
-    // Инициирует процесс аутентификации через GitHub
-  }
+  async githubAuth(@Req() req) {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   async githubAuthCallback(@Req() req, @Res() res: Response) {
-    // Обрабатывает перенаправление после успешной аутентификации через GitHub
-    //  можно перенаправить пользователя на определенную страницу или вернуть JWT
     const githubRefirectUri = process.env.GITHUB_REDIRECT_URI;
     const origin = req.headers.origin;
     console.log('Origin:', origin);
@@ -272,7 +335,6 @@ export class AuthController {
         secure: true,
       })
       .redirect(`${githubRefirectUri}?token=${accesToken.access_token}`);
-    //посмотреть от куда пришел зарос(заголовки типа origin ) и можно будет узнать от куда сделан запрос
   }
 
   @Post('delete-all')

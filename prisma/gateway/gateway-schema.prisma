@@ -12,7 +12,7 @@ model User {
   id                String                 @id @default(uuid())
   username          String
   email             String
-  hashPassword      String
+  hashPassword      String?
   createdAt         DateTime
   updatedAt         DateTime?
   isConfirmed       Boolean
@@ -20,6 +20,7 @@ model User {
   resetPasswordCode UserResetPasswordCode?
   securityDevices   SecurityDevices[]
   userGithubInfo    UserGithubInfo?
+  googleInfo        UserGoogleInfo?
 
   @@index([username])
   @@index([email])
@@ -65,4 +66,12 @@ model SecurityDevices {
   title          String
 
   @@index([deviceId])
+}
+
+model UserGoogleInfo {
+  userId        String  @unique()
+  User          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sub           String  @unique()
+  email         String
+  emailVerified Boolean
 }

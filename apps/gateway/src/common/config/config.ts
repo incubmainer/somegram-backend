@@ -10,14 +10,15 @@ import {
   githubAuthConfig,
   GithubAuthConfig,
 } from './configs/github-auth.config';
+import { googleConfig, GoogleConfig } from './configs/google.config';
 
 class FinalConfig {
   readonly db: DbConfig;
   readonly app: AppConfig;
   readonly email: EmailConfig;
   readonly frontendUrls: FrontendUrlsConfig;
-  readonly auth: AuthConfig;
   readonly githubAuth: GithubAuthConfig;
+  readonly google: GoogleConfig;
 }
 
 export const finalConfig = (): FinalConfig => {
@@ -28,5 +29,6 @@ export const finalConfig = (): FinalConfig => {
     frontendUrls: frontendUrlsConfig(),
     auth: authConfig(),
     githubAuth: githubAuthConfig(),
+    google: googleConfig(),
   };
 };

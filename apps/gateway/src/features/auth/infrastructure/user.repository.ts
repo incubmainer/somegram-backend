@@ -16,7 +16,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+  ) { }
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -25,6 +25,7 @@ export class UserRepository {
     });
     return user;
   }
+
   public async getUserWithGithubInfo(
     email: string,
   ): Promise<(User & { userGithubInfo: UserGithubInfo | null }) | null> {
@@ -41,6 +42,46 @@ export class UserRepository {
       .$queryRaw`SELECT set_sequential_username() AS username`;
     return result[0].username;
   }
+
+  public async generateUniqueUsername(): Promise<string> {
+    const result = await this.txHost.tx
+      .$queryRaw`SELECT set_sequential_username() AS username`;
+    return result[0].username;
+  }
+  public async addGoogleInfoToUserAndConfirm(
+    userId: User['id'],
+    googleInfo: {
+      sub: string;
+      name: string;
+      email: string;
+      email_verified: boolean;
+    },
+  ) {
+    await this.txHost.tx.userGoogleInfo.create({
+      data: {
+        userId,
+        sub: googleInfo.sub,
+        email: googleInfo.email,
+        emailVerified: googleInfo.email_verified,
+      },
+    });
+    await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { isConfirmed: true },
+    });
+  }
+  public async getUserByEmailWithGoogleInfo(email: string) {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        email,
+      },
+      include: {
+        googleInfo: true,
+      },
+    });
+    return user;
+  }
+
   public async getUserByUsername(username: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -168,6 +209,7 @@ export class UserRepository {
     });
   }
 
+
   public async createConfirmedUserWithGithub(
     user: UserFromGithub,
     { username, email, createdAt },
@@ -214,5 +256,43 @@ export class UserRepository {
   public async deleteAll() {
     await this.txHost.tx.userGithubInfo.deleteMany({});
     return await this.txHost.tx.user.deleteMany({});
+
+  public async getUserByGoogleSub(sub: string): Promise<User> {
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        googleInfo: {
+          sub: sub,
+        },
+      },
+    });
+    return user;
+  }
+  public async createConfirmedUserWithGoogleInfo(dto: {
+    username: string;
+    email: string;
+    createdAt: Date;
+    googleInfo: {
+      sub: string;
+      name: string;
+      email: string;
+      email_verified: boolean;
+    };
+  }): Promise<User['id']> {
+    const user = await this.txHost.tx.user.create({
+      data: {
+        username: dto.username,
+        email: dto.email,
+        createdAt: dto.createdAt,
+        isConfirmed: true,
+        googleInfo: {
+          create: {
+            sub: dto.googleInfo.sub,
+            email: dto.googleInfo.email,
+            emailVerified: dto.googleInfo.email_verified,
+          },
+        },
+      },
+    });
+    return user.id;
   }
 }

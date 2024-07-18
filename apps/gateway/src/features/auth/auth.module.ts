@@ -21,6 +21,7 @@ import {
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
+import { GoogleAuthService } from './infrastructure/google-auth.service';
 import { LogoutUseCase } from './application/use-cases/logout-use-case';
 import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
 import { RecapchaService } from '../../common/utils/recapcha.service';
@@ -29,7 +30,10 @@ import { RestorePasswordConfirmationUseCase } from './application/use-cases/rest
 import { GithubStrategy } from './strategies/github.strategy';
 import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-use-case';
 
-const useCases = [LoginUserUseCase, LogoutUseCase, AuthWithGithubUseCase];
+const useCases = [LoginUserUseCase, LogoutUseCase, AuthWithGithubUseCase, LoginByGoogleUseCase];
+import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
+import { GoogleStrategy } from './strategies/google.strategy';
+
 @Module({
   imports: [
     CqrsModule,
@@ -46,6 +50,7 @@ const useCases = [LoginUserUseCase, LogoutUseCase, AuthWithGithubUseCase];
     LocalStrategy,
     JwtStrategy,
     GithubStrategy,
+    GoogleStrategy,
     UserRepository,
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
@@ -65,6 +70,7 @@ const useCases = [LoginUserUseCase, LogoutUseCase, AuthWithGithubUseCase];
     SecurityDevicesRepository,
     SecurityDevicesService,
     ...useCases,
+    GoogleAuthService,
   ],
 })
 export class AuthModule {}
