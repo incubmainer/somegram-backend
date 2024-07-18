@@ -27,10 +27,18 @@ import { RestorePasswordUseCase } from './application/use-cases/restore-password
 import { RecapchaService } from '../../common/utils/recapcha.service';
 import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
 import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
+import { GithubStrategy } from './strategies/github.strategy';
+import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 import { GoogleStrategy } from './strategies/google.strategy';
 
-const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
+const useCases = [
+  LoginUserUseCase,
+  LogoutUseCase,
+  AuthWithGithubUseCase,
+  LoginByGoogleUseCase,
+];
+
 @Module({
   imports: [
     CqrsModule,
@@ -46,6 +54,7 @@ const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
   providers: [
     LocalStrategy,
     JwtStrategy,
+    GithubStrategy,
     GoogleStrategy,
     UserRepository,
     RegistrationUseCase,
@@ -69,4 +78,4 @@ const useCases = [LoginUserUseCase, LogoutUseCase, LoginByGoogleUseCase];
     GoogleAuthService,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -6,6 +6,10 @@ import {
   FrontendUrlsConfig,
   frontendUrlsConfig,
 } from './configs/frontend-urls';
+import {
+  githubAuthConfig,
+  GithubAuthConfig,
+} from './configs/github-auth.config';
 import { googleConfig, GoogleConfig } from './configs/google.config';
 
 class FinalConfig {
@@ -14,6 +18,7 @@ class FinalConfig {
   readonly email: EmailConfig;
   readonly frontendUrls: FrontendUrlsConfig;
   readonly auth: AuthConfig;
+  readonly githubAuth: GithubAuthConfig;
   readonly google: GoogleConfig;
 }
 
@@ -24,6 +29,7 @@ export const finalConfig = (): FinalConfig => {
     email: emailConfig(),
     frontendUrls: frontendUrlsConfig(),
     auth: authConfig(),
+    githubAuth: githubAuthConfig(),
     google: googleConfig(),
   };
 };

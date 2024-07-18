@@ -19,10 +19,22 @@ model User {
   confirmationToken UserConfirmationToken?
   resetPasswordCode UserResetPasswordCode?
   securityDevices   SecurityDevices[]
+  userGithubInfo    UserGithubInfo?
   googleInfo        UserGoogleInfo?
 
   @@index([username])
   @@index([email])
+}
+
+model UserGithubInfo {
+  userId      String  @unique()
+  User        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId    String
+  userName    String
+  displayName String?
+  email       String
+
+  @@index([githubId])
 }
 
 model UserConfirmationToken {
