@@ -5,7 +5,7 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { UserRepository } from '../../infrastructure/user.repository';
 import { IsBoolean, IsEmail, IsString, validateSync } from 'class-validator';
-import { GoogleAuthService } from '../../infrastructure/google-auth.service';
+import { EmailAuthService } from '../../infrastructure/email-auth.service';
 
 export const LoginByGoogleCodes = {
   Success: Symbol('success'),
@@ -49,7 +49,7 @@ export class LoginByGoogleUseCase {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    private readonly googleAuthService: GoogleAuthService,
+    private readonly emailAuthService: EmailAuthService,
   ) { }
 
   public async execute(
@@ -107,6 +107,7 @@ export class LoginByGoogleUseCase {
               email_verified: googleEmailVerified,
             },
           });
+        await this.emailAuthService.successRegistration(googleEmail);
         notification.setData(userId);
       });
     } catch (e) {

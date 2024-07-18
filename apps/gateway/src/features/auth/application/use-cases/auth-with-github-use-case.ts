@@ -44,6 +44,7 @@ export class AuthWithGithubUseCase
               email: user.email,
               createdAt: currentDate,
             });
+          await this.emailAuthService.successRegistration(user.email);
           // notification.setData(createdUser.id);
           return { username: createdUser.username, id: createdUser.id };
         }
