@@ -37,11 +37,6 @@ export class UserRepository {
     });
     return user;
   }
-  public async generateUniqueUsername(): Promise<string> {
-    const result = await this.txHost.tx
-      .$queryRaw`SELECT set_sequential_username() AS username`;
-    return result[0].username;
-  }
 
   public async generateUniqueUsername(): Promise<string> {
     const result = await this.txHost.tx
@@ -209,7 +204,6 @@ export class UserRepository {
     });
   }
 
-
   public async createConfirmedUserWithGithub(
     user: UserFromGithub,
     { username, email, createdAt },
@@ -220,7 +214,6 @@ export class UserRepository {
         email: email,
         createdAt: createdAt,
         isConfirmed: true,
-        hashPassword: 'null', //обязательно убрать!!!!!!!!!!! hashpasword вообще не должен тут быть!!!!!!!
         userGithubInfo: {
           create: {
             githubId: user.githubId,
@@ -256,7 +249,7 @@ export class UserRepository {
   public async deleteAll() {
     await this.txHost.tx.userGithubInfo.deleteMany({});
     return await this.txHost.tx.user.deleteMany({});
-
+  }
   public async getUserByGoogleSub(sub: string): Promise<User> {
     const user = await this.txHost.tx.user.findFirst({
       where: {

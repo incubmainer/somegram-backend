@@ -9,10 +9,8 @@ import {
   Res,
   UseGuards,
   NotFoundException,
-  Get,
   UnauthorizedException,
   Get,
-  Query,
   Req,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
@@ -25,7 +23,7 @@ import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.inpu
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
 import { LoginSwagger } from './swagger/login.swagger';
@@ -54,13 +52,11 @@ import { GoogleAuthService } from '../infrastructure/google-auth.service';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../application/auth.service';
 import { UserRepository } from '../infrastructure/user.repository';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
 import { AuthWithGithubCommand } from '../application/use-cases/auth-with-github-use-case';
 import { randomUUID } from 'crypto';
-import { GoogleAuthCallbackQueryInputDto } from './dto/input-dto/google-auth-callback-query.input-dto';
 import {
   LoginByGoogleCodes,
   LoginByGoogleCommand,
@@ -158,6 +154,7 @@ export class AuthController {
   async googleAuthCallback(
     @GoogleUser() googleProfile: GoogleProfile | null,
     @Res() response: Response,
+    @Req() request: Request,
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ): Promise<any> {
@@ -195,12 +192,13 @@ export class AuthController {
     const accesAndRefreshTokens = await this.commandBus.execute(
       new LoginUserCommand(userId, ip, title),
     );
+    const origin = request.headers.origin || '';
     response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .send({ accessToken: accesAndRefreshTokens.accessToken });
+      .redirect(`${origin}/?token=${accesAndRefreshTokens.accessToken}`);
   }
 
   @Post('restore-password')
@@ -311,14 +309,11 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth(@Req() req) {}
+  async githubAuth() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   async githubAuthCallback(@Req() req, @Res() res: Response) {
-    const githubRefirectUri = process.env.GITHUB_REDIRECT_URI;
-    const origin = req.headers.origin;
-    console.log('Origin:', origin);
     const user: UserFromGithub = req.user;
     const deviceId = randomUUID();
     const userNameAndId = await this.commandBus.execute(
@@ -329,12 +324,13 @@ export class AuthController {
       userNameAndId.id,
       deviceId,
     );
+    const origin = req.headers.origin || '';
     res
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${githubRefirectUri}?token=${accesToken.access_token}`);
+      .redirect(`${origin}/?token=${accesToken.access_token}`);
   }
 
   @Post('delete-all')

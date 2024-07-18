@@ -29,10 +29,15 @@ import { MockRecapchaService } from '../../common/utils/mock-recapcha.service';
 import { RestorePasswordConfirmationUseCase } from './application/use-cases/restore-password-confirmation.use-case';
 import { GithubStrategy } from './strategies/github.strategy';
 import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-use-case';
-
-const useCases = [LoginUserUseCase, LogoutUseCase, AuthWithGithubUseCase, LoginByGoogleUseCase];
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 import { GoogleStrategy } from './strategies/google.strategy';
+
+const useCases = [
+  LoginUserUseCase,
+  LogoutUseCase,
+  AuthWithGithubUseCase,
+  LoginByGoogleUseCase,
+];
 
 @Module({
   imports: [
@@ -73,4 +78,4 @@ import { GoogleStrategy } from './strategies/google.strategy';
     GoogleAuthService,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

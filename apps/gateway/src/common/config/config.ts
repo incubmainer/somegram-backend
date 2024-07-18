@@ -17,6 +17,7 @@ class FinalConfig {
   readonly app: AppConfig;
   readonly email: EmailConfig;
   readonly frontendUrls: FrontendUrlsConfig;
+  readonly auth: AuthConfig;
   readonly githubAuth: GithubAuthConfig;
   readonly google: GoogleConfig;
 }
