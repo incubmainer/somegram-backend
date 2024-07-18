@@ -21,7 +21,6 @@ import {
   tokensLivesConstants,
 } from '../../common/config/constants/jwt-basic-constants';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
-import { GoogleAuthService } from './infrastructure/google-auth.service';
 import { LogoutUseCase } from './application/use-cases/logout-use-case';
 import { RestorePasswordUseCase } from './application/use-cases/restore-password.use-case';
 import { RecapchaService } from '../../common/utils/recapcha.service';
@@ -75,7 +74,6 @@ const useCases = [
     SecurityDevicesRepository,
     SecurityDevicesService,
     ...useCases,
-    GoogleAuthService,
   ],
 })
 export class AuthModule { }

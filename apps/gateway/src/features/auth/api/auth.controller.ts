@@ -48,7 +48,6 @@ import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-c
 import { CurrentUserId } from './decorators/current-user-id-param.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
 import { UserAgent } from './decorators/user-agent.decorator';
-import { GoogleAuthService } from '../infrastructure/google-auth.service';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
@@ -73,7 +72,6 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly authService: AuthService,
     private readonly usersRepository: UserRepository,
-    private readonly googleAuthService: GoogleAuthService,
   ) { }
 
   @Post('registration')
@@ -331,10 +329,5 @@ export class AuthController {
         secure: true,
       })
       .redirect(`${origin}/?token=${accesToken.access_token}`);
-  }
-
-  @Post('delete-all')
-  async deleteAll() {
-    await this.usersRepository.deleteAll();
   }
 }
