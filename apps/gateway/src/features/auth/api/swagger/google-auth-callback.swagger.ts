@@ -9,11 +9,6 @@ export function GoogleAuthCallbackSwagger() {
       status: 200,
       description:
         'Login successful. The refreshToken is set in an HTTP-only cookie.',
-      schema: {
-        example: {
-          accessToken: 'yourAccessTokenHere',
-        },
-      },
     }),
     ApiResponse({
       status: 400,
