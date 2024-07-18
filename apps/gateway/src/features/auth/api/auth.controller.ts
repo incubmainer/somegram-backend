@@ -54,7 +54,10 @@ import { RefreshToken } from './decorators/refresh-token.decorator';
 import { AuthService } from '../application/auth.service';
 import { UserRepository } from '../infrastructure/user.repository';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
-import { AuthWithGithubCommand } from '../application/use-cases/auth-with-github-use-case';
+import {
+  AuthWithGithubCommand,
+  LoginWithGithubCodes,
+} from '../application/use-cases/auth-with-github-use-case';
 import { randomUUID } from 'crypto';
 import {
   LoginByGoogleCodes,
@@ -72,7 +75,7 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly authService: AuthService,
     private readonly usersRepository: UserRepository,
-  ) { }
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -144,7 +147,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() { }
+  async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -307,27 +310,47 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth() { }
+  async githubAuth() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  async githubAuthCallback(@Req() req, @Res() res: Response) {
+  async githubAuthCallback(
+    @Req() req,
+    @Res() res: Response,
+    @IpAddress() ip?: string,
+    @UserAgent() userAgent?: string,
+  ) {
     const user: UserFromGithub = req.user;
-    const deviceId = randomUUID();
-    const userNameAndId = await this.commandBus.execute(
+    const notification: Notification<string> = await this.commandBus.execute(
       new AuthWithGithubCommand(user),
     );
-    const accesToken = await this.authService.createAccessToken(userNameAndId);
-    const refreshToken = await this.authService.createRefreshToken(
-      userNameAndId.id,
-      deviceId,
+    const noteCode = notification.getCode();
+    if (noteCode === LoginWithGithubCodes.TransactionError) {
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+    }
+    const userId = notification.getDate();
+    if (!ip) {
+      throw new NotFoundException({
+        error: 'login failed',
+        message: 'Unknown ip address',
+        details: {
+          ip: 'Invlid ip address',
+        },
+      });
+    }
+    const title = userAgent || 'Mozilla';
+    const accesAndRefreshTokens = await this.commandBus.execute(
+      new LoginUserCommand(userId, ip, title),
     );
+
     const origin = req.headers.origin || '';
     res
-      .cookie('refreshToken', refreshToken, {
+      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?token=${accesToken.access_token}`);
+      .redirect(`${origin}/?token=${accesAndRefreshTokens.accessToken}`);
   }
 }

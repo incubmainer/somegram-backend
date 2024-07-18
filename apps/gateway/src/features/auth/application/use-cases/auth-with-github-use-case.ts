@@ -12,22 +12,25 @@ export const LoginWithGithubCodes = {
   TransactionError: Symbol('transactionError'),
 };
 
+type UserId = string;
+
 export class AuthWithGithubCommand {
-  constructor(public user: UserFromGithub) { }
+  constructor(public user: UserFromGithub) {}
 }
 
 @CommandHandler(AuthWithGithubCommand)
 export class AuthWithGithubUseCase
-  implements ICommandHandler<AuthWithGithubCommand> {
+  implements ICommandHandler<AuthWithGithubCommand>
+{
   constructor(
     private userRepository: UserRepository,
     private readonly emailAuthService: EmailAuthService,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
-  async execute(command: AuthWithGithubCommand): Promise<Notification<void>> {
-    const notification = new Notification(LoginWithGithubCodes.Success);
+  ) {}
+  async execute(command: AuthWithGithubCommand): Promise<Notification<UserId>> {
+    const notification = new Notification<UserId>(LoginWithGithubCodes.Success);
     const { user } = command;
     try {
       await this.txHost.withTransaction(async () => {
@@ -45,22 +48,22 @@ export class AuthWithGithubUseCase
               createdAt: currentDate,
             });
           await this.emailAuthService.successRegistration(user.email);
-          // notification.setData(createdUser.id);
-          return { username: createdUser.username, id: createdUser.id };
+          return notification.setData(createdUser.id);
         }
         if (isExistUser && isExistUser.userGithubInfo) {
           if (isExistUser.userGithubInfo.email === user.email) {
             return { username: isExistUser.username, id: isExistUser.id };
           }
           await this.userRepository.changeGithubEmail(isExistUser.id, user);
-          return { username: isExistUser.username, id: isExistUser.id };
+          return notification.setData(isExistUser.id);
         }
         if (isExistUser && !isExistUser.userGithubInfo) {
           await this.userRepository.addGithubInfo(user, isExistUser.id);
           const userWithGithub = await this.userRepository.getUserByEmail(
             user.email,
           );
-          return { username: userWithGithub.username, id: userWithGithub.id };
+          notification.setData(userWithGithub.id);
+          return;
         }
       });
     } catch (e) {

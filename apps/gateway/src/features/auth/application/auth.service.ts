@@ -27,15 +27,15 @@ export class AuthService {
 
     return user;
   }
-  async createAccessToken(userNameAndId) {
-    const payload = { username: userNameAndId.username, sub: userNameAndId.id };
-    return {
-      access_token: this.jwtService.sign(payload, {
-        secret: jwtConstants.JWT_SECRET,
-        expiresIn: tokensLivesConstants['1hour'],
-      }),
-    };
-  }
+  // async createAccessToken(userNameAndId) {
+  //   const payload = { username: userNameAndId.username, sub: userNameAndId.id };
+  //   return {
+  //     access_token: this.jwtService.sign(payload, {
+  //       secret: jwtConstants.JWT_SECRET,
+  //       expiresIn: tokensLivesConstants['1hour'],
+  //     }),
+  //   };
+  // }
   async login(userId: string) {
     const payload = { sub: userId };
 
