@@ -1,11 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserFromGithub } from '../../api/dto/input-dto/user-from-github';
 import { UserRepository } from '../../infrastructure/user.repository';
-import { AuthService } from '../auth.service';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Notification } from '../../../../common/domain/notification';
+import { EmailAuthService } from '../../infrastructure/email-auth.service';
 
 export const LoginWithGithubCodes = {
   Success: Symbol('success'),
@@ -13,20 +13,19 @@ export const LoginWithGithubCodes = {
 };
 
 export class AuthWithGithubCommand {
-  constructor(public user: UserFromGithub) {}
+  constructor(public user: UserFromGithub) { }
 }
 
 @CommandHandler(AuthWithGithubCommand)
 export class AuthWithGithubUseCase
-  implements ICommandHandler<AuthWithGithubCommand>
-{
+  implements ICommandHandler<AuthWithGithubCommand> {
   constructor(
     private userRepository: UserRepository,
-    private authService: AuthService,
+    private readonly emailAuthService: EmailAuthService,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+  ) { }
   async execute(command: AuthWithGithubCommand): Promise<Notification<void>> {
     const notification = new Notification(LoginWithGithubCodes.Success);
     const { user } = command;
@@ -36,15 +35,8 @@ export class AuthWithGithubUseCase
           user.email,
         );
         if (!isExistUser) {
-          //заменить эту функцию на метод из репозитория
-          function getRandomString() {
-            const min = 100;
-            const max = 999;
-            const randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-            return randomNum.toString();
-          }
-
-          const uniqueUsername = user.username + getRandomString();
+          const uniqueUsername =
+            await this.userRepository.generateUniqueUsername();
           const currentDate = new Date();
           const createdUser =
             await this.userRepository.createConfirmedUserWithGithub(user, {

@@ -43,4 +43,14 @@ export class EmailAuthService {
       `,
     );
   }
+
+  public async successRegistration(email: string) {
+    await this.emailSender.sendHtml(
+      email,
+      'Registration success',
+      `
+        <p>Registration success</p>
+      `,
+    );
+  }
 }
