@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsUserEmail } from '../../../application/decorators/is-user-email';
 import { IsUserPassword } from '../../../application/decorators/is-user-password';
 import { IsUsername } from '../../../application/decorators/is-username';
+import { IsString } from 'class-validator';
 
 export class RegistrationBodyInputDto {
   @ApiProperty({
@@ -31,4 +32,12 @@ export class RegistrationBodyInputDto {
   })
   @IsUserPassword()
   password: string;
+  @ApiProperty({
+    type: String,
+    description: 'this is html of email. Params: ##name##, ##token##',
+    example:
+      '<b>Hello, ##name##!</b><br/>Please confirm your email by clicking on the link below:<br/><a href="http://localhost:3000/confirm-email/##token##">Confirm email</a>. If it doesn\'t work, copy and paste the following link in your browser:<br/>http://localhost:3000/confirm-email/##token##',
+  })
+  @IsString()
+  html: string;
 }

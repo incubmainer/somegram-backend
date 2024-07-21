@@ -67,6 +67,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
+import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -75,14 +76,19 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly authService: AuthService,
     private readonly usersRepository: UserRepository,
-  ) {}
+  ) { }
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
   @RegistrationSwagger()
   public async registration(@Body() body: RegistrationBodyInputDto) {
     const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationCommand(body.username, body.email, body.password),
+      new RegistrationCommand(
+        body.username,
+        body.email,
+        body.password,
+        body.html,
+      ),
     );
     const code = notification.getCode();
     if (code === RegistrationCodes.Success)
@@ -147,7 +153,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  async googleAuth() { }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -199,7 +205,7 @@ export class AuthController {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?token=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
   }
 
   @Post('restore-password')
@@ -207,7 +213,7 @@ export class AuthController {
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
     const notification: Notification<null> = await this.commandBus.execute(
-      new RestorePasswordCommand(body.email, body.recaptchaToken),
+      new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
     );
     const code = notification.getCode();
     if (code === RestorePasswordCodes.Success)
@@ -310,10 +316,11 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth() {}
+  async githubAuth() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
+  @GithubAuthCallbackSwagger()
   async githubAuthCallback(
     @Req() req,
     @Res() res: Response,

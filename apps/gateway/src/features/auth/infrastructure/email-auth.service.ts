@@ -17,30 +17,31 @@ export class EmailAuthService {
     this.frontendRestorePasswordUrl = config.FRONTEND_RESTORE_PASSWORD_URL;
   }
   public async sendConfirmationEmail(dto: {
+    name: string;
     email: string;
     confirmationToken: string;
+    html: string;
   }) {
-    const validToken = encodeURIComponent(dto.confirmationToken);
     await this.emailSender.sendHtml(
       dto.email,
       'Confirm your email',
-      `
-      <p>Click <a href="${this.frontendConfirmationUrl}?token=${validToken}">here</a> to confirm your email</p>
-      code: ${dto.confirmationToken}
-      `,
+      dto.html
+        .replace('##name##', dto.name)
+        .replace('##token##', dto.confirmationToken),
     );
   }
   public async sendRestorePasswordCode(dto: {
+    name: string;
     email: string;
     restorePasswordCode: string;
+    html: string;
   }) {
     await this.emailSender.sendHtml(
       dto.email,
       'Restore password',
-      `
-        <Click <a href="${this.frontendRestorePasswordUrl}?code=${dto.restorePasswordCode}">here</a> to restore your password</p>
-        code: ${dto.restorePasswordCode}
-      `,
+      dto.html
+        .replace('##name##', dto.name)
+        .replace('##code##', dto.restorePasswordCode),
     );
   }
 
@@ -49,7 +50,7 @@ export class EmailAuthService {
       email,
       'Registration success',
       `
-        <p>Registration success</p>
+        <p>Registration on somegram success</p>
       `,
     );
   }

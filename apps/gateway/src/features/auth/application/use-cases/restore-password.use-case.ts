@@ -23,9 +23,12 @@ export class RestorePasswordCommand {
   email: string;
   @IsString()
   recaptchaToken: string;
-  constructor(email: string, recaptchaToken: string) {
+  @IsString()
+  html: string;
+  constructor(email: string, recaptchaToken: string, html: string) {
     this.email = email;
     this.recaptchaToken = recaptchaToken;
+    this.html = html;
     const errors = validateSync(this);
     if (errors.length) throw new Error('Validation failed');
   }
@@ -78,8 +81,10 @@ export class RestorePasswordUseCase {
           ),
         });
         await this.emailAuthService.sendRestorePasswordCode({
+          name: user.username,
           email,
           restorePasswordCode: code,
+          html: command.html,
         });
       });
     } catch (e) {

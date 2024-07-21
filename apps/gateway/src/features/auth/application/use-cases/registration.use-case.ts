@@ -7,7 +7,7 @@ import { UserRepository } from '../../infrastructure/user.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { IsUsername } from '../decorators/is-username';
-import { IsEmail, validateSync } from 'class-validator';
+import { IsEmail, IsString, validateSync } from 'class-validator';
 import { IsUserPassword } from '../decorators/is-user-password';
 
 export const RegistrationCodes = {
@@ -24,10 +24,13 @@ export class RegistrationCommand {
   public readonly email: string;
   @IsUserPassword()
   public readonly password: string;
-  constructor(username: string, email: string, password: string) {
+  @IsString()
+  html: string;
+  constructor(username: string, email: string, password: string, html: string) {
     this.username = username;
     this.email = email;
     this.password = password;
+    this.html = html;
     const errors = validateSync(this);
     if (errors.length) throw new Error('Validation failed');
   }
@@ -48,7 +51,7 @@ export class RegistrationUseCase {
     command: RegistrationCommand,
   ): Promise<Notification<void>> {
     const notification = new Notification(RegistrationCodes.Success);
-    const { username, email, password } = command;
+    const { username, email, password, html } = command;
     try {
       await this.txHost.withTransaction(async () => {
         const currentDate = new Date();
@@ -97,8 +100,10 @@ export class RegistrationUseCase {
           confirmationTokenExpiresAt,
         });
         await this.emailAuthService.sendConfirmationEmail({
+          name: username,
           email,
           confirmationToken,
+          html,
         });
       });
     } catch (e) {

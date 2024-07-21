@@ -17,4 +17,13 @@ export class RestorePasswordBodyInputDto {
   })
   @IsString()
   public recaptchaToken: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'this is html of email. Params: ##name##, ##code##',
+    example:
+      '<b>Hello, ##name##!</b><br/>Please restore you password by clicking on the link below:<br/><a href="http://localhost:3000/restore-password/##code##">Restore password</a>. If it doesn\'t work, copy and paste the following link in your browser:<br/>http://localhost:3000/confirm-email/##code##',
+  })
+  @IsString()
+  public html: string;
 }
