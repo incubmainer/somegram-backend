@@ -56,4 +56,26 @@ export class SecurityDevicesRepository {
     if (!result) return null;
     return true;
   }
+  async isValidRefreshTokenWithDeviceId(
+    isOkLastactiveDate: string,
+    deviceId1: string,
+  ): Promise<SecurityDevices | null> {
+    const isValidToken = await this.txHost.tx.securityDevices.findFirst({
+      where: { lastActiveDate: isOkLastactiveDate, deviceId: deviceId1 },
+    });
+    if (!isValidToken) return null;
+    return isValidToken;
+  }
+
+  async updateLastActiveDate(
+    deviceId: string,
+    lastActiveDate: string,
+  ): Promise<boolean> {
+    const result = await this.txHost.tx.securityDevices.update({
+      where: { deviceId: deviceId },
+      data: { lastActiveDate: lastActiveDate },
+    });
+    if (!result) return null;
+    return true;
+  }
 }

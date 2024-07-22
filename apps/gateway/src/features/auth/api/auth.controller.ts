@@ -67,6 +67,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
+import { RefreshTokenCommand } from '../application/use-cases/refresh-token-use-case';
+import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -306,6 +308,25 @@ export class AuthController {
       new LogoutCommand(refreshToken),
     );
     return result;
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @RefreshTokenSwagger()
+  async refreshToken(@Req() req, @Res() res: Response) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException();
+    }
+    const tokens = await this.commandBus.execute(
+      new RefreshTokenCommand(refreshToken),
+    );
+    return res
+      .cookie('refreshToken', tokens.newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .send(tokens.accessToken);
   }
 
   @Get('github')

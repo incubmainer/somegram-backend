@@ -30,12 +30,14 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
 
 const useCases = [
   LoginUserUseCase,
   LogoutUseCase,
   AuthWithGithubUseCase,
   LoginByGoogleUseCase,
+  RefreshTokenUseCase,
 ];
 
 @Module({
@@ -76,4 +78,4 @@ const useCases = [
     ...useCases,
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

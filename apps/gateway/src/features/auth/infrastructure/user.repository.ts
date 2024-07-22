@@ -16,7 +16,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
+  ) {}
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -287,5 +287,15 @@ export class UserRepository {
       },
     });
     return user.id;
+  }
+
+  async findUserById(currentUserId: string): Promise<User | null> {
+    const user = await this.txHost.tx.user.findFirst({
+      where: { id: currentUserId },
+    });
+    if (!user) {
+      return null;
+    }
+    return user;
   }
 }
