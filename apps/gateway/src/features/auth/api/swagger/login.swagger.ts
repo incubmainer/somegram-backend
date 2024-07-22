@@ -7,7 +7,8 @@ export function LoginSwagger() {
     ApiOperation({ summary: 'User Login' }),
     ApiResponse({
       status: 200,
-      description: 'Login success',
+      description: `Login successful.
+The refreshToken is set in an HTTP-only cookie.`,
       schema: {
         example: {
           accessToken: 'asdoifja3rfjl312r.aoifj23fl.jlwoif',
