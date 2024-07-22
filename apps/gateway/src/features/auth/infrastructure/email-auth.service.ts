@@ -26,8 +26,8 @@ export class EmailAuthService {
       dto.email,
       'Confirm your email',
       dto.html
-        .replace('##name##', dto.name)
-        .replace('##token##', dto.confirmationToken),
+        .replaceAll('##name##', dto.name)
+        .replaceAll('##token##', dto.confirmationToken),
     );
   }
   public async sendRestorePasswordCode(dto: {
@@ -40,8 +40,8 @@ export class EmailAuthService {
       dto.email,
       'Restore password',
       dto.html
-        .replace('##name##', dto.name)
-        .replace('##code##', dto.restorePasswordCode),
+        .replaceAll('##name##', dto.name)
+        .replaceAll('##code##', dto.restorePasswordCode),
     );
   }
 
