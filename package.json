@@ -23,7 +23,7 @@
     "prisma:migrate-dev:gateway": "dotenv -e ./apps/gateway/.env.dev -- prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
     "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
-    "start:dev:gateway": "NODE_ENV=development nest start gateway --watch",
+    "start:dev:gateway": "cross-env NODE_ENV=development nest start gateway --watch",
     "start:gateway": "NODE_ENV=production node dist/apps/gateway/main"
   },
   "dependencies": {
@@ -73,6 +73,7 @@
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "cross-env": "^7.0.3",
     "dotenv-cli": "^7.4.2",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
