@@ -21,9 +21,17 @@ model User {
   securityDevices   SecurityDevices[]
   userGithubInfo    UserGithubInfo?
   googleInfo        UserGoogleInfo?
+  userAvatar        UserAvatar?
 
   @@index([username])
   @@index([email])
+}
+
+model UserAvatar {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarKey String
+  createdAt DateTime
 }
 
 model UserGithubInfo {

@@ -34,6 +34,14 @@ export const appSetting = (app: INestApplication) => {
   );
   const config = new DocumentBuilder()
     .setTitle('api')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
     .setDescription('api swagger')
     .setVersion('1.0')
     .build();

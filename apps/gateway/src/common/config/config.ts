@@ -11,6 +11,7 @@ import {
   GithubAuthConfig,
 } from './configs/github-auth.config';
 import { googleConfig, GoogleConfig } from './configs/google.config';
+import { s3Config, S3Config } from './configs/s3.config';
 
 class FinalConfig {
   readonly db: DbConfig;
@@ -20,6 +21,7 @@ class FinalConfig {
   readonly auth: AuthConfig;
   readonly githubAuth: GithubAuthConfig;
   readonly google: GoogleConfig;
+  readonly s3: S3Config;
 }
 
 export const finalConfig = (): FinalConfig => {
@@ -31,5 +33,6 @@ export const finalConfig = (): FinalConfig => {
     auth: authConfig(),
     githubAuth: githubAuthConfig(),
     google: googleConfig(),
+    s3: s3Config(),
   };
 };

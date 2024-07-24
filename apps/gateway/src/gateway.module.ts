@@ -4,6 +4,7 @@ import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { finalConfig } from './common/config/config';
 import { AuthModule } from './features/auth/auth.module';
 import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
+import { UsersModule } from './features/users/users.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ClsTransactionalModule } from './common/modules/cls-transactional.modul
     }),
     ClsTransactionalModule,
     AuthModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
