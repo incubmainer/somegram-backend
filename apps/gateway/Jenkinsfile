@@ -40,6 +40,7 @@ pipeline {
                        export NVM_DIR="$HOME/.nvm"
                        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
                        nvm use --lts
+                       yarn prisma:gen:gateway
                        yarn test:e2e
                     '''
                 }
