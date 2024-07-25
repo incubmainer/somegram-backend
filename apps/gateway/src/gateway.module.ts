@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { GatewayController } from './gateway.controller';
-import { GatewayService } from './gateway.service';
-import { PrismaClient } from '@prisma/gateway';
 import { ConfigModule } from '@nestjs/config';
 import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { finalConfig } from './common/config/config';
+import { AuthModule } from './features/auth/auth.module';
+import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
+import { UsersModule } from './features/users/users.module';
 
 @Module({
   imports: [
@@ -14,8 +14,11 @@ import { finalConfig } from './common/config/config';
       envFilePath: loadEnvFileNames(),
       load: [finalConfig],
     }),
+    ClsTransactionalModule,
+    AuthModule,
+    UsersModule,
   ],
-  controllers: [GatewayController],
-  providers: [GatewayService, PrismaClient],
+  controllers: [],
+  providers: [],
 })
 export class GatewayModule { }

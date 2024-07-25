@@ -9,7 +9,77 @@ generator client {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  position String
+  id                String                 @id @default(uuid())
+  username          String
+  email             String
+  hashPassword      String?
+  createdAt         DateTime
+  updatedAt         DateTime?
+  isConfirmed       Boolean
+  confirmationToken UserConfirmationToken?
+  resetPasswordCode UserResetPasswordCode?
+  securityDevices   SecurityDevices[]
+  userGithubInfo    UserGithubInfo?
+  googleInfo        UserGoogleInfo?
+  userAvatar        UserAvatar?
+
+  @@index([username])
+  @@index([email])
+}
+
+model UserAvatar {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarKey String
+  createdAt DateTime
+}
+
+model UserGithubInfo {
+  userId      String  @unique()
+  User        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId    String
+  userName    String
+  displayName String?
+  email       String
+
+  @@index([githubId])
+}
+
+model UserConfirmationToken {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  expiredAt DateTime
+  createdAt DateTime
+
+  @@index([token])
+}
+
+model UserResetPasswordCode {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  expiredAt DateTime
+  createdAt DateTime
+
+  @@index([code])
+}
+
+model SecurityDevices {
+  userId         String?
+  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip             String
+  deviceId       String  @unique()
+  lastActiveDate String
+  title          String
+
+  @@index([deviceId])
+}
+
+model UserGoogleInfo {
+  userId        String  @unique()
+  User          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sub           String  @unique()
+  email         String
+  emailVerified Boolean
 }
