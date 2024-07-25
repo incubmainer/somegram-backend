@@ -13,6 +13,8 @@ export const appSetting = (app: INestApplication) => {
   const configService = app.get(ConfigService);
   app.use(cookieParser());
   const appConfig = configService.get<AppConfig>('app');
+  const globalPrefix = appConfig.GLOBAL_PREFIX;
+  const cleanGlobalPrefix = globalPrefix.replace(/\/$/, '');
   app.setGlobalPrefix(appConfig.GLOBAL_PREFIX);
   app.useGlobalPipes(
     new ValidationPipe({
@@ -46,5 +48,6 @@ export const appSetting = (app: INestApplication) => {
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+  const swaggerPath = `${cleanGlobalPrefix}/swagger`;
+  SwaggerModule.setup(swaggerPath, app, document);
 };
