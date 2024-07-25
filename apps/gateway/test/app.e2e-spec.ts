@@ -24,13 +24,12 @@ describe('GatewayController (e2e)', () => {
   });
 
   it('/ (GET)', async () => {
-    const req = await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send({
-        email: 'some@mail.com',
-        password: 'abcABC123+',
-        username: 'SomeName',
-      });
+    await request(app.getHttpServer()).post('/auth/registration').send({
+      email: 'some@mail.com',
+      password: 'abcABC123+',
+      username: 'SomeName',
+      html: 'some html',
+    });
   });
 
   it('should Log in user ', async () => {
