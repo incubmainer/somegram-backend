@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function RestorePasswordSwagger() {
@@ -6,17 +6,17 @@ export function RestorePasswordSwagger() {
     ApiTags('auth'),
     ApiOperation({ summary: 'Restore Password' }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description: 'Restore password successful',
       schema: {
         example: {
-          statusCode: 200,
+          statusCode: HttpStatus.OK,
           message: 'Restore password successful',
         },
       },
     }),
     ApiResponse({
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Restore password failed',
       schema: {
         oneOf: [
@@ -37,11 +37,11 @@ export function RestorePasswordSwagger() {
       },
     }),
     ApiResponse({
-      status: 422,
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: 422,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {
@@ -55,7 +55,7 @@ export function RestorePasswordSwagger() {
       },
     }),
     ApiResponse({
-      status: 500,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
       schema: {
         example: {

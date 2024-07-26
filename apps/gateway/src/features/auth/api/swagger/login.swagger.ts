@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function LoginSwagger() {
@@ -6,7 +6,7 @@ export function LoginSwagger() {
     ApiTags('auth'),
     ApiOperation({ summary: 'User Login' }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description: `Login successful.
 The refreshToken is set in an HTTP-only cookie.`,
       schema: {
@@ -16,22 +16,22 @@ The refreshToken is set in an HTTP-only cookie.`,
       },
     }),
     ApiResponse({
-      status: 401,
+      status: HttpStatus.UNAUTHORIZED,
       description: 'Wrong UserName or Password',
       schema: {
         example: {
-          statusCode: 401,
+          statusCode: HttpStatus.UNAUTHORIZED,
           error: 'login_failed',
           message: 'Login failed.',
         },
       },
     }),
     ApiResponse({
-      status: 422,
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: 422,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {

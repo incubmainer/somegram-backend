@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 export function RefreshTokenSwagger() {
@@ -9,7 +9,7 @@ export function RefreshTokenSwagger() {
         'Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing) ',
     }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description:
         'Returns JWT accessToken in body and JWT refreshToken in cookie.',
       schema: {
@@ -19,7 +19,7 @@ export function RefreshTokenSwagger() {
       },
     }),
     ApiResponse({
-      status: 401,
+      status: HttpStatus.UNAUTHORIZED,
       description: 'Unauthorised',
     }),
   );

@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function RestorePasswordConfirmationSwagger() {
@@ -6,17 +6,17 @@ export function RestorePasswordConfirmationSwagger() {
     ApiTags('auth'),
     ApiOperation({ summary: 'Restore Password Confirmation' }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description: 'Restore password confirmation successful',
       schema: {
         example: {
-          statusCode: 200,
+          statusCode: HttpStatus.OK,
           message: 'Restore password confirmation successful',
         },
       },
     }),
     ApiResponse({
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Restore password confirmation failed due to expired code',
       schema: {
         oneOf: [
@@ -38,11 +38,11 @@ export function RestorePasswordConfirmationSwagger() {
       },
     }),
     ApiResponse({
-      status: 422,
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: 422,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {
