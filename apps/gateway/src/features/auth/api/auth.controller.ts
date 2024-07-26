@@ -70,14 +70,16 @@ import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagge
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 import { RefreshTokenCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
+import { ConfigService } from '@nestjs/config';
+import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
+import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly authService: AuthService,
-    private readonly usersRepository: UserRepository,
+    private readonly configService: ConfigService,
   ) { }
 
   @Post('registration')
@@ -208,6 +210,15 @@ export class AuthController {
         secure: true,
       })
       .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+  }
+
+  @Get('recaptcha-site-key')
+  @RecaptchaSiteKeySwagger()
+  async recaptchaSiteKey() {
+    const authConfig = this.configService.get<AuthConfig>('auth');
+    return {
+      recaptchaSiteKey: authConfig.recaptchaSiteKey,
+    };
   }
 
   @Post('restore-password')

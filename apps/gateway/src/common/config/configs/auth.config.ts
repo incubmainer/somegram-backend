@@ -2,6 +2,7 @@ export class AuthConfig {
   public readonly restorePasswordCodeExpireAfterMiliseconds: number;
   public readonly restorePasswordCodeLength: number;
   public readonly recaptchaSecretKey: string;
+  public readonly recaptchaSiteKey: string;
 }
 
 export const authConfig = (): AuthConfig => {
@@ -32,9 +33,14 @@ export const authConfig = (): AuthConfig => {
   if (!recaptchaSecretKey) {
     throw new Error('RECAPTCHA_SECRET_KEY is not defined');
   }
+  const recaptchaSiteKey = process.env.RECAPTCHA_SITE_KEY;
+  if (!recaptchaSiteKey) {
+    throw new Error('RECAPTCHA_SITE_KEY is not defined');
+  }
   return {
     restorePasswordCodeExpireAfterMiliseconds,
     restorePasswordCodeLength,
     recaptchaSecretKey,
+    recaptchaSiteKey,
   };
 };

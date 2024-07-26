@@ -137,6 +137,11 @@ spec:
                 secretKeyRef:
                   name: somegram-backend-production-config-secret
                   key: GLOBAL_PREFIX
+            - name: RECAPTCHA_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: somegram-backend-production-config-secret
+                  key: RECAPTCHA_SITE_KEY
             - name: PORT
               valueFrom:
                 secretKeyRef:
