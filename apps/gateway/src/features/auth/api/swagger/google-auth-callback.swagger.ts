@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function GoogleAuthCallbackSwagger() {
@@ -6,14 +6,14 @@ export function GoogleAuthCallbackSwagger() {
     ApiTags('auth'),
     ApiOperation({ summary: 'Google Authentication Callback' }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description: `Login successful.
 Redirect to home page. ({homePage}/?accessToken={accessToken})
 The refreshToken is set in an HTTP-only cookie.
 The accessToken set to the query parameter.`,
     }),
     ApiResponse({
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Login failed due to wrong email',
       schema: {
         example: {
@@ -23,7 +23,7 @@ The accessToken set to the query parameter.`,
       },
     }),
     ApiResponse({
-      status: 404,
+      status: HttpStatus.NOT_FOUND,
       description: 'Unknown IP address',
       schema: {
         example: {
@@ -36,11 +36,11 @@ The accessToken set to the query parameter.`,
       },
     }),
     ApiResponse({
-      status: 500,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: 500,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
         },
       },

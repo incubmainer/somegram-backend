@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 export function LogOutSwagger() {
@@ -9,11 +9,11 @@ export function LogOutSwagger() {
         'In cookie client must send correct refreshToken that will be revoked',
     }),
     ApiResponse({
-      status: 204,
+      status: HttpStatus.NO_CONTENT,
       description: 'No content',
     }),
     ApiResponse({
-      status: 401,
+      status: HttpStatus.UNAUTHORIZED,
       description: 'Unauthorised',
     }),
   );

@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function RegistrationConfirmationSwagger() {
@@ -6,17 +6,17 @@ export function RegistrationConfirmationSwagger() {
     ApiTags('auth'),
     ApiOperation({ summary: 'Registration Confirmation' }),
     ApiResponse({
-      status: 200,
+      status: HttpStatus.OK,
       description: 'Registration confirmation successful',
       schema: {
         example: {
-          statusCode: 200,
+          statusCode: HttpStatus.OK,
           message: 'Registration confirmation successful',
         },
       },
     }),
     ApiResponse({
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Registration confirmation failed',
       schema: {
         oneOf: [
@@ -37,11 +37,11 @@ export function RegistrationConfirmationSwagger() {
       },
     }),
     ApiResponse({
-      status: 422,
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: 422,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {
@@ -55,7 +55,7 @@ export function RegistrationConfirmationSwagger() {
       },
     }),
     ApiResponse({
-      status: 500,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
       schema: {
         example: {
