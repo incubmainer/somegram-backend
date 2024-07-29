@@ -80,7 +80,7 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
@@ -157,7 +157,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() { }
+  async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -348,7 +348,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth() { }
+  async githubAuth() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -390,6 +390,6 @@ export class AuthController {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?token=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
   }
 }
