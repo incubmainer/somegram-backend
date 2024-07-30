@@ -1,19 +1,17 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { IsString, validateSync } from 'class-validator';
-import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../infrastructure/avatar.repository';
+import { IsString, validateSync, ValidationError } from 'class-validator';
 import { IsUsername } from '../../../auth/application/decorators/is-username';
 import { IsFirstName } from '../decorators/is-first-name';
 import { IsLastName } from '../decorators/is-last-name';
 import { IsDateOfBirth } from '../decorators/is-date-of-birth';
 import { IsAboutMe } from '../decorators/is-about-me';
+import { UserRepository } from '../../../auth/infrastructure/user.repository';
+import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
 
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
+  UserNotFound: Symbol('userNotFound'),
   ValidationCommandError: Symbol('validationCommandError'),
   TransactionError: Symbol('transactionError'),
 };
@@ -28,7 +26,7 @@ export class FillingUserProfileCommand {
   @IsLastName()
   public readonly lastName: string;
   @IsDateOfBirth()
-  public readonly dateOfBirth: Date;
+  public readonly dateOfBirth: string;
   @IsAboutMe()
   public readonly aboutMe: string;
   constructor(
@@ -36,7 +34,7 @@ export class FillingUserProfileCommand {
     username: string,
     firstName: string,
     lastName: string,
-    dateOfBirth: Date,
+    dateOfBirth: string,
     about: string,
   ) {
     this.userId = userId;
@@ -50,30 +48,42 @@ export class FillingUserProfileCommand {
 
 @CommandHandler(FillingUserProfileCommand)
 export class FillingUserProfileUseCase {
-  constructor(
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-  ) { }
+  constructor(private readonly userRepository: UserRepository) { }
 
   public async execute(
     command: FillingUserProfileCommand,
-  ): Promise<Notification<string>> {
+  ): Promise<Notification<null> | Notification<null, ValidationError>> {
     const errors = validateSync(command);
     if (errors.length) {
-      return new Notification<string>(
+      const note = new Notification<null, ValidationError>(
         FillingUserProfileCodes.ValidationCommandError,
       );
+      note.addErrors(errors);
+      return note;
     }
     const { userId, username, firstName, lastName, dateOfBirth, aboutMe } =
       command;
-    const notification = new Notification<string>(
+    const notification = new Notification<null>(
       FillingUserProfileCodes.Success,
     );
     try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-      });
+      const currentDate = new Date();
+      const dateOfBirthDate = parseDateDDMMYYYY(dateOfBirth);
+      const isUpdated = await this.userRepository.updateUserProfileInfo(
+        userId,
+        {
+          username,
+          firstName,
+          lastName,
+          dateOfBirth: dateOfBirthDate,
+          aboutMe,
+          updatedAt: currentDate,
+        },
+      );
+      if (!isUpdated) {
+        notification.setCode(FillingUserProfileCodes.UserNotFound);
+        return notification;
+      }
     } catch (e) {
       if (notification.getCode() === FillingUserProfileCodes.Success) {
         notification.setCode(FillingUserProfileCodes.TransactionError);

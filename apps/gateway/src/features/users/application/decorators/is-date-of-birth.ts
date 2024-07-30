@@ -13,7 +13,19 @@ export function IsDateOfBirth(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          if (!(value instanceof Date)) {
+          if (typeof value !== 'string') {
+            return false;
+          }
+
+          const dateFormatRegex = /^\d{2}\.\d{2}\.\d{4}$/;
+          if (!dateFormatRegex.test(value)) {
+            return false;
+          }
+
+          const [day, month, year] = value.split('.').map(Number);
+          const dateOfBirth = new Date(year, month - 1, day);
+
+          if (isNaN(dateOfBirth.getTime())) {
             return false;
           }
 
@@ -21,10 +33,10 @@ export function IsDateOfBirth(validationOptions?: ValidationOptions) {
           const thirteenYearsAgo = new Date();
           thirteenYearsAgo.setFullYear(today.getFullYear() - 13);
 
-          return value <= thirteenYearsAgo;
+          return dateOfBirth <= thirteenYearsAgo;
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be a valid date and the person must be older than 13 years`;
+          return `${args.property} must be a valid date in the format dd.mm.yyyy and the person must be older than 13 years`;
         },
       },
     });

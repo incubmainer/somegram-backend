@@ -16,7 +16,7 @@ export class UserRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+  ) { }
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -297,5 +297,31 @@ export class UserRepository {
       return null;
     }
     return user;
+  }
+
+  async updateUserProfileInfo(
+    userId: User['id'],
+    dto: {
+      username: User['username'];
+      firstName: User['firstName'];
+      lastName: User['lastName'];
+      dateOfBirth: User['dateOfBirth'];
+      aboutMe: User['about'];
+      updatedAt: User['updatedAt'];
+    },
+  ): Promise<boolean> {
+    const result = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: {
+        username: dto.username,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        dateOfBirth: dto.dateOfBirth,
+        about: dto.aboutMe,
+        updatedAt: dto.updatedAt,
+      },
+    });
+    const isUpdated = !!result;
+    return isUpdated;
   }
 }
