@@ -8,6 +8,7 @@ import { IsDateOfBirth } from '../decorators/is-date-of-birth';
 import { IsAboutMe } from '../decorators/is-about-me';
 import { UserRepository } from '../../../auth/infrastructure/user.repository';
 import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
+import { IsCityName } from '../decorators/is-city';
 
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
@@ -29,6 +30,8 @@ export class FillingUserProfileCommand {
   public readonly dateOfBirth: string;
   @IsAboutMe()
   public readonly aboutMe: string;
+  @IsCityName()
+  public readonly city: string;
   constructor(
     userId: string,
     username: string,
@@ -36,6 +39,7 @@ export class FillingUserProfileCommand {
     lastName: string,
     dateOfBirth: string,
     about: string,
+    city: string,
   ) {
     this.userId = userId;
     this.username = username;
@@ -43,12 +47,13 @@ export class FillingUserProfileCommand {
     this.lastName = lastName;
     this.dateOfBirth = dateOfBirth;
     this.aboutMe = about;
+    this.city = city;
   }
 }
 
 @CommandHandler(FillingUserProfileCommand)
 export class FillingUserProfileUseCase {
-  constructor(private readonly userRepository: UserRepository) { }
+  constructor(private readonly userRepository: UserRepository) {}
 
   public async execute(
     command: FillingUserProfileCommand,
@@ -61,8 +66,15 @@ export class FillingUserProfileUseCase {
       note.addErrors(errors);
       return note;
     }
-    const { userId, username, firstName, lastName, dateOfBirth, aboutMe } =
-      command;
+    const {
+      userId,
+      username,
+      firstName,
+      lastName,
+      dateOfBirth,
+      aboutMe,
+      city,
+    } = command;
     const notification = new Notification<null>(
       FillingUserProfileCodes.Success,
     );
@@ -78,6 +90,7 @@ export class FillingUserProfileUseCase {
           dateOfBirth: dateOfBirthDate,
           aboutMe,
           updatedAt: currentDate,
+          city,
         },
       );
       if (!isUpdated) {

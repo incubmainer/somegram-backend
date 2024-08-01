@@ -73,6 +73,13 @@ export function FillProfileSwagger() {
                   'aboutMe must be between 0 and 200 characters long and can include letters, numbers, and special characters.',
               },
             },
+            {
+              property: 'city',
+              constraints: {
+                isCityName:
+                  'city must be between 1 and 100 characters long and can include letters from any alphabet, spaces, hyphens, apostrophes, and periods.',
+              },
+            },
           ],
         },
       },

@@ -26,6 +26,7 @@ model User {
   lastName          String?
   dateOfBirth       DateTime?
   about             String?
+  city              String?
 
   @@index([username])
   @@index([email])

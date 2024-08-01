@@ -31,7 +31,7 @@ import { FillProfileSwagger } from './swagger/fill-profile.swagger';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly commandBus: CommandBus) { }
+  constructor(private readonly commandBus: CommandBus) {}
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()
@@ -76,6 +76,7 @@ export class UsersController {
       fillProfileDto.lastName,
       fillProfileDto.dateOfBirth,
       fillProfileDto.aboutMe,
+      fillProfileDto.city,
     );
     const result: Notification<null, ValidationError> =
       await this.commandBus.execute(command);

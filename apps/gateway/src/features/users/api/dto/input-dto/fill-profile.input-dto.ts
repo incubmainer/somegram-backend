@@ -30,4 +30,9 @@ export class FillProfileInputDto {
       'About me with a length between 0 and 200 characters. Allowed characters: 0-9, A-Z, a-z, А-Я, а-я, special characters',
   })
   aboutMe: string;
+  @ApiProperty({
+    description:
+      'Is city name. Allowed characters: letters from any alphabet, spaces, hyphens, apostrophes, and periods.',
+  })
+  city: string;
 }
