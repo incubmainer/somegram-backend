@@ -22,6 +22,11 @@ model User {
   userGithubInfo    UserGithubInfo?
   googleInfo        UserGoogleInfo?
   userAvatar        UserAvatar?
+  firstName         String?
+  lastName          String?
+  dateOfBirth       DateTime?
+  about             String?
+  city              String?
 
   @@index([username])
   @@index([email])

@@ -298,4 +298,32 @@ export class UserRepository {
     }
     return user;
   }
+
+  async updateUserProfileInfo(
+    userId: User['id'],
+    dto: {
+      username: User['username'];
+      firstName: User['firstName'];
+      lastName: User['lastName'];
+      dateOfBirth: User['dateOfBirth'];
+      aboutMe: User['about'];
+      updatedAt: User['updatedAt'];
+      city: User['city'];
+    },
+  ): Promise<boolean> {
+    const result = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: {
+        username: dto.username,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        dateOfBirth: dto.dateOfBirth,
+        about: dto.aboutMe,
+        updatedAt: dto.updatedAt,
+        city: dto.city,
+      },
+    });
+    const isUpdated = !!result;
+    return isUpdated;
+  }
 }

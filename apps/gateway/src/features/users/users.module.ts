@@ -13,8 +13,9 @@ import { FileStorageService } from '../../common/utils/file-storage.service';
 import { AvatarStorageService } from './infrastructure/avatar-storage.service';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.use-case';
 import { AvatarRepository } from './infrastructure/avatar.repository';
+import { FillingUserProfileUseCase } from './application/use-cases/filling-user-profile.use-case';
 
-const useCases = [UploadAvatarUseCase];
+const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
 
 @Module({
   imports: [
