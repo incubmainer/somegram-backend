@@ -1,7 +1,11 @@
 import {
+  Body,
   Controller,
   HttpStatus,
+  InternalServerErrorException,
   Post,
+  Put,
+  UnauthorizedException,
   UnprocessableEntityException,
   UploadedFile,
   UseGuards,
@@ -16,11 +20,18 @@ import { AuthGuard } from '@nestjs/passport';
 import { UploadAvatarCommand } from '../application/use-cases/upload-avatar.use-case';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { ValidationException } from 'apps/gateway/src/common/domain/validation-error';
+import { FillProfileInputDto } from './dto/input-dto/fill-profile.input-dto';
+import {
+  FillingUserProfileCodes,
+  FillingUserProfileCommand,
+} from '../application/use-cases/filling-user-profile.use-case';
+import { ValidationError } from 'class-validator';
+import { FillProfileSwagger } from './swagger/fill-profile.swagger';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly commandBus: CommandBus) { }
+  constructor(private readonly commandBus: CommandBus) {}
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()
@@ -49,5 +60,41 @@ export class UsersController {
           })),
         });
     }
+  }
+
+  @Put('fill-profile')
+  @UseGuards(AuthGuard('jwt'))
+  @FillProfileSwagger()
+  async fillProfile(
+    @CurrentUserId() userId: string,
+    @Body() fillProfileDto: FillProfileInputDto,
+  ) {
+    const command = new FillingUserProfileCommand(
+      userId,
+      fillProfileDto.username,
+      fillProfileDto.firstName,
+      fillProfileDto.lastName,
+      fillProfileDto.dateOfBirth,
+      fillProfileDto.aboutMe,
+      fillProfileDto.city,
+    );
+    const result: Notification<null, ValidationError> =
+      await this.commandBus.execute(command);
+    const code = result.getCode();
+    if (code === FillingUserProfileCodes.Success)
+      return { message: 'Profile filled successfully' };
+    if (code === FillingUserProfileCodes.ValidationCommandError)
+      throw new UnprocessableEntityException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Validation failed',
+        errors: result.getErrors().map((e) => ({
+          property: e.property,
+          constraints: e.constraints,
+        })),
+      });
+    if (code === FillingUserProfileCodes.UserNotFound)
+      throw new UnauthorizedException();
+    if (code === FillingUserProfileCodes.TransactionError)
+      throw new InternalServerErrorException();
   }
 }
