@@ -5,6 +5,7 @@ import { finalConfig } from './common/config/config';
 import { AuthModule } from './features/auth/auth.module';
 import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
 import { UsersModule } from './features/users/users.module';
+import { PostsModule } from './features/posts/posts.module';
 
 @Module({
   imports: [
@@ -17,8 +18,9 @@ import { UsersModule } from './features/users/users.module';
     ClsTransactionalModule,
     AuthModule,
     UsersModule,
+    PostsModule,
   ],
   controllers: [],
   providers: [],
 })
-export class GatewayModule { }
+export class GatewayModule {}
