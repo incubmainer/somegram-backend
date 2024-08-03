@@ -22,6 +22,7 @@ model User {
   userGithubInfo    UserGithubInfo?
   googleInfo        UserGoogleInfo?
   userAvatar        UserAvatar?
+  userPosts         UserPosts[]
   firstName         String?
   lastName          String?
   dateOfBirth       DateTime?
@@ -79,6 +80,24 @@ model SecurityDevices {
   title          String
 
   @@index([deviceId])
+}
+
+model PostsPhotos {
+  postId    String    @unique()
+  userId    String
+  userPosts UserPosts @relation(fields: [postId], references: [id], onDelete: Cascade)
+  photoKey  String
+  createdAt DateTime
+
+  @@index([photoKey])
+}
+
+model UserPosts {
+  id          String       @unique()
+  userId      String
+  User        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postPhotos  PostsPhotos?
+  description String
 }
 
 model UserGoogleInfo {

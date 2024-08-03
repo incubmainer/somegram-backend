@@ -12,11 +12,11 @@ export class PostPhotoStorageService {
   constructor(private readonly fileStorageService: FileStorageService) {}
   public async savePhoto(
     userId: string,
-    avatar: Buffer,
+    photo: Buffer,
     mimeType: string,
   ): Promise<{
-    avatarUrl: string;
-    avatarKey: string;
+    photoUrl: string;
+    photoKey: string;
   }> {
     const s3Client = this.fileStorageService.getS3Client();
     const fileExtension = mimeType.split('/')[1];
@@ -25,28 +25,28 @@ export class PostPhotoStorageService {
     const params = {
       Bucket: bucketName,
       Key: `users/${userId}/posts/${uuid}.${fileExtension}`,
-      Body: avatar,
+      Body: photo,
       ContentType: mimeType,
       ACL: ObjectCannedACL.public_read,
     };
     await s3Client.send(new PutObjectCommand(params));
-    const avatarUrl = this.getPhotoUrl(params.Key);
-    const avatarKey = params.Key;
-    return { avatarUrl, avatarKey };
+    const photoUrl = this.getPhotoUrl(params.Key);
+    const photoKey = params.Key;
+    return { photoUrl, photoKey };
   }
 
-  public getPhotoUrl(avatarKey: string): string {
+  public getPhotoUrl(photoKey: string): string {
     const publicUrl = this.fileStorageService.getPublicUrl();
     const bucketName = this.fileStorageService.getBucketName();
-    return `${publicUrl}/${bucketName}/${avatarKey}`;
+    return `${publicUrl}/${bucketName}/${photoKey}`;
   }
 
-  public async deletePhotoByKey(avatarKey: string): Promise<void> {
+  public async deletePhotoByKey(photoKey: string): Promise<void> {
     const s3Client = this.fileStorageService.getS3Client();
     const bucketName = this.fileStorageService.getBucketName();
     const params = {
       Bucket: bucketName,
-      Key: avatarKey,
+      Key: photoKey,
     };
     await s3Client.send(new DeleteObjectCommand(params));
   }

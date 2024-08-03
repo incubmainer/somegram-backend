@@ -39,6 +39,7 @@ export class PostsController {
             addPostDto.description,
           ),
         );
+      return 'all is ok';
     } catch (e) {}
   }
 }

@@ -12,7 +12,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
-
+import { v4 as uuidv4 } from 'uuid';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 
 export const AddPostCodes = {
@@ -68,6 +68,30 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     const { userId, postPhoto, mimeType, description } = command;
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
+      await this.txHost.withTransaction(async () => {
+        const currentDate = new Date();
+        const postId = uuidv4();
+        console.log(
+          '🚀 ~ AddPostUseCase ~ awaitthis.txHost.withTransaction ~ postId:',
+          postId,
+        );
+        const urls = await this.postPhotoStorageService.savePhoto(
+          userId,
+          postPhoto,
+          mimeType,
+        );
+        console.log(
+          '🚀 ~ AddPostUseCase ~ awaitthis.txHost.withTransaction ~ urls:',
+          urls,
+        );
+        await this.postsRepository.addInfoAboutPhoto({
+          postId,
+          userId,
+          photoKey: urls.photoKey,
+          createdAt: currentDate,
+        });
+        await this.postsRepository.addPost({ postId, userId, description });
+      });
     } catch (e) {}
   }
 }
