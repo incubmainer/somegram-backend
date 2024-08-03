@@ -1,5 +1,5 @@
 describe('AuthService', () => {
-  beforeEach(() => { });
+  beforeEach(() => {});
 
   describe('empty', () => {
     it('empty test', async () => {

@@ -7,14 +7,14 @@ import {
 const USERNAME_REGEX = /^[0-9A-Za-z_-]+$/;
 
 export function IsUsername(validationOptions?: ValidationOptions) {
-  return function(object: Object, propertyName: string) {
+  return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
       name: 'isUsername',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any) {
           if (!value || typeof value !== 'string') {
             return false;
           }

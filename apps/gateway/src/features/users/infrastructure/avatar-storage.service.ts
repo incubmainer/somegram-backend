@@ -6,7 +6,7 @@ import { ObjectCannedACL } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class AvatarStorageService {
-  constructor(private readonly fileStorageService: FileStorageService) { }
+  constructor(private readonly fileStorageService: FileStorageService) {}
   public async saveAvatar(
     userId: string,
     avatar: Buffer,

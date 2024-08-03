@@ -45,7 +45,7 @@ export class RegistrationUseCase {
     >,
     private readonly cryptoAuthService: CryptoAuthService,
     private readonly emailAuthService: EmailAuthService,
-  ) { }
+  ) {}
 
   public async execute(
     command: RegistrationCommand,

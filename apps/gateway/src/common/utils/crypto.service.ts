@@ -31,10 +31,8 @@ export class CryptoService {
     }
     const params = Object.fromEntries(
       parsed[1].split(',').map((p) => {
-        const kv = p.split('=');
-        // @ts-ignore
-        kv[1] = Number(kv[1]);
-        return kv;
+        const [key, value] = p.split('=');
+        return [key, Number(value)] as [string, number];
       }),
     );
     const salt = Buffer.from(parsed[2], 'base64');
