@@ -5,8 +5,9 @@ import { ClsTransactionalModule } from '../../common/modules/cls-transactional.m
 import { PostPhotoStorageService } from './infrastructure/post-photo-storage.service';
 import { FileStorageService } from '../../common/utils/file-storage.service';
 import { PostsRepository } from './infrastructure/posts.repository';
+import { AddPostUseCase } from './application/use-cases/add-post-use-case';
 
-const useCases = [];
+const useCases = [AddPostUseCase];
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule],

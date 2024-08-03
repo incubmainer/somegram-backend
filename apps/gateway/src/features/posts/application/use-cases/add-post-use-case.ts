@@ -66,6 +66,8 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       return note;
     }
     const { userId, postPhoto, mimeType, description } = command;
+    console.log('🚀 ~ AddPostUseCase ~ userId:', userId);
+    console.log('🚀 ~ AddPostUseCase ~ mimeType:', mimeType);
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(async () => {
@@ -84,14 +86,17 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
           '🚀 ~ AddPostUseCase ~ awaitthis.txHost.withTransaction ~ urls:',
           urls,
         );
+        await this.postsRepository.addPost({ postId, userId, description });
+
         await this.postsRepository.addInfoAboutPhoto({
           postId,
           userId,
           photoKey: urls.photoKey,
           createdAt: currentDate,
         });
-        await this.postsRepository.addPost({ postId, userId, description });
+        notification.setData(urls.photoUrl);
       });
     } catch (e) {}
+    return notification;
   }
 }

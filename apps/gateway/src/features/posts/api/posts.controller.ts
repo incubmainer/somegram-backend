@@ -21,7 +21,7 @@ import { AddPostCommand } from '../application/use-cases/add-post-use-case';
 export class PostsController {
   constructor(private readonly commandBus: CommandBus) {}
 
-  @Post()
+  @Post('add-post')
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(JwtAuthGuard)
   async addPost(
@@ -29,6 +29,8 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
+    console.log('🚀 ~ PostsController ~ file:', file);
+    console.log('🚀 ~ PostsController ~ userId:', userId);
     try {
       const result: Notification<string, ValidationError> =
         await this.commandBus.execute(
@@ -39,7 +41,7 @@ export class PostsController {
             addPostDto.description,
           ),
         );
-      return 'all is ok';
+      return result;
     } catch (e) {}
   }
 }
