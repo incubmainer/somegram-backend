@@ -25,7 +25,7 @@ const passwordRegex = new RegExp(
 );
 
 export function IsUserPassword(validationOptions?: ValidationOptions) {
-  return function(object: Record<string, any>, propertyName: string) {
+  return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
       name: 'isPassword',
       target: object.constructor,
