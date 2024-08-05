@@ -21,4 +21,4 @@ import { UsersModule } from './features/users/users.module';
   controllers: [],
   providers: [],
 })
-export class GatewayModule { }
+export class GatewayModule {}

@@ -13,4 +13,4 @@ import {
   ],
   exports: [GatewayPrismaServiceToken],
 })
-export class GatewayPrismaModule { }
+export class GatewayPrismaModule {}

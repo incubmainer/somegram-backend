@@ -8,14 +8,14 @@ import { Buffer } from 'buffer';
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export function IsAvatar(validationOptions?: ValidationOptions) {
-  return function(object: Object, propertyName: string) {
+  return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
       name: 'isAvatar',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        async validate(value: any, args: ValidationArguments) {
+        async validate(value: any) {
           if (!Buffer.isBuffer(value)) {
             return false;
           }

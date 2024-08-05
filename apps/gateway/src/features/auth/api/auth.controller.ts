@@ -51,14 +51,11 @@ import { UserAgent } from './decorators/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
 import { RefreshToken } from './decorators/refresh-token.decorator';
-import { AuthService } from '../application/auth.service';
-import { UserRepository } from '../infrastructure/user.repository';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
 import {
   AuthWithGithubCommand,
   LoginWithGithubCodes,
 } from '../application/use-cases/auth-with-github-use-case';
-import { randomUUID } from 'crypto';
 import {
   LoginByGoogleCodes,
   LoginByGoogleCommand,

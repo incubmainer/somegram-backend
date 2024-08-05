@@ -51,19 +51,19 @@ export function RegistrationSwagger() {
             {
               property: 'username',
               constraints: {
-                IsUsername: 'Username must be at least 4 characters long',
+                IsUsername: `username must be a valid username (6-30 characters, alphanumeric, underscore, or dash)`,
               },
             },
             {
               property: 'email',
               constraints: {
-                isEmail: 'Email must be a valid email address',
+                isEmail: 'email must be an email',
               },
             },
             {
               property: 'password',
               constraints: {
-                length: 'Password must be at least 6 characters long',
+                length: `password must be between 6 and 20 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character from ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \\ ] ^ _\` { | } ~`,
               },
             },
           ],

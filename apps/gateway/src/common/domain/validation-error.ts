@@ -1,4 +1,4 @@
-import { validateSync, ValidationError } from 'class-validator';
+import { ValidationError } from 'class-validator';
 
 export class ValidationException extends Error {
   public errors: ValidationError[];

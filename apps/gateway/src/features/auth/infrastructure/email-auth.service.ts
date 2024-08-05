@@ -3,7 +3,7 @@ import { EmailSender } from 'apps/gateway/src/common/utils/email.sender';
 
 @Injectable()
 export class EmailAuthService {
-  constructor(private readonly emailSender: EmailSender) { }
+  constructor(private readonly emailSender: EmailSender) {}
   public async sendConfirmationEmail(dto: {
     name: string;
     email: string;

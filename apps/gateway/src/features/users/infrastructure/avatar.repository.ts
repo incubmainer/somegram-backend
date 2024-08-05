@@ -13,7 +13,7 @@ export class AvatarRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) { }
+  ) {}
   public async setCurrentAvatar(dto: {
     userId: User['id'];
     avatarKey: UserAvatar['avatarKey'];

@@ -21,4 +21,4 @@ import { GatewayPrismaServiceToken } from '@app/databases/gateway/gateway-prisma
   ],
   exports: [ClsModule],
 })
-export class ClsTransactionalModule { }
+export class ClsTransactionalModule {}
