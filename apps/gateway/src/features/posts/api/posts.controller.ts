@@ -23,6 +23,7 @@ import {
   AddPostCodes,
   AddPostCommand,
 } from '../application/use-cases/add-post-use-case';
+import { AddPostSwagger } from './swagger/add-post-swagger';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -31,17 +32,18 @@ export class PostsController {
 
   @Post('add-post')
   @UseInterceptors(FilesInterceptor('files', 10))
+  @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
   async addPost(
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
+    console.log('🚀 ~ PostsController ~ files:', files);
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
         new AddPostCommand(userId, files, addPostDto.description),
       );
-    console.log('🚀 ~ PostsController ~ file:', files);
 
     const code = result.getCode();
     if (code === AddPostCodes.Success)
