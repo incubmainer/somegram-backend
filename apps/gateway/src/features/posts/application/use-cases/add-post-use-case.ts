@@ -1,5 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
+  IsOptional,
   IsString,
   MaxLength,
   validateSync,
@@ -14,6 +15,7 @@ import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { v4 as uuidv4 } from 'uuid';
 import { PostsRepository } from '../../infrastructure/posts.repository';
+import { UserRepository } from '../../../auth/infrastructure/user.repository';
 
 export const AddPostCodes = {
   Success: Symbol('success'),
@@ -29,14 +31,16 @@ export class AddPostCommand {
   public readonly postPhoto: Buffer;
   @IsPhotoMimetype()
   public readonly mimeType: string;
+  @IsOptional()
+  @IsString()
   @MaxLength(500)
-  public readonly description: string;
+  public readonly description?: string;
 
   constructor(
     userId: string,
     postPhoto: Buffer,
     mimeType: string,
-    description: string,
+    description?: string,
   ) {
     this.userId = userId;
     this.postPhoto = postPhoto;
@@ -53,6 +57,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     >,
     private readonly postPhotoStorageService: PostPhotoStorageService,
     private readonly postsRepository: PostsRepository,
+    private readonly userRepository: UserRepository,
   ) {}
   async execute(
     command: AddPostCommand,
@@ -66,37 +71,38 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       return note;
     }
     const { userId, postPhoto, mimeType, description } = command;
-    console.log('🚀 ~ AddPostUseCase ~ userId:', userId);
-    console.log('🚀 ~ AddPostUseCase ~ mimeType:', mimeType);
+
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(async () => {
         const currentDate = new Date();
         const postId = uuidv4();
-        console.log(
-          '🚀 ~ AddPostUseCase ~ awaitthis.txHost.withTransaction ~ postId:',
-          postId,
-        );
+
+        const isUser = await this.userRepository.findUserById(userId);
+        if (!isUser) {
+          notification.setCode(AddPostCodes.UserNotFound);
+          return notification;
+        }
         const urls = await this.postPhotoStorageService.savePhoto(
           userId,
           postPhoto,
           mimeType,
         );
-        console.log(
-          '🚀 ~ AddPostUseCase ~ awaitthis.txHost.withTransaction ~ urls:',
-          urls,
-        );
+
         await this.postsRepository.addPost({ postId, userId, description });
 
         await this.postsRepository.addInfoAboutPhoto({
           postId,
-          userId,
           photoKey: urls.photoKey,
           createdAt: currentDate,
         });
         notification.setData(urls.photoUrl);
       });
-    } catch (e) {}
+    } catch (e) {
+      if (notification.getCode() === AddPostCodes.Success) {
+        notification.setCode(AddPostCodes.TransactionError);
+      }
+    }
     return notification;
   }
 }

@@ -3,8 +3,8 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { Injectable } from '@nestjs/common';
 import {
   PrismaClient as GatewayPrismaClient,
-  PostsPhotos,
-  UserPosts,
+  PostPhoto,
+  UserPost,
 } from '@prisma/gateway';
 @Injectable()
 export class PostsRepository {
@@ -14,26 +14,24 @@ export class PostsRepository {
     >,
   ) {}
   public async addInfoAboutPhoto(dto: {
-    postId: PostsPhotos['postId'];
-    userId: PostsPhotos['userId'];
-    photoKey: PostsPhotos['photoKey'];
-    createdAt: PostsPhotos['createdAt'];
+    postId: PostPhoto['postId'];
+    photoKey: PostPhoto['photoKey'];
+    createdAt: PostPhoto['createdAt'];
   }): Promise<void> {
-    await this.txHost.tx.postsPhotos.create({
+    await this.txHost.tx.postPhoto.create({
       data: {
         postId: dto.postId,
-        userId: dto.userId,
         photoKey: dto.photoKey,
         createdAt: dto.createdAt,
       },
     });
   }
   public async addPost(dto: {
-    postId: UserPosts['id'];
-    userId: UserPosts['userId'];
-    description: UserPosts['description'];
+    postId: UserPost['id'];
+    userId: UserPost['userId'];
+    description: UserPost['description'];
   }): Promise<void> {
-    await this.txHost.tx.userPosts.create({
+    await this.txHost.tx.userPost.create({
       data: {
         id: dto.postId,
         userId: dto.userId,
