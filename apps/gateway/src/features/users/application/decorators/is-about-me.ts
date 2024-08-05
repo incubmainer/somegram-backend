@@ -7,14 +7,14 @@ import {
 const ABOUT_REGEX = /^[0-9A-Za-zА-Яа-я.,!?@#&()\-+=$%^&*_\s]+$/;
 
 export function IsAboutMe(validationOptions?: ValidationOptions) {
-  return function(object: Object, propertyName: string) {
+  return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
       name: 'isAboutMe',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any) {
           if (typeof value !== 'string') {
             return false;
           }

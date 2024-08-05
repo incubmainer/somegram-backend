@@ -50,7 +50,7 @@ export class LoginByGoogleUseCase {
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly emailAuthService: EmailAuthService,
-  ) { }
+  ) {}
 
   public async execute(
     command: LoginByGoogleCommand,

@@ -39,7 +39,7 @@ export class UploadAvatarUseCase {
     >,
     private readonly avatarStorageService: AvatarStorageService,
     private readonly avatarRepository: AvatarRepository,
-  ) { }
+  ) {}
 
   public async execute(
     command: UploadAvatarCommand,

@@ -39,4 +39,4 @@ const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
     AvatarRepository,
   ],
 })
-export class UsersModule { }
+export class UsersModule {}
