@@ -23,6 +23,24 @@
       ],
       "@app/databases/*": [
         "libs/databases/src/*"
+      ],
+      "@app/als": [
+        "libs/als/src"
+      ],
+      "@app/als/*": [
+        "libs/als/src/*"
+      ],
+      "@app/custom-logger": [
+        "libs/custom-logger/src"
+      ],
+      "@app/custom-logger/*": [
+        "libs/custom-logger/src/*"
+      ],
+      "@app/requests": [
+        "libs/requests/src"
+      ],
+      "@app/requests/*": [
+        "libs/requests/src/*"
       ]
     }
   }

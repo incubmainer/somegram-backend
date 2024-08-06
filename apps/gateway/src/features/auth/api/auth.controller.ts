@@ -70,6 +70,10 @@ import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+} from '@app/custom-logger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -77,12 +81,16 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly configService: ConfigService,
-  ) {}
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setClassName(AuthController.name);
+  }
 
   @Post('registration')
   @HttpCode(HttpStatus.OK)
   @RegistrationSwagger()
   public async registration(@Body() body: RegistrationBodyInputDto) {
+    this.logger.log('info', 'start registration', {});
     const notification: Notification<null> = await this.commandBus.execute(
       new RegistrationCommand(
         body.username,
@@ -92,12 +100,15 @@ export class AuthController {
       ),
     );
     const code = notification.getCode();
-    if (code === RegistrationCodes.Success)
+    if (code === RegistrationCodes.Success) {
+      this.logger.log('info', 'registration success', {});
       return {
         statusCode: HttpStatus.OK,
         message: 'Registration successful',
       };
-    if (code === RegistrationCodes.EmailAlreadyExists)
+    }
+    if (code === RegistrationCodes.EmailAlreadyExists) {
+      this.logger.log('warn', 'email already exists', {});
       throw new BadRequestException({
         error: 'registration_failed',
         message:
@@ -106,7 +117,9 @@ export class AuthController {
           email: 'Email address is already in use.',
         },
       });
-    if (code === RegistrationCodes.UsernameAlreadyExists)
+    }
+    if (code === RegistrationCodes.UsernameAlreadyExists) {
+      this.logger.log('warn', 'username already exists', {});
       throw new BadRequestException({
         error: 'registration_failed',
         message:
@@ -115,10 +128,13 @@ export class AuthController {
           username: 'Username is already taken.',
         },
       });
-    if (code === RegistrationCodes.TransactionError)
+    }
+    if (code === RegistrationCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+    }
   }
 
   @Post('registration-confirmation')
@@ -127,34 +143,43 @@ export class AuthController {
   public async registrationConfirmation(
     @Body() body: RegistrationConfirmationBodyInputDto,
   ) {
+    this.logger.log('info', 'start registration confirmation', {});
     const notification: Notification<null> = await this.commandBus.execute(
       new RegistrationConfirmationCommand(body.token),
     );
     const code = notification.getCode();
-    if (code === RegistrationConfirmationCodes.Success)
+    if (code === RegistrationConfirmationCodes.Success) {
+      this.logger.log('info', 'registration confirmation success', {});
       return {
         statusCode: HttpStatus.OK,
         message: 'Registration confirmation successful',
       };
-    if (code === RegistrationConfirmationCodes.TokenExpired)
+    }
+    if (code === RegistrationConfirmationCodes.TokenExpired) {
+      this.logger.log('warn', 'token expired', {});
       throw new BadRequestException({
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to token expiration.',
       });
-    if (code === RegistrationConfirmationCodes.TokenInvalid)
+    }
+    if (code === RegistrationConfirmationCodes.TokenInvalid) {
+      this.logger.log('warn', 'token invalid', {});
       throw new BadRequestException({
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to invalid token.',
       });
-    if (code === RegistrationConfirmationCodes.TransactionError)
+    }
+    if (code === RegistrationConfirmationCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+    }
   }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  async googleAuth() { }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -166,6 +191,7 @@ export class AuthController {
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ): Promise<any> {
+    this.logger.log('info', 'start google auth callback', {});
     const notification: Notification<string> = await this.commandBus.execute(
       new LoginByGoogleCommand(
         googleProfile.id,
@@ -176,18 +202,21 @@ export class AuthController {
     );
     const noteCode = notification.getCode();
     if (noteCode === LoginByGoogleCodes.WrongEmail) {
+      this.logger.log('warn', 'wrong email', {});
       throw new BadRequestException({
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
       });
     }
     if (noteCode === LoginByGoogleCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
     }
     const userId = notification.getDate();
     if (!ip) {
+      this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
         error: 'login failed',
         message: 'Unknown ip address',
@@ -201,6 +230,7 @@ export class AuthController {
       new LoginUserCommand(userId, ip, title),
     );
     const origin = request.headers.origin || '';
+    this.logger.log('info', 'google auth callback success', {});
     response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
         httpOnly: true,
@@ -212,6 +242,7 @@ export class AuthController {
   @Get('recaptcha-site-key')
   @RecaptchaSiteKeySwagger()
   async recaptchaSiteKey() {
+    this.logger.log('info', 'get recaptcha site key', {});
     const authConfig = this.configService.get<AuthConfig>('auth');
     return {
       recaptchaSiteKey: authConfig.recaptchaSiteKey,
@@ -222,29 +253,38 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
+    this.logger.log('info', 'start restore password', {});
     const notification: Notification<null> = await this.commandBus.execute(
       new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
     );
     const code = notification.getCode();
-    if (code === RestorePasswordCodes.Success)
+    if (code === RestorePasswordCodes.Success) {
+      this.logger.log('info', 'restore password success', {});
       return {
         statusCode: HttpStatus.OK,
         message: 'Restore password successful',
       };
-    if (code === RestorePasswordCodes.UnvalidRecaptcha)
+    }
+    if (code === RestorePasswordCodes.UnvalidRecaptcha) {
+      this.logger.log('warn', 'invalid recaptcha token', {});
       throw new BadRequestException({
         error: 'invalid_recaptcha_token',
         message: 'Restore password failed due to invalid recaptcha token.',
       });
-    if (code === RestorePasswordCodes.UserNotFound)
+    }
+    if (code === RestorePasswordCodes.UserNotFound) {
+      this.logger.log('warn', 'user not found', {});
       throw new BadRequestException({
         error: 'user_not_found',
         message: 'Restore password failed due to user not found.',
       });
-    if (code === RestorePasswordCodes.TransactionError)
+    }
+    if (code === RestorePasswordCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+    }
   }
 
   @Post('restore-password-confirmation')
@@ -253,29 +293,38 @@ export class AuthController {
   public async restorePasswordConfirmation(
     @Body() body: RestorePasswordConfirmationBodyInputDto,
   ) {
+    this.logger.log('info', 'start restore password confirmation', {});
     const notification: Notification<null> = await this.commandBus.execute(
       new RestorePasswordConfirmationCommand(body.code, body.password),
     );
     const code = notification.getCode();
-    if (code === RestorePasswordConfirmationCodes.Success)
+    if (code === RestorePasswordConfirmationCodes.Success) {
+      this.logger.log('info', 'restore password confirmation success', {});
       return {
         statusCode: HttpStatus.OK,
         message: 'Restore password confirmation successful',
       };
-    if (code === RestorePasswordConfirmationCodes.ExpiredCode)
+    }
+    if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
+      this.logger.log('warn', 'expired code', {});
       throw new BadRequestException({
         error: 'restore_password_confirmation_failed',
         message: 'Restore password confirmation failed due to expired code.',
       });
-    if (code === RestorePasswordConfirmationCodes.UnvalidCode)
+    }
+    if (code === RestorePasswordConfirmationCodes.UnvalidCode) {
+      this.logger.log('warn', 'invalid code', {});
       throw new BadRequestException({
         error: 'restore_password_confirmation_failed',
         message: 'Restore password confirmation failed due to unvalid code.',
       });
-    if (code === RestorePasswordConfirmationCodes.TransactionError)
+    }
+    if (code === RestorePasswordConfirmationCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
+    }
   }
 
   @UseGuards(LocalAuthGuard)
@@ -289,7 +338,9 @@ export class AuthController {
     @UserAgent() userAgent: string | undefined,
     @Res() response: Response,
   ) {
+    this.logger.log('info', 'start login', {});
     if (!ip) {
+      this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
         error: 'login failed',
         message: 'Unknown ip address',
@@ -303,6 +354,7 @@ export class AuthController {
       new LoginUserCommand(userId, ip, title),
     );
 
+    this.logger.log('info', 'login success', {});
     response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
         httpOnly: true,
@@ -345,7 +397,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth() {}
+  async githubAuth() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))

@@ -60,7 +60,9 @@
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "winston": "^3.13.1",
+    "winston-transport": "^4.7.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -110,7 +112,10 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/databases(|/.*)$": "<rootDir>/libs/databases/src/$1"
+      "^@app/databases(|/.*)$": "<rootDir>/libs/databases/src/$1",
+      "^@app/als(|/.*)$": "<rootDir>/libs/als/src/$1",
+      "^@app/custom-logger(|/.*)$": "<rootDir>/libs/custom-logger/src/$1",
+      "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1"
     }
   }
 }
