@@ -6,7 +6,6 @@ export class FileDto {
   @Validate(IsPostPhoto)
   buffer: Buffer;
 
-  @IsString()
   @Validate(IsPhotoMimetype)
   mimetype: string;
 }
