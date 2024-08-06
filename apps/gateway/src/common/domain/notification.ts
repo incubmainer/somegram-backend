@@ -6,7 +6,7 @@ export class Notification<T = null, E = null> {
     this.code = code;
   }
 
-  setData(data: T) {
+  setData(data: T): void {
     this.data = data;
   }
 
