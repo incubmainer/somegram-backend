@@ -81,9 +81,10 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly configService: ConfigService,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    @InjectCustomLoggerService()
+    private readonly logger: CustomLoggerService,
   ) {
-    logger.setClassName(AuthController.name);
+    logger.setContext(AuthController.name);
   }
 
   @Post('registration')
@@ -179,7 +180,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() { }
+  async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -397,7 +398,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth() { }
+  async githubAuth() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))

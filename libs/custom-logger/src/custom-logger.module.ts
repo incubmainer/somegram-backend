@@ -15,11 +15,15 @@ import { getCustomLoggerModuleOptions } from './utils';
 @Module({})
 export class CustomLoggerModule {
   public static forRoot(options: CustomLoggerModuleOptions): DynamicModule {
-    const provider: Provider = createCustomLoggerProvider(options);
+    const optionsProvider: Provider = {
+      provide: CustomLoggerModuleOptionsToken,
+      useValue: getCustomLoggerModuleOptions(options),
+    };
+    const customLoggerProvider: Provider = createCustomLoggerProvider();
     return {
       module: CustomLoggerModule,
-      providers: [provider],
-      exports: [provider],
+      providers: [optionsProvider, customLoggerProvider],
+      exports: [customLoggerProvider],
     };
   }
 
@@ -32,13 +36,20 @@ export class CustomLoggerModule {
       useFactory: async (options: CustomLoggerModuleOptions) =>
         getCustomLoggerModuleOptions(options),
     };
+    const customLoggerProvider: Provider = createCustomLoggerProvider();
+    const providers = [
+      ...this.createAsyncProviders(options),
+      customLoggerProvider,
+    ];
 
-    return {
+    const module = {
       module: CustomLoggerModule,
       imports: options.imports,
-      providers: [...this.createAsyncProviders(options), provider],
+      providers,
       exports: [provider],
     };
+
+    return module;
   }
 
   private static createAsyncProviders(

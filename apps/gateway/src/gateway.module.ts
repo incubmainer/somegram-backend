@@ -61,20 +61,10 @@ import { v4 as uuidv4 } from 'uuid';
           },
           console: {
             enable: true,
-            color: 'yellow',
           },
-          levels: {
-            trace: 5,
-            debug: 4,
-            info: 3,
-            warn: 2,
-            error: 1,
-            fatal: 0,
-          },
-          loggerLevel: 'info',
+          loggerLevel: 'trace',
           additionalFields: {
             microserviceName: () => 'gateway',
-            timestamp: () => new Date().toISOString(),
             requestId: () => als.getFromStore('requestId'),
           },
         };
@@ -90,7 +80,7 @@ export class GatewayModule {
   constructor(
     @InjectRequestsService()
     private readonly requestsService: RequestsService,
-  ) { }
+  ) {}
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(this.requestsService.getMiddleware())

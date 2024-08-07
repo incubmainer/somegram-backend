@@ -9,13 +9,11 @@ export interface CustomLoggerModuleOptions {
   };
   console: {
     enable: boolean;
-    color: string;
-  };
-  levels: {
-    [key: string]: number;
   };
   loggerLevel: string;
   additionalFields?: Record<string, () => string>;
+  label?: string;
+  timeFormat?: string;
 }
 
 export interface CustomLoggerModuleFactory {

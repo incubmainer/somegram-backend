@@ -1,13 +1,18 @@
-import { Provider } from '@nestjs/common';
-import { CustomLoggerServiceToken } from './custom-logger.constants';
+import { Provider, Scope } from '@nestjs/common';
+import {
+  CustomLoggerModuleOptionsToken,
+  CustomLoggerServiceToken,
+} from './custom-logger.constants';
 import { CustomLoggerModuleOptions } from './custom-logger.interface';
-import { getCustomLoggerModuleOptions } from './utils';
+import { CustomLoggerService } from './custom-logger.service';
 
-export function createCustomLoggerProvider(
-  options: CustomLoggerModuleOptions,
-): Provider {
+export function createCustomLoggerProvider(): Provider {
   return {
     provide: CustomLoggerServiceToken,
-    useValue: getCustomLoggerModuleOptions(options),
+    useFactory: (options: CustomLoggerModuleOptions) => {
+      return new CustomLoggerService(options);
+    },
+    inject: [CustomLoggerModuleOptionsToken],
+    scope: Scope.TRANSIENT,
   };
 }

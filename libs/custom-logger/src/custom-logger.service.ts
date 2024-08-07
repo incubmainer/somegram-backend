@@ -1,15 +1,19 @@
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { CustomLoggerModuleOptions } from './custom-logger.interface';
 import { CustomLoggerModuleOptionsToken } from './custom-logger.constants';
-const { combine, prettyPrint, errors, colorize } = winston.format;
+import {
+  customLoggerDefaultLabel,
+  defaultTimeFormat,
+} from './custom-logger.default';
 
-@Injectable({ scope: Scope.TRANSIENT })
+const { combine, colorize, label, printf, timestamp } = winston.format;
+
 export class CustomLoggerService {
   private logger: winston.Logger;
-  private className?: string;
+  private context?: string;
 
   constructor(
     @Inject(CustomLoggerModuleOptionsToken)
@@ -18,11 +22,41 @@ export class CustomLoggerService {
     const transports: Transport[] = [];
 
     if (options.console.enable) {
+      const customFormat = printf(
+        ({ level, message, label, timestamp, ...additionalFields }) => {
+          const mainPart = `${timestamp} [${label}] ${level}: ${message}\n`;
+          const secondaryPartObject = {};
+          Object.keys(additionalFields).forEach((key) => {
+            if (additionalFields[key] !== undefined) {
+              secondaryPartObject[key] = additionalFields[key];
+            }
+          });
+
+          const secondaryPart = JSON.stringify(secondaryPartObject, null, 2);
+
+          return mainPart + secondaryPart;
+        },
+      );
       const consoleTransport = new winston.transports.Console({
         format: combine(
-          errors({ stack: true }),
-          prettyPrint(),
-          colorize({ all: true, colors: { trace: options.console.color } }),
+          colorize({
+            all: true,
+            colors: {
+              trace: 'magenta',
+              debug: 'blue',
+              info: 'green',
+              warn: 'yellow',
+              error: 'red',
+              fatal: 'bold red',
+            },
+          }),
+          label({
+            label: options.label ? options.label : customLoggerDefaultLabel,
+          }),
+          timestamp({
+            format: options.timeFormat ? options.timeFormat : defaultTimeFormat,
+          }),
+          customFormat,
         ),
       });
       transports.push(consoleTransport);
@@ -40,16 +74,20 @@ export class CustomLoggerService {
 
     this.logger = winston.createLogger({
       level: options.loggerLevel,
-      levels: options.levels,
+      levels: {
+        trace: 5,
+        debug: 4,
+        info: 3,
+        warn: 2,
+        error: 1,
+        fatal: 0,
+      },
       transports: transports,
     });
   }
-  setClassName(className: string) {
-    this.className = className;
-  }
   log(level: string, message: string, meta?: Record<string, any>) {
     const resultMeta = {
-      className: this.className || undefined,
+      context: this.context || undefined,
       ...meta,
     };
 
@@ -69,4 +107,90 @@ export class CustomLoggerService {
 
     this.logger.log(result);
   }
+  setContext(context: string): void {
+    this.context = context;
+  }
+
+  // private getStack(error: any): string | undefined {
+  //   const stack = error?.stack;
+  //
+  //   if (stack) {
+  //     return `${stack?.split('\n')[1]}`;
+  //   }
+  // }
+  //
+  // trace(message: string, functionName?: string) {
+  //   super.verbose(message, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.trace(
+  //     message,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //   );
+  // }
+  //
+  // debug(message: string, functionName?: string) {
+  //   super.debug(message, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.debug(
+  //     message,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //   );
+  // }
+  //
+  // log(message: string, functionName?: string) {
+  //   super.log(message, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.info(
+  //     message,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //   );
+  // }
+  //
+  // warn(message: string, functionName?: string) {
+  //   super.warn(message, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.warn(
+  //     message,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //   );
+  // }
+  //
+  // error(error: any, functionName?: string) {
+  //   const jsonError = error instanceof Error ? JSON.stringify(error) : error;
+  //   const stack = this.getStack(error);
+  //
+  //   const fullErrorMessage = `${
+  //     error?.message ? `msg: ${error?.message}; ` : ''
+  //   } fullError: ${jsonError}`;
+  //
+  //   super.error(error, stack, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.error(
+  //     fullErrorMessage,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //     stack,
+  //   );
+  // }
+  //
+  // fatal(message: string, functionName?: string, stack?: string) {
+  //   super.fatal(message, this.getSourceContext() || functionName);
+  //
+  //   this.winstonLogger.fatal(
+  //     message,
+  //     this.getRequestId(),
+  //     functionName,
+  //     this.getSourceContext(),
+  //     stack,
+  //   );
+  // }
 }
