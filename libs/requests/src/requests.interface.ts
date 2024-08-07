@@ -3,6 +3,7 @@ import { ModuleMetadata, Type } from '@nestjs/common';
 export interface FieldOption {
   fieldName: string;
   generator: () => string;
+  returnInResponse?: () => boolean;
 }
 
 export interface RequestsModuleOptions {

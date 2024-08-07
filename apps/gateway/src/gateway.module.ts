@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { finalConfig } from './common/config/config';
 import { AuthModule } from './features/auth/auth.module';
@@ -17,6 +17,9 @@ import {
   RequestsService,
 } from '@app/requests';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerConfig } from './common/config/configs/logger.config';
+
+export const requestId = 'reduestId';
 
 @Module({
   imports: [
@@ -37,11 +40,12 @@ import { v4 as uuidv4 } from 'uuid';
             {
               fieldName: 'x-request-id',
               generator: uuidv4,
+              returnInResponse: () => true,
             },
           ],
           cb: (values, next) => {
             als.start(() => {
-              als.setToStore('requestId', values['x-request-id']);
+              als.setToStore(requestId, values['x-request-id']);
               next();
             });
           },
@@ -51,7 +55,8 @@ import { v4 as uuidv4 } from 'uuid';
       inject: [AlsService],
     }),
     CustomLoggerModule.forRootAsync({
-      useFactory: (als: AlsService) => {
+      useFactory: (als: AlsService, configService: ConfigService) => {
+        const loggerConfig = configService.get<LoggerConfig>('logger');
         const config: CustomLoggerModuleOptions = {
           http: {
             enable: false,
@@ -62,15 +67,15 @@ import { v4 as uuidv4 } from 'uuid';
           console: {
             enable: true,
           },
-          loggerLevel: 'trace',
+          loggerLevel: loggerConfig.loggerLevel,
           additionalFields: {
             microserviceName: () => 'gateway',
-            requestId: () => als.getFromStore('requestId'),
+            requestId: () => als.getFromStore(requestId),
           },
         };
         return config;
       },
-      inject: [AlsService],
+      inject: [AlsService, ConfigService],
     }),
   ],
   controllers: [],

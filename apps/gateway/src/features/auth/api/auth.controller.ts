@@ -73,10 +73,16 @@ import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
+  LogClass,
 } from '@app/custom-logger';
 
 @ApiTags('auth')
 @Controller('auth')
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -368,12 +374,15 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogOutSwagger()
   async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
+    this.logger.log('info', 'start logout', {});
     if (!refreshToken) {
+      this.logger.log('warn', 'no refresh token', {});
       throw new UnauthorizedException();
     }
     const result = await this.commandBus.execute(
       new LogoutCommand(refreshToken),
     );
+    this.logger.log('info', 'logout success', {});
     return result;
   }
 
@@ -381,13 +390,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @RefreshTokenSwagger()
   async refreshToken(@Req() req, @Res() res: Response) {
+    this.logger.log('info', 'start refresh token', {});
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
+      this.logger.log('warn', 'no refresh token', {});
       throw new UnauthorizedException();
     }
     const tokens = await this.commandBus.execute(
       new RefreshTokenCommand(refreshToken),
     );
+    this.logger.log('info', 'refresh token success', {});
     return res
       .cookie('refreshToken', tokens.newRefreshToken, {
         httpOnly: true,
@@ -409,18 +421,21 @@ export class AuthController {
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ) {
+    this.logger.log('info', 'start github auth callback', {});
     const user: UserFromGithub = req.user;
     const notification: Notification<string> = await this.commandBus.execute(
       new AuthWithGithubCommand(user),
     );
     const noteCode = notification.getCode();
     if (noteCode === LoginWithGithubCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
         message: 'Transaction error',
       });
     }
     const userId = notification.getDate();
     if (!ip) {
+      this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
         error: 'login failed',
         message: 'Unknown ip address',
@@ -435,6 +450,7 @@ export class AuthController {
     );
 
     const origin = req.headers.origin || '';
+    this.logger.log('info', 'github auth callback success', {});
     res
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
         httpOnly: true,

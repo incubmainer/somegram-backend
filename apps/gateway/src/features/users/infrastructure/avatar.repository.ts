@@ -6,14 +6,27 @@ import {
   User,
   UserAvatar,
 } from '@prisma/gateway';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 @Injectable()
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AvatarRepository {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(AvatarRepository.name);
+  }
   public async setCurrentAvatar(dto: {
     userId: User['id'];
     avatarKey: UserAvatar['avatarKey'];

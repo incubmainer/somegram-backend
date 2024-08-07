@@ -8,8 +8,114 @@ interface LogClassOptions {
   active?: () => boolean;
 }
 
+function safeStringify(value: any): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return 'can_not_parse';
+  }
+}
+
+function logInput(
+  logger: CustomLoggerService,
+  level: string,
+  methodName: string,
+  startTime: number,
+  args: any[],
+) {
+  const inputValues = safeStringify(args);
+  logger.log(level, `input ${methodName}`, {
+    method: methodName,
+    startTime,
+    inputValues,
+  });
+}
+
+function logOutput(
+  logger: CustomLoggerService,
+  level: string,
+  methodName: string,
+  startTime: number,
+  result: any,
+) {
+  const endTime = Date.now();
+  const outputValues = safeStringify(result);
+  logger.log(level, `output ${methodName}`, {
+    method: methodName,
+    endTime,
+    outputValues,
+    executionTime: endTime - startTime,
+  });
+}
+
+function logError(
+  logger: CustomLoggerService,
+  level: string,
+  methodName: string,
+  startTime: number,
+  err: any,
+) {
+  const endTime = Date.now();
+  logger.log(level, `output ${methodName} error`, {
+    method: methodName,
+    endTime,
+    outputValues: null,
+    executionTime: endTime - startTime,
+    outputError: safeStringify(err),
+  });
+}
+
+async function handleAsyncMethod(
+  logger: CustomLoggerService,
+  level: string,
+  methodName: string,
+  startTime: number,
+  result: Promise<any>,
+) {
+  try {
+    const res = await result;
+    logOutput(logger, level, methodName, startTime, res);
+    return res;
+  } catch (err) {
+    logError(logger, level, methodName, startTime, err);
+    throw err;
+  }
+}
+
+function createLoggerDecorator(
+  methodName: string,
+  originalMethod: Function,
+  loggerClassField: string,
+  level: string,
+) {
+  return function (...args: any[]) {
+    const logger: CustomLoggerService = this[loggerClassField];
+
+    if (!logger) {
+      throw new Error(`Logger not found at field ${loggerClassField}`);
+    }
+
+    const startTime = Date.now();
+    logInput(logger, level, methodName, startTime, args);
+
+    try {
+      const result = originalMethod.apply(this, args);
+
+      if (result && typeof result.then === 'function') {
+        return handleAsyncMethod(logger, level, methodName, startTime, result);
+      } else {
+        logOutput(logger, level, methodName, startTime, result);
+        return result;
+      }
+    } catch (err) {
+      logError(logger, level, methodName, startTime, err);
+      throw err;
+    }
+  };
+}
+
 export function LogClass(options: LogClassOptions) {
-  const { level, loggerClassField, active = () => true } = options; // Устанавливаем значение по умолчанию
+  const { level, loggerClassField, active = () => true } = options;
 
   return function <T extends Constructor>(Base: T) {
     if (!active()) {
@@ -32,77 +138,10 @@ export function LogClass(options: LogClassOptions) {
             this[methodName] = createLoggerDecorator(
               methodName,
               originalMethod,
+              loggerClassField,
+              level,
             ).bind(this);
           }
-        }
-
-        function createLoggerDecorator(
-          methodName: string,
-          originalMethod: Function,
-        ) {
-          return function (...args: any[]) {
-            const logger: CustomLoggerService = this[loggerClassField];
-
-            if (!logger) {
-              throw new Error(`Logger not found at field ${loggerClassField}`);
-            }
-
-            const startTime = Date.now();
-            const inputValues = JSON.stringify(args);
-            logger.log(level, `input ${methodName}`, {
-              method: methodName,
-              startTime,
-              inputValues,
-            });
-
-            try {
-              const result = originalMethod.apply(this, args);
-
-              if (result && typeof result.then === 'function') {
-                return result
-                  .then((res: any) => {
-                    const endTime = Date.now();
-                    logger.log(level, `output ${methodName}`, {
-                      method: methodName,
-                      endTime,
-                      outputValues: JSON.stringify(res),
-                      executionTime: endTime - startTime,
-                    });
-                    return res;
-                  })
-                  .catch((err: any) => {
-                    const endTime = Date.now();
-                    logger.log(level, `output ${methodName} error`, {
-                      method: methodName,
-                      endTime,
-                      outputValues: null,
-                      executionTime: endTime - startTime,
-                      outputError: JSON.stringify(err),
-                    });
-                    throw err;
-                  });
-              } else {
-                const endTime = Date.now();
-                logger.log(level, `output ${methodName}`, {
-                  method: methodName,
-                  endTime,
-                  outputValues: JSON.stringify(result),
-                  executionTime: endTime - startTime,
-                });
-                return result;
-              }
-            } catch (err) {
-              const endTime = Date.now();
-              logger.log(level, `output ${methodName} error`, {
-                method: methodName,
-                endTime,
-                outputValues: null,
-                executionTime: endTime - startTime,
-                outputError: JSON.stringify(err),
-              });
-              throw err;
-            }
-          };
         }
       }
     }
