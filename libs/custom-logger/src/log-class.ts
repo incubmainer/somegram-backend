@@ -1,6 +1,6 @@
 import { CustomLoggerService } from './custom-logger.service';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = any> = new (...args: any[]) => T;
 
 interface LogClassOptions {
   level: string;
@@ -84,7 +84,7 @@ async function handleAsyncMethod(
 
 function createLoggerDecorator(
   methodName: string,
-  originalMethod: Function,
+  originalMethod: (...args: any[]) => any,
   loggerClassField: string,
   level: string,
 ) {

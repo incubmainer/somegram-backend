@@ -7,7 +7,7 @@ export const REQUEST_ID_KEY = 'requestId';
 
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
-  constructor(private asyncLocalStorageService: AlsService) { }
+  constructor(private asyncLocalStorageService: AlsService) {}
   use(req: Request, res: Response, next: NextFunction): void {
     let requestId = req.headers['x-request-id'] as string;
 
