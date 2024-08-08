@@ -6,6 +6,11 @@ import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Notification } from '../../../../common/domain/notification';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const LoginWithGithubCodes = {
   Success: Symbol('success'),
@@ -19,6 +24,11 @@ export class AuthWithGithubCommand {
 }
 
 @CommandHandler(AuthWithGithubCommand)
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AuthWithGithubUseCase
   implements ICommandHandler<AuthWithGithubCommand>
 {
@@ -28,7 +38,11 @@ export class AuthWithGithubUseCase
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+    @InjectCustomLoggerService()
+    private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(AuthWithGithubUseCase.name);
+  }
   async execute(command: AuthWithGithubCommand): Promise<Notification<UserId>> {
     const notification = new Notification<UserId>(LoginWithGithubCodes.Success);
     const { user } = command;
