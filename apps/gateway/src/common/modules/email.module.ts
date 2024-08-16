@@ -12,4 +12,4 @@ import { MockEmailSender } from '../utils/mock-email.sender';
   ],
   exports: [EmailSender],
 })
-export class EmailModule { }
+export class EmailModule {}

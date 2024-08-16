@@ -9,6 +9,11 @@ import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { IsUsername } from '../decorators/is-username';
 import { IsEmail, IsString, validateSync } from 'class-validator';
 import { IsUserPassword } from '../decorators/is-user-password';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const RegistrationCodes = {
   Success: Symbol('success'),
@@ -36,6 +41,11 @@ export class RegistrationCommand {
   }
 }
 
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 @CommandHandler(RegistrationCommand)
 export class RegistrationUseCase {
   constructor(
@@ -45,11 +55,15 @@ export class RegistrationUseCase {
     >,
     private readonly cryptoAuthService: CryptoAuthService,
     private readonly emailAuthService: EmailAuthService,
-  ) { }
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(RegistrationUseCase.name);
+  }
 
   public async execute(
     command: RegistrationCommand,
   ): Promise<Notification<void>> {
+    this.logger.log('info', 'registration command', {});
     const notification = new Notification(RegistrationCodes.Success);
     const { username, email, password, html } = command;
     try {
@@ -58,11 +72,17 @@ export class RegistrationUseCase {
         const userByEmail = await this.userRepository.getUserByEmail(email);
         if (userByEmail && userByEmail.isConfirmed) {
           notification.setCode(RegistrationCodes.EmailAlreadyExists);
+          this.logger.log('warn', 'email already exists', {
+            payload: { email },
+          });
           throw new Error('Email already exists');
         }
         const userByUsername =
           await this.userRepository.getUserByUsername(username);
         if (userByUsername && userByUsername.isConfirmed) {
+          this.logger.log('warn', 'username already exists', {
+            payload: { username },
+          });
           notification.setCode(RegistrationCodes.UsernameAlreadyExists);
           throw new Error('Username already exists');
         }
@@ -105,9 +125,11 @@ export class RegistrationUseCase {
           confirmationToken,
           html,
         });
+        this.logger.log('info', 'registration success', {});
       });
     } catch (e) {
       if (notification.getCode() === RegistrationCodes.Success) {
+        this.logger.log('error', 'transaction error', {});
         notification.setCode(RegistrationCodes.TransactionError);
       }
     }

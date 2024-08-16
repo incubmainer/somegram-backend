@@ -1,3 +1,8 @@
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -14,14 +19,23 @@ export class GoogleProfile {
 }
 
 @Injectable()
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
     super({
       clientID: configService.get<GoogleConfig>('google').clientId,
       clientSecret: configService.get<GoogleConfig>('google').clientSecret,
       callbackURL: configService.get<GoogleConfig>('google').redirectUri,
       scope: ['email', 'profile'],
     });
+    logger.setContext(GoogleStrategy.name);
   }
 
   async validate(

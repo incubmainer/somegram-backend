@@ -27,11 +27,26 @@ import {
 } from '../application/use-cases/filling-user-profile.use-case';
 import { ValidationError } from 'class-validator';
 import { FillProfileSwagger } from './swagger/fill-profile.swagger';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 @ApiTags('users')
 @Controller('users')
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class UsersController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(UsersController.name);
+  }
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()

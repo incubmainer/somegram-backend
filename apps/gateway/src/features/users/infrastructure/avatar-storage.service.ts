@@ -3,10 +3,25 @@ import { Injectable } from '@nestjs/common';
 import { FileStorageService } from 'apps/gateway/src/common/utils/file-storage.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ObjectCannedACL } from '@aws-sdk/client-s3';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 @Injectable()
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AvatarStorageService {
-  constructor(private readonly fileStorageService: FileStorageService) { }
+  constructor(
+    private readonly fileStorageService: FileStorageService,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(AvatarStorageService.name);
+  }
   public async saveAvatar(
     userId: string,
     avatar: Buffer,

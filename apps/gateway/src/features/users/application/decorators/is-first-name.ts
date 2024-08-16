@@ -7,14 +7,14 @@ import {
 const FIRSTNAME_REGEX = /^[A-Za-zА-Яа-я]+$/;
 
 export function IsFirstName(validationOptions?: ValidationOptions) {
-  return function(object: Object, propertyName: string) {
+  return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
       name: 'isFirstName',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any) {
           if (!value || typeof value !== 'string') {
             return false;
           }

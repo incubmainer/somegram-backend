@@ -1,9 +1,24 @@
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 import { Injectable } from '@nestjs/common';
 import { EmailSender } from 'apps/gateway/src/common/utils/email.sender';
 
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 @Injectable()
 export class EmailAuthService {
-  constructor(private readonly emailSender: EmailSender) { }
+  constructor(
+    private readonly emailSender: EmailSender,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(EmailAuthService.name);
+  }
   public async sendConfirmationEmail(dto: {
     name: string;
     email: string;

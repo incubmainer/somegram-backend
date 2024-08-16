@@ -9,6 +9,11 @@ import { IsAvatar } from '../decorators/is-avatar';
 import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
 import { ValidationException } from 'apps/gateway/src/common/domain/validation-error';
 import { AvatarRepository } from '../../infrastructure/avatar.repository';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
@@ -32,6 +37,11 @@ export class UploadAvatarCommand {
 }
 
 @CommandHandler(UploadAvatarCommand)
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class UploadAvatarUseCase {
   constructor(
     private readonly txHost: TransactionHost<
@@ -39,7 +49,10 @@ export class UploadAvatarUseCase {
     >,
     private readonly avatarStorageService: AvatarStorageService,
     private readonly avatarRepository: AvatarRepository,
-  ) { }
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(UploadAvatarUseCase.name);
+  }
 
   public async execute(
     command: UploadAvatarCommand,

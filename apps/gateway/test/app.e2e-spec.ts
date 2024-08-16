@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { GatewayModule } from './../src/gateway.module';
 import * as request from 'supertest';
-import { randomUUID } from 'crypto';
 
 describe('GatewayController (e2e)', () => {
   let app: INestApplication;

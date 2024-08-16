@@ -6,7 +6,8 @@ export const GatewayPrismaServiceToken = Symbol('GatewayPrismaServiceToken');
 @Injectable()
 export class GatewayPrismaService
   extends GatewayPrismaClient
-  implements OnModuleInit {
+  implements OnModuleInit
+{
   async onModuleInit(): Promise<void> {
     await this.$connect();
   }

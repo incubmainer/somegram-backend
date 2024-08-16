@@ -6,7 +6,6 @@ import {
   jwtConstants,
   tokensLivesConstants,
 } from '../../../common/config/constants/jwt-basic-constants';
-import { UserFromGithub } from '../api/dto/input-dto/user-from-github';
 
 @Injectable()
 export class AuthService {
