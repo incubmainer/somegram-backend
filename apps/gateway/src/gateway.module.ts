@@ -5,6 +5,7 @@ import { finalConfig } from './common/config/config';
 import { AuthModule } from './features/auth/auth.module';
 import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
 import { UsersModule } from './features/users/users.module';
+import { PostsModule } from './features/posts/posts.module';
 import { AlsModule, AlsService } from '@app/als';
 import {
   CustomLoggerModule,
@@ -32,6 +33,7 @@ export const requestId = 'reduestId';
     ClsTransactionalModule,
     AuthModule,
     UsersModule,
+    PostsModule,
     AlsModule.forRoot({ isGlobal: true }),
     RequestsModule.forRootAsync({
       useFactory: (als: AlsService) => {
