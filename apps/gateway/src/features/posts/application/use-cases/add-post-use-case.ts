@@ -9,7 +9,7 @@ import {
   ValidationError,
 } from 'class-validator';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { Notification } from '../../../../common/domain/notification';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
@@ -19,8 +19,6 @@ import { PostsRepository } from '../../infrastructure/posts.repository';
 import { UserRepository } from '../../../auth/infrastructure/user.repository';
 import { Type } from 'class-transformer';
 import { FileDto } from '../../api/dto/file.dto';
-import { IsPhotoMimetype } from '../decorators/is-photo-mime-type';
-import { IsPostPhoto } from '../decorators/is-photo-for-post';
 
 export const AddPostCodes = {
   Success: Symbol('success'),
@@ -61,7 +59,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     private readonly postPhotoStorageService: PostPhotoStorageService,
     private readonly postsRepository: PostsRepository,
     private readonly userRepository: UserRepository,
-  ) {}
+  ) { }
   async execute(
     command: AddPostCommand,
   ): Promise<Notification<string[]> | Notification<null, ValidationError>> {
