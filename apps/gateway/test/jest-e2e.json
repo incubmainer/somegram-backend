@@ -8,6 +8,9 @@
   },
   "moduleNameMapper": {
     "@app/databases/gateway/(.*)": "<rootDir>../../../libs/databases/src/gateway/$1",
-    "apps/gateway/(.*)": "<rootDir>../$1"
+    "apps/gateway/(.*)": "<rootDir>../$1",
+    "@app/custom-logger": "<rootDir>../../../libs/custom-logger/src/$1",
+    "@app/als": "<rootDir>../../../libs/als/src/$1",
+    "@app/requests": "<rootDir>../../../libs/requests/src/$1"
   }
 }
