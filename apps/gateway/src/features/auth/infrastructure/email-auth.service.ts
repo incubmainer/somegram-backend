@@ -25,12 +25,13 @@ export class EmailAuthService {
     confirmationToken: string;
     html: string;
   }) {
+    const encodedToken = encodeURIComponent(dto.confirmationToken);
     await this.emailSender.sendHtml(
       dto.email,
       'Confirm your email',
       dto.html
         .replaceAll('##name##', dto.name)
-        .replaceAll('##token##', dto.confirmationToken),
+        .replaceAll('##token##', encodedToken),
     );
   }
   public async sendRestorePasswordCode(dto: {
