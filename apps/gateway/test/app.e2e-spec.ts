@@ -38,7 +38,7 @@ describe('GatewayController (e2e)', () => {
         email: 'some@mail.com',
         password: 'abcABC123+',
       })
-      .expect(200);
+      .expect(201);
     aTokenUser01 = response.body.accessToken;
     rTokenUser01 = response.headers['set-cookie'][0];
 

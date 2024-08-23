@@ -7,6 +7,7 @@ import {
   GithubAuthConfig,
 } from './configs/github-auth.config';
 import { googleConfig, GoogleConfig } from './configs/google.config';
+import { loggerConfig, LoggerConfig } from './configs/logger.config';
 import { s3Config, S3Config } from './configs/s3.config';
 
 class FinalConfig {
@@ -17,6 +18,7 @@ class FinalConfig {
   readonly githubAuth: GithubAuthConfig;
   readonly google: GoogleConfig;
   readonly s3: S3Config;
+  readonly logger: LoggerConfig;
 }
 
 export const finalConfig = (): FinalConfig => {
@@ -28,5 +30,6 @@ export const finalConfig = (): FinalConfig => {
     githubAuth: githubAuthConfig(),
     google: googleConfig(),
     s3: s3Config(),
+    logger: loggerConfig(),
   };
 };

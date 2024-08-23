@@ -9,6 +9,11 @@ import { IsAboutMe } from '../decorators/is-about-me';
 import { UserRepository } from '../../../auth/infrastructure/user.repository';
 import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
 import { IsCityName } from '../decorators/is-city';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
@@ -52,8 +57,18 @@ export class FillingUserProfileCommand {
 }
 
 @CommandHandler(FillingUserProfileCommand)
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class FillingUserProfileUseCase {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(FillingUserProfileUseCase.name);
+  }
 
   public async execute(
     command: FillingUserProfileCommand,

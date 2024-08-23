@@ -5,7 +5,7 @@ import { AppConfig } from './common/config/configs/app.config';
 import { appSetting } from './app-setting';
 
 async function bootstrap() {
-  const app = await NestFactory.create(GatewayModule);
+  const app = await NestFactory.create(GatewayModule, { cors: true });
   const configService = app.get(ConfigService);
   const appConfig = configService.get<AppConfig>('app');
   appSetting(app);
