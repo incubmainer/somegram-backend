@@ -23,6 +23,7 @@ export class EmailAuthService {
     name: string;
     email: string;
     confirmationToken: string;
+    expiredAt: Date;
     html: string;
   }) {
     const encodedToken = encodeURIComponent(dto.confirmationToken);
@@ -31,7 +32,8 @@ export class EmailAuthService {
       'Confirm your email',
       dto.html
         .replaceAll('##name##', dto.name)
-        .replaceAll('##token##', encodedToken),
+        .replaceAll('##token##', encodedToken)
+        .replaceAll('##expiredAt##', dto.expiredAt.toISOString()),
     );
   }
   public async sendRestorePasswordCode(dto: {
