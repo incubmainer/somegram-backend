@@ -122,6 +122,7 @@ export class RegistrationUseCase {
         await this.emailAuthService.sendConfirmationEmail({
           name: username,
           email,
+          expiredAt: confirmationTokenExpiresAt,
           confirmationToken,
           html,
         });
