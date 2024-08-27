@@ -75,6 +75,12 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import {
+  GetInfoAboutMeCommand,
+  MeCodes,
+} from '../application/use-cases/get-info-about-me.use-case';
+import { MeOutputDto } from './dto/output-dto/me-output-dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -457,5 +463,23 @@ export class AuthController {
         secure: true,
       })
       .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+  }
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
+    console.log('🚀 ~ AuthController ~ getInfoAboutMe ~ userId:');
+    this.logger.log('info', 'start me request', {});
+    const notification: Notification<MeOutputDto> =
+      await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
+    const noteCode = notification.getCode();
+    if (noteCode === MeCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
+      throw new InternalServerErrorException({
+        message: 'Transaction error',
+      });
+    }
+    const outputUser = notification.getDate();
+    return outputUser;
   }
 }

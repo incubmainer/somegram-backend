@@ -14,6 +14,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { MeOutputDto, userMapper } from '../api/dto/output-dto/me-output-dto';
 
 @Injectable()
 @LogClass({
@@ -310,6 +311,15 @@ export class UserRepository {
       return null;
     }
     return user;
+  }
+  async getInfoAboutMe(currentUserId: string): Promise<MeOutputDto | null> {
+    const user = await this.txHost.tx.user.findFirst({
+      where: { id: currentUserId },
+    });
+    if (!user) {
+      return null;
+    }
+    return userMapper(user);
   }
 
   async updateUserProfileInfo(

@@ -31,6 +31,7 @@ import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
+import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
 
 const useCases = [
   LoginUserUseCase,
@@ -61,6 +62,7 @@ const useCases = [
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
     RestorePasswordUseCase,
+    GetInfoAboutMeUseCase,
     {
       provide: RecapchaService,
       useClass:
