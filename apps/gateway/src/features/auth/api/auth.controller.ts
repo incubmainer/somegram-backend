@@ -81,6 +81,7 @@ import {
   MeCodes,
 } from '../application/use-cases/get-info-about-me.use-case';
 import { MeOutputDto } from './dto/output-dto/me-output-dto';
+import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -467,6 +468,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @GetInfoAboutMeSwagger()
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     console.log('🚀 ~ AuthController ~ getInfoAboutMe ~ userId:');
     this.logger.log('info', 'start me request', {});
