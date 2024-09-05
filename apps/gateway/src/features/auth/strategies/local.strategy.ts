@@ -8,12 +8,12 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-@Injectable()
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
+@Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private authService: AuthService,

@@ -32,6 +32,8 @@ import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.us
 import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
 import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
+import { PassportModule } from '@nestjs/passport';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 const useCases = [
   LoginUserUseCase,
@@ -39,6 +41,7 @@ const useCases = [
   AuthWithGithubUseCase,
   LoginByGoogleUseCase,
   RefreshTokenUseCase,
+  GetInfoAboutMeUseCase,
 ];
 
 @Module({
@@ -51,18 +54,19 @@ const useCases = [
       secret: jwtConstants.JWT_SECRET,
       signOptions: { expiresIn: tokensLivesConstants['2hours'] },
     }),
+    PassportModule,
   ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
     LocalStrategy,
     JwtStrategy,
+    // LocalAuthGuard,
     GithubStrategy,
     GoogleStrategy,
     UserRepository,
     RegistrationUseCase,
     RegistrationConfirmationUseCase,
     RestorePasswordUseCase,
-    GetInfoAboutMeUseCase,
     {
       provide: RecapchaService,
       useClass:
@@ -79,5 +83,6 @@ const useCases = [
     SecurityDevicesService,
     ...useCases,
   ],
+  // exports: [LocalAuthGuard],
 })
 export class AuthModule {}

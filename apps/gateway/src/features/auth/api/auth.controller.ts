@@ -342,10 +342,10 @@ export class AuthController {
   }
 
   @UseGuards(LocalAuthGuard)
+  @Post('login')
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
   @ApiBody({ type: LoginDto })
-  @Post('login')
   async login(
     @CurrentUserId() userId: string,
     @IpAddress() ip: string,
