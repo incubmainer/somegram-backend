@@ -16,6 +16,7 @@ export class AuthService {
   ) {}
   async validateUser(email: string, pass: string) {
     const user = await this.userRepository.getUserByEmail(email);
+    console.log('🚀 ~ AuthService ~ validateUser ~ user:', user);
     if (!user) return null;
 
     const isValidPassword = await this.cryptoService.validatePassword(
