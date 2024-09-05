@@ -8,12 +8,12 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-@Injectable()
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
+@Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private authService: AuthService,
@@ -27,6 +27,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   async validate(email: string, password: string): Promise<any> {
     const user = await this.authService.validateUser(email, password);
+    console.log('🚀 ~ LocalStrategy ~ validate ~ user:', user);
     if (!user) {
       throw new UnauthorizedException();
     }
