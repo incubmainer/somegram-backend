@@ -243,7 +243,8 @@ export class AuthController {
     const accesAndRefreshTokens = await this.commandBus.execute(
       new LoginUserCommand(userId, ip, title),
     );
-    const origin = request.headers.origin || '';
+    const origin = request.headers.origin || 'http://localhost:3000';
+    console.log('🚀 ~ AuthController ~ origin:', origin);
     this.logger.log('info', 'google auth callback success', {});
     response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
@@ -456,7 +457,7 @@ export class AuthController {
       new LoginUserCommand(userId, ip, title),
     );
 
-    const origin = req.headers.origin || '';
+    const origin = req.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'github auth callback success', {});
     res
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
