@@ -93,6 +93,7 @@ export class RestorePasswordUseCase {
         notification.setCode(RestorePasswordCodes.TransactionError);
       }
     }
+    //SS
     return notification;
   }
 }
