@@ -17,7 +17,16 @@ export const appSetting = (app: INestApplication) => {
       'http://localhost:3001',
       'https://somegram.online',
     ],
-    credentials: true, // Чтобы разрешить отправку cookies с запросами
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Origin',
+      'X-Requested-With',
+      'Accept',
+      'Authorization',
+    ],
+    exposedHeaders: ['Authorization'],
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
   });
   app.use(cookieParser());
   const appConfig = configService.get<AppConfig>('app');
