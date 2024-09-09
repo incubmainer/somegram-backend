@@ -11,6 +11,14 @@ import * as cookieParser from 'cookie-parser';
 
 export const appSetting = (app: INestApplication) => {
   const configService = app.get(ConfigService);
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://somegram.online',
+    ],
+    credentials: true, // Чтобы разрешить отправку cookies с запросами
+  });
   app.use(cookieParser());
   const appConfig = configService.get<AppConfig>('app');
   const globalPrefix = appConfig.GLOBAL_PREFIX;
