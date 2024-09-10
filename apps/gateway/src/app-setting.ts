@@ -26,7 +26,7 @@ export const appSetting = (app: INestApplication) => {
       'Authorization',
     ],
     exposedHeaders: ['Authorization'],
-    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
   });
   app.use(cookieParser());
   const appConfig = configService.get<AppConfig>('app');
