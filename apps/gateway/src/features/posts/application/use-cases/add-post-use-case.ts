@@ -59,7 +59,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     private readonly postPhotoStorageService: PostPhotoStorageService,
     private readonly postsRepository: PostsRepository,
     private readonly userRepository: UserRepository,
-  ) { }
+  ) {}
   async execute(
     command: AddPostCommand,
   ): Promise<Notification<string[]> | Notification<null, ValidationError>> {
