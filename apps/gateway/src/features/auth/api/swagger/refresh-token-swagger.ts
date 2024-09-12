@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 export function RefreshTokenSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({
       summary:
         'Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing) ',

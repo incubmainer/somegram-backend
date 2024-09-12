@@ -33,7 +33,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-@ApiTags('users')
+@ApiTags('Users')
 @Controller('users')
 @LogClass({
   level: 'trace',

@@ -39,4 +39,18 @@ export class PostsRepository {
       },
     });
   }
+
+  public async updatePost(dto: {
+    postId: UserPost['id'];
+    description: UserPost['description'];
+  }): Promise<UserPost> {
+    return await this.txHost.tx.userPost.update({
+      data: {
+        description: dto.description,
+      },
+      where: {
+        id: dto.postId,
+      },
+    });
+  }
 }

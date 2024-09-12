@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 export function RecaptchaSiteKeySwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({
       summary: 'Get the reCAPTCHA site key',
     }),

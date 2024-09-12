@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function LoginSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'User Login' }),
     ApiResponse({
       status: HttpStatus.OK,

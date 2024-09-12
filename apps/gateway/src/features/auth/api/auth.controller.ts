@@ -83,7 +83,7 @@ import {
 import { MeOutputDto } from './dto/output-dto/me-output-dto';
 import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 @LogClass({
   level: 'trace',

@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function GithubAuthCallbackSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'GitHub Authentication Callback' }),
     ApiResponse({
       status: HttpStatus.OK,

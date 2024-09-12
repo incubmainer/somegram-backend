@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function RestorePasswordConfirmationSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'Restore Password Confirmation' }),
     ApiResponse({
       status: HttpStatus.OK,

@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  Param,
   Post,
+  Put,
   UnauthorizedException,
   UnprocessableEntityException,
   UploadedFiles,
@@ -17,20 +20,26 @@ import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { ValidationError } from 'class-validator';
-import { AddPostDto } from './dto/input.dto';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import {
   AddPostCodes,
   AddPostCommand,
 } from '../application/use-cases/add-post-use-case';
 import { AddPostSwagger } from './swagger/add-post-swagger';
+import {
+  UpdatePostCodes,
+  UpdatePostCommand,
+} from '../application/use-cases/update-post-use-case';
+import { UpdatePostSwagger } from './swagger/update-post-swagger';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { AddPostDto } from './dto/input.dto';
 
-@ApiTags('posts')
+@ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(private readonly commandBus: CommandBus) {}
 
-  @Post('add-post')
+  @Post()
   @UseInterceptors(FilesInterceptor('files', 10))
   @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
@@ -62,6 +71,42 @@ export class PostsController {
       });
     if (code === AddPostCodes.UserNotFound) throw new UnauthorizedException();
     if (code === AddPostCodes.TransactionError)
+      throw new InternalServerErrorException();
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UpdatePostSwagger()
+  @UseGuards(JwtAuthGuard)
+  async updatePost(
+    @CurrentUserId() userId: string,
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
+    console.log(userId);
+    const result: Notification<string, ValidationError> =
+      await this.commandBus.execute(
+        new UpdatePostCommand(userId, id, updatePostDto.description),
+      );
+
+    const code = result.getCode();
+    if (code === UpdatePostCodes.Success)
+      return {
+        message: 'Post update successfully',
+        photoUrl: result.getDate(),
+      };
+    if (code === UpdatePostCodes.ValidationCommandError)
+      throw new UnprocessableEntityException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Validation failed',
+        errors: result.getErrors().map((e) => ({
+          property: e.property,
+          constraints: e.constraints,
+        })),
+      });
+    if (code === UpdatePostCodes.UserNotFound)
+      throw new UnauthorizedException();
+    if (code === UpdatePostCodes.TransactionError)
       throw new InternalServerErrorException();
   }
 }

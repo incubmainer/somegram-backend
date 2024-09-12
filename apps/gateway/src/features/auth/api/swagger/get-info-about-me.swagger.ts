@@ -1,15 +1,13 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { MeOutputDto } from '../dto/output-dto/me-output-dto';
 
 export function GetInfoAboutMeSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'Get info about user' }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'Returns user information',
-      //   type: MeOutputDto,
       schema: {
         example: {
           userId: '123',
