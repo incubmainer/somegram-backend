@@ -9,8 +9,9 @@ import { PostsRepository } from './infrastructure/posts.repository';
 import { AddPostUseCase } from './application/use-cases/add-post-use-case';
 import { UserRepository } from '../auth/infrastructure/user.repository';
 import { UpdatePostUseCase } from './application/use-cases/update-post-use-case';
+import { DeletePostUseCase } from './application/use-cases/delete-post-use-case';
 
-const useCases = [AddPostUseCase, UpdatePostUseCase];
+const useCases = [AddPostUseCase, UpdatePostUseCase, DeletePostUseCase];
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule],

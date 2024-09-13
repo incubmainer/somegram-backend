@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -33,6 +35,11 @@ import {
 import { UpdatePostSwagger } from './swagger/update-post-swagger';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { AddPostDto } from './dto/input.dto';
+import { DeletePostSwagger } from './swagger/delete-post-swagger';
+import {
+  DeletePostCodes,
+  DeletePostCommand,
+} from '../application/use-cases/delete-post-use-case';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -83,18 +90,13 @@ export class PostsController {
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    console.log(userId);
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
         new UpdatePostCommand(userId, id, updatePostDto.description),
       );
 
     const code = result.getCode();
-    if (code === UpdatePostCodes.Success)
-      return {
-        message: 'Post update successfully',
-        photoUrl: result.getDate(),
-      };
+    if (code === UpdatePostCodes.Success) return;
     if (code === UpdatePostCodes.ValidationCommandError)
       throw new UnprocessableEntityException({
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -104,9 +106,35 @@ export class PostsController {
           constraints: e.constraints,
         })),
       });
+    if (code === UpdatePostCodes.PostNotFound) throw new NotFoundException();
     if (code === UpdatePostCodes.UserNotFound)
       throw new UnauthorizedException();
     if (code === UpdatePostCodes.TransactionError)
+      throw new InternalServerErrorException();
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DeletePostSwagger()
+  @UseGuards(JwtAuthGuard)
+  async deletePost(@CurrentUserId() userId: string, @Param('id') id: string) {
+    const result: Notification<string, ValidationError> =
+      await this.commandBus.execute(new DeletePostCommand(userId, id));
+
+    const code = result.getCode();
+    if (code === DeletePostCodes.Success) return;
+    if (code === DeletePostCodes.ValidationCommandError)
+      throw new UnprocessableEntityException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Validation failed',
+        errors: result.getErrors().map((e) => ({
+          property: e.property,
+          constraints: e.constraints,
+        })),
+      });
+    if (code === DeletePostCodes.UserNotFound)
+      throw new UnauthorizedException();
+    if (code === DeletePostCodes.TransactionError)
       throw new InternalServerErrorException();
   }
 }

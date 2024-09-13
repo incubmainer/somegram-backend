@@ -43,11 +43,18 @@ export class PostsRepository {
   public async updatePost(dto: {
     postId: UserPost['id'];
     description: UserPost['description'];
-  }): Promise<UserPost> {
+  }): Promise<UserPost | null> {
     return await this.txHost.tx.userPost.update({
       data: {
         description: dto.description,
       },
+      where: {
+        id: dto.postId,
+      },
+    });
+  }
+  public async deletePost(dto: { postId: UserPost['id'] }) {
+    return await this.txHost.tx.userPost.delete({
       where: {
         id: dto.postId,
       },
