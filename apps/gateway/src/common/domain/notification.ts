@@ -10,7 +10,7 @@ export class Notification<T = null, E = null> {
     this.data = data;
   }
 
-  getDate(): T | null {
+  getData(): T | null {
     return this.data;
   }
 

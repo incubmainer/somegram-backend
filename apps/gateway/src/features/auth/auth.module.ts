@@ -33,6 +33,7 @@ import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.us
 import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
 import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
+import { CreateTokensUseCase } from './application/use-cases/create-token.use-case';
 
 const useCases = [
   LoginUserUseCase,
@@ -41,6 +42,7 @@ const useCases = [
   LoginByGoogleUseCase,
   RefreshTokenUseCase,
   GetInfoAboutMeUseCase,
+  CreateTokensUseCase,
 ];
 
 @Module({

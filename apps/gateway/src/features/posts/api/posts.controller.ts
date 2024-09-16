@@ -84,7 +84,7 @@ export class PostsController {
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new UpdatePostCommand(userId, id, updatePostDto.description),
+        new UpdatePostCommand(id, userId, updatePostDto.description),
       );
 
     const code = result.getCode();
@@ -112,7 +112,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async deletePost(@CurrentUserId() userId: string, @Param('id') id: string) {
     const result: Notification<string, ValidationError> =
-      await this.commandBus.execute(new DeletePostCommand(userId, id));
+      await this.commandBus.execute(new DeletePostCommand(id, userId));
 
     const code = result.getCode();
     if (code === DeletePostCodes.Success) return;

@@ -227,7 +227,7 @@ export class AuthController {
         message: 'Transaction error',
       });
     }
-    const userId = notification.getDate();
+    //const userId = notification.getData();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -240,7 +240,11 @@ export class AuthController {
     }
     const title = userAgent || 'Mozilla';
     const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+      new LoginUserCommand(
+        { email: 'password', password: 'password' },
+        ip,
+        title,
+      ),
     );
     const origin = request.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'google auth callback success', {});
@@ -429,7 +433,7 @@ export class AuthController {
         message: 'Transaction error',
       });
     }
-    const userId = notification.getDate();
+    //const userId = notification.getData();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -442,7 +446,11 @@ export class AuthController {
     }
     const title = userAgent || 'Mozilla';
     const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+      new LoginUserCommand(
+        { email: 'password', password: 'password' },
+        ip,
+        title,
+      ),
     );
 
     const origin = req.headers.origin || 'http://localhost:3000';
@@ -454,12 +462,12 @@ export class AuthController {
       })
       .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
   }
+
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
-    console.log('🚀 ~ AuthController ~ getInfoAboutMe ~ userId:');
     this.logger.log('info', 'start me request', {});
     const notification: Notification<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
@@ -470,7 +478,7 @@ export class AuthController {
         message: 'Transaction error',
       });
     }
-    const outputUser = notification.getDate();
+    const outputUser = notification.getData();
     return outputUser;
   }
 }

@@ -11,12 +11,12 @@ export const DeletePostCodes = {
 };
 
 export class DeletePostCommand {
-  public readonly userId: string;
   public readonly postId: string;
+  public readonly userId: string;
 
   constructor(postId: string, userId: string) {
-    this.userId = userId;
     this.postId = postId;
+    this.userId = userId;
   }
 }
 @CommandHandler(DeletePostCommand)

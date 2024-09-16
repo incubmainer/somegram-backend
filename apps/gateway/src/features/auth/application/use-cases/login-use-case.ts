@@ -1,8 +1,9 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthService } from '../auth.service';
 import { randomUUID } from 'crypto';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
 import { LoginDto } from '../../api/dto/input-dto/login-user-with-device.dto';
+import { CreateTokensCommand } from './create-token.use-case';
 
 export const LoginCodes = {
   Success: Symbol('success'),
@@ -25,6 +26,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
   constructor(
     private readonly authService: AuthService,
     private readonly securityDevicesRepo: SecurityDevicesRepository,
+    private readonly commandBus: CommandBus,
   ) {}
   async execute(
     command: LoginUserCommand,
@@ -38,12 +40,13 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       return null;
     }
     const deviceId = randomUUID();
-    const refreshToken = await this.authService.createRefreshToken(
-      userId,
-      deviceId,
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId, deviceId),
     );
-    const payload = await this.authService.verifyRefreshToken(refreshToken);
-    const accessToken = await this.authService.createAccesshToken(userId);
+
+    const payload = await this.authService.verifyRefreshToken(
+      tokens.refreshToken,
+    );
     const lastActiveDate = new Date(payload.iat * 1000).toISOString();
 
     await this.securityDevicesRepo.addDevice(
@@ -53,6 +56,10 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       lastActiveDate,
       title,
     );
-    return { refreshToken, accessToken };
+
+    return {
+      refreshToken: tokens.refreshToken,
+      accessToken: tokens.accessToken,
+    };
   }
 }

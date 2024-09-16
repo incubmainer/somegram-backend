@@ -20,8 +20,8 @@ export const UpdatePostCodes = {
 };
 
 export class UpdatePostCommand {
-  public readonly userId: string;
   public readonly postId: string;
+  public readonly userId: string;
   @IsOptional()
   @IsString()
   @MaxLength(DESC_MAX_LENGTH)
@@ -50,8 +50,9 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     }
     const { postId, userId, description } = command;
     const notification = new Notification<string[]>(UpdatePostCodes.Success);
-
+    console.log(userId, postId);
     const post = await this.postsRepository.findPost(postId);
+
     if (!post) {
       notification.setCode(UpdatePostCodes.PostNotFound);
       return notification;
