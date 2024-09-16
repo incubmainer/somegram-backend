@@ -22,7 +22,6 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
-import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Request, Response } from 'express';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
@@ -244,7 +243,6 @@ export class AuthController {
       new LoginUserCommand(userId, ip, title),
     );
     const origin = request.headers.origin || 'http://localhost:3000';
-    console.log('🚀 ~ AuthController ~ origin:', origin);
     this.logger.log('info', 'google auth callback success', {});
     response
       .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
@@ -342,40 +340,30 @@ export class AuthController {
     }
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
   @ApiBody({ type: LoginDto })
   async login(
-    @CurrentUserId() userId: string,
+    @Body() loginDto: LoginDto,
     @IpAddress() ip: string,
-    @UserAgent() userAgent: string | undefined,
+    @UserAgent() userAgent: string,
     @Res() response: Response,
   ) {
     this.logger.log('info', 'start login', {});
-    if (!ip) {
-      this.logger.log('warn', 'unknown ip address', {});
-      throw new NotFoundException({
-        error: 'login failed',
-        message: 'Unknown ip address',
-        details: {
-          ip: 'Invlid ip address',
-        },
-      });
-    }
-    const title = userAgent || 'Mozilla';
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+    const tokens = await this.commandBus.execute(
+      new LoginUserCommand(loginDto, ip, userAgent),
     );
-
+    if (!tokens) {
+      throw new UnauthorizedException();
+    }
     this.logger.log('info', 'login success', {});
     response
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .send({ accessToken: accesAndRefreshTokens.accessToken });
+      .send({ accessToken: tokens.accessToken });
   }
 
   @Post('logout')

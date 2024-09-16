@@ -30,12 +30,20 @@ export class PostsRepository {
     postId: UserPost['id'];
     userId: UserPost['userId'];
     description: UserPost['description'];
-  }): Promise<void> {
-    await this.txHost.tx.userPost.create({
+  }): Promise<UserPost> {
+    return await this.txHost.tx.userPost.create({
       data: {
         id: dto.postId,
         userId: dto.userId,
         description: dto.description,
+      },
+    });
+  }
+
+  public async findPost(postId: UserPost['id']): Promise<UserPost | null> {
+    return await this.txHost.tx.userPost.findFirst({
+      where: {
+        id: postId,
       },
     });
   }

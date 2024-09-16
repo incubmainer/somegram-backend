@@ -16,8 +16,11 @@ export class AuthService {
   ) {}
   async validateUser(email: string, pass: string) {
     const user = await this.userRepository.getUserByEmail(email);
-    console.log('🚀 ~ AuthService ~ validateUser ~ user:', user);
-    if (!user) return null;
+    console.log(user);
+    if (!user) {
+      //if (!user || !user.isConfirmed) {
+      return false;
+    }
 
     const isValidPassword = await this.cryptoService.validatePassword(
       pass,
@@ -25,18 +28,15 @@ export class AuthService {
     );
     if (!isValidPassword) return null;
 
-    return user;
+    return user.id;
   }
 
-  async login(userId: string) {
+  async createAccesshToken(userId: string) {
     const payload = { sub: userId };
-
-    return {
-      accessToken: await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.JWT_SECRET,
-        expiresIn: tokensLivesConstants['1hour'],
-      }),
-    };
+    return await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.JWT_SECRET,
+      expiresIn: tokensLivesConstants['1hour'],
+    });
   }
   async createRefreshToken(userId: string, deviceId: string) {
     const payload = { sub: userId, deviceId: deviceId };

@@ -5,7 +5,7 @@ import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { DESC_MAX_LENGTH } from '../dto/update-post.dto';
+import { DESC_MAX_LENGTH } from '../dto/post.dto';
 
 export function UpdatePostSwagger() {
   return applyDecorators(

@@ -2,14 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
   Put,
-  UnauthorizedException,
   UnprocessableEntityException,
   UploadedFiles,
   UseGuards,
@@ -33,8 +32,7 @@ import {
   UpdatePostCommand,
 } from '../application/use-cases/update-post-use-case';
 import { UpdatePostSwagger } from './swagger/update-post-swagger';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { AddPostDto } from './dto/input.dto';
+import { PostDto } from './dto/post.dto';
 import { DeletePostSwagger } from './swagger/delete-post-swagger';
 import {
   DeletePostCodes,
@@ -53,20 +51,15 @@ export class PostsController {
   async addPost(
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUserId() userId: string,
-    @Body() addPostDto: AddPostDto,
+    @Body() addPostDto: PostDto,
   ) {
-    console.log('🚀 ~ PostsController ~ files:', files);
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
         new AddPostCommand(userId, files, addPostDto.description),
       );
 
     const code = result.getCode();
-    if (code === AddPostCodes.Success)
-      return {
-        message: 'Post created successfully',
-        photoUrl: result.getDate(),
-      };
+    if (code === AddPostCodes.Success) return result.data;
     if (code === AddPostCodes.ValidationCommandError)
       throw new UnprocessableEntityException({
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -76,9 +69,8 @@ export class PostsController {
           constraints: e.constraints,
         })),
       });
-    if (code === AddPostCodes.UserNotFound) throw new UnauthorizedException();
     if (code === AddPostCodes.TransactionError)
-      throw new InternalServerErrorException();
+      throw new ForbiddenException('Database error');
   }
 
   @Put(':id')
@@ -88,7 +80,7 @@ export class PostsController {
   async updatePost(
     @CurrentUserId() userId: string,
     @Param('id') id: string,
-    @Body() updatePostDto: UpdatePostDto,
+    @Body() updatePostDto: PostDto,
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
@@ -106,11 +98,12 @@ export class PostsController {
           constraints: e.constraints,
         })),
       });
-    if (code === UpdatePostCodes.PostNotFound) throw new NotFoundException();
-    if (code === UpdatePostCodes.UserNotFound)
-      throw new UnauthorizedException();
+    if (code === UpdatePostCodes.PostNotFound)
+      throw new NotFoundException('Post not found');
+    if (code === UpdatePostCodes.UserNotOwner)
+      throw new ForbiddenException('User not owner of post');
     if (code === UpdatePostCodes.TransactionError)
-      throw new InternalServerErrorException();
+      throw new ForbiddenException('Database error');
   }
 
   @Delete(':id')
@@ -123,18 +116,11 @@ export class PostsController {
 
     const code = result.getCode();
     if (code === DeletePostCodes.Success) return;
-    if (code === DeletePostCodes.ValidationCommandError)
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
-          property: e.property,
-          constraints: e.constraints,
-        })),
-      });
-    if (code === DeletePostCodes.UserNotFound)
-      throw new UnauthorizedException();
+    if (code === DeletePostCodes.PostNotFound)
+      throw new NotFoundException('Post not found');
+    if (code === DeletePostCodes.UserNotOwner)
+      throw new ForbiddenException('User not owner of post');
     if (code === DeletePostCodes.TransactionError)
-      throw new InternalServerErrorException();
+      throw new ForbiddenException('Database error');
   }
 }

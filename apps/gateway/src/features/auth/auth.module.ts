@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+
 import { AuthController } from './api/auth.controller';
 import { RegistrationUseCase } from './application/use-cases/registration.use-case';
 import { UserRepository } from './infrastructure/user.repository';
@@ -9,9 +12,7 @@ import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
 import { EmailModule } from '../../common/modules/email.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
 import { AuthService } from './application/auth.service';
-import { JwtModule } from '@nestjs/jwt';
 import { LoginUserUseCase } from './application/use-cases/login-use-case';
 import { SecurityDevicesRepository } from '../security-devices/infrastructure/security-devices.repository';
 import { SecurityDevicesService } from '../security-devices/application/security-devices.service';
@@ -32,8 +33,6 @@ import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.us
 import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
 import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
-import { PassportModule } from '@nestjs/passport';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 
 const useCases = [
   LoginUserUseCase,
@@ -58,9 +57,7 @@ const useCases = [
   ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
-    LocalStrategy,
     JwtStrategy,
-    // LocalAuthGuard,
     GithubStrategy,
     GoogleStrategy,
     UserRepository,
@@ -83,6 +80,5 @@ const useCases = [
     SecurityDevicesService,
     ...useCases,
   ],
-  // exports: [LocalAuthGuard],
 })
 export class AuthModule {}
