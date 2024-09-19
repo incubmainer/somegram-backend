@@ -31,6 +31,7 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-c
 import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
 import { CreateTokensUseCase } from './application/use-cases/create-token.use-case';
 import { AddUserDeviceUseCase } from './application/use-cases/add-user-device.use-case';
+import { RegistrationEmailResendingUseCase } from './application/use-cases/registration-email-resending.use-case';
 
 const services = [
   AuthService,
@@ -53,6 +54,7 @@ const useCases = [
   RegistrationConfirmationUseCase,
   RestorePasswordUseCase,
   RestorePasswordConfirmationUseCase,
+  RegistrationEmailResendingUseCase,
 ];
 
 const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];

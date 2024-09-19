@@ -55,10 +55,11 @@ export function RestorePasswordSwagger() {
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: HttpStatus.FORBIDDEN,
       description: 'Transaction error',
       schema: {
         example: {
+          statusCode: HttpStatus.FORBIDDEN,
           message: 'Transaction error',
         },
       },

@@ -26,5 +26,15 @@ export function GetInfoAboutMeSwagger() {
         },
       },
     }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          statusCode: HttpStatus.FORBIDDEN,
+          message: 'Transaction error',
+        },
+      },
+    }),
   );
 }

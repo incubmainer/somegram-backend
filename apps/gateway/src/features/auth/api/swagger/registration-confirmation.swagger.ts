@@ -6,14 +6,8 @@ export function RegistrationConfirmationSwagger() {
     ApiTags('Auth'),
     ApiOperation({ summary: 'Registration Confirmation' }),
     ApiResponse({
-      status: HttpStatus.OK,
+      status: HttpStatus.NO_CONTENT,
       description: 'Registration confirmation successful',
-      schema: {
-        example: {
-          statusCode: HttpStatus.OK,
-          message: 'Registration confirmation successful',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
@@ -22,6 +16,7 @@ export function RegistrationConfirmationSwagger() {
         oneOf: [
           {
             example: {
+              statusCode: HttpStatus.BAD_REQUEST,
               error: 'registration_confirmation_failed',
               message:
                 'Registration confirmation failed due to token expiration.',
@@ -55,10 +50,11 @@ export function RegistrationConfirmationSwagger() {
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: HttpStatus.FORBIDDEN,
       description: 'Transaction error',
       schema: {
         example: {
+          statusCode: HttpStatus.FORBIDDEN,
           message: 'Transaction error',
         },
       },

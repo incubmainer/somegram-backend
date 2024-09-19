@@ -20,6 +20,7 @@ export function RegistrationSwagger() {
       description: 'Email or Username already exists',
       schema: {
         example: {
+          statusCode: HttpStatus.BAD_REQUEST,
           error: 'registration_failed',
           message:
             'Registration failed due to conflict with existing email or username.',
@@ -31,11 +32,11 @@ export function RegistrationSwagger() {
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: HttpStatus.FORBIDDEN,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          statusCode: HttpStatus.FORBIDDEN,
           message: 'Transaction error',
         },
       },

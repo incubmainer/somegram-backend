@@ -14,6 +14,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { randomUUID } from 'crypto';
 
 export const RegistrationCodes = {
   Success: Symbol('success'),
@@ -86,8 +87,6 @@ export class RegistrationUseCase {
           notification.setCode(RegistrationCodes.UsernameAlreadyExists);
           throw new Error('Username already exists');
         }
-
-        // delete not confirmed user if exists
         if (
           userByEmail &&
           userByUsername &&
@@ -105,8 +104,7 @@ export class RegistrationUseCase {
 
         const hashPassword =
           await this.cryptoAuthService.hashPassword(password);
-        const confirmationToken =
-          await this.cryptoAuthService.generateConfirmationToken();
+        const confirmationToken = randomUUID().replaceAll('-', '');
         const hoursExpires = 24;
         const confirmationTokenExpiresAt = new Date(
           currentDate.getTime() + 1000 * 60 * 60 * hoursExpires,
@@ -128,11 +126,9 @@ export class RegistrationUseCase {
         });
         this.logger.log('info', 'registration success', {});
       });
-    } catch (e) {
-      if (notification.getCode() === RegistrationCodes.Success) {
-        this.logger.log('error', 'transaction error', {});
-        notification.setCode(RegistrationCodes.TransactionError);
-      }
+    } catch {
+      this.logger.log('error', 'transaction error', {});
+      notification.setCode(RegistrationCodes.TransactionError);
     }
     return notification;
   }

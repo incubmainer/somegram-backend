@@ -4,7 +4,6 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   Post,
   Res,
   UseGuards,
@@ -12,6 +11,7 @@ import {
   UnauthorizedException,
   Get,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -81,6 +81,12 @@ import {
 } from '../application/use-cases/get-info-about-me.use-case';
 import { MeOutputDto } from './dto/output-dto/me-output-dto';
 import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
+import { RegistrationEmailResendingSwagger } from './swagger/registration-email-resending.swagger';
+import { RegistrationEmailResendingBodyInputDto } from './dto/input-dto/registration-email-resending.body.input-dto';
+import {
+  RegistrationEmailResendingCodes,
+  RegistrationEmailResendingCommand,
+} from '../application/use-cases/registration-email-resending.use-case';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -123,6 +129,7 @@ export class AuthController {
     if (code === RegistrationCodes.EmailAlreadyExists) {
       this.logger.log('warn', 'email already exists', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
         message:
           'Registration failed due to conflict with existing email or username.',
@@ -144,14 +151,15 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
+        statusCode: HttpStatus.FORBIDDEN,
         message: 'Transaction error',
       });
     }
   }
 
   @Post('registration-confirmation')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationConfirmationSwagger()
   public async registrationConfirmation(
     @Body() body: RegistrationConfirmationBodyInputDto,
@@ -163,14 +171,12 @@ export class AuthController {
     const code = notification.getCode();
     if (code === RegistrationConfirmationCodes.Success) {
       this.logger.log('info', 'registration confirmation success', {});
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Registration confirmation successful',
-      };
+      return;
     }
     if (code === RegistrationConfirmationCodes.TokenExpired) {
       this.logger.log('warn', 'token expired', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to token expiration.',
       });
@@ -178,13 +184,54 @@ export class AuthController {
     if (code === RegistrationConfirmationCodes.TokenInvalid) {
       this.logger.log('warn', 'token invalid', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to invalid token.',
       });
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'Transaction error',
+      });
+    }
+  }
+
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RegistrationEmailResendingSwagger()
+  public async registrationEmailResending(
+    @Body() body: RegistrationEmailResendingBodyInputDto,
+  ) {
+    this.logger.log('info', 'start registration-email-resending', {});
+    const notification: Notification<null> = await this.commandBus.execute(
+      new RegistrationEmailResendingCommand(body.email, body.html),
+    );
+    const code = notification.getCode();
+    if (code === RegistrationEmailResendingCodes.Success) {
+      this.logger.log('info', 'registration-email-resending success', {});
+      return;
+    }
+    if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
+      this.logger.log('warn', 'email already confirmated', {});
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        error: 'email_already_confirmated',
+        message: 'User with current email already confirmed',
+      });
+    }
+    if (code === RegistrationEmailResendingCodes.UserNotFound) {
+      this.logger.log('warn', 'username not found', {});
+      throw new NotFoundException({
+        error: 'user_not_found',
+        message: 'User with current email not found',
+      });
+    }
+    if (code === RegistrationEmailResendingCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
+      throw new ForbiddenException({
+        statusCode: HttpStatus.FORBIDDEN,
         message: 'Transaction error',
       });
     }
@@ -223,7 +270,7 @@ export class AuthController {
     }
     if (noteCode === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
         message: 'Transaction error',
       });
     }
@@ -296,7 +343,7 @@ export class AuthController {
     }
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
         message: 'Transaction error',
       });
     }
@@ -336,7 +383,7 @@ export class AuthController {
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
         message: 'Transaction error',
       });
     }
@@ -427,7 +474,7 @@ export class AuthController {
     const noteCode = notification.getCode();
     if (noteCode === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
         message: 'Transaction error',
       });
     }
@@ -470,7 +517,7 @@ export class AuthController {
     const noteCode = notification.getCode();
     if (noteCode === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
+      throw new ForbiddenException({
         message: 'Transaction error',
       });
     }

@@ -56,11 +56,11 @@ export function RestorePasswordConfirmationSwagger() {
       },
     }),
     ApiResponse({
-      status: 500,
+      status: HttpStatus.FORBIDDEN,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: 500,
+          statusCode: HttpStatus.FORBIDDEN,
           message: 'Transaction error',
         },
       },

@@ -131,6 +131,22 @@ export class UserRepository {
       },
     });
   }
+
+  public async updateUserConfirmationInfo(dto: {
+    userId: User['id'];
+    createdAt: Date;
+    confirmationToken: UserConfirmationToken['token'];
+    confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
+  }) {
+    await this.txHost.tx.userConfirmationToken.update({
+      where: { userId: dto.userId },
+      data: {
+        token: dto.confirmationToken,
+        createdAt: dto.createdAt,
+        expiredAt: dto.confirmationTokenExpiresAt,
+      },
+    });
+  }
   public async findUserByToken(token: string) {
     const user = await this.txHost.tx.user.findFirst({
       where: {
@@ -144,6 +160,7 @@ export class UserRepository {
     });
     return user;
   }
+
   public deleteConfirmationToken(token: string) {
     return this.txHost.tx.userConfirmationToken.deleteMany({
       where: {
@@ -151,6 +168,7 @@ export class UserRepository {
       },
     });
   }
+
   public confirmUser(id: User['id']) {
     return this.txHost.tx.user.update({
       where: {

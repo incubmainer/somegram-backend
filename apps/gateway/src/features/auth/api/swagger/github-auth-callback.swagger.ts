@@ -26,11 +26,11 @@ The accessToken set to the query parameter.`,
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: HttpStatus.FORBIDDEN,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: 500,
+          statusCode: HttpStatus.FORBIDDEN,
           message: 'Transaction error',
         },
       },
