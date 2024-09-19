@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+
 import { UserRepository } from '../infrastructure/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { CryptoService } from '../../../common/utils/crypto.service';
@@ -13,7 +14,6 @@ export class AuthService {
   ) {}
   async validateUser(email: string, pass: string) {
     const user = await this.userRepository.getUserByEmail(email);
-    console.log(user);
     if (!user) {
       //if (!user || !user.isConfirmed) {
       return false;

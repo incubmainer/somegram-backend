@@ -25,7 +25,7 @@ export class RefreshTokenUseCase
     if (!payload) {
       throw new UnauthorizedException();
     }
-    const user = await this.usersRepository.findUserById(payload.sub);
+    const user = await this.usersRepository.findUserById(payload.userId);
     if (!user) {
       throw new UnauthorizedException();
     }

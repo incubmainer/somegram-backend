@@ -227,7 +227,6 @@ export class AuthController {
         message: 'Transaction error',
       });
     }
-    //const userId = notification.getData();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -238,12 +237,11 @@ export class AuthController {
         },
       });
     }
-    const title = userAgent || 'Mozilla';
     const accesAndRefreshTokens = await this.commandBus.execute(
       new LoginUserCommand(
         { email: 'password', password: 'password' },
         ip,
-        title,
+        userAgent,
       ),
     );
     const origin = request.headers.origin || 'http://localhost:3000';
@@ -356,7 +354,7 @@ export class AuthController {
   ) {
     this.logger.log('info', 'start login', {});
     const tokens = await this.commandBus.execute(
-      new LoginUserCommand(loginDto, ip, userAgent),
+      new LoginUserCommand(loginDto, userAgent, ip),
     );
     if (!tokens) {
       throw new UnauthorizedException();
@@ -433,7 +431,6 @@ export class AuthController {
         message: 'Transaction error',
       });
     }
-    //const userId = notification.getData();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -444,12 +441,11 @@ export class AuthController {
         },
       });
     }
-    const title = userAgent || 'Mozilla';
     const accesAndRefreshTokens = await this.commandBus.execute(
       new LoginUserCommand(
         { email: 'password', password: 'password' },
         ip,
-        title,
+        userAgent,
       ),
     );
 

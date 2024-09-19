@@ -21,10 +21,10 @@ export class CreateTokensUseCase
   constructor(private readonly jwtService: JwtService) {}
 
   async execute(command: CreateTokensCommand) {
-    const accessTokenPayload = { sub: command.userId };
+    const accessTokenPayload = { userId: command.userId };
 
     const refreshTokenPayload = {
-      sub: command.userId,
+      userId: command.userId,
       deviceId: command.deviceId,
     };
 
