@@ -86,6 +86,8 @@ import {
   RegistrationEmailResendingCodes,
   RegistrationEmailResendingCommand,
 } from '../application/use-cases/registration-email-resending.use-case';
+import { CreateTokensCommand } from '../application/use-cases/create-token.use-case';
+import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -279,21 +281,23 @@ export class AuthController {
         },
       });
     }
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(
-        { email: 'password', password: 'password' },
-        ip,
-        userAgent,
-      ),
+    const userId = notification.getData();
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId),
     );
-    const origin = request.headers.origin || 'http://localhost:3000';
+
+    await this.commandBus.execute(
+      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
+    );
+
+    const origin = request.headers.origin || 'http://localhost:3001';
     this.logger.log('info', 'google auth callback success', {});
     response
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
 
   @Get('recaptcha-site-key')
@@ -483,22 +487,23 @@ export class AuthController {
         },
       });
     }
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(
-        { email: 'password', password: 'password' },
-        ip,
-        userAgent,
-      ),
+    const userId = notification.getData();
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId),
     );
 
-    const origin = req.headers.origin || 'http://localhost:3000';
+    await this.commandBus.execute(
+      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
+    );
+
+    const origin = req.headers.origin || 'http://localhost:3001';
     this.logger.log('info', 'github auth callback success', {});
     res
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
 
   @Get('me')
