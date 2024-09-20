@@ -21,6 +21,12 @@ export function RefreshTokenSwagger() {
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'Unauthorised',
+      schema: {
+        example: {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: 'Unauthorised',
+        },
+      },
     }),
   );
 }

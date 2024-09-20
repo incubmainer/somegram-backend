@@ -11,7 +11,6 @@ import {
   UnauthorizedException,
   Get,
   Req,
-  ForbiddenException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -151,9 +150,8 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -191,9 +189,8 @@ export class AuthController {
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -216,23 +213,21 @@ export class AuthController {
     if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
       this.logger.log('warn', 'email already confirmated', {});
       throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
         error: 'email_already_confirmated',
         message: 'User with current email already confirmed',
       });
     }
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
       this.logger.log('warn', 'username not found', {});
-      throw new NotFoundException({
+      throw new BadRequestException({
         error: 'user_not_found',
         message: 'User with current email not found',
       });
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -260,18 +255,18 @@ export class AuthController {
         googleProfile.emailVerified,
       ),
     );
-    const noteCode = notification.getCode();
-    if (noteCode === LoginByGoogleCodes.WrongEmail) {
+    const code = notification.getCode();
+    if (code === LoginByGoogleCodes.WrongEmail) {
       this.logger.log('warn', 'wrong email', {});
       throw new BadRequestException({
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
       });
     }
-    if (noteCode === LoginByGoogleCodes.TransactionError) {
+    if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
     if (!ip) {
@@ -343,8 +338,8 @@ export class AuthController {
     }
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -383,8 +378,8 @@ export class AuthController {
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -471,11 +466,11 @@ export class AuthController {
     const notification: Notification<string> = await this.commandBus.execute(
       new AuthWithGithubCommand(user),
     );
-    const noteCode = notification.getCode();
-    if (noteCode === LoginWithGithubCodes.TransactionError) {
+    const code = notification.getCode();
+    if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
     if (!ip) {
@@ -514,11 +509,11 @@ export class AuthController {
     this.logger.log('info', 'start me request', {});
     const notification: Notification<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
-    const noteCode = notification.getCode();
-    if (noteCode === MeCodes.TransactionError) {
+    const code = notification.getCode();
+    if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new ForbiddenException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
     const outputUser = notification.getData();

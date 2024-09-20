@@ -16,10 +16,21 @@ The accessToken set to the query parameter.`,
       status: HttpStatus.BAD_REQUEST,
       description: 'Login failed due to wrong email',
       schema: {
-        example: {
-          error: 'login_by_google_failed',
-          message: 'Login by google failed due to wrong email.',
-        },
+        oneOf: [
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'login_by_google_failed',
+              message: 'Login by google failed due to wrong email.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
+            },
+          },
+        ],
       },
     }),
     ApiResponse({
@@ -32,16 +43,6 @@ The accessToken set to the query parameter.`,
           details: {
             ip: 'Invalid IP address',
           },
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
         },
       },
     }),

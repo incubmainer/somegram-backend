@@ -18,13 +18,6 @@ The refreshToken is set in an HTTP-only cookie.`,
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'Wrong UserName or Password',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          error: 'login_failed',
-          message: 'Login failed.',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,

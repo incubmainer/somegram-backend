@@ -19,22 +19,10 @@ export function GetInfoAboutMeSwagger() {
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'JWT token inside cookie missed, expired or incorrect',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'Unauthorised',
-        },
-      },
     }),
     ApiResponse({
-      status: HttpStatus.FORBIDDEN,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
-        },
-      },
     }),
   );
 }

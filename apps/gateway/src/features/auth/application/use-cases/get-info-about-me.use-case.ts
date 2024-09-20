@@ -40,7 +40,8 @@ export class GetInfoAboutMeUseCase
     try {
       const user = await this.userRepository.getInfoAboutMe(command.userId);
       notification.setData(user);
-    } catch {
+    } catch (e) {
+      this.logger.log('error', 'transaction error', { e });
       notification.setCode(MeCodes.TransactionError);
     }
     return notification;

@@ -14,7 +14,7 @@ export function LogOutSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorised',
+      description: 'Unauthorized',
     }),
   );
 }

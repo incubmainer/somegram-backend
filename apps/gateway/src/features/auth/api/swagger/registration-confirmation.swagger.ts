@@ -16,7 +16,7 @@ export function RegistrationConfirmationSwagger() {
         oneOf: [
           {
             example: {
-              statusCode: HttpStatus.BAD_REQUEST,
+              status: HttpStatus.BAD_REQUEST,
               error: 'registration_confirmation_failed',
               message:
                 'Registration confirmation failed due to token expiration.',
@@ -24,8 +24,15 @@ export function RegistrationConfirmationSwagger() {
           },
           {
             example: {
+              status: HttpStatus.BAD_REQUEST,
               error: 'registration_confirmation_failed',
               message: 'Registration confirmation failed due to invalid token.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
             },
           },
         ],
@@ -46,16 +53,6 @@ export function RegistrationConfirmationSwagger() {
               },
             },
           ],
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
         },
       },
     }),

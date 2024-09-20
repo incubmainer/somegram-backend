@@ -19,26 +19,26 @@ export function RegistrationSwagger() {
       status: HttpStatus.BAD_REQUEST,
       description: 'Email or Username already exists',
       schema: {
-        example: {
-          statusCode: HttpStatus.BAD_REQUEST,
-          error: 'registration_failed',
-          message:
-            'Registration failed due to conflict with existing email or username.',
-          details: {
-            email: 'Email address is already in use.',
-            username: 'Username is already taken.',
+        oneOf: [
+          {
+            example: {
+              statusCode: HttpStatus.BAD_REQUEST,
+              error: 'registration_failed',
+              message:
+                'Registration failed due to conflict with existing email or username.',
+              details: {
+                email: 'Email address is already in use.',
+                username: 'Username is already taken.',
+              },
+            },
           },
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
-        },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
+            },
+          },
+        ],
       },
     }),
     ApiResponse({

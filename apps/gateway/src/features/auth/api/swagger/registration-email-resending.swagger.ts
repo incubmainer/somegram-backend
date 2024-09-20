@@ -13,23 +13,31 @@ export function RegistrationEmailResendingSwagger() {
         'An email with a verification code has been sent to the specified email address',
     }),
     ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: 'Transaction error',
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Email resending failed',
       schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: 'User with current email not found',
-      schema: {
-        example: {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'User with current email not found',
-        },
+        oneOf: [
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'email_already_confirmated',
+              message: 'User with current email already confirmed',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'user_not_found',
+              message: 'Restore password failed due to user not found.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
+            },
+          },
+        ],
       },
     }),
     ApiResponse({

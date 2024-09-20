@@ -22,6 +22,7 @@ export function RestorePasswordConfirmationSwagger() {
         oneOf: [
           {
             example: {
+              status: HttpStatus.BAD_REQUEST,
               error: 'restore_password_confirmation_failed',
               message:
                 'Restore password confirmation failed due to expired code.',
@@ -29,9 +30,16 @@ export function RestorePasswordConfirmationSwagger() {
           },
           {
             example: {
+              status: HttpStatus.BAD_REQUEST,
               error: 'restore_password_confirmation_failed',
               message:
                 'Restore password confirmation failed due to invalid code.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
             },
           },
         ],
@@ -52,16 +60,6 @@ export function RestorePasswordConfirmationSwagger() {
               },
             },
           ],
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.FORBIDDEN,
-          message: 'Transaction error',
         },
       },
     }),
