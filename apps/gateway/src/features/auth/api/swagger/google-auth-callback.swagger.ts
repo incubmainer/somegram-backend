@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function GoogleAuthCallbackSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'Google Authentication Callback' }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -16,10 +16,21 @@ The accessToken set to the query parameter.`,
       status: HttpStatus.BAD_REQUEST,
       description: 'Login failed due to wrong email',
       schema: {
-        example: {
-          error: 'login_by_google_failed',
-          message: 'Login by google failed due to wrong email.',
-        },
+        oneOf: [
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'login_by_google_failed',
+              message: 'Login by google failed due to wrong email.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
+            },
+          },
+        ],
       },
     }),
     ApiResponse({
@@ -32,16 +43,6 @@ The accessToken set to the query parameter.`,
           details: {
             ip: 'Invalid IP address',
           },
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Transaction error',
         },
       },
     }),

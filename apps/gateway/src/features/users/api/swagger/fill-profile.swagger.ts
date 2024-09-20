@@ -8,7 +8,7 @@ import {
 
 export function FillProfileSwagger() {
   return applyDecorators(
-    ApiTags('users'),
+    ApiTags('Users'),
     ApiBearerAuth('access-token'),
     ApiOperation({ summary: 'Fill User Profile' }),
     ApiResponse({

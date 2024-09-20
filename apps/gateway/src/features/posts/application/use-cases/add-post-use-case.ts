@@ -16,19 +16,17 @@ import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { v4 as uuidv4 } from 'uuid';
 import { PostsRepository } from '../../infrastructure/posts.repository';
-import { UserRepository } from '../../../auth/infrastructure/user.repository';
 import { Type } from 'class-transformer';
 import { FileDto } from '../../api/dto/file.dto';
+import { DESC_MAX_LENGTH } from '../../api/dto/post.dto';
 
 export const AddPostCodes = {
   Success: Symbol('success'),
   TransactionError: Symbol('transactionError'),
-  UserNotFound: Symbol('userNotFound'),
   ValidationCommandError: Symbol('validationCommandError'),
 };
 
 export class AddPostCommand {
-  @IsString()
   public readonly userId: string;
   @IsArray()
   @ValidateNested({ each: true })
@@ -36,7 +34,7 @@ export class AddPostCommand {
   public readonly files: FileDto[];
   @IsOptional()
   @IsString()
-  @MaxLength(500)
+  @MaxLength(DESC_MAX_LENGTH)
   public readonly description?: string;
 
   constructor(
@@ -58,11 +56,8 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     >,
     private readonly postPhotoStorageService: PostPhotoStorageService,
     private readonly postsRepository: PostsRepository,
-    private readonly userRepository: UserRepository,
   ) {}
-  async execute(
-    command: AddPostCommand,
-  ): Promise<Notification<string[]> | Notification<null, ValidationError>> {
+  async execute(command: AddPostCommand) {
     const errors = validateSync(command);
     if (errors.length) {
       const note = new Notification<null, ValidationError>(
@@ -72,26 +67,29 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       return note;
     }
     const { userId, files, description } = command;
-    const notification = new Notification<string[]>(AddPostCodes.Success);
+    const notification = new Notification<{
+      id: string;
+      userId: string;
+      description: string | null;
+      images: string[];
+    }>(AddPostCodes.Success);
     const allUrls: string[] = [];
     try {
       await this.txHost.withTransaction(async () => {
         const currentDate = new Date();
         const postId = uuidv4();
 
-        const isUser = await this.userRepository.findUserById(userId);
-        if (!isUser) {
-          notification.setCode(AddPostCodes.UserNotFound);
-          return notification;
-        }
-        await this.postsRepository.addPost({ postId, userId, description });
+        const post = await this.postsRepository.addPost({
+          postId,
+          userId,
+          description,
+        });
         for (const file of files) {
           const urls = await this.postPhotoStorageService.savePhoto(
             userId,
             file.buffer,
             file.mimetype,
           );
-
           await this.postsRepository.addInfoAboutPhoto({
             postId,
             photoKey: urls.photoKey,
@@ -99,12 +97,10 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
           });
           allUrls.push(urls.photoUrl);
         }
-        notification.setData(allUrls);
+        notification.setData({ ...post, images: allUrls });
       });
-    } catch (e) {
-      if (notification.getCode() === AddPostCodes.Success) {
-        notification.setCode(AddPostCodes.TransactionError);
-      }
+    } catch {
+      notification.setCode(AddPostCodes.TransactionError);
     }
     return notification;
   }

@@ -30,11 +30,6 @@ export class CryptoAuthService {
     return hashPassword;
   }
 
-  public async generateConfirmationToken(): Promise<string> {
-    const confirmationToken = this.cryptoService.generateRandomString(20);
-    return confirmationToken;
-  }
-
   public async generateRestorePasswordCode(): Promise<string> {
     const restorePasswordCode = this.cryptoService.generateRandomString(
       this.restorePasswordCodeLength,

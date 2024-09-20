@@ -8,15 +8,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 interface JwtPayload {
-  sub: string;
-  login: string;
-  iat?: number;
-  exp?: number;
-}
-
-interface JwtRefreshTokenPayload {
-  sub: string;
-  deviceId: string;
+  userId: string;
   iat?: number;
   exp?: number;
 }
@@ -39,9 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    return { id: payload.sub, login: payload.login };
-  }
-  async validateRefreshToken(payload: JwtRefreshTokenPayload) {
-    return { id: payload.sub, deviceId: payload.deviceId };
+    return { userId: payload.userId };
   }
 }

@@ -4,7 +4,6 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   Post,
   Res,
   UseGuards,
@@ -22,7 +21,6 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
-import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Request, Response } from 'express';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
@@ -82,8 +80,16 @@ import {
 } from '../application/use-cases/get-info-about-me.use-case';
 import { MeOutputDto } from './dto/output-dto/me-output-dto';
 import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
+import { RegistrationEmailResendingSwagger } from './swagger/registration-email-resending.swagger';
+import { RegistrationEmailResendingBodyInputDto } from './dto/input-dto/registration-email-resending.body.input-dto';
+import {
+  RegistrationEmailResendingCodes,
+  RegistrationEmailResendingCommand,
+} from '../application/use-cases/registration-email-resending.use-case';
+import { CreateTokensCommand } from '../application/use-cases/create-token.use-case';
+import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 @LogClass({
   level: 'trace',
@@ -124,6 +130,7 @@ export class AuthController {
     if (code === RegistrationCodes.EmailAlreadyExists) {
       this.logger.log('warn', 'email already exists', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
         message:
           'Registration failed due to conflict with existing email or username.',
@@ -145,14 +152,14 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
 
   @Post('registration-confirmation')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationConfirmationSwagger()
   public async registrationConfirmation(
     @Body() body: RegistrationConfirmationBodyInputDto,
@@ -164,14 +171,12 @@ export class AuthController {
     const code = notification.getCode();
     if (code === RegistrationConfirmationCodes.Success) {
       this.logger.log('info', 'registration confirmation success', {});
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Registration confirmation successful',
-      };
+      return;
     }
     if (code === RegistrationConfirmationCodes.TokenExpired) {
       this.logger.log('warn', 'token expired', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to token expiration.',
       });
@@ -179,14 +184,52 @@ export class AuthController {
     if (code === RegistrationConfirmationCodes.TokenInvalid) {
       this.logger.log('warn', 'token invalid', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_confirmation_failed',
         message: 'Registration confirmation failed due to invalid token.',
       });
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
+      });
+    }
+  }
+
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RegistrationEmailResendingSwagger()
+  public async registrationEmailResending(
+    @Body() body: RegistrationEmailResendingBodyInputDto,
+  ) {
+    this.logger.log('info', 'start registration-email-resending', {});
+    const notification: Notification<null> = await this.commandBus.execute(
+      new RegistrationEmailResendingCommand(body.email, body.html),
+    );
+    const code = notification.getCode();
+    if (code === RegistrationEmailResendingCodes.Success) {
+      this.logger.log('info', 'registration-email-resending success', {});
+      return;
+    }
+    if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
+      this.logger.log('warn', 'email already confirmated', {});
+      throw new BadRequestException({
+        error: 'email_already_confirmated',
+        message: 'User with current email already confirmed',
+      });
+    }
+    if (code === RegistrationEmailResendingCodes.UserNotFound) {
+      this.logger.log('warn', 'username not found', {});
+      throw new BadRequestException({
+        error: 'user_not_found',
+        message: 'User with current email not found',
+      });
+    }
+    if (code === RegistrationEmailResendingCodes.TransactionError) {
+      this.logger.log('error', 'transaction error', {});
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -214,21 +257,20 @@ export class AuthController {
         googleProfile.emailVerified,
       ),
     );
-    const noteCode = notification.getCode();
-    if (noteCode === LoginByGoogleCodes.WrongEmail) {
+    const code = notification.getCode();
+    if (code === LoginByGoogleCodes.WrongEmail) {
       this.logger.log('warn', 'wrong email', {});
       throw new BadRequestException({
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
       });
     }
-    if (noteCode === LoginByGoogleCodes.TransactionError) {
+    if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
-    const userId = notification.getDate();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -239,19 +281,23 @@ export class AuthController {
         },
       });
     }
-    const title = userAgent || 'Mozilla';
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+    const userId = notification.getData();
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId),
     );
-    const origin = request.headers.origin || 'http://localhost:3000';
-    console.log('🚀 ~ AuthController ~ origin:', origin);
+
+    await this.commandBus.execute(
+      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
+    );
+
+    const origin = request.headers.origin || 'http://localhost:3001';
     this.logger.log('info', 'google auth callback success', {});
     response
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
 
   @Get('recaptcha-site-key')
@@ -296,8 +342,8 @@ export class AuthController {
     }
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
@@ -336,46 +382,36 @@ export class AuthController {
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
   @ApiBody({ type: LoginDto })
   async login(
-    @CurrentUserId() userId: string,
+    @Body() loginDto: LoginDto,
     @IpAddress() ip: string,
-    @UserAgent() userAgent: string | undefined,
+    @UserAgent() userAgent: string,
     @Res() response: Response,
   ) {
     this.logger.log('info', 'start login', {});
-    if (!ip) {
-      this.logger.log('warn', 'unknown ip address', {});
-      throw new NotFoundException({
-        error: 'login failed',
-        message: 'Unknown ip address',
-        details: {
-          ip: 'Invlid ip address',
-        },
-      });
-    }
-    const title = userAgent || 'Mozilla';
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+    const tokens = await this.commandBus.execute(
+      new LoginUserCommand(loginDto, userAgent, ip),
     );
-
+    if (!tokens) {
+      throw new UnauthorizedException();
+    }
     this.logger.log('info', 'login success', {});
     response
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .send({ accessToken: accesAndRefreshTokens.accessToken });
+      .send({ accessToken: tokens.accessToken });
   }
 
   @Post('logout')
@@ -434,14 +470,13 @@ export class AuthController {
     const notification: Notification<string> = await this.commandBus.execute(
       new AuthWithGithubCommand(user),
     );
-    const noteCode = notification.getCode();
-    if (noteCode === LoginWithGithubCodes.TransactionError) {
+    const code = notification.getCode();
+    if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
-    const userId = notification.getDate();
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
@@ -452,37 +487,41 @@ export class AuthController {
         },
       });
     }
-    const title = userAgent || 'Mozilla';
-    const accesAndRefreshTokens = await this.commandBus.execute(
-      new LoginUserCommand(userId, ip, title),
+    const userId = notification.getData();
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId),
     );
 
-    const origin = req.headers.origin || 'http://localhost:3000';
+    await this.commandBus.execute(
+      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
+    );
+
+    const origin = req.headers.origin || 'http://localhost:3001';
     this.logger.log('info', 'github auth callback success', {});
     res
-      .cookie('refreshToken', accesAndRefreshTokens.refreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .redirect(`${origin}/?accessToken=${accesAndRefreshTokens.accessToken}`);
+      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
+
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
-    console.log('🚀 ~ AuthController ~ getInfoAboutMe ~ userId:');
     this.logger.log('info', 'start me request', {});
     const notification: Notification<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
-    const noteCode = notification.getCode();
-    if (noteCode === MeCodes.TransactionError) {
+    const code = notification.getCode();
+    if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        message: 'Transaction error',
+      throw new BadRequestException({
+        error: 'Transaction error',
       });
     }
-    const outputUser = notification.getDate();
+    const outputUser = notification.getData();
     return outputUser;
   }
 }

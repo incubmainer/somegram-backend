@@ -1,21 +1,15 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthService } from '../auth.service';
-import { randomUUID } from 'crypto';
-import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
 
-export const LoginCodes = {
-  Success: Symbol('success'),
-  UserDoesntExist: Symbol('user_doesnt_exist'),
-  WrongPassword: Symbol('wrong_password'),
-  EmailAlreadyExists: Symbol('email_already_exists'),
-  TransactionError: Symbol('transaction_error'),
-};
+import { LoginDto } from '../../api/dto/input-dto/login-user-with-device.dto';
+import { CreateTokensCommand } from './create-token.use-case';
+import { AddUserDeviceCommand } from './add-user-device.use-case';
 
 export class LoginUserCommand {
   constructor(
-    public userId: string,
+    public loginDto: LoginDto,
+    public userAgent: string,
     public ip: string,
-    public title: string,
   ) {}
 }
 
@@ -23,28 +17,30 @@ export class LoginUserCommand {
 export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
   constructor(
     private readonly authService: AuthService,
-    private readonly securityDevicesRepo: SecurityDevicesRepository,
+    private readonly commandBus: CommandBus,
   ) {}
   async execute(
     command: LoginUserCommand,
-  ): Promise<{ refreshToken: string; accessToken: string }> {
-    const { userId, ip, title } = command;
-    const deviceId = randomUUID();
-    const refreshToken = await this.authService.createRefreshToken(
-      userId,
-      deviceId,
+  ): Promise<{ refreshToken: string; accessToken: string } | null> {
+    const { loginDto, ip, userAgent } = command;
+    const userId = await this.authService.validateUser(
+      loginDto.email,
+      loginDto.password,
     );
-    const payload = await this.authService.verifyRefreshToken(refreshToken);
-    const accessToken = await this.authService.login(userId);
-    const lastActiveDate = new Date(payload.iat * 1000).toISOString();
+    if (!userId) {
+      return null;
+    }
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userId),
+    );
 
-    await this.securityDevicesRepo.addDevice(
-      userId,
-      deviceId,
-      ip,
-      lastActiveDate,
-      title,
+    await this.commandBus.execute(
+      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
-    return { refreshToken: refreshToken, accessToken: accessToken.accessToken };
+
+    return {
+      refreshToken: tokens.refreshToken,
+      accessToken: tokens.accessToken,
+    };
   }
 }

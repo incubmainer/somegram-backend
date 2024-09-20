@@ -1,32 +1,34 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-export function RegistrationConfirmationSwagger() {
+export function RegistrationEmailResendingSwagger() {
   return applyDecorators(
     ApiTags('Auth'),
-    ApiOperation({ summary: 'Registration Confirmation' }),
+    ApiOperation({
+      summary: 'Resend confirmation registration Email if user exists',
+    }),
     ApiResponse({
       status: HttpStatus.NO_CONTENT,
-      description: 'Registration confirmation successful',
+      description:
+        'An email with a verification code has been sent to the specified email address',
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'Registration confirmation failed',
+      description: 'Email resending failed',
       schema: {
         oneOf: [
           {
             example: {
               status: HttpStatus.BAD_REQUEST,
-              error: 'registration_confirmation_failed',
-              message:
-                'Registration confirmation failed due to token expiration.',
+              error: 'email_already_confirmated',
+              message: 'User with current email already confirmed',
             },
           },
           {
             example: {
               status: HttpStatus.BAD_REQUEST,
-              error: 'registration_confirmation_failed',
-              message: 'Registration confirmation failed due to invalid token.',
+              error: 'user_not_found',
+              message: 'Restore password failed due to user not found.',
             },
           },
           {
@@ -47,9 +49,9 @@ export function RegistrationConfirmationSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'token',
+              property: 'email',
               constraints: {
-                IsString: 'some message',
+                isEmail: 'email must be an email',
               },
             },
           ],

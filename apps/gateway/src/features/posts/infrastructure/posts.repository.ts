@@ -30,12 +30,41 @@ export class PostsRepository {
     postId: UserPost['id'];
     userId: UserPost['userId'];
     description: UserPost['description'];
-  }): Promise<void> {
-    await this.txHost.tx.userPost.create({
+  }): Promise<UserPost> {
+    return await this.txHost.tx.userPost.create({
       data: {
         id: dto.postId,
         userId: dto.userId,
         description: dto.description,
+      },
+    });
+  }
+
+  public async findPost(postId: UserPost['id']): Promise<UserPost | null> {
+    return await this.txHost.tx.userPost.findFirst({
+      where: {
+        id: postId,
+      },
+    });
+  }
+
+  public async updatePost(dto: {
+    postId: UserPost['id'];
+    description: UserPost['description'];
+  }): Promise<UserPost | null> {
+    return await this.txHost.tx.userPost.update({
+      data: {
+        description: dto.description,
+      },
+      where: {
+        id: dto.postId,
+      },
+    });
+  }
+  public async deletePost(dto: { postId: UserPost['id'] }) {
+    return await this.txHost.tx.userPost.delete({
+      where: {
+        id: dto.postId,
       },
     });
   }

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
-import { LocalStrategy } from '../auth/strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '../../common/config/constants/jwt-basic-constants';
 import { UsersController } from './api/users.controller';
@@ -28,7 +27,6 @@ const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
   ],
   controllers: [UsersController],
   providers: [
-    LocalStrategy,
     JwtStrategy,
     AuthService,
     UserRepository,

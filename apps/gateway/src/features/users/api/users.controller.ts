@@ -33,7 +33,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-@ApiTags('users')
+@ApiTags('Users')
 @Controller('users')
 @LogClass({
   level: 'trace',
@@ -63,7 +63,7 @@ export class UsersController {
       );
       const result: Notification<string> =
         await this.commandBus.execute(command);
-      return { avatarUrl: result.getDate() };
+      return { avatarUrl: result.getData() };
     } catch (e) {
       if (e instanceof ValidationException)
         throw new UnprocessableEntityException({

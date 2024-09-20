@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function GithubAuthCallbackSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'GitHub Authentication Callback' }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -26,11 +26,11 @@ The accessToken set to the query parameter.`,
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: HttpStatus.BAD_REQUEST,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: 500,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: 'Transaction error',
         },
       },

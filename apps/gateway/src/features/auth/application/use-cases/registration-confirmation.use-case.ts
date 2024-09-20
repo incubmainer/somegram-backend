@@ -54,10 +54,8 @@ export class RegistrationConfirmationUseCase {
         await this.userRepository.deleteConfirmationToken(token);
         await this.userRepository.confirmUser(user.id);
       });
-    } catch (e) {
-      if (notification.getCode() === RegistrationConfirmationCodes.Success) {
-        notification.setCode(RegistrationConfirmationCodes.TransactionError);
-      }
+    } catch {
+      notification.setCode(RegistrationConfirmationCodes.TransactionError);
     }
     return notification;
   }

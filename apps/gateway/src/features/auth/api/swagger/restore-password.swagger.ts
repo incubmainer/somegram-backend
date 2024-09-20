@@ -3,7 +3,7 @@ import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export function RestorePasswordSwagger() {
   return applyDecorators(
-    ApiTags('auth'),
+    ApiTags('Auth'),
     ApiOperation({ summary: 'Restore Password' }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -22,6 +22,7 @@ export function RestorePasswordSwagger() {
         oneOf: [
           {
             example: {
+              status: HttpStatus.BAD_REQUEST,
               error: 'invalid_recaptcha_token',
               message:
                 'Restore password failed due to invalid recaptcha token.',
@@ -29,8 +30,15 @@ export function RestorePasswordSwagger() {
           },
           {
             example: {
+              status: HttpStatus.BAD_REQUEST,
               error: 'user_not_found',
               message: 'Restore password failed due to user not found.',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
             },
           },
         ],
@@ -51,15 +59,6 @@ export function RestorePasswordSwagger() {
               },
             },
           ],
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-      schema: {
-        example: {
-          message: 'Transaction error',
         },
       },
     }),

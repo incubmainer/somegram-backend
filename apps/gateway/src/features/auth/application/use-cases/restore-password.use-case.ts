@@ -88,7 +88,6 @@ export class RestorePasswordUseCase {
         });
       });
     } catch (e) {
-      console.log(e);
       if (notification.getCode() === RestorePasswordCodes.Success) {
         notification.setCode(RestorePasswordCodes.TransactionError);
       }
