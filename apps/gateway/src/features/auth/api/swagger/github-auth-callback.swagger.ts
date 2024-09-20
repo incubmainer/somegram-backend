@@ -17,6 +17,7 @@ The accessToken set to the query parameter.`,
       description: 'Unknown IP address',
       schema: {
         example: {
+          status: HttpStatus.NOT_FOUND,
           error: 'login_failed',
           message: 'Unknown IP address',
           details: {

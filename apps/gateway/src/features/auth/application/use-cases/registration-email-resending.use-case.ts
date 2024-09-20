@@ -11,7 +11,7 @@ import {
 } from '@app/custom-logger';
 
 import { Notification } from 'apps/gateway/src/common/domain/notification';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 
 export const RegistrationEmailResendingCodes = {
@@ -42,7 +42,7 @@ export class RegistrationEmailResendingCommand {
 @CommandHandler(RegistrationEmailResendingCommand)
 export class RegistrationEmailResendingUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,

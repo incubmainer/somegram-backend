@@ -1,7 +1,8 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AuthService } from '../auth.service';
-import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedException } from '@nestjs/common';
+
+import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { CheckRefreshTokenCommand } from './check-refresh-token';
 
 export class LogoutCommand {
   constructor(public refreshToken: string) {}
@@ -10,28 +11,17 @@ export class LogoutCommand {
 @CommandHandler(LogoutCommand)
 export class LogoutUseCase implements ICommandHandler<LogoutCommand> {
   constructor(
-    private authService: AuthService,
-    private securityDevicesRepo: SecurityDevicesRepository,
+    private securityDevicesRepository: SecurityDevicesRepository,
+    private commandBus: CommandBus,
   ) {}
   async execute(command: LogoutCommand): Promise<boolean> {
-    const payload = await this.authService.verifyRefreshToken(
-      command.refreshToken,
+    const deviceInfo = await this.commandBus.execute(
+      new CheckRefreshTokenCommand(command.refreshToken),
     );
-    if (!payload) {
-      throw new UnauthorizedException();
-    }
 
-    const deviceId = payload.deviceId;
-    const lastActiveDate = new Date(payload.iat * 1000).toISOString();
-    const isValidRefreshToken =
-      await this.securityDevicesRepo.isValidRefreshToken(lastActiveDate);
-
-    if (!isValidRefreshToken) {
-      throw new UnauthorizedException();
-    }
-
-    const deletedToken =
-      await this.securityDevicesRepo.deleteRefreshTokenWhenLogout(deviceId);
+    const deletedToken = await this.securityDevicesRepository.deleteDevice(
+      deviceInfo.deviceId,
+    );
     if (!deletedToken) {
       throw new UnauthorizedException();
     }

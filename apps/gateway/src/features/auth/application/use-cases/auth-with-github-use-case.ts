@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserFromGithub } from '../../api/dto/input-dto/user-from-github';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
@@ -33,7 +33,7 @@ export class AuthWithGithubUseCase
   implements ICommandHandler<AuthWithGithubCommand>
 {
   constructor(
-    private userRepository: UserRepository,
+    private authRepository: UsersRepository,
     private readonly emailAuthService: EmailAuthService,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
@@ -48,15 +48,15 @@ export class AuthWithGithubUseCase
     const { user } = command;
     try {
       await this.txHost.withTransaction(async () => {
-        const isExistUser = await this.userRepository.getUserWithGithubInfo(
+        const isExistUser = await this.authRepository.getUserWithGithubInfo(
           user.email,
         );
         if (!isExistUser) {
           const uniqueUsername =
-            await this.userRepository.generateUniqueUsername();
+            await this.authRepository.generateUniqueUsername();
           const currentDate = new Date();
           const createdUser =
-            await this.userRepository.createConfirmedUserWithGithub(user, {
+            await this.authRepository.createConfirmedUserWithGithub(user, {
               username: uniqueUsername,
               email: user.email,
               createdAt: currentDate,
@@ -68,22 +68,21 @@ export class AuthWithGithubUseCase
           if (isExistUser.userGithubInfo.email === user.email) {
             return { username: isExistUser.username, id: isExistUser.id };
           }
-          await this.userRepository.changeGithubEmail(isExistUser.id, user);
+          await this.authRepository.changeGithubEmail(isExistUser.id, user);
           return notification.setData(isExistUser.id);
         }
         if (isExistUser && !isExistUser.userGithubInfo) {
-          await this.userRepository.addGithubInfo(user, isExistUser.id);
-          const userWithGithub = await this.userRepository.getUserByEmail(
+          await this.authRepository.addGithubInfo(user, isExistUser.id);
+          const userWithGithub = await this.authRepository.getUserByEmail(
             user.email,
           );
           notification.setData(userWithGithub.id);
-          return;
+          return notification;
         }
       });
     } catch (e) {
-      if (notification.getCode() === LoginWithGithubCodes.Success) {
-        notification.setCode(LoginWithGithubCodes.TransactionError);
-      }
+      this.logger.log('error', 'transaction error', { e });
+      notification.setCode(LoginWithGithubCodes.TransactionError);
     }
     return notification;
   }

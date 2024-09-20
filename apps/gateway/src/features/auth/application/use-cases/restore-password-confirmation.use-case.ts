@@ -3,7 +3,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsString, validateSync } from 'class-validator';
 import { IsUserPassword } from '../decorators/is-user-password';
@@ -34,7 +34,7 @@ export class RestorePasswordConfirmationUseCase
   implements ICommandHandler<RestorePasswordConfirmationCommand>
 {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
@@ -56,26 +56,24 @@ export class RestorePasswordConfirmationUseCase
           await this.userRepository.getUserByRestorePasswordCode(code);
         if (!user) {
           notification.setCode(RestorePasswordConfirmationCodes.UnvalidCode);
-          throw new Error('Unvalid code');
+          return notification;
         }
         if (!user.resetPasswordCode) {
           notification.setCode(RestorePasswordConfirmationCodes.UnvalidCode);
-          throw new Error('Unvalid code');
+          return notification;
         }
         if (user.resetPasswordCode.expiredAt < currentDate) {
           notification.setCode(RestorePasswordConfirmationCodes.ExpiredCode);
-          throw new Error('Code expired');
+          return notification;
         }
         const hashPassword =
           await this.cryptoAuthService.hashPassword(password);
         await this.userRepository.deleteRestorePasswordCode(user.id);
         await this.userRepository.updateUserPassword(user.id, hashPassword);
-        await this.securityDevicesRepository.deleteAllSessionForUser(user.id);
+        await this.securityDevicesRepository.deleteAllSessionsForUser(user.id);
       });
-    } catch (e) {
-      if (notification.getCode() === RestorePasswordConfirmationCodes.Success) {
-        notification.setCode(RestorePasswordConfirmationCodes.TransactionError);
-      }
+    } catch {
+      notification.setCode(RestorePasswordConfirmationCodes.TransactionError);
     }
     return notification;
   }

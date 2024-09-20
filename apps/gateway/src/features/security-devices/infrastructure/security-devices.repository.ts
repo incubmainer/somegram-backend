@@ -31,40 +31,25 @@ export class SecurityDevicesRepository {
     });
   }
 
-  public async deleteAllSessionForUser(userId: string): Promise<void> {
+  public async deleteAllSessionsForUser(userId: string): Promise<void> {
     await this.txHost.tx.securityDevices.deleteMany({
       where: { userId: userId },
     });
   }
 
-  public async isValidRefreshToken(
-    lastActiveDate: string,
-  ): Promise<SecurityDevices | null> {
-    const result = await this.txHost.tx.securityDevices.findFirst({
-      where: { lastActiveDate: lastActiveDate },
-    });
-    if (!result) return null;
-    return result;
-  }
-
-  public async deleteRefreshTokenWhenLogout(
-    deviceId: string,
-  ): Promise<boolean> {
+  public async deleteDevice(deviceId: string): Promise<boolean> {
     const result = await this.txHost.tx.securityDevices.delete({
       where: { deviceId: deviceId },
     });
     if (!result) return null;
     return true;
   }
-  async isValidRefreshTokenWithDeviceId(
-    isOkLastactiveDate: string,
-    deviceId1: string,
-  ): Promise<SecurityDevices | null> {
-    const isValidToken = await this.txHost.tx.securityDevices.findFirst({
-      where: { lastActiveDate: isOkLastactiveDate, deviceId: deviceId1 },
+  async getDiviceById(deviceId: string): Promise<SecurityDevices | null> {
+    const device = await this.txHost.tx.securityDevices.findFirst({
+      where: { deviceId },
     });
-    if (!isValidToken) return null;
-    return isValidToken;
+    if (!device) return null;
+    return device;
   }
 
   async updateLastActiveDate(

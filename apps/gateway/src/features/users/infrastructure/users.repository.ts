@@ -8,13 +8,16 @@ import {
   UserConfirmationToken,
   UserResetPasswordCode,
 } from '@prisma/gateway';
-import { UserFromGithub } from '../api/dto/input-dto/user-from-github';
+import { UserFromGithub } from '../../auth/api/dto/input-dto/user-from-github';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { MeOutputDto, userMapper } from '../api/dto/output-dto/me-output-dto';
+import {
+  MeOutputDto,
+  userMapper,
+} from '../../auth/api/dto/output-dto/me-output-dto';
 
 @Injectable()
 @LogClass({
@@ -22,14 +25,14 @@ import { MeOutputDto, userMapper } from '../api/dto/output-dto/me-output-dto';
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
-export class UserRepository {
+export class UsersRepository {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
-    this.logger.setContext(UserRepository.name);
+    this.logger.setContext(UsersRepository.name);
   }
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({

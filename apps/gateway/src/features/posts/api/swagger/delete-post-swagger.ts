@@ -45,7 +45,28 @@ export function DeletePostSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'Not found',
+      description: 'Post not found',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: 'If user not owner of post or database query errror',
+      schema: {
+        oneOf: [
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'delete_post_failed',
+              message: 'User not owner of post',
+            },
+          },
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Transaction error',
+            },
+          },
+        ],
+      },
     }),
   );
 }

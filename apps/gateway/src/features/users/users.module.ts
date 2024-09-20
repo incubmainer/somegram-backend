@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '../../common/config/constants/jwt-basic-constants';
 import { UsersController } from './api/users.controller';
 import { AuthService } from '../auth/application/auth.service';
-import { UserRepository } from '../auth/infrastructure/user.repository';
+import { UsersRepository } from './infrastructure/users.repository';
 import { CryptoService } from '../../common/utils/crypto.service';
 import { FileStorageService } from '../../common/utils/file-storage.service';
 import { AvatarStorageService } from './infrastructure/avatar-storage.service';
@@ -29,7 +29,7 @@ const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
   providers: [
     JwtStrategy,
     AuthService,
-    UserRepository,
+    UsersRepository,
     CryptoService,
     FileStorageService,
     AvatarStorageService,

@@ -1,8 +1,8 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -70,7 +70,9 @@ export class PostsController {
         })),
       });
     if (code === AddPostCodes.TransactionError)
-      throw new ForbiddenException('Database error');
+      throw new BadRequestException({
+        error: 'Transaction error',
+      });
   }
 
   @Put(':id')
@@ -101,9 +103,14 @@ export class PostsController {
     if (code === UpdatePostCodes.PostNotFound)
       throw new NotFoundException('Post not found');
     if (code === UpdatePostCodes.UserNotOwner)
-      throw new ForbiddenException('User not owner of post');
+      throw new BadRequestException({
+        error: 'update_post_failed',
+        message: 'User not owner of post',
+      });
     if (code === UpdatePostCodes.TransactionError)
-      throw new ForbiddenException('Database error');
+      throw new BadRequestException({
+        error: 'Transaction error',
+      });
   }
 
   @Delete(':id')
@@ -119,8 +126,13 @@ export class PostsController {
     if (code === DeletePostCodes.PostNotFound)
       throw new NotFoundException('Post not found');
     if (code === DeletePostCodes.UserNotOwner)
-      throw new ForbiddenException('User not owner of post');
+      throw new BadRequestException({
+        error: 'delete_post_failed',
+        message: 'User not owner of post',
+      });
     if (code === DeletePostCodes.TransactionError)
-      throw new ForbiddenException('Database error');
+      throw new BadRequestException({
+        error: 'Transaction error',
+      });
   }
 }

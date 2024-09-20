@@ -5,7 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { AuthController } from './api/auth.controller';
 import { RegistrationUseCase } from './application/use-cases/registration.use-case';
-import { UserRepository } from './infrastructure/user.repository';
+import { UsersRepository } from '../users/infrastructure/users.repository';
 import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import { CryptoAuthService } from './infrastructure/crypto-auth.service';
 import { CryptoService } from '../../common/utils/crypto.service';
@@ -32,6 +32,7 @@ import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me
 import { CreateTokensUseCase } from './application/use-cases/create-token.use-case';
 import { AddUserDeviceUseCase } from './application/use-cases/add-user-device.use-case';
 import { RegistrationEmailResendingUseCase } from './application/use-cases/registration-email-resending.use-case';
+import { CheckRefreshTokenUseCase } from './application/use-cases/check-refresh-token';
 
 const services = [
   AuthService,
@@ -55,11 +56,12 @@ const useCases = [
   RestorePasswordUseCase,
   RestorePasswordConfirmationUseCase,
   RegistrationEmailResendingUseCase,
+  CheckRefreshTokenUseCase,
 ];
 
 const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
 
-const repositories = [UserRepository, SecurityDevicesRepository];
+const repositories = [UsersRepository, SecurityDevicesRepository];
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule, EmailModule, PassportModule],
