@@ -3,7 +3,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { IsEmail, IsString, validateSync } from 'class-validator';
@@ -38,7 +38,7 @@ export class RestorePasswordCommand {
 export class RestorePasswordUseCase {
   private readonly expireAfterMiliseconds: number;
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
@@ -69,7 +69,7 @@ export class RestorePasswordUseCase {
         const user = await this.userRepository.getUserByEmail(email);
         if (!user) {
           notification.setCode(RestorePasswordCodes.UserNotFound);
-          throw new Error('User not found');
+          return notification;
         }
         const code = await this.cryptoAuthService.generateRestorePasswordCode();
         await this.userRepository.updateRestorePasswordCode({
@@ -87,10 +87,8 @@ export class RestorePasswordUseCase {
           html: command.html,
         });
       });
-    } catch (e) {
-      if (notification.getCode() === RestorePasswordCodes.Success) {
-        notification.setCode(RestorePasswordCodes.TransactionError);
-      }
+    } catch {
+      notification.setCode(RestorePasswordCodes.TransactionError);
     }
 
     return notification;

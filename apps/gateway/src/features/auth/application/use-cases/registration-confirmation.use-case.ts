@@ -3,7 +3,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IsString, validateSync } from 'class-validator';
 
 export const RegistrationConfirmationCodes = {
@@ -26,7 +26,7 @@ export class RegistrationConfirmationCommand {
 @CommandHandler(RegistrationConfirmationCommand)
 export class RegistrationConfirmationUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
@@ -45,11 +45,11 @@ export class RegistrationConfirmationUseCase {
         const user = await this.userRepository.findUserByToken(token);
         if (!user) {
           notification.setCode(RegistrationConfirmationCodes.TokenInvalid);
-          return;
+          return notification;
         }
         if (user.confirmationToken.expiredAt < currentDate) {
           notification.setCode(RegistrationConfirmationCodes.TokenExpired);
-          return;
+          return notification;
         }
         await this.userRepository.deleteConfirmationToken(token);
         await this.userRepository.confirmUser(user.id);

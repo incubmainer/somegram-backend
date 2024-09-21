@@ -10,6 +10,7 @@ export function GetInfoAboutMeSwagger() {
       description: 'Returns user information',
       schema: {
         example: {
+          status: HttpStatus.OK,
           userId: '123',
           userName: 'John Doe',
           email: 'john.doe@example.com',

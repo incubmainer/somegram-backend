@@ -3,7 +3,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { UserRepository } from '../../infrastructure/user.repository';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IsBoolean, IsEmail, IsString, validateSync } from 'class-validator';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 
@@ -45,7 +45,7 @@ type UserId = string;
 @CommandHandler(LoginByGoogleCommand)
 export class LoginByGoogleUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
@@ -70,13 +70,13 @@ export class LoginByGoogleUseCase {
         if (userByGoogleId) {
           notification.setData(userByGoogleId.id);
           notification.setCode(LoginByGoogleCodes.GoogleAccountAlreadyUsed);
-          return;
+          return notification;
         }
         const userByEmail =
           await this.userRepository.getUserByEmailWithGoogleInfo(googleEmail);
         if (userByEmail && userByEmail.googleInfo) {
           notification.setCode(LoginByGoogleCodes.WrongEmail);
-          throw new Error('Wrong email');
+          return notification;
         }
         if (userByEmail) {
           await this.userRepository.addGoogleInfoToUserAndConfirm(
@@ -110,10 +110,8 @@ export class LoginByGoogleUseCase {
         await this.emailAuthService.successRegistration(googleEmail);
         notification.setData(userId);
       });
-    } catch (e) {
-      if (notification.getCode() === LoginByGoogleCodes.Success) {
-        notification.setCode(LoginByGoogleCodes.TransactionError);
-      }
+    } catch {
+      notification.setCode(LoginByGoogleCodes.TransactionError);
     }
     return notification;
   }

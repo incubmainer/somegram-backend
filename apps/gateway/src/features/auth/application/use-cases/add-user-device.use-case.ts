@@ -17,7 +17,7 @@ export class AddUserDeviceUseCase
 {
   constructor(
     private readonly authService: AuthService,
-    private readonly securityDevicesRepo: SecurityDevicesRepository,
+    private readonly securityDevicesRepository: SecurityDevicesRepository,
   ) {}
 
   async execute(command: AddUserDeviceCommand) {
@@ -26,7 +26,7 @@ export class AddUserDeviceUseCase
     );
     const lastActiveDate = new Date(payload.iat * 1000).toISOString();
 
-    await this.securityDevicesRepo.addDevice(
+    await this.securityDevicesRepository.addDevice(
       payload.userId,
       payload.deviceId,
       command.ipAddress,

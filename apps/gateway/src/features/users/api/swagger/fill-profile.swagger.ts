@@ -85,13 +85,12 @@ export function FillProfileSwagger() {
       },
     }),
     ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Internal server error',
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message:
-            'Internal server error occurred while processing the request.',
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Transaction error',
         },
       },
     }),

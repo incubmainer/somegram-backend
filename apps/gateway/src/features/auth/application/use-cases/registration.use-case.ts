@@ -1,20 +1,21 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { UserRepository } from '../../infrastructure/user.repository';
-import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
-import { IsUsername } from '../decorators/is-username';
+import { randomUUID } from 'crypto';
 import { IsEmail, IsString, validateSync } from 'class-validator';
-import { IsUserPassword } from '../decorators/is-user-password';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { randomUUID } from 'crypto';
+
+import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
+import { EmailAuthService } from '../../infrastructure/email-auth.service';
+import { IsUsername } from '../decorators/is-username';
+import { IsUserPassword } from '../decorators/is-user-password';
 
 export const RegistrationCodes = {
   Success: Symbol('success'),
@@ -50,7 +51,7 @@ export class RegistrationCommand {
 @CommandHandler(RegistrationCommand)
 export class RegistrationUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
@@ -76,7 +77,7 @@ export class RegistrationUseCase {
           this.logger.log('warn', 'email already exists', {
             payload: { email },
           });
-          throw new Error('Email already exists');
+          return notification;
         }
         const userByUsername =
           await this.userRepository.getUserByUsername(username);
@@ -85,7 +86,7 @@ export class RegistrationUseCase {
             payload: { username },
           });
           notification.setCode(RegistrationCodes.UsernameAlreadyExists);
-          throw new Error('Username already exists');
+          return notification;
         }
         if (
           userByEmail &&
@@ -126,8 +127,8 @@ export class RegistrationUseCase {
         });
         this.logger.log('info', 'registration success', {});
       });
-    } catch {
-      this.logger.log('error', 'transaction error', {});
+    } catch (e) {
+      this.logger.log('error', 'transaction error', { e });
       notification.setCode(RegistrationCodes.TransactionError);
     }
     return notification;

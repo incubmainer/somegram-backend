@@ -6,7 +6,7 @@ import { IsFirstName } from '../decorators/is-first-name';
 import { IsLastName } from '../decorators/is-last-name';
 import { IsDateOfBirth } from '../decorators/is-date-of-birth';
 import { IsAboutMe } from '../decorators/is-about-me';
-import { UserRepository } from '../../../auth/infrastructure/user.repository';
+import { UsersRepository } from '../../infrastructure/users.repository';
 import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
 import { IsCityName } from '../decorators/is-city';
 import {
@@ -64,7 +64,7 @@ export class FillingUserProfileCommand {
 })
 export class FillingUserProfileUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UsersRepository,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
     logger.setContext(FillingUserProfileUseCase.name);

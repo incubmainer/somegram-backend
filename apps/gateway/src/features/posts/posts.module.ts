@@ -7,7 +7,7 @@ import { PostPhotoStorageService } from './infrastructure/post-photo-storage.ser
 import { FileStorageService } from '../../common/utils/file-storage.service';
 import { PostsRepository } from './infrastructure/posts.repository';
 import { AddPostUseCase } from './application/use-cases/add-post-use-case';
-import { UserRepository } from '../auth/infrastructure/user.repository';
+import { UsersRepository } from '../users/infrastructure/users.repository';
 import { UpdatePostUseCase } from './application/use-cases/update-post-use-case';
 import { DeletePostUseCase } from './application/use-cases/delete-post-use-case';
 
@@ -20,7 +20,7 @@ const useCases = [AddPostUseCase, UpdatePostUseCase, DeletePostUseCase];
     FileStorageService,
     PostPhotoStorageService,
     PostsRepository,
-    UserRepository,
+    UsersRepository,
     ...useCases,
   ],
   exports: [],
