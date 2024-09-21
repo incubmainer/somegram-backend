@@ -32,9 +32,6 @@ export class RefreshTokenUseCase
       deviceInfo.deviceId,
       lastActiveDate,
     );
-    return {
-      refreshToken: tokens.refreshToken,
-      accessToken: tokens.accessToken,
-    };
+    return tokens;
   }
 }

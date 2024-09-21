@@ -38,9 +38,6 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    return {
-      refreshToken: tokens.refreshToken,
-      accessToken: tokens.accessToken,
-    };
+    return tokens;
   }
 }

@@ -445,11 +445,11 @@ export class AuthController {
     );
     this.logger.log('info', 'refresh token success', {});
     return res
-      .cookie('refreshToken', tokens.newRefreshToken, {
+      .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
       })
-      .send(tokens.accessToken);
+      .send({ accessToken: tokens.accessToken });
   }
 
   @Get('github')
