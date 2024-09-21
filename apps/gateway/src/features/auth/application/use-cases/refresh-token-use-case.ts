@@ -13,13 +13,13 @@ export class RefreshTokenUseCase
   implements ICommandHandler<RefreshTokenCommand>
 {
   constructor(
-    private authServise: AuthService,
+    private authService: AuthService,
     private securityDevicesRepository: SecurityDevicesRepository,
     private usersRepository: UserRepository,
     private readonly commandBus: CommandBus,
   ) {}
   async execute(command: RefreshTokenCommand): Promise<object> {
-    const payload = await this.authServise.verifyRefreshToken(
+    const payload = await this.authService.verifyRefreshToken(
       command.refreshToken,
     );
     if (!payload) {
@@ -43,7 +43,7 @@ export class RefreshTokenUseCase
     const tokens = await this.commandBus.execute(
       new CreateTokensCommand(user.id, deviceId),
     );
-    const result = await this.authServise.verifyRefreshToken(
+    const result = await this.authService.verifyRefreshToken(
       tokens.refreshToken,
     );
     const lastActiveDate = new Date(result.iat * 1000).toISOString();
@@ -51,9 +51,6 @@ export class RefreshTokenUseCase
       deviceId,
       lastActiveDate,
     );
-    return {
-      refreshToken: tokens.refreshToken,
-      accessToken: tokens.accessToken,
-    };
+    return tokens;
   }
 }
