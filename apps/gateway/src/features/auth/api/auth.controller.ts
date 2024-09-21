@@ -91,11 +91,11 @@ import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.u
 
 @ApiTags('Auth')
 @Controller('auth')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
