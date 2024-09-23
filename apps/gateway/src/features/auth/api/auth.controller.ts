@@ -8,7 +8,6 @@ import {
   Res,
   UseGuards,
   NotFoundException,
-  UnauthorizedException,
   Get,
   Req,
 } from '@nestjs/common';
@@ -296,6 +295,7 @@ export class AuthController {
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
       })
       .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
@@ -407,6 +407,7 @@ export class AuthController {
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
       })
       .send({ accessToken: tokens.accessToken });
   }
@@ -414,7 +415,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogOutSwagger()
-  async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
+  async logout(@RefreshToken() refreshToken: string): Promise<boolean> {
     this.logger.log('info', 'start logout', {});
     const result = await this.commandBus.execute(
       new LogoutCommand(refreshToken),
@@ -426,13 +427,11 @@ export class AuthController {
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @RefreshTokenSwagger()
-  async refreshToken(@Req() req, @Res() res: Response) {
+  async refreshToken(
+    @RefreshToken() refreshToken: string,
+    @Res() res: Response,
+  ) {
     this.logger.log('info', 'start refresh token', {});
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      this.logger.log('warn', 'no refresh token', {});
-      throw new UnauthorizedException();
-    }
     const tokens = await this.commandBus.execute(
       new RefreshTokenCommand(refreshToken),
     );
@@ -441,6 +440,7 @@ export class AuthController {
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
       })
       .send({ accessToken: tokens.accessToken });
   }
@@ -495,6 +495,7 @@ export class AuthController {
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
       })
       .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
   }
