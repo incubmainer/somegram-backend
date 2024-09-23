@@ -402,9 +402,6 @@ export class AuthController {
     const tokens = await this.commandBus.execute(
       new LoginUserCommand(loginDto, userAgent, ip),
     );
-    if (!tokens) {
-      throw new UnauthorizedException();
-    }
     this.logger.log('info', 'login success', {});
     response
       .cookie('refreshToken', tokens.refreshToken, {
@@ -419,10 +416,6 @@ export class AuthController {
   @LogOutSwagger()
   async logout(@RefreshToken() refreshToken?: string): Promise<boolean> {
     this.logger.log('info', 'start logout', {});
-    if (!refreshToken) {
-      this.logger.log('warn', 'no refresh token', {});
-      throw new UnauthorizedException();
-    }
     const result = await this.commandBus.execute(
       new LogoutCommand(refreshToken),
     );

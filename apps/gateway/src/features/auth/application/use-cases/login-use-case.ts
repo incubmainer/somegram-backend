@@ -4,6 +4,7 @@ import { AuthService } from '../auth.service';
 import { LoginDto } from '../../api/dto/input-dto/login-user-with-device.dto';
 import { CreateTokensCommand } from './create-token.use-case';
 import { AddUserDeviceCommand } from './add-user-device.use-case';
+import { UnauthorizedException } from '@nestjs/common';
 
 export class LoginUserCommand {
   constructor(
@@ -28,7 +29,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       loginDto.password,
     );
     if (!userId) {
-      return null;
+      throw new UnauthorizedException();
     }
     const tokens = await this.commandBus.execute(
       new CreateTokensCommand(userId),
