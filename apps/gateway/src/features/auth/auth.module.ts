@@ -64,7 +64,12 @@ const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
 const repositories = [UsersRepository, SecurityDevicesRepository];
 
 @Module({
-  imports: [CqrsModule, ClsTransactionalModule, EmailModule, PassportModule],
+  imports: [
+    CqrsModule,
+    ClsTransactionalModule,
+    EmailModule,
+    PassportModule.register({ session: true }),
+  ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
     ...services,
