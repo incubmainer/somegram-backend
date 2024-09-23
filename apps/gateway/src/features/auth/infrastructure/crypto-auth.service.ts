@@ -29,11 +29,4 @@ export class CryptoAuthService {
     const hashPassword = await this.cryptoService.hash(password);
     return hashPassword;
   }
-
-  public async generateRestorePasswordCode(): Promise<string> {
-    const restorePasswordCode = this.cryptoService.generateRandomString(
-      this.restorePasswordCodeLength,
-    );
-    return restorePasswordCode;
-  }
 }

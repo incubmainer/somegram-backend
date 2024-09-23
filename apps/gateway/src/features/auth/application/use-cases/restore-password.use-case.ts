@@ -1,15 +1,17 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { randomUUID } from 'crypto';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
+import { IsEmail, IsString, validateSync } from 'class-validator';
+import { ConfigService } from '@nestjs/config';
+
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
-import { IsEmail, IsString, validateSync } from 'class-validator';
-import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecapchaService } from 'apps/gateway/src/common/utils/recapcha.service';
+import { Notification } from 'apps/gateway/src/common/domain/notification';
 
 export const RestorePasswordCodes = {
   Success: Symbol('success'),
@@ -71,7 +73,7 @@ export class RestorePasswordUseCase {
           notification.setCode(RestorePasswordCodes.UserNotFound);
           return notification;
         }
-        const code = await this.cryptoAuthService.generateRestorePasswordCode();
+        const code = randomUUID().replaceAll('-', '');
         await this.userRepository.updateRestorePasswordCode({
           userId: user.id,
           restorePasswordCode: code,
