@@ -181,12 +181,12 @@ export class AuthController {
         message: 'Registration confirmation failed due to token expiration.',
       });
     }
-    if (code === RegistrationConfirmationCodes.TokenInvalid) {
-      this.logger.log('warn', 'token invalid', {});
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'registration_confirmation_failed',
-        message: 'Registration confirmation failed due to invalid token.',
+    if (code === RegistrationConfirmationCodes.UserNotFound) {
+      this.logger.log('warn', 'user not found', {});
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        error: 'User not found',
+        message: 'User with confirmation token not found',
       });
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
@@ -221,7 +221,7 @@ export class AuthController {
     }
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
       this.logger.log('warn', 'username not found', {});
-      throw new BadRequestException({
+      throw new NotFoundException({
         error: 'user_not_found',
         message: 'User with current email not found',
       });

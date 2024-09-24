@@ -16,6 +16,8 @@ import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { IsUsername } from '../decorators/is-username';
 import { IsUserPassword } from '../decorators/is-user-password';
+import { ConfigService } from '@nestjs/config';
+import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 
 export const RegistrationCodes = {
   Success: Symbol('success'),
@@ -50,15 +52,20 @@ export class RegistrationCommand {
 })
 @CommandHandler(RegistrationCommand)
 export class RegistrationUseCase {
+  private readonly expireAfterMiliseconds: number;
   constructor(
     private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly cryptoAuthService: CryptoAuthService,
+    private readonly configService: ConfigService,
     private readonly emailAuthService: EmailAuthService,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
+    const config = this.configService.get<AuthConfig>('auth');
+    this.expireAfterMiliseconds =
+      config.emailConfirmationTokenExpireAfterMiliseconds;
     logger.setContext(RegistrationUseCase.name);
   }
 
@@ -106,9 +113,8 @@ export class RegistrationUseCase {
         const hashPassword =
           await this.cryptoAuthService.hashPassword(password);
         const confirmationToken = randomUUID().replaceAll('-', '');
-        const hoursExpires = 24;
         const confirmationTokenExpiresAt = new Date(
-          currentDate.getTime() + 1000 * 60 * 60 * hoursExpires,
+          currentDate.getTime() + this.expireAfterMiliseconds,
         );
         await this.userRepository.createNotConfirmedUser({
           username,

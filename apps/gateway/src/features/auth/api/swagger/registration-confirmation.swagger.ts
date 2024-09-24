@@ -22,13 +22,6 @@ export function RegistrationConfirmationSwagger() {
                 'Registration confirmation failed due to token expiration.',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'registration_confirmation_failed',
-              message: 'Registration confirmation failed due to invalid token.',
-            },
-          },
         ],
       },
     }),
@@ -39,6 +32,17 @@ export function RegistrationConfirmationSwagger() {
         example: {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: 'User with confirmation token not found',
+      schema: {
+        example: {
+          status: HttpStatus.NOT_FOUND,
+          error: 'User not found',
+          message: 'User with confirmation token not found',
         },
       },
     }),

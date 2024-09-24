@@ -9,7 +9,7 @@ import { IsString, validateSync } from 'class-validator';
 export const RegistrationConfirmationCodes = {
   Success: Symbol('success'),
   TokenExpired: Symbol('tokenExpired'),
-  TokenInvalid: Symbol('tokenInvalid'),
+  UserNotFound: Symbol('userNotFound'),
   TransactionError: Symbol('transactionError'),
 };
 
@@ -44,7 +44,7 @@ export class RegistrationConfirmationUseCase {
         const currentDate = new Date();
         const user = await this.userRepository.findUserByToken(token);
         if (!user) {
-          notification.setCode(RegistrationConfirmationCodes.TokenInvalid);
+          notification.setCode(RegistrationConfirmationCodes.UserNotFound);
           return notification;
         }
         if (user.confirmationToken.expiredAt < currentDate) {
