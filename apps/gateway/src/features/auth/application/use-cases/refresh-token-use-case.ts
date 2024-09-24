@@ -5,19 +5,17 @@ import { SecurityDevicesRepository } from '../../../security-devices/infrastruct
 import { CreateTokensCommand } from './create-token.use-case';
 import { CheckRefreshTokenCommand } from './check-refresh-token';
 
-export class RefreshTokenCommand {
+export class RenewTokensCommand {
   constructor(public refreshToken: string) {}
 }
-@CommandHandler(RefreshTokenCommand)
-export class RefreshTokenUseCase
-  implements ICommandHandler<RefreshTokenCommand>
-{
+@CommandHandler(RenewTokensCommand)
+export class RenewTokensUseCase implements ICommandHandler<RenewTokensCommand> {
   constructor(
     private authService: AuthService,
     private securityDevicesRepository: SecurityDevicesRepository,
     private readonly commandBus: CommandBus,
   ) {}
-  async execute(command: RefreshTokenCommand): Promise<object> {
+  async execute(command: RenewTokensCommand): Promise<object> {
     const deviceInfo = await this.commandBus.execute(
       new CheckRefreshTokenCommand(command.refreshToken),
     );

@@ -10,7 +10,7 @@ export function RegistrationEmailResendingSwagger() {
     ApiResponse({
       status: HttpStatus.NO_CONTENT,
       description:
-        'An email with a verification code has been sent to the specified email address',
+        'A letter will be sent again to the email address you provided during registration.',
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
@@ -31,13 +31,17 @@ export function RegistrationEmailResendingSwagger() {
               message: 'Restore password failed due to user not found.',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
+        },
       },
     }),
     ApiResponse({
@@ -49,9 +53,9 @@ export function RegistrationEmailResendingSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'email',
+              property: 'token',
               constraints: {
-                isEmail: 'email must be an email',
+                IsString: 'some message',
               },
             },
           ],

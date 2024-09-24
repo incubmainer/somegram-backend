@@ -22,8 +22,14 @@ export function GetInfoAboutMeSwagger() {
       description: 'JWT token inside cookie missed, expired or incorrect',
     }),
     ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
+      schema: {
+        example: {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
+        },
+      },
     }),
   );
 }

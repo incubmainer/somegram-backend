@@ -16,11 +16,11 @@ export function AddPostSwagger() {
       },
     }),
     ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: 'Restore password confirmation failed due to expired code',
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
       schema: {
         example: {
-          status: HttpStatus.BAD_REQUEST,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'Transaction error',
         },
       },

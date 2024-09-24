@@ -5,6 +5,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -70,7 +71,7 @@ export class PostsController {
         })),
       });
     if (code === AddPostCodes.TransactionError)
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
   }
@@ -108,7 +109,7 @@ export class PostsController {
         message: 'User not owner of post',
       });
     if (code === UpdatePostCodes.TransactionError)
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
   }
@@ -131,7 +132,7 @@ export class PostsController {
         message: 'User not owner of post',
       });
     if (code === DeletePostCodes.TransactionError)
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
   }

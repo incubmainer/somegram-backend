@@ -36,12 +36,6 @@ export function RestorePasswordConfirmationSwagger() {
                 'Restore password confirmation failed due to invalid code.',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
       },
     }),
@@ -60,6 +54,16 @@ export function RestorePasswordConfirmationSwagger() {
               },
             },
           ],
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
         },
       },
     }),

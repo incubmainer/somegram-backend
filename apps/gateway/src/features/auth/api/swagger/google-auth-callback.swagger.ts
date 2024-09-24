@@ -24,13 +24,17 @@ The accessToken set to the query parameter.`,
               message: 'Login by google failed due to wrong email.',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
+        },
       },
     }),
     ApiResponse({

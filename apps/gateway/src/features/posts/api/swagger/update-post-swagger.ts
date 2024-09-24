@@ -49,8 +49,18 @@ export function UpdatePostSwagger() {
       description: 'Post not found',
     }),
     ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Transaction error',
+        },
+      },
+    }),
+    ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'If user not owner of post or database query errror',
+      description: 'If user not owner of post',
       schema: {
         oneOf: [
           {
@@ -58,12 +68,6 @@ export function UpdatePostSwagger() {
               status: HttpStatus.BAD_REQUEST,
               error: 'update_post_failed',
               message: 'User not owner of post',
-            },
-          },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
             },
           },
         ],

@@ -10,6 +10,7 @@ import {
   NotFoundException,
   Get,
   Req,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -62,7 +63,7 @@ import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
-import { RefreshTokenCommand } from '../application/use-cases/refresh-token-use-case';
+import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
@@ -151,7 +152,7 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -190,7 +191,7 @@ export class AuthController {
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -204,7 +205,7 @@ export class AuthController {
   ) {
     this.logger.log('info', 'start registration-email-resending', {});
     const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationEmailResendingCommand(body.email, body.html),
+      new RegistrationEmailResendingCommand(body.token, body.html),
     );
     const code = notification.getCode();
     if (code === RegistrationEmailResendingCodes.Success) {
@@ -227,7 +228,7 @@ export class AuthController {
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -266,7 +267,7 @@ export class AuthController {
     }
     if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -326,7 +327,7 @@ export class AuthController {
         message: 'Restore password successful',
       };
     }
-    if (code === RestorePasswordCodes.UnvalidRecaptcha) {
+    if (code === RestorePasswordCodes.InvalidRecaptcha) {
       this.logger.log('warn', 'invalid recaptcha token', {});
       throw new BadRequestException({
         error: 'invalid_recaptcha_token',
@@ -342,7 +343,7 @@ export class AuthController {
     }
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -373,16 +374,16 @@ export class AuthController {
         message: 'Restore password confirmation failed due to expired code.',
       });
     }
-    if (code === RestorePasswordConfirmationCodes.UnvalidCode) {
+    if (code === RestorePasswordConfirmationCodes.InvalidCode) {
       this.logger.log('warn', 'invalid code', {});
       throw new BadRequestException({
         error: 'restore_password_confirmation_failed',
-        message: 'Restore password confirmation failed due to unvalid code.',
+        message: 'Restore password confirmation failed due to Invalid code.',
       });
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -427,13 +428,13 @@ export class AuthController {
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @RefreshTokenSwagger()
-  async refreshToken(
+  async renewTokens(
     @RefreshToken() refreshToken: string,
     @Res() res: Response,
   ) {
     this.logger.log('info', 'start refresh token', {});
     const tokens = await this.commandBus.execute(
-      new RefreshTokenCommand(refreshToken),
+      new RenewTokensCommand(refreshToken),
     );
     this.logger.log('info', 'refresh token success', {});
     return res
@@ -466,7 +467,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }
@@ -511,7 +512,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
     }

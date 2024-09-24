@@ -12,7 +12,7 @@ import { SecurityDevicesRepository } from '../../../security-devices/infrastruct
 
 export const RestorePasswordConfirmationCodes = {
   Success: Symbol('success'),
-  UnvalidCode: Symbol('unvalid_code'),
+  InvalidCode: Symbol('Invalid_code'),
   ExpiredCode: Symbol('expired_code'),
   TransactionError: Symbol('transaction_error'),
 };
@@ -56,11 +56,11 @@ export class RestorePasswordConfirmationUseCase
         const user =
           await this.userRepository.getUserByRestorePasswordCode(code);
         if (!user) {
-          notification.setCode(RestorePasswordConfirmationCodes.UnvalidCode);
+          notification.setCode(RestorePasswordConfirmationCodes.InvalidCode);
           return notification;
         }
         if (!user.resetPasswordCode) {
-          notification.setCode(RestorePasswordConfirmationCodes.UnvalidCode);
+          notification.setCode(RestorePasswordConfirmationCodes.InvalidCode);
           return notification;
         }
         if (user.resetPasswordCode.expiredAt < currentDate) {
