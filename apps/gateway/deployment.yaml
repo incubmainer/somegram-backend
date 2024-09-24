@@ -142,6 +142,11 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: RECAPTCHA_SITE_KEY
+             - name: EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS
              - name: PORT
                valueFrom:
                  secretKeyRef:
