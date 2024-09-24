@@ -14,8 +14,7 @@ export class AuthService {
   ) {}
   async validateUser(email: string, pass: string) {
     const user = await this.usersRepository.getUserByEmail(email);
-    if (!user) {
-      //if (!user || !user.isConfirmed) {
+    if (!user || !user.isConfirmed) {
       return false;
     }
 

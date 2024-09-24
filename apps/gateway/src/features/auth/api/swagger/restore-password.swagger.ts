@@ -10,7 +10,7 @@ export function RestorePasswordSwagger() {
       description: 'Restore password successful',
       schema: {
         example: {
-          statusCode: HttpStatus.OK,
+          status: HttpStatus.OK,
           message: 'Restore password successful',
         },
       },
@@ -43,7 +43,7 @@ export function RestorePasswordSwagger() {
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
         },
       },
@@ -53,7 +53,7 @@ export function RestorePasswordSwagger() {
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {

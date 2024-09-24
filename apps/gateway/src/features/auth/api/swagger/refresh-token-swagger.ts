@@ -23,7 +23,7 @@ export function RefreshTokenSwagger() {
       description: 'Unauthorised',
       schema: {
         example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
+          status: HttpStatus.UNAUTHORIZED,
           message: 'Unauthorised',
         },
       },

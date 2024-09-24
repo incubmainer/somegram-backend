@@ -30,7 +30,7 @@ export function RegistrationConfirmationSwagger() {
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
         },
       },
@@ -51,7 +51,7 @@ export function RegistrationConfirmationSwagger() {
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {

@@ -32,7 +32,7 @@ The accessToken set to the query parameter.`,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
         },
       },

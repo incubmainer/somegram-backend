@@ -142,6 +142,7 @@ export class AuthController {
     if (code === RegistrationCodes.UsernameAlreadyExists) {
       this.logger.log('warn', 'username already exists', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
         message:
           'Registration failed due to conflict with existing email or username.',
@@ -153,6 +154,7 @@ export class AuthController {
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -192,6 +194,7 @@ export class AuthController {
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -215,6 +218,7 @@ export class AuthController {
     if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
       this.logger.log('warn', 'email already confirmated', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'email_already_confirmated',
         message: 'User with current email already confirmed',
       });
@@ -222,13 +226,15 @@ export class AuthController {
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
       this.logger.log('warn', 'username not found', {});
       throw new NotFoundException({
-        error: 'user_not_found',
+        statusCode: HttpStatus.NOT_FOUND,
+        error: 'User not found',
         message: 'User with current email not found',
       });
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -261,6 +267,7 @@ export class AuthController {
     if (code === LoginByGoogleCodes.WrongEmail) {
       this.logger.log('warn', 'wrong email', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
       });
@@ -268,12 +275,14 @@ export class AuthController {
     if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
         message: 'Unknown ip address',
         details: {
@@ -330,6 +339,7 @@ export class AuthController {
     if (code === RestorePasswordCodes.InvalidRecaptcha) {
       this.logger.log('warn', 'invalid recaptcha token', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'invalid_recaptcha_token',
         message: 'Restore password failed due to invalid recaptcha token.',
       });
@@ -337,6 +347,7 @@ export class AuthController {
     if (code === RestorePasswordCodes.UserNotFound) {
       this.logger.log('warn', 'user not found', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'user_not_found',
         message: 'Restore password failed due to user not found.',
       });
@@ -344,6 +355,7 @@ export class AuthController {
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -370,6 +382,7 @@ export class AuthController {
     if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
       this.logger.log('warn', 'expired code', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
         message: 'Restore password confirmation failed due to expired code.',
       });
@@ -377,6 +390,7 @@ export class AuthController {
     if (code === RestorePasswordConfirmationCodes.InvalidCode) {
       this.logger.log('warn', 'invalid code', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
         message: 'Restore password confirmation failed due to Invalid code.',
       });
@@ -384,6 +398,7 @@ export class AuthController {
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -468,12 +483,14 @@ export class AuthController {
     if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
         message: 'Unknown ip address',
         details: {
@@ -513,6 +530,7 @@ export class AuthController {
     if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
       throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
