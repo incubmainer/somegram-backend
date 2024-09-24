@@ -49,7 +49,7 @@ export function DeletePostSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'If user not owner of post or database query errror',
+      description: 'If user not owner of post',
       schema: {
         oneOf: [
           {
@@ -59,13 +59,17 @@ export function DeletePostSwagger() {
               message: 'User not owner of post',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Transaction error',
+        },
       },
     }),
   );

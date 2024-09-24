@@ -27,7 +27,7 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { AuthWithGithubUseCase } from './application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleUseCase } from './application/use-cases/login-by-google.use-case';
 import { GoogleStrategy } from './strategies/google.strategy';
-import { RefreshTokenUseCase } from './application/use-cases/refresh-token-use-case';
+import { RenewTokensUseCase } from './application/use-cases/refresh-token-use-case';
 import { GetInfoAboutMeUseCase } from './application/use-cases/get-info-about-me.use-case';
 import { CreateTokensUseCase } from './application/use-cases/create-token.use-case';
 import { AddUserDeviceUseCase } from './application/use-cases/add-user-device.use-case';
@@ -47,7 +47,7 @@ const useCases = [
   LogoutUseCase,
   AuthWithGithubUseCase,
   LoginByGoogleUseCase,
-  RefreshTokenUseCase,
+  RenewTokensUseCase,
   GetInfoAboutMeUseCase,
   CreateTokensUseCase,
   AddUserDeviceUseCase,

@@ -1,7 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { IsEmail, IsString, validateSync } from 'class-validator';
+import { IsString, validateSync } from 'class-validator';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { randomUUID } from 'crypto';
 import {
@@ -13,6 +13,8 @@ import {
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
+import { ConfigService } from '@nestjs/config';
+import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 
 export const RegistrationEmailResendingCodes = {
   Success: Symbol('success'),
@@ -22,12 +24,12 @@ export const RegistrationEmailResendingCodes = {
 };
 
 export class RegistrationEmailResendingCommand {
-  @IsEmail()
-  public readonly email: string;
+  @IsString()
+  token: string;
   @IsString()
   html: string;
   constructor(email: string, html: string) {
-    this.email = email;
+    this.token = email;
     this.html = html;
     const errors = validateSync(this);
     if (errors.length) throw new Error('Validation failed');
@@ -41,14 +43,19 @@ export class RegistrationEmailResendingCommand {
 })
 @CommandHandler(RegistrationEmailResendingCommand)
 export class RegistrationEmailResendingUseCase {
+  private readonly expireAfterMiliseconds: number;
   constructor(
     private readonly userRepository: UsersRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly emailAuthService: EmailAuthService,
+    private readonly configService: ConfigService,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
+    const config = this.configService.get<AuthConfig>('auth');
+    this.expireAfterMiliseconds =
+      config.emailConfirmationTokenExpireAfterMiliseconds;
     logger.setContext(RegistrationEmailResendingUseCase.name);
   }
 
@@ -59,43 +66,42 @@ export class RegistrationEmailResendingUseCase {
     const notification = new Notification(
       RegistrationEmailResendingCodes.Success,
     );
-    const { email, html } = command;
+    const { token, html } = command;
     try {
       await this.txHost.withTransaction(async () => {
-        const userByEmail = await this.userRepository.getUserByEmail(email);
-        if (!userByEmail) {
+        const userByToken = await this.userRepository.findUserByToken(token);
+        if (!userByToken) {
           notification.setCode(RegistrationEmailResendingCodes.UserNotFound);
           this.logger.log('warn', 'user not found', {
-            payload: { email },
+            payload: { token },
           });
           return notification;
         }
-        if (userByEmail && userByEmail.isConfirmed) {
+        if (userByToken && userByToken.isConfirmed) {
           notification.setCode(
             RegistrationEmailResendingCodes.EmailAlreadyConfirmated,
           );
           this.logger.log('warn', 'email already confirmated', {
-            payload: { email },
+            payload: { token },
           });
           return notification;
         }
         const confirmationToken = randomUUID().replaceAll('-', '');
-        const hoursExpires = 24;
         const currentDate = new Date();
         const confirmationTokenExpiresAt = new Date(
-          currentDate.getTime() + 1000 * 60 * 60 * hoursExpires,
+          currentDate.getTime() + this.expireAfterMiliseconds,
         );
 
         await this.userRepository.updateUserConfirmationInfo({
-          userId: userByEmail.id,
+          userId: userByToken.id,
           createdAt: currentDate,
           confirmationToken,
           confirmationTokenExpiresAt,
         });
 
         await this.emailAuthService.sendConfirmationEmail({
-          name: userByEmail.username,
-          email,
+          name: userByToken.username,
+          email: userByToken.email,
           expiredAt: confirmationTokenExpiresAt,
           confirmationToken,
           html,

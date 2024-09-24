@@ -10,7 +10,7 @@ export function RestorePasswordSwagger() {
       description: 'Restore password successful',
       schema: {
         example: {
-          statusCode: HttpStatus.OK,
+          status: HttpStatus.OK,
           message: 'Restore password successful',
         },
       },
@@ -35,13 +35,17 @@ export function RestorePasswordSwagger() {
               message: 'Restore password failed due to user not found.',
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
+        },
       },
     }),
     ApiResponse({
@@ -49,7 +53,7 @@ export function RestorePasswordSwagger() {
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {

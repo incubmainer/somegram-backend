@@ -1,16 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
-import { IsUserEmail } from '../../../application/decorators/is-user-email';
-
 export class RegistrationEmailResendingBodyInputDto {
   @ApiProperty({
     type: String,
-    description: 'this is email of user',
-    example: 'some@mail.com',
+    description: "It's confirmation token",
+    example: 'hlMdq0ghJbmujPQ+adSo+qX6aP0=',
   })
-  @IsUserEmail()
-  email: string;
+  @IsString()
+  token: string;
   @ApiProperty({
     type: String,
     description:

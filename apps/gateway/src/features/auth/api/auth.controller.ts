@@ -10,6 +10,7 @@ import {
   NotFoundException,
   Get,
   Req,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
@@ -62,7 +63,7 @@ import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
-import { RefreshTokenCommand } from '../application/use-cases/refresh-token-use-case';
+import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
@@ -141,6 +142,7 @@ export class AuthController {
     if (code === RegistrationCodes.UsernameAlreadyExists) {
       this.logger.log('warn', 'username already exists', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
         message:
           'Registration failed due to conflict with existing email or username.',
@@ -151,7 +153,8 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -180,17 +183,18 @@ export class AuthController {
         message: 'Registration confirmation failed due to token expiration.',
       });
     }
-    if (code === RegistrationConfirmationCodes.TokenInvalid) {
-      this.logger.log('warn', 'token invalid', {});
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'registration_confirmation_failed',
-        message: 'Registration confirmation failed due to invalid token.',
+    if (code === RegistrationConfirmationCodes.UserNotFound) {
+      this.logger.log('warn', 'user not found', {});
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        error: 'User not found',
+        message: 'User with confirmation token not found',
       });
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -204,7 +208,7 @@ export class AuthController {
   ) {
     this.logger.log('info', 'start registration-email-resending', {});
     const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationEmailResendingCommand(body.email, body.html),
+      new RegistrationEmailResendingCommand(body.token, body.html),
     );
     const code = notification.getCode();
     if (code === RegistrationEmailResendingCodes.Success) {
@@ -214,20 +218,23 @@ export class AuthController {
     if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
       this.logger.log('warn', 'email already confirmated', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'email_already_confirmated',
         message: 'User with current email already confirmed',
       });
     }
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
       this.logger.log('warn', 'username not found', {});
-      throw new BadRequestException({
-        error: 'user_not_found',
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        error: 'User not found',
         message: 'User with current email not found',
       });
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -260,19 +267,22 @@ export class AuthController {
     if (code === LoginByGoogleCodes.WrongEmail) {
       this.logger.log('warn', 'wrong email', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'login_by_google_failed',
         message: 'Login by google failed due to wrong email.',
       });
     }
     if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
         message: 'Unknown ip address',
         details: {
@@ -326,9 +336,10 @@ export class AuthController {
         message: 'Restore password successful',
       };
     }
-    if (code === RestorePasswordCodes.UnvalidRecaptcha) {
+    if (code === RestorePasswordCodes.InvalidRecaptcha) {
       this.logger.log('warn', 'invalid recaptcha token', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'invalid_recaptcha_token',
         message: 'Restore password failed due to invalid recaptcha token.',
       });
@@ -336,13 +347,15 @@ export class AuthController {
     if (code === RestorePasswordCodes.UserNotFound) {
       this.logger.log('warn', 'user not found', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'user_not_found',
         message: 'Restore password failed due to user not found.',
       });
     }
     if (code === RestorePasswordCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -369,20 +382,23 @@ export class AuthController {
     if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
       this.logger.log('warn', 'expired code', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
         message: 'Restore password confirmation failed due to expired code.',
       });
     }
-    if (code === RestorePasswordConfirmationCodes.UnvalidCode) {
+    if (code === RestorePasswordConfirmationCodes.InvalidCode) {
       this.logger.log('warn', 'invalid code', {});
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
-        message: 'Restore password confirmation failed due to unvalid code.',
+        message: 'Restore password confirmation failed due to Invalid code.',
       });
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
@@ -427,13 +443,13 @@ export class AuthController {
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @RefreshTokenSwagger()
-  async refreshToken(
+  async renewTokens(
     @RefreshToken() refreshToken: string,
     @Res() res: Response,
   ) {
     this.logger.log('info', 'start refresh token', {});
     const tokens = await this.commandBus.execute(
-      new RefreshTokenCommand(refreshToken),
+      new RenewTokensCommand(refreshToken),
     );
     this.logger.log('info', 'refresh token success', {});
     return res
@@ -466,13 +482,15 @@ export class AuthController {
     const code = notification.getCode();
     if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
       throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
         message: 'Unknown ip address',
         details: {
@@ -511,7 +529,8 @@ export class AuthController {
     const code = notification.getCode();
     if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
       });
     }

@@ -1,6 +1,6 @@
 export class AuthConfig {
   public readonly restorePasswordCodeExpireAfterMiliseconds: number;
-  public readonly restorePasswordCodeLength: number;
+  public readonly emailConfirmationTokenExpireAfterMiliseconds: number;
   public readonly recaptchaSecretKey: string;
   public readonly recaptchaSiteKey: string;
 }
@@ -21,13 +21,20 @@ export const authConfig = (): AuthConfig => {
       'RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS is not a number',
     );
   }
-  const restorePasswordCodeLengthStr = process.env.RESTORE_PASSWORD_CODE_LENGTH;
-  if (!restorePasswordCodeLengthStr) {
-    throw new Error('RESTORE_PASSWORD_CODE_LENGTH is not defined');
+  const emailConfirmationTokenExpireAfterMilisecondsStr =
+    process.env.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS;
+  if (!emailConfirmationTokenExpireAfterMilisecondsStr) {
+    throw new Error(
+      'EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS is not defined',
+    );
   }
-  const restorePasswordCodeLength = parseInt(restorePasswordCodeLengthStr);
-  if (isNaN(restorePasswordCodeLength)) {
-    throw new Error('RESTORE_PASSWORD_CODE_LENGTH is not a number');
+  const emailConfirmationTokenExpireAfterMiliseconds = parseInt(
+    emailConfirmationTokenExpireAfterMilisecondsStr,
+  );
+  if (isNaN(emailConfirmationTokenExpireAfterMiliseconds)) {
+    throw new Error(
+      'EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS is not a number',
+    );
   }
   const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
   if (!recaptchaSecretKey) {
@@ -39,7 +46,7 @@ export const authConfig = (): AuthConfig => {
   }
   return {
     restorePasswordCodeExpireAfterMiliseconds,
-    restorePasswordCodeLength,
+    emailConfirmationTokenExpireAfterMiliseconds,
     recaptchaSecretKey,
     recaptchaSiteKey,
   };

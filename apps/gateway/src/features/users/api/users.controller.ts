@@ -1,8 +1,8 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   Put,
   UnauthorizedException,
@@ -110,7 +110,7 @@ export class UsersController {
     if (code === FillingUserProfileCodes.UserNotFound)
       throw new UnauthorizedException();
     if (code === FillingUserProfileCodes.TransactionError)
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         error: 'Transaction error',
       });
   }

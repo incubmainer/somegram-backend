@@ -27,11 +27,11 @@ The accessToken set to the query parameter.`,
       },
     }),
     ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
       schema: {
         example: {
-          statusCode: HttpStatus.BAD_REQUEST,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Transaction error',
         },
       },

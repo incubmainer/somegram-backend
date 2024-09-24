@@ -10,7 +10,7 @@ export function RegistrationSwagger() {
       description: 'Registration success',
       schema: {
         example: {
-          statusCode: HttpStatus.OK,
+          status: HttpStatus.OK,
           message: 'Registration successful',
         },
       },
@@ -22,7 +22,7 @@ export function RegistrationSwagger() {
         oneOf: [
           {
             example: {
-              statusCode: HttpStatus.BAD_REQUEST,
+              status: HttpStatus.BAD_REQUEST,
               error: 'registration_failed',
               message:
                 'Registration failed due to conflict with existing email or username.',
@@ -32,13 +32,17 @@ export function RegistrationSwagger() {
               },
             },
           },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Transaction error',
-            },
-          },
         ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
+      schema: {
+        example: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Transaction error',
+        },
       },
     }),
     ApiResponse({
@@ -46,7 +50,7 @@ export function RegistrationSwagger() {
       description: 'Validation error',
       schema: {
         example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           message: 'Validation failed',
           errors: [
             {

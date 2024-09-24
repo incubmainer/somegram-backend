@@ -7,7 +7,6 @@ import { IsEmail, IsString, validateSync } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecapchaService } from 'apps/gateway/src/common/utils/recapcha.service';
@@ -16,7 +15,7 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 export const RestorePasswordCodes = {
   Success: Symbol('success'),
   UserNotFound: Symbol('user_not_found'),
-  UnvalidRecaptcha: Symbol('unvalid_recaptcha'),
+  InvalidRecaptcha: Symbol('Invalid_recaptcha'),
   TransactionError: Symbol('transaction_error'),
 };
 
@@ -44,7 +43,6 @@ export class RestorePasswordUseCase {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    private readonly cryptoAuthService: CryptoAuthService,
     private readonly emailAuthService: EmailAuthService,
     private readonly configService: ConfigService,
     private readonly recapchaService: RecapchaService,
@@ -62,7 +60,7 @@ export class RestorePasswordUseCase {
     const isValidRecaptcha =
       await this.recapchaService.verifyRecaptchaToken(recaptchaToken);
     if (!isValidRecaptcha) {
-      notification.setCode(RestorePasswordCodes.UnvalidRecaptcha);
+      notification.setCode(RestorePasswordCodes.InvalidRecaptcha);
       return notification;
     }
     try {
