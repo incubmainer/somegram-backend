@@ -60,6 +60,7 @@ export class DeleteAvatarUseCase {
           await this.avatarRepository.getAvatarKeyByUserId(userId);
         if (avatarKey) {
           await this.avatarStorageService.deleteAvatarByKey(avatarKey);
+          await this.avatarRepository.deleteAvatarKeyByUserId(userId);
         }
       });
     } catch (e) {

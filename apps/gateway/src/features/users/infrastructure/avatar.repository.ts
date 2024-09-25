@@ -54,4 +54,12 @@ export class AvatarRepository {
     });
     return result ? result.avatarKey : null;
   }
+
+  public async deleteAvatarKeyByUserId(
+    userId: User['id'],
+  ): Promise<UserAvatar> {
+    return await this.txHost.tx.userAvatar.delete({
+      where: { userId },
+    });
+  }
 }

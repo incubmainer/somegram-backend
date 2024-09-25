@@ -164,6 +164,7 @@ export class UsersController {
   @Delete('profile-delete-avatar')
   @DeleteAvatarSwagger()
   @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUserAvatar(@CurrentUserId() userId: string) {
     this.logger.log('info', 'start delete avatar request', {});
     const notification: Notification<ProfileInfoOutputDto> =
