@@ -3,7 +3,6 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CommandHandler } from '@nestjs/cqrs';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { IsString, validateSync, ValidationError } from 'class-validator';
 import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
 import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import {
@@ -11,34 +10,28 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { IsValidFile } from '../decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 
-export const UploadAvatarCodes = {
+export const DeleteAvatarCodes = {
   Success: Symbol('success'),
   UserNotFound: Symbol('userNotFound'),
-  ValidationCommandError: Symbol('validationCommandError'),
   TransactionError: Symbol('transactionError'),
 };
 
-export class UploadAvatarCommand {
-  @IsString()
+export class DeleteAvatarCommand {
   public readonly userId: string;
-  @IsValidFile()
-  public readonly file: Express.Multer.File;
-  constructor(userId: string, file: Express.Multer.File) {
+  constructor(userId: string) {
     this.userId = userId;
-    this.file = file;
   }
 }
 
-@CommandHandler(UploadAvatarCommand)
+@CommandHandler(DeleteAvatarCommand)
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
-export class UploadAvatarUseCase {
+export class DeleteAvatarUseCase {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
@@ -48,51 +41,30 @@ export class UploadAvatarUseCase {
     private readonly usersQueryRepository: UsersQueryRepository,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
-    logger.setContext(UploadAvatarUseCase.name);
+    logger.setContext(DeleteAvatarUseCase.name);
   }
 
   public async execute(
-    command: UploadAvatarCommand,
-  ): Promise<
-    Notification<null, ValidationError> | Notification<null | string>
-  > {
-    const errors = validateSync(command);
-    if (errors.length) {
-      const notification = new Notification<null, ValidationError>(
-        UploadAvatarCodes.ValidationCommandError,
-      );
-      notification.addErrors(errors);
-      return notification;
-    }
-    const { userId, file } = command;
-    const notification = new Notification<string>(UploadAvatarCodes.Success);
+    command: DeleteAvatarCommand,
+  ): Promise<Notification<null | string>> {
+    const { userId } = command;
+    const notification = new Notification<string>(DeleteAvatarCodes.Success);
     const user = await this.usersQueryRepository.findUserById(command.userId);
     if (!user) {
-      notification.setCode(UploadAvatarCodes.UserNotFound);
+      notification.setCode(DeleteAvatarCodes.UserNotFound);
       return notification;
     }
     try {
       await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-        const previousAvatarKey =
+        const avatarKey =
           await this.avatarRepository.getAvatarKeyByUserId(userId);
-        if (previousAvatarKey) {
-          await this.avatarStorageService.deleteAvatarByKey(previousAvatarKey);
+        if (avatarKey) {
+          await this.avatarStorageService.deleteAvatarByKey(avatarKey);
         }
-        const urls = await this.avatarStorageService.saveAvatar(
-          userId,
-          file.buffer,
-          file.mimetype,
-        );
-        await this.avatarRepository.setCurrentAvatar({
-          userId,
-          avatarKey: urls.avatarKey,
-          createdAt: currentDate,
-        });
       });
     } catch (e) {
       this.logger.log('error', 'transaction error', { e });
-      notification.setCode(UploadAvatarCodes.TransactionError);
+      notification.setCode(DeleteAvatarCodes.TransactionError);
     }
     return notification;
   }

@@ -33,6 +33,7 @@ import { CreateTokensUseCase } from './application/use-cases/create-token.use-ca
 import { AddUserDeviceUseCase } from './application/use-cases/add-user-device.use-case';
 import { RegistrationEmailResendingUseCase } from './application/use-cases/registration-email-resending.use-case';
 import { CheckRefreshTokenUseCase } from './application/use-cases/check-refresh-token';
+import { UsersQueryRepository } from '../users/infrastructure/users.query-repository';
 
 const services = [
   AuthService,
@@ -61,7 +62,11 @@ const useCases = [
 
 const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
 
-const repositories = [UsersRepository, SecurityDevicesRepository];
+const repositories = [
+  UsersRepository,
+  UsersQueryRepository,
+  SecurityDevicesRepository,
+];
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule, EmailModule, PassportModule],

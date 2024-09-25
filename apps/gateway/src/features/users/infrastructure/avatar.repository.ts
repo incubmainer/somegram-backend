@@ -45,7 +45,7 @@ export class AvatarRepository {
       },
     });
   }
-  public async getCurrentAvatarKey(
+  public async getAvatarKeyByUserId(
     userId: User['id'],
   ): Promise<UserAvatar['avatarKey'] | null> {
     const result = await this.txHost.tx.userAvatar.findUnique({

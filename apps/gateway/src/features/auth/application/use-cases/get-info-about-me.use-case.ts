@@ -7,7 +7,7 @@ import {
 } from '../../../../../../../libs/custom-logger/src';
 import { MeOutputDto } from '../../api/dto/output-dto/me-output-dto';
 import { Notification } from '../../../../common/domain/notification';
-import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 
 export const MeCodes = {
   Success: Symbol('success'),
@@ -27,7 +27,7 @@ export class GetInfoAboutMeUseCase
   implements ICommandHandler<GetInfoAboutMeCommand>
 {
   constructor(
-    private usersRepository: UsersRepository,
+    private usersQueryRepository: UsersQueryRepository,
     @InjectCustomLoggerService()
     private readonly logger: CustomLoggerService,
   ) {
@@ -37,8 +37,12 @@ export class GetInfoAboutMeUseCase
     command: GetInfoAboutMeCommand,
   ): Promise<Notification<MeOutputDto>> {
     const notification = new Notification<MeOutputDto>(MeCodes.Success);
+    console.log(command.userId);
     try {
-      const user = await this.usersRepository.getInfoAboutMe(command.userId);
+      const user = await this.usersQueryRepository.getInfoAboutMe(
+        command.userId,
+      );
+
       notification.setData(user);
     } catch (e) {
       this.logger.log('error', 'transaction error', { e });

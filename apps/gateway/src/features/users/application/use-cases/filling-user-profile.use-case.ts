@@ -1,23 +1,28 @@
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { User } from '@prisma/gateway';
 import { IsString, validateSync, ValidationError } from 'class-validator';
-import { IsUsername } from '../../../auth/application/decorators/is-username';
-import { IsFirstName } from '../decorators/is-first-name';
-import { IsLastName } from '../decorators/is-last-name';
-import { IsDateOfBirth } from '../decorators/is-date-of-birth';
-import { IsAboutMe } from '../decorators/is-about-me';
-import { UsersRepository } from '../../infrastructure/users.repository';
-import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
-import { IsCityName } from '../decorators/is-city';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
 
+import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { IsUsername } from '../../../auth/application/decorators/is-username';
+import { IsFirstName } from '../decorators/is-first-name';
+import { IsLastName } from '../decorators/is-last-name';
+import { IsDateOfBirth } from '../decorators/is-date-of-birth';
+
+import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
+import { IsCityName } from '../decorators/is-city';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
+import { IsAbout } from '../decorators/is-about';
+
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
   UserNotFound: Symbol('userNotFound'),
+  UsernameAlreadyExists: Symbol('username_already_exists'),
   ValidationCommandError: Symbol('validationCommandError'),
   TransactionError: Symbol('transactionError'),
 };
@@ -26,20 +31,20 @@ export class FillingUserProfileCommand {
   @IsString()
   public readonly userId: string;
   @IsUsername()
-  public readonly username: string;
+  public readonly userName: string;
   @IsFirstName()
   public readonly firstName: string;
   @IsLastName()
   public readonly lastName: string;
   @IsDateOfBirth()
   public readonly dateOfBirth: string;
-  @IsAboutMe()
-  public readonly aboutMe: string;
+  @IsAbout()
+  public readonly about: string;
   @IsCityName()
   public readonly city: string;
   constructor(
     userId: string,
-    username: string,
+    userName: string,
     firstName: string,
     lastName: string,
     dateOfBirth: string,
@@ -47,11 +52,11 @@ export class FillingUserProfileCommand {
     city: string,
   ) {
     this.userId = userId;
-    this.username = username;
+    this.userName = userName;
     this.firstName = firstName;
     this.lastName = lastName;
     this.dateOfBirth = dateOfBirth;
-    this.aboutMe = about;
+    this.about = about;
     this.city = city;
   }
 }
@@ -64,7 +69,8 @@ export class FillingUserProfileCommand {
 })
 export class FillingUserProfileUseCase {
   constructor(
-    private readonly userRepository: UsersRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly usersQueryRepository: UsersQueryRepository,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
     logger.setContext(FillingUserProfileUseCase.name);
@@ -72,7 +78,7 @@ export class FillingUserProfileUseCase {
 
   public async execute(
     command: FillingUserProfileCommand,
-  ): Promise<Notification<null> | Notification<null, ValidationError>> {
+  ): Promise<Notification<null | User> | Notification<null, ValidationError>> {
     const errors = validateSync(command);
     if (errors.length) {
       const note = new Notification<null, ValidationError>(
@@ -81,41 +87,45 @@ export class FillingUserProfileUseCase {
       note.addErrors(errors);
       return note;
     }
-    const {
-      userId,
-      username,
-      firstName,
-      lastName,
-      dateOfBirth,
-      aboutMe,
-      city,
-    } = command;
-    const notification = new Notification<null>(
+    const { userId, userName, firstName, lastName, dateOfBirth, about, city } =
+      command;
+    const notification = new Notification<User | null>(
       FillingUserProfileCodes.Success,
     );
     try {
+      const user = await this.usersQueryRepository.findUserById(command.userId);
+      if (!user) {
+        notification.setCode(FillingUserProfileCodes.UserNotFound);
+        return notification;
+      }
+
+      const uniqueUsername =
+        await this.usersQueryRepository.getUserByUsername(userName);
+
+      if (uniqueUsername?.username) {
+        if (user.id !== uniqueUsername.id) {
+          notification.setCode(FillingUserProfileCodes.UsernameAlreadyExists);
+          return notification;
+        }
+      }
       const currentDate = new Date();
       const dateOfBirthDate = parseDateDDMMYYYY(dateOfBirth);
-      const isUpdated = await this.userRepository.updateUserProfileInfo(
+      const updatedUser = await this.usersRepository.updateUserProfileInfo(
         userId,
         {
-          username,
+          userName,
           firstName,
           lastName,
           dateOfBirth: dateOfBirthDate,
-          aboutMe,
+          about,
           updatedAt: currentDate,
           city,
         },
       );
-      if (!isUpdated) {
-        notification.setCode(FillingUserProfileCodes.UserNotFound);
-        return notification;
-      }
+      notification.setData(updatedUser);
     } catch (e) {
-      if (notification.getCode() === FillingUserProfileCodes.Success) {
-        notification.setCode(FillingUserProfileCodes.TransactionError);
-      }
+      this.logger.log('error', 'transaction error', { e });
+      notification.setCode(FillingUserProfileCodes.TransactionError);
     }
     return notification;
   }

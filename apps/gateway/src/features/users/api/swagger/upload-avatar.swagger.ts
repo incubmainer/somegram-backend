@@ -13,28 +13,28 @@ export function UploadAvatarSwagger() {
     ApiBearerAuth('access-token'),
     ApiConsumes('multipart/form-data'),
     ApiBody({
-      description: 'Avatar image file',
       type: 'multipart/form-data',
       required: true,
       schema: {
         type: 'object',
+        required: ['file'],
         properties: {
           file: {
             type: 'string',
             format: 'binary',
+            description:
+              'The user avatar image file. Must be in JPEG or PNG format and not exceed 10 MB in size.',
           },
         },
       },
     }),
     ApiResponse({
-      status: HttpStatus.OK,
+      status: HttpStatus.NO_CONTENT,
       description: 'Avatar upload successful',
-      schema: {
-        example: {
-          avatarUrl:
-            'http://localhost:9000/somegram/users/f965e9f5-e7ae-4ae4-a5c5-2016285c72dd/avatars/f78869fa-2d3a-47b8-97c1-785693087ea7.jpeg',
-        },
-      },
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: 'User not found or not authorized',
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -54,6 +54,10 @@ export function UploadAvatarSwagger() {
           ],
         },
       },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: 'Transaction error',
     }),
   );
 }

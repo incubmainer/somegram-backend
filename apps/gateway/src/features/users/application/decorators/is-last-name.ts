@@ -5,6 +5,10 @@ import {
 } from 'class-validator';
 
 const FIRSTNAME_REGEX = /^[A-Za-zА-Яа-я]+$/;
+const LASTNAME_LENGTH = {
+  min: 1,
+  max: 50,
+};
 
 export function IsLastName(validationOptions?: ValidationOptions) {
   return function (object: Record<string, any>, propertyName: string) {
@@ -19,7 +23,10 @@ export function IsLastName(validationOptions?: ValidationOptions) {
             return false;
           }
 
-          if (value.length < 1 || value.length > 50) {
+          if (
+            value.length < LASTNAME_LENGTH.min ||
+            value.length > LASTNAME_LENGTH.max
+          ) {
             return false;
           }
 
@@ -30,7 +37,7 @@ export function IsLastName(validationOptions?: ValidationOptions) {
           return true;
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be a valid first name (1-50 characters, only alphabetic characters are allowed)`;
+          return `${args.property} must be a valid first name (${LASTNAME_LENGTH.min}-${LASTNAME_LENGTH.max}  characters, only alphabetic characters are allowed)`;
         },
       },
     });
