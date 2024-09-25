@@ -6,7 +6,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 
-export function FillProfileSwagger() {
+export function ProfileFillInfoSwagger() {
   return applyDecorators(
     ApiTags('Users'),
     ApiBearerAuth('access-token'),
@@ -16,19 +16,18 @@ export function FillProfileSwagger() {
       description: 'Profile filled successfully',
       schema: {
         example: {
-          message: 'Profile filled successfully',
+          userName: 'john_doe',
+          firstName: 'John',
+          lastName: 'Doe',
+          dateOfBirth: '1990-01-01',
+          city: 'New York',
+          about: 'Software Developer',
         },
       },
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'User not found or not authorized',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'Unauthorized',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -39,10 +38,10 @@ export function FillProfileSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'username',
+              property: 'userName',
               constraints: {
                 isUsername:
-                  'username must be a valid username (6-30 characters, alphanumeric, underscore, or dash)',
+                  'userName must be a valid username (6-30 characters, alphanumeric, underscore, or dash)',
               },
             },
             {
@@ -67,10 +66,10 @@ export function FillProfileSwagger() {
               },
             },
             {
-              property: 'aboutMe',
+              property: 'about',
               constraints: {
-                isAboutMe:
-                  'aboutMe must be between 0 and 200 characters long and can include letters, numbers, and special characters.',
+                isAbout:
+                  'about must be between 0 and 200 characters long and can include letters, numbers, and special characters.',
               },
             },
             {
@@ -85,14 +84,12 @@ export function FillProfileSwagger() {
       },
     }),
     ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Username already exists',
+    }),
+    ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Transaction error',
-        },
-      },
     }),
   );
 }

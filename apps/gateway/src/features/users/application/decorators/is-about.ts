@@ -5,11 +5,15 @@ import {
 } from 'class-validator';
 
 const ABOUT_REGEX = /^[0-9A-Za-zА-Яа-я.,!?@#&()\-+=$%^&*_\s]+$/;
+const ABOUT_LENGTH = {
+  min: 0,
+  max: 200,
+};
 
-export function IsAboutMe(validationOptions?: ValidationOptions) {
+export function IsAbout(validationOptions?: ValidationOptions) {
   return function (object: Record<string, any>, propertyName: string) {
     registerDecorator({
-      name: 'isAboutMe',
+      name: 'isAbout',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
@@ -19,7 +23,10 @@ export function IsAboutMe(validationOptions?: ValidationOptions) {
             return false;
           }
 
-          if (value.length < 0 || value.length > 200) {
+          if (
+            value.length < ABOUT_LENGTH.min ||
+            value.length > ABOUT_LENGTH.max
+          ) {
             return false;
           }
 
@@ -30,7 +37,7 @@ export function IsAboutMe(validationOptions?: ValidationOptions) {
           return true;
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be between 0 and 200 characters long and can include letters, numbers, and special characters.`;
+          return `${args.property} must be between ${ABOUT_LENGTH.min} and ${ABOUT_LENGTH.max} characters long and can include letters, numbers, and special characters.`;
         },
       },
     });

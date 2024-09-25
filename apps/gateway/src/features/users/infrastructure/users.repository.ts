@@ -14,10 +14,6 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import {
-  MeOutputDto,
-  userMapper,
-} from '../../auth/api/dto/output-dto/me-output-dto';
 
 @Injectable()
 @LogClass({
@@ -333,41 +329,30 @@ export class UsersRepository {
     }
     return user;
   }
-  async getInfoAboutMe(currentUserId: string): Promise<MeOutputDto | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { id: currentUserId },
-    });
-    if (!user) {
-      return null;
-    }
-    return userMapper(user);
-  }
 
   async updateUserProfileInfo(
     userId: User['id'],
     dto: {
-      username: User['username'];
+      userName: User['username'];
       firstName: User['firstName'];
       lastName: User['lastName'];
       dateOfBirth: User['dateOfBirth'];
-      aboutMe: User['about'];
+      about: User['about'];
       updatedAt: User['updatedAt'];
       city: User['city'];
     },
-  ): Promise<boolean> {
-    const result = await this.txHost.tx.user.update({
+  ): Promise<User> {
+    return await this.txHost.tx.user.update({
       where: { id: userId },
       data: {
-        username: dto.username,
+        username: dto.userName,
         firstName: dto.firstName,
         lastName: dto.lastName,
         dateOfBirth: dto.dateOfBirth,
-        about: dto.aboutMe,
+        about: dto.about,
         updatedAt: dto.updatedAt,
         city: dto.city,
       },
     });
-    const isUpdated = !!result;
-    return isUpdated;
   }
 }

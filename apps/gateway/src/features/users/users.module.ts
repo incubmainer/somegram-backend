@@ -13,8 +13,18 @@ import { AvatarStorageService } from './infrastructure/avatar-storage.service';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.use-case';
 import { AvatarRepository } from './infrastructure/avatar.repository';
 import { FillingUserProfileUseCase } from './application/use-cases/filling-user-profile.use-case';
+import { GetProfileInfoUseCase } from './application/use-cases/get-profile-info.use-case';
+import { UsersQueryRepository } from './infrastructure/users.query-repository';
+import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case copy';
 
-const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
+const useCases = [
+  UploadAvatarUseCase,
+  FillingUserProfileUseCase,
+  GetProfileInfoUseCase,
+  DeleteAvatarUseCase,
+];
+
+const repositories = [UsersRepository, UsersQueryRepository, AvatarRepository];
 
 @Module({
   imports: [
@@ -29,12 +39,11 @@ const useCases = [UploadAvatarUseCase, FillingUserProfileUseCase];
   providers: [
     JwtStrategy,
     AuthService,
-    UsersRepository,
     CryptoService,
     FileStorageService,
     AvatarStorageService,
     ...useCases,
-    AvatarRepository,
+    ...repositories,
   ],
   exports: [],
 })

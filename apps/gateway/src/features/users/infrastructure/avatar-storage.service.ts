@@ -1,4 +1,8 @@
-import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  DeleteObjectCommandOutput,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { FileStorageService } from 'apps/gateway/src/common/utils/file-storage.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,13 +57,15 @@ export class AvatarStorageService {
     return `${publicUrl}/${bucketName}/${avatarKey}`;
   }
 
-  public async deleteAvatarByKey(avatarKey: string): Promise<void> {
+  public async deleteAvatarByKey(
+    avatarKey: string,
+  ): Promise<DeleteObjectCommandOutput> {
     const s3Client = this.fileStorageService.getS3Client();
     const bucketName = this.fileStorageService.getBucketName();
     const params = {
       Bucket: bucketName,
       Key: avatarKey,
     };
-    await s3Client.send(new DeleteObjectCommand(params));
+    return await s3Client.send(new DeleteObjectCommand(params));
   }
 }

@@ -13,15 +13,23 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
+
 import {
   RegistrationCodes,
   RegistrationCommand,
 } from '../application/use-cases/registration.use-case';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { RegistrationSwagger } from './swagger/registration.swagger';
-import { Request, Response } from 'express';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
 import { LoginSwagger } from './swagger/login.swagger';
@@ -58,22 +66,14 @@ import {
   LoginByGoogleCodes,
   LoginByGoogleCommand,
 } from '../application/use-cases/login-by-google.use-case';
-import { AuthGuard } from '@nestjs/passport';
 import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
-import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import {
   GetInfoAboutMeCommand,
   MeCodes,
@@ -521,7 +521,7 @@ export class AuthController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.log('info', 'start me request', {});
     const notification: Notification<MeOutputDto> =
