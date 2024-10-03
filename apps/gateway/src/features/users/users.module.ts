@@ -15,7 +15,7 @@ import { AvatarRepository } from './infrastructure/avatar.repository';
 import { FillingUserProfileUseCase } from './application/use-cases/filling-user-profile.use-case';
 import { GetProfileInfoUseCase } from './application/use-cases/get-profile-info.use-case';
 import { UsersQueryRepository } from './infrastructure/users.query-repository';
-import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case copy';
+import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case';
 
 const useCases = [
   UploadAvatarUseCase,

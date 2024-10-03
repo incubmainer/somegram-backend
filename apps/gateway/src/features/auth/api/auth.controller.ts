@@ -299,7 +299,7 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    const origin = request.headers.origin || 'http://localhost:3001';
+    const origin = request.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'google auth callback success', {});
     response
       .cookie('refreshToken', tokens.refreshToken, {
@@ -507,7 +507,7 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    const origin = req.headers.origin || 'http://localhost:3001';
+    const origin = req.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'github auth callback success', {});
     res
       .cookie('refreshToken', tokens.refreshToken, {

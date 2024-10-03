@@ -51,7 +51,7 @@ import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
 import {
   DeleteAvatarCodes,
   DeleteAvatarCommand,
-} from '../application/use-cases/delete-avatar.use-case copy';
+} from '../application/use-cases/delete-avatar.use-case';
 
 @ApiTags('Users')
 @Controller('users')
@@ -70,7 +70,7 @@ export class UsersController {
   @Get('profile-info')
   @ProfileInfoSwagger()
   @UseGuards(AuthGuard('jwt'))
-  async gerProfuleInfo(@CurrentUserId() userId: string) {
+  async gerProfileInfo(@CurrentUserId() userId: string) {
     this.logger.log('info', 'start profile info request', {});
     const notification: Notification<ProfileInfoOutputDto> =
       await this.commandBus.execute(new GetProfileInfoCommand(userId));
