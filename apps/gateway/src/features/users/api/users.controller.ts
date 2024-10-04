@@ -133,6 +133,7 @@ export class UsersController {
       fillProfileDto.dateOfBirth,
       fillProfileDto.about,
       fillProfileDto.city,
+      fillProfileDto.country,
     );
     const result: Notification<null, ValidationError> =
       await this.commandBus.execute(command);

@@ -18,6 +18,7 @@ import { IsCityName } from '../decorators/is-city';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { IsAbout } from '../decorators/is-about';
+import { IsCountry } from '../decorators/is-coutry';
 
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
@@ -42,6 +43,8 @@ export class FillingUserProfileCommand {
   public readonly about: string;
   @IsCityName()
   public readonly city: string;
+  @IsCountry()
+  public readonly country: string;
   constructor(
     userId: string,
     userName: string,
@@ -50,6 +53,7 @@ export class FillingUserProfileCommand {
     dateOfBirth: string,
     about: string,
     city: string,
+    country: string,
   ) {
     this.userId = userId;
     this.userName = userName;
@@ -58,6 +62,7 @@ export class FillingUserProfileCommand {
     this.dateOfBirth = dateOfBirth;
     this.about = about;
     this.city = city;
+    this.country = country;
   }
 }
 
@@ -87,8 +92,16 @@ export class FillingUserProfileUseCase {
       note.addErrors(errors);
       return note;
     }
-    const { userId, userName, firstName, lastName, dateOfBirth, about, city } =
-      command;
+    const {
+      userId,
+      userName,
+      firstName,
+      lastName,
+      dateOfBirth,
+      about,
+      city,
+      country,
+    } = command;
     const notification = new Notification<User | null>(
       FillingUserProfileCodes.Success,
     );
@@ -120,6 +133,7 @@ export class FillingUserProfileUseCase {
           about,
           updatedAt: currentDate,
           city,
+          country,
         },
       );
       notification.setData(updatedUser);

@@ -8,6 +8,7 @@ export class ProfileInfoOutputDto {
   dateOfBirth: string | null;
   about: string | null;
   city: string | null;
+  country: string | null;
   avatar?: {
     url: string | null;
   };
@@ -30,5 +31,6 @@ export const userProfileInfoMapper = (user: User): ProfileInfoOutputDto => {
     dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString() : null,
     about: user.about ?? null,
     city: user.city ?? null,
+    country: user.country ?? null,
   });
 };

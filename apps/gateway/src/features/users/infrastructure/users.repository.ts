@@ -340,6 +340,7 @@ export class UsersRepository {
       about: User['about'];
       updatedAt: User['updatedAt'];
       city: User['city'];
+      country: User['country'];
     },
   ): Promise<User> {
     return await this.txHost.tx.user.update({
@@ -352,6 +353,7 @@ export class UsersRepository {
         about: dto.about,
         updatedAt: dto.updatedAt,
         city: dto.city,
+        country: dto.country,
       },
     });
   }

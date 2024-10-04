@@ -25,7 +25,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
   ): Promise<{ refreshToken: string; accessToken: string } | null> {
     const { loginDto, ip, userAgent } = command;
     const userId = await this.authService.validateUser(
-      loginDto.email,
+      loginDto.email.toLowerCase(),
       loginDto.password,
     );
     if (!userId) {

@@ -31,8 +31,12 @@ export class FillProfileInputDto {
   })
   about: string;
   @ApiProperty({
-    description:
-      'Is city name. Allowed characters: letters from any alphabet, spaces, hyphens, apostrophes, and periods.',
+    description: 'Is city name. Allowed characters: letters from any alphabet',
   })
   city: string;
+  @ApiProperty({
+    description:
+      'Is country name. Allowed characters: letters from any alphabet',
+  })
+  country: string;
 }
