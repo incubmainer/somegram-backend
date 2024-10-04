@@ -27,7 +27,7 @@ export class RestorePasswordCommand {
   @IsString()
   html: string;
   constructor(email: string, recaptchaToken: string, html: string) {
-    this.email = email;
+    this.email = email.toLowerCase();
     this.recaptchaToken = recaptchaToken;
     this.html = html;
     const errors = validateSync(this);

@@ -37,7 +37,7 @@ export class RegistrationCommand {
   html: string;
   constructor(username: string, email: string, password: string, html: string) {
     this.username = username;
-    this.email = email;
+    this.email = email.toLowerCase();
     this.password = password;
     this.html = html;
     const errors = validateSync(this);

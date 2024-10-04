@@ -28,8 +28,8 @@ export class RegistrationEmailResendingCommand {
   token: string;
   @IsString()
   html: string;
-  constructor(email: string, html: string) {
-    this.token = email;
+  constructor(token: string, html: string) {
+    this.token = token;
     this.html = html;
     const errors = validateSync(this);
     if (errors.length) throw new Error('Validation failed');
