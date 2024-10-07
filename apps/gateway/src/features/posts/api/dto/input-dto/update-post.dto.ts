@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MaxLength } from 'class-validator';
 
-export const DESC_MAX_LENGTH = 500;
+import { DESCRIPTION_MAX_LENGTH } from '../../../application/use-cases/add-post.use-case';
 
-export class AddPostDto {
+export class UpdatePostDto {
   @ApiProperty({
     type: Array,
   })
   files: string[];
 
   @ApiProperty({
-    description: `Post description, max length ${DESC_MAX_LENGTH} characters.`,
+    description: `Post description, max length ${DESCRIPTION_MAX_LENGTH} characters.`,
     type: String,
-    maxLength: DESC_MAX_LENGTH,
+    maxLength: DESCRIPTION_MAX_LENGTH,
     required: false,
     nullable: true,
   })
   @IsString()
-  @MaxLength(DESC_MAX_LENGTH)
+  @MaxLength(DESCRIPTION_MAX_LENGTH)
   description?: string;
 }

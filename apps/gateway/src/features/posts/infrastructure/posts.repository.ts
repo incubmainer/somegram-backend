@@ -13,6 +13,7 @@ export class PostsRepository {
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
   ) {}
+
   public async addInfoAboutPhoto(dto: {
     postId: PostPhoto['postId'];
     photoKey: PostPhoto['photoKey'];
@@ -29,11 +30,13 @@ export class PostsRepository {
   public async addPost(dto: {
     postId: UserPost['id'];
     userId: UserPost['userId'];
+    createdAt: UserPost['createdAt'];
     description: UserPost['description'];
   }): Promise<UserPost> {
     return await this.txHost.tx.userPost.create({
       data: {
         id: dto.postId,
+        createdAt: dto.createdAt,
         userId: dto.userId,
         description: dto.description,
       },
@@ -51,10 +54,12 @@ export class PostsRepository {
   public async updatePost(dto: {
     postId: UserPost['id'];
     description: UserPost['description'];
+    updatedAt: UserPost['updatedAt'];
   }): Promise<UserPost | null> {
     return await this.txHost.tx.userPost.update({
       data: {
         description: dto.description,
+        updatedAt: dto.updatedAt,
       },
       where: {
         id: dto.postId,

@@ -21,10 +21,12 @@ export const UploadAvatarCodes = {
   TransactionError: Symbol('transactionError'),
 };
 
+export const MAX_AVATAR_SIZE = 10;
+
 export class UploadAvatarCommand {
   @IsString()
   public readonly userId: string;
-  @IsValidFile()
+  @IsValidFile(MAX_AVATAR_SIZE)
   public readonly file: Express.Multer.File;
   constructor(userId: string, file: Express.Multer.File) {
     this.userId = userId;

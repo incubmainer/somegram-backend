@@ -26,38 +26,70 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import {
   AddPostCodes,
   AddPostCommand,
-} from '../application/use-cases/add-post-use-case';
+} from '../application/use-cases/add-post.use-case';
 import { AddPostSwagger } from './swagger/add-post-swagger';
 import {
   UpdatePostCodes,
   UpdatePostCommand,
-} from '../application/use-cases/update-post-use-case';
+} from '../application/use-cases/update-post.use-case';
 import { UpdatePostSwagger } from './swagger/update-post-swagger';
-import { PostDto } from './dto/post.dto';
+import { AddPostDto } from './dto/input-dto/add-post.dto';
 import { DeletePostSwagger } from './swagger/delete-post-swagger';
 import {
   DeletePostCodes,
   DeletePostCommand,
-} from '../application/use-cases/delete-post-use-case';
+} from '../application/use-cases/delete-post.use-case';
+import { AddPhotoSwagger } from './swagger/add-photo-swagger';
+import { UploadPhotoCommand } from '../application/use-cases/upload-photo.use-case';
+import { UpdatePostDto } from './dto/input-dto/update-post.dto';
+import { GetPublicPostCommand } from '../application/use-cases/get-public-post.use-case';
 
 @ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(private readonly commandBus: CommandBus) {}
-
   @Post()
-  @UseInterceptors(FilesInterceptor('files', 10))
   @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
   async addPost(
-    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUserId() userId: string,
-    @Body() addPostDto: PostDto,
+    @Body() addPostDto: AddPostDto,
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new AddPostCommand(userId, files, addPostDto.description),
+        new AddPostCommand(userId, addPostDto.files, addPostDto.description),
       );
+    const code = result.getCode();
+    if (code === AddPostCodes.Success) {
+      return await this.commandBus.execute(
+        new GetPublicPostCommand(result.data),
+      );
+    }
+    if (code === AddPostCodes.ValidationCommandError)
+      throw new UnprocessableEntityException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Validation failed',
+        errors: result.getErrors().map((e) => ({
+          property: e.property,
+          constraints: e.constraints,
+        })),
+      });
+    if (code === AddPostCodes.TransactionError)
+      throw new InternalServerErrorException({
+        error: 'Transaction error',
+      });
+  }
+
+  @Post('photo')
+  @UseInterceptors(FilesInterceptor('file'))
+  @AddPhotoSwagger()
+  @UseGuards(JwtAuthGuard)
+  async addPhoto(
+    @UploadedFiles() file: Express.Multer.File,
+    @CurrentUserId() userId: string,
+  ) {
+    const result: Notification<string, ValidationError> =
+      await this.commandBus.execute(new UploadPhotoCommand(userId, file));
 
     const code = result.getCode();
     if (code === AddPostCodes.Success) return result.data;
@@ -83,7 +115,7 @@ export class PostsController {
   async updatePost(
     @CurrentUserId() userId: string,
     @Param('id') id: string,
-    @Body() updatePostDto: PostDto,
+    @Body() updatePostDto: UpdatePostDto,
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(

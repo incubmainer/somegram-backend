@@ -13,12 +13,14 @@ import { Notification } from '../../../../common/domain/notification';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { v4 as uuidv4 } from 'uuid';
 import { PostsRepository } from '../../infrastructure/posts.repository';
+import { UploadAvatarCodes } from '../../../users/application/use-cases/upload-avatar.use-case';
 import { Type } from 'class-transformer';
-import { FileDto } from '../../api/dto/file.dto';
-import { DESC_MAX_LENGTH } from '../../api/dto/post.dto';
+import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
+import { UnauthorizedException } from '@nestjs/common';
+
+export const DESCRIPTION_MAX_LENGTH = 500;
 
 export const AddPostCodes = {
   Success: Symbol('success'),
@@ -30,20 +32,16 @@ export class AddPostCommand {
   public readonly userId: string;
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => FileDto)
-  public readonly files: FileDto[];
+  @Type(() => String)
+  public readonly files: string[];
   @IsOptional()
   @IsString()
-  @MaxLength(DESC_MAX_LENGTH)
+  @MaxLength(DESCRIPTION_MAX_LENGTH)
   public readonly description?: string;
 
-  constructor(
-    userId: string,
-    files: Express.Multer.File[],
-    description?: string,
-  ) {
+  constructor(userId: string, filesKeys: string[], description?: string) {
     this.userId = userId;
-    this.files = files;
+    this.files = filesKeys;
     this.description = description;
   }
 }
@@ -54,50 +52,43 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    private readonly postPhotoStorageService: PostPhotoStorageService,
     private readonly postsRepository: PostsRepository,
+    private readonly usersQueryRepository: UsersQueryRepository,
   ) {}
   async execute(command: AddPostCommand) {
     const errors = validateSync(command);
     if (errors.length) {
-      const note = new Notification<null, ValidationError>(
-        AddPostCodes.ValidationCommandError,
+      const notification = new Notification<null, ValidationError>(
+        UploadAvatarCodes.ValidationCommandError,
       );
-      note.addErrors(errors);
-      return note;
+      notification.addErrors(errors);
+      return notification;
     }
-    const { userId, files, description } = command;
-    const notification = new Notification<{
-      id: string;
-      userId: string;
-      description: string | null;
-      images: string[];
-    }>(AddPostCodes.Success);
-    const allUrls: string[] = [];
+    const { userId, files: filesKeys, description } = command;
+    const notification = new Notification<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
+        const user = await this.usersQueryRepository.findUserById(userId);
+        if (!user) {
+          throw new UnauthorizedException();
+        }
         const postId = uuidv4();
-
+        const createdAt = new Date();
         const post = await this.postsRepository.addPost({
           postId,
           userId,
+          createdAt,
           description,
         });
-        for (const file of files) {
-          const urls = await this.postPhotoStorageService.savePhoto(
-            userId,
-            file.buffer,
-            file.mimetype,
-          );
+
+        for (const fileKey of filesKeys) {
           await this.postsRepository.addInfoAboutPhoto({
             postId,
-            photoKey: urls.photoKey,
-            createdAt: currentDate,
+            photoKey: fileKey,
+            createdAt: new Date(),
           });
-          allUrls.push(urls.photoUrl);
         }
-        notification.setData({ ...post, images: allUrls });
+        notification.setData(post.id);
       });
     } catch {
       notification.setCode(AddPostCodes.TransactionError);

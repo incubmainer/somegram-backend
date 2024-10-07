@@ -55,11 +55,11 @@ import {
 
 @ApiTags('Users')
 @Controller('users')
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class UsersController {
   constructor(
     private readonly commandBus: CommandBus,

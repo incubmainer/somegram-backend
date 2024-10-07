@@ -9,7 +9,7 @@ import {
 
 import { Notification } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
-import { DESC_MAX_LENGTH } from '../../api/dto/post.dto';
+import { DESCRIPTION_MAX_LENGTH } from './add-post.use-case';
 
 export const UpdatePostCodes = {
   Success: Symbol('success'),
@@ -24,7 +24,7 @@ export class UpdatePostCommand {
   public readonly userId: string;
   @IsOptional()
   @IsString()
-  @MaxLength(DESC_MAX_LENGTH)
+  @MaxLength(DESCRIPTION_MAX_LENGTH)
   public readonly description?: string;
 
   constructor(postId: string, userId: string, description?: string) {
@@ -50,21 +50,22 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     }
     const { postId, userId, description } = command;
     const notification = new Notification<string[]>(UpdatePostCodes.Success);
-    console.log(userId, postId);
-    const post = await this.postsRepository.findPost(postId);
-
-    if (!post) {
-      notification.setCode(UpdatePostCodes.PostNotFound);
-      return notification;
-    }
-    if (post.userId !== userId) {
-      notification.setCode(UpdatePostCodes.UserNotOwner);
-      return notification;
-    }
     try {
+      const post = await this.postsRepository.findPost(postId);
+
+      if (!post) {
+        notification.setCode(UpdatePostCodes.PostNotFound);
+        return notification;
+      }
+      if (post.userId !== userId) {
+        notification.setCode(UpdatePostCodes.UserNotOwner);
+        return notification;
+      }
+      const updatedAt = new Date();
       await this.postsRepository.updatePost({
         postId,
         description,
+        updatedAt,
       });
     } catch {
       notification.setCode(UpdatePostCodes.TransactionError);

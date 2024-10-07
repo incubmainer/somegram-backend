@@ -5,7 +5,7 @@ import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { DESC_MAX_LENGTH } from '../dto/post.dto';
+import { DESCRIPTION_MAX_LENGTH } from '../../application/use-cases/add-post.use-case';
 
 export function UpdatePostSwagger() {
   return applyDecorators(
@@ -27,7 +27,7 @@ export function UpdatePostSwagger() {
             {
               property: 'description',
               constraints: {
-                description: `Post description, max length ${DESC_MAX_LENGTH} characters.`,
+                description: `Post description, max length ${DESCRIPTION_MAX_LENGTH} characters.`,
               },
             },
           ],

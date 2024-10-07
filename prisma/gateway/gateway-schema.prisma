@@ -98,6 +98,8 @@ model UserPost {
   userId      String
   User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   postPhotos  PostPhoto[]
+  createdAt   DateTime
+  updatedAt   DateTime?
   description String?
 }
 
