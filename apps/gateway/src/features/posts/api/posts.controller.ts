@@ -11,12 +11,12 @@ import {
   Post,
   Put,
   UnprocessableEntityException,
-  UploadedFiles,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -40,60 +40,101 @@ import {
   DeletePostCommand,
 } from '../application/use-cases/delete-post.use-case';
 import { AddPhotoSwagger } from './swagger/add-photo-swagger';
-import { UploadPhotoCommand } from '../application/use-cases/upload-photo.use-case';
+import {
+  UploadPhotoCodes,
+  UploadPhotoCommand,
+} from '../application/use-cases/upload-photo.use-case';
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
-import { GetPublicPostCommand } from '../application/use-cases/get-public-post.use-case';
+import {
+  GetPostCodes,
+  GetPublicPostCommand,
+} from '../application/use-cases/get-public-post.use-case';
+import { PostOutputDto } from './dto/output-dto/post.output-dto';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 @ApiTags('Posts')
 @Controller('posts')
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class PostsController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+  ) {
+    logger.setContext(PostsController.name);
+  }
   @Post()
   @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   async addPost(
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
-    const result: Notification<string, ValidationError> =
+    const addPostResult: Notification<string, ValidationError> =
       await this.commandBus.execute(
         new AddPostCommand(userId, addPostDto.files, addPostDto.description),
       );
-    const code = result.getCode();
-    if (code === AddPostCodes.Success) {
-      return await this.commandBus.execute(
-        new GetPublicPostCommand(result.data),
+    const addPostResultCode = addPostResult.getCode();
+    let getPostResult: Notification<PostOutputDto, ValidationError>;
+    if (addPostResultCode === AddPostCodes.Success) {
+      const postId = addPostResult.getData();
+      getPostResult = await this.commandBus.execute(
+        new GetPublicPostCommand(postId),
       );
     }
-    if (code === AddPostCodes.ValidationCommandError)
+    const getPostResultCode = getPostResult.getCode();
+    if (getPostResultCode === GetPostCodes.Success) {
+      const data = getPostResult.getData();
+      return data;
+    }
+    if (getPostResultCode === GetPostCodes.PostNotFound) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (addPostResultCode === AddPostCodes.ValidationCommandError) {
       throw new UnprocessableEntityException({
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
+        errors: addPostResult.getErrors().map((e) => ({
           property: e.property,
           constraints: e.constraints,
         })),
       });
-    if (code === AddPostCodes.TransactionError)
+    }
+
+    if (
+      addPostResultCode === AddPostCodes.TransactionError ||
+      getPostResultCode === GetPostCodes.TransactionError
+    ) {
       throw new InternalServerErrorException({
         error: 'Transaction error',
       });
+    }
   }
 
   @Post('photo')
-  @UseInterceptors(FilesInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   @AddPhotoSwagger()
   @UseGuards(JwtAuthGuard)
   async addPhoto(
-    @UploadedFiles() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @CurrentUserId() userId: string,
   ) {
+    this.logger.log('info', 'start upload photo request', {});
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(new UploadPhotoCommand(userId, file));
-
     const code = result.getCode();
-    if (code === AddPostCodes.Success) return result.data;
-    if (code === AddPostCodes.ValidationCommandError)
+    if (code === UploadPhotoCodes.Success) return result.getData();
+    if (code === UploadPhotoCodes.ValidationCommandError)
       throw new UnprocessableEntityException({
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         message: 'Validation failed',
@@ -102,7 +143,7 @@ export class PostsController {
           constraints: e.constraints,
         })),
       });
-    if (code === AddPostCodes.TransactionError)
+    if (code === UploadPhotoCodes.TransactionError)
       throw new InternalServerErrorException({
         error: 'Transaction error',
       });

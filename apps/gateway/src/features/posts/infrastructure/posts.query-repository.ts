@@ -22,9 +22,7 @@ export class PostsQueryRepository {
     });
   }
 
-  public async getPostPhotosInfo(
-    postId: UserPost['id'],
-  ): Promise<PostPhoto[] | null> {
+  public async getPostPhotosInfo(postId: UserPost['id']): Promise<PostPhoto[]> {
     return await this.txHost.tx.postPhoto.findMany({
       where: {
         postId: postId,

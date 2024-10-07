@@ -27,7 +27,7 @@ export const postToOutputMapper = (
     id: post.id,
     description: post.description ?? null,
     createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString() ?? null,
+    updatedAt: post.updatedAt ? post.updatedAt.toISOString() : null,
     images: images,
     postOwnerInfo: {
       userId: user.id,

@@ -11,7 +11,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { IsValidFile } from '../decorators/is-valid-file';
+import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 
 export const UploadAvatarCodes = {

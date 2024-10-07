@@ -6,9 +6,9 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png'];
+export const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png'];
 
-@ValidatorConstraint({ name: 'isValidFile', async: false })
+@ValidatorConstraint({ name: 'isValidFile', async: true })
 export class IsValidFileConstraint implements ValidatorConstraintInterface {
   private readonly maxSize: number;
 
@@ -17,10 +17,10 @@ export class IsValidFileConstraint implements ValidatorConstraintInterface {
   }
 
   validate(file: Express.Multer.File, args: ValidationArguments) {
-    if (!file) return false;
-    return (
-      file.size <= this.maxSize * 1024 * 1024 &&
-      ALLOWED_MIMETYPES.includes(file.mimetype)
+    if (!args.value || !file) return false;
+    return !(
+      file.size > this.maxSize * 1024 * 1024 ||
+      !ALLOWED_MIMETYPES.includes(file.mimetype)
     );
   }
 

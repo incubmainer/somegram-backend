@@ -7,6 +7,7 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { MAX_PHOTO_SIZE } from '../../application/use-cases/upload-photo.use-case';
+import { ALLOWED_MIMETYPES } from '../../../../common/decorators/is-valid-file';
 
 export function AddPhotoSwagger() {
   return applyDecorators(
@@ -23,7 +24,7 @@ export function AddPhotoSwagger() {
           file: {
             type: 'string',
             format: 'binary',
-            description: `The post image file. Must be in JPEG or PNG format and not exceed ${MAX_PHOTO_SIZE} MB in size.`,
+            description: `File must be present, less than ${MAX_PHOTO_SIZE} MB, and of type: ${ALLOWED_MIMETYPES.join(', ')}`,
           },
         },
       },
@@ -33,7 +34,7 @@ export function AddPhotoSwagger() {
       description: 'Photo upload successful',
       schema: {
         example: {
-          photoKey: '3686962b-f029-4ab3-9d19-42ec6d341696',
+          photoKey: 'AddPostCommand',
         },
       },
     }),

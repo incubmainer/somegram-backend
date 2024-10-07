@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsString,
   MaxLength,
-  ValidateNested,
   validateSync,
   ValidationError,
 } from 'class-validator';
@@ -16,9 +15,13 @@ import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { v4 as uuidv4 } from 'uuid';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { UploadAvatarCodes } from '../../../users/application/use-cases/upload-avatar.use-case';
-import { Type } from 'class-transformer';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { UnauthorizedException } from '@nestjs/common';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const DESCRIPTION_MAX_LENGTH = 500;
 
@@ -31,9 +34,8 @@ export const AddPostCodes = {
 export class AddPostCommand {
   public readonly userId: string;
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => String)
-  public readonly files: string[];
+  @IsString({ each: true })
+  public readonly filesKeys: string[];
   @IsOptional()
   @IsString()
   @MaxLength(DESCRIPTION_MAX_LENGTH)
@@ -41,20 +43,28 @@ export class AddPostCommand {
 
   constructor(userId: string, filesKeys: string[], description?: string) {
     this.userId = userId;
-    this.files = filesKeys;
+    this.filesKeys = filesKeys;
     this.description = description;
   }
 }
 
 @CommandHandler(AddPostCommand)
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
   constructor(
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly postsRepository: PostsRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
-  ) {}
+  ) {
+    logger.setContext(AddPostUseCase.name);
+  }
   async execute(command: AddPostCommand) {
     const errors = validateSync(command);
     if (errors.length) {
@@ -64,7 +74,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       notification.addErrors(errors);
       return notification;
     }
-    const { userId, files: filesKeys, description } = command;
+    const { userId, filesKeys, description } = command;
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(async () => {
@@ -90,7 +100,8 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
         }
         notification.setData(post.id);
       });
-    } catch {
+    } catch (e) {
+      this.logger.log('error', 'transaction error', { e });
       notification.setCode(AddPostCodes.TransactionError);
     }
     return notification;

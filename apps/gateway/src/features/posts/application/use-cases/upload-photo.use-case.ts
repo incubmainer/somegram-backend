@@ -3,12 +3,16 @@ import { validateSync, ValidationError } from 'class-validator';
 
 import { Notification } from '../../../../common/domain/notification';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
-import { IsValidFile } from '../../../users/application/decorators/is-valid-file';
-import { UploadAvatarCodes } from '../../../users/application/use-cases/upload-avatar.use-case';
+import { IsValidFile } from '../../../../common/decorators/is-valid-file';
+import {
+  CustomLoggerService,
+  InjectCustomLoggerService,
+  LogClass,
+} from '@app/custom-logger';
 
 export const MAX_PHOTO_SIZE = 20;
 
-export const UploadPostCodes = {
+export const UploadPhotoCodes = {
   Success: Symbol('success'),
   TransactionError: Symbol('transactionError'),
   ValidationCommandError: Symbol('validationCommandError'),
@@ -25,31 +29,44 @@ export class UploadPhotoCommand {
 }
 
 @CommandHandler(UploadPhotoCommand)
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class UploadPhotoUseCase implements ICommandHandler<UploadPhotoCommand> {
   constructor(
+    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly postPhotoStorageService: PostPhotoStorageService,
-  ) {}
+  ) {
+    logger.setContext(UploadPhotoUseCase.name);
+  }
   async execute(command: UploadPhotoCommand) {
     const errors = validateSync(command);
     if (errors.length) {
       const notification = new Notification<null, ValidationError>(
-        UploadAvatarCodes.ValidationCommandError,
+        UploadPhotoCodes.ValidationCommandError,
       );
       notification.addErrors(errors);
       return notification;
     }
     const { userId, file } = command;
 
-    const notification = new Notification<string>(UploadPostCodes.Success);
+    const notification = new Notification<{
+      photoKey: string;
+    }>(UploadPhotoCodes.Success);
     try {
       const savedFile = await this.postPhotoStorageService.savePhoto(
         userId,
         file.buffer,
         file.mimetype,
       );
-      notification.setData(savedFile.photoKey);
-    } catch {
-      notification.setCode(UploadPostCodes.TransactionError);
+      notification.setData({
+        photoKey: savedFile.photoKey,
+      });
+    } catch (e) {
+      this.logger.log('error', 'transaction error', { e });
+      notification.setCode(UploadPhotoCodes.TransactionError);
     }
     return notification;
   }
