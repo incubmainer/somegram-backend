@@ -41,12 +41,6 @@ export function AddPhotoSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Transaction error',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,

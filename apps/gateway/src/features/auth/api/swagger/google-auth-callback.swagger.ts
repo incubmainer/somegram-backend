@@ -15,27 +15,10 @@ The accessToken set to the query parameter.`,
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: 'Login failed due to wrong email',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'login_by_google_failed',
-              message: 'Login by google failed due to wrong email.',
-            },
-          },
-        ],
-      },
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Transaction error',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   HttpCode,
@@ -11,6 +10,7 @@ import {
   Get,
   Req,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -107,7 +107,7 @@ export class AuthController {
   }
 
   @Post('registration')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationSwagger()
   public async registration(@Body() body: RegistrationBodyInputDto) {
     this.logger.log('info', 'start registration', {});
@@ -122,10 +122,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === RegistrationCodes.Success) {
       this.logger.log('info', 'registration success', {});
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Registration successful',
-      };
+      return;
     }
     if (code === RegistrationCodes.EmailAlreadyExists) {
       this.logger.log('warn', 'email already exists', {});
@@ -153,10 +150,7 @@ export class AuthController {
     }
     if (code === RegistrationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
   }
 
@@ -193,10 +187,7 @@ export class AuthController {
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
   }
 
@@ -225,18 +216,15 @@ export class AuthController {
     }
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
       this.logger.log('warn', 'username not found', {});
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'User not found',
         message: 'User with current email not found',
       });
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
   }
 
@@ -274,10 +262,7 @@ export class AuthController {
     }
     if (code === LoginByGoogleCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
@@ -321,7 +306,7 @@ export class AuthController {
   }
 
   @Post('restore-password')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
     this.logger.log('info', 'start restore password', {});
@@ -331,10 +316,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === RestorePasswordCodes.Success) {
       this.logger.log('info', 'restore password success', {});
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Restore password successful',
-      };
+      return;
     }
     if (code === RestorePasswordCodes.InvalidRecaptcha) {
       this.logger.log('warn', 'invalid recaptcha token', {});
@@ -347,7 +329,7 @@ export class AuthController {
     if (code === RestorePasswordCodes.UserNotFound) {
       this.logger.log('warn', 'user not found', {});
       throw new BadRequestException({
-        statusCode: HttpStatus.NOT_FOUND,
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'user_not_found',
         message: 'Restore password failed due to user not found.',
       });
@@ -362,7 +344,7 @@ export class AuthController {
   }
 
   @Post('restore-password-confirmation')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RestorePasswordConfirmationSwagger()
   public async restorePasswordConfirmation(
     @Body() body: RestorePasswordConfirmationBodyInputDto,
@@ -374,10 +356,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === RestorePasswordConfirmationCodes.Success) {
       this.logger.log('info', 'restore password confirmation success', {});
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Restore password confirmation successful',
-      };
+      return;
     }
     if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
       this.logger.log('warn', 'expired code', {});
@@ -397,10 +376,7 @@ export class AuthController {
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
   }
 
@@ -433,11 +409,9 @@ export class AuthController {
   @LogOutSwagger()
   async logout(@RefreshToken() refreshToken: string): Promise<boolean> {
     this.logger.log('info', 'start logout', {});
-    const result = await this.commandBus.execute(
-      new LogoutCommand(refreshToken),
-    );
+    await this.commandBus.execute(new LogoutCommand(refreshToken));
     this.logger.log('info', 'logout success', {});
-    return result;
+    return;
   }
 
   @Post('refresh-token')
@@ -482,10 +456,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
     if (!ip) {
       this.logger.log('warn', 'unknown ip address', {});
@@ -529,10 +500,7 @@ export class AuthController {
     const code = notification.getCode();
     if (code === MeCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
     const outputUser = notification.getData();
     return outputUser;

@@ -6,14 +6,8 @@ export function RestorePasswordConfirmationSwagger() {
     ApiTags('Auth'),
     ApiOperation({ summary: 'Restore Password Confirmation' }),
     ApiResponse({
-      status: HttpStatus.OK,
+      status: HttpStatus.NO_CONTENT,
       description: 'Restore password confirmation successful',
-      schema: {
-        example: {
-          status: HttpStatus.OK,
-          message: 'Restore password confirmation successful',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
@@ -60,12 +54,6 @@ export function RestorePasswordConfirmationSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Transaction error',
-        },
-      },
     }),
   );
 }

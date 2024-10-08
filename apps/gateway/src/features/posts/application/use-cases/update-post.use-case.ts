@@ -39,7 +39,7 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
   constructor(private readonly postsRepository: PostsRepository) {}
   async execute(
     command: UpdatePostCommand,
-  ): Promise<Notification<string[]> | Notification<null, ValidationError>> {
+  ): Promise<Notification<string> | Notification<null, ValidationError>> {
     const errors = validateSync(command);
     if (errors.length) {
       const note = new Notification<null, ValidationError>(
@@ -49,10 +49,9 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
       return note;
     }
     const { postId, userId, description } = command;
-    const notification = new Notification<string[]>(UpdatePostCodes.Success);
+    const notification = new Notification<string>(UpdatePostCodes.Success);
     try {
       const post = await this.postsRepository.findPost(postId);
-
       if (!post) {
         notification.setCode(UpdatePostCodes.PostNotFound);
         return notification;

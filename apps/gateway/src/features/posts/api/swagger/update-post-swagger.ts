@@ -13,7 +13,7 @@ export function UpdatePostSwagger() {
     ApiBearerAuth('access-token'),
     ApiOperation({ summary: 'Update user post' }),
     ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+      status: HttpStatus.OK,
       description: 'No Content',
     }),
     ApiResponse({
@@ -37,12 +37,6 @@ export function UpdatePostSwagger() {
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'User not found or not authorized',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'Unauthorized',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
@@ -51,12 +45,6 @@ export function UpdatePostSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Transaction error',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,

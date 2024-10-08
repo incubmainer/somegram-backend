@@ -114,9 +114,7 @@ export class PostsController {
       addPostResultCode === AddPostCodes.TransactionError ||
       getPostResultCode === GetPostCodes.TransactionError
     ) {
-      throw new InternalServerErrorException({
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
     }
   }
 
@@ -144,9 +142,7 @@ export class PostsController {
         })),
       });
     if (code === UploadPhotoCodes.TransactionError)
-      throw new InternalServerErrorException({
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
   }
 
   @Put(':id')
@@ -178,13 +174,12 @@ export class PostsController {
       throw new NotFoundException('Post not found');
     if (code === UpdatePostCodes.UserNotOwner)
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'update_post_failed',
         message: 'User not owner of post',
       });
     if (code === UpdatePostCodes.TransactionError)
-      throw new InternalServerErrorException({
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
   }
 
   @Delete(':id')
@@ -201,12 +196,11 @@ export class PostsController {
       throw new NotFoundException('Post not found');
     if (code === DeletePostCodes.UserNotOwner)
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'delete_post_failed',
         message: 'User not owner of post',
       });
     if (code === DeletePostCodes.TransactionError)
-      throw new InternalServerErrorException({
-        error: 'Transaction error',
-      });
+      throw new InternalServerErrorException();
   }
 }
