@@ -1,18 +1,19 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { IsString, validateSync, ValidationError } from 'class-validator';
-import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+
+import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
+import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
+import { Notification } from 'apps/gateway/src/common/domain/notification';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
