@@ -1,18 +1,19 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { IsString, validateSync, ValidationError } from 'class-validator';
-import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { IsValidFile } from '../decorators/is-valid-file';
+
+import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
+import { AvatarRepository } from '../../infrastructure/avatar.repository';
+import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
+import { Notification } from 'apps/gateway/src/common/domain/notification';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
@@ -21,10 +22,12 @@ export const UploadAvatarCodes = {
   TransactionError: Symbol('transactionError'),
 };
 
+export const MAX_AVATAR_SIZE = 10;
+
 export class UploadAvatarCommand {
   @IsString()
   public readonly userId: string;
-  @IsValidFile()
+  @IsValidFile(MAX_AVATAR_SIZE)
   public readonly file: Express.Multer.File;
   constructor(userId: string, file: Express.Multer.File) {
     this.userId = userId;
@@ -66,7 +69,9 @@ export class UploadAvatarUseCase {
     }
     const { userId, file } = command;
     const notification = new Notification<string>(UploadAvatarCodes.Success);
-    const user = await this.usersQueryRepository.findUserById(command.userId);
+    const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
+      command.userId,
+    );
     if (!user) {
       notification.setCode(UploadAvatarCodes.UserNotFound);
       return notification;

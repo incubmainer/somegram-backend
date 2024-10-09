@@ -28,12 +28,6 @@ export function RegistrationConfirmationSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Transaction error',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,

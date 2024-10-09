@@ -87,6 +87,17 @@ export function ProfileFillInfoSwagger() {
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: 'Username already exists',
+      schema: {
+        oneOf: [
+          {
+            example: {
+              status: HttpStatus.BAD_REQUEST,
+              error: 'Username already exists',
+              message: 'Error updating profile because username already exists',
+            },
+          },
+        ],
+      },
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,

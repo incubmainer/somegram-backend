@@ -6,14 +6,8 @@ export function RegistrationSwagger() {
     ApiTags('Auth'),
     ApiOperation({ summary: 'User Registration' }),
     ApiResponse({
-      status: HttpStatus.OK,
+      status: HttpStatus.NO_CONTENT,
       description: 'Registration success',
-      schema: {
-        example: {
-          status: HttpStatus.OK,
-          message: 'Registration successful',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
@@ -38,12 +32,6 @@ export function RegistrationSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Transaction error',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,

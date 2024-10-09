@@ -20,13 +20,7 @@ export function RefreshTokenSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorised',
-      schema: {
-        example: {
-          status: HttpStatus.UNAUTHORIZED,
-          message: 'Unauthorised',
-        },
-      },
+      description: 'Token expired, user or user device not found',
     }),
   );
 }

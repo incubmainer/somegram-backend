@@ -155,7 +155,9 @@ export class UsersController {
       throw new UnauthorizedException();
     if (code === FillingUserProfileCodes.UsernameAlreadyExists) {
       throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
         error: 'Username already exists',
+        message: 'Error updating profile because username already exists',
       });
     }
     if (code === FillingUserProfileCodes.TransactionError)

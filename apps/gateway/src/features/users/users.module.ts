@@ -26,6 +26,12 @@ const useCases = [
 
 const repositories = [UsersRepository, UsersQueryRepository, AvatarRepository];
 
+const services = [
+  AuthService,
+  CryptoService,
+  FileStorageService,
+  AvatarStorageService,
+];
 @Module({
   imports: [
     CqrsModule,
@@ -36,15 +42,7 @@ const repositories = [UsersRepository, UsersQueryRepository, AvatarRepository];
     }),
   ],
   controllers: [UsersController],
-  providers: [
-    JwtStrategy,
-    AuthService,
-    CryptoService,
-    FileStorageService,
-    AvatarStorageService,
-    ...useCases,
-    ...repositories,
-  ],
+  providers: [JwtStrategy, ...services, ...useCases, ...repositories],
   exports: [],
 })
 export class UsersModule {}

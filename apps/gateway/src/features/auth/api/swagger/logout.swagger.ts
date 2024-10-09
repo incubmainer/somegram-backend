@@ -14,7 +14,7 @@ export function LogOutSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorized',
+      description: 'Token expired, user or user device not found',
     }),
   );
 }

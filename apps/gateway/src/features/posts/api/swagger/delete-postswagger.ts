@@ -36,12 +36,6 @@ export function DeletePostSwagger() {
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
       description: 'User not found or not authorized',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'Unauthorized',
-        },
-      },
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
@@ -65,12 +59,6 @@ export function DeletePostSwagger() {
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
-      schema: {
-        example: {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Transaction error',
-        },
-      },
     }),
   );
 }
