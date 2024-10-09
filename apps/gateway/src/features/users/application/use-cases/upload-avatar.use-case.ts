@@ -68,7 +68,9 @@ export class UploadAvatarUseCase {
     }
     const { userId, file } = command;
     const notification = new Notification<string>(UploadAvatarCodes.Success);
-    const user = await this.usersQueryRepository.findUserById(command.userId);
+    const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
+      command.userId,
+    );
     if (!user) {
       notification.setCode(UploadAvatarCodes.UserNotFound);
       return notification;

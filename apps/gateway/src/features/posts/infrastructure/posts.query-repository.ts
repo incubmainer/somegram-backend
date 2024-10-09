@@ -14,19 +14,39 @@ export class PostsQueryRepository {
     >,
   ) {}
 
-  public async findPost(postId: UserPost['id']): Promise<UserPost | null> {
+  public async getPostWithPhotosById(postId: UserPost['id']): Promise<
+    {
+      postPhotos: PostPhoto[];
+    } & UserPost
+  > {
     return await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
       },
-    });
-  }
-
-  public async getPostPhotosInfo(postId: UserPost['id']): Promise<PostPhoto[]> {
-    return await this.txHost.tx.postPhoto.findMany({
-      where: {
-        postId: postId,
+      include: {
+        postPhotos: true,
       },
     });
+  }
+  public async getPostsWithPhotos(
+    userId: UserPost['userId'],
+    offset: number,
+    limit: number,
+  ) {
+    const posts = await this.txHost.tx.userPost.findMany({
+      where: { userId },
+      include: { postPhotos: true },
+      skip: offset,
+      take: limit,
+    });
+
+    const count = await this.txHost.tx.userPost.count({
+      where: { userId },
+    });
+
+    return {
+      posts,
+      count,
+    };
   }
 }

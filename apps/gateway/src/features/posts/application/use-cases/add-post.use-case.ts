@@ -78,7 +78,8 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(async () => {
-        const user = await this.usersQueryRepository.findUserById(userId);
+        const user =
+          await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
         if (!user) {
           throw new UnauthorizedException();
         }

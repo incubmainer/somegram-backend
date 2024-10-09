@@ -9,7 +9,6 @@ import {
 } from '@app/custom-logger';
 
 import { AvatarStorageService } from '../../../users/infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../../users/infrastructure/avatar.repository';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
 import {
@@ -40,7 +39,6 @@ export class GetPublicPostUseCase
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
-    private readonly avatarRepository: AvatarRepository,
     private readonly avatarStorageService: AvatarStorageService,
     private readonly postPhotoStorageService: PostPhotoStorageService,
   ) {
@@ -50,37 +48,29 @@ export class GetPublicPostUseCase
     const { postId } = command;
     const notification = new Notification<PostOutputDto>(GetPostCodes.Success);
     try {
-      const post = await this.postsQueryRepository.findPost(postId);
+      const post =
+        await this.postsQueryRepository.getPostWithPhotosById(postId);
       if (!post) {
         notification.setCode(GetPostCodes.PostNotFound);
         return notification;
       }
-      const postOwner = await this.usersQueryRepository.findUserById(
-        post.userId,
+      const postOwner =
+        await this.usersQueryRepository.findUserWithAvatarInfoById(post.userId);
+      const ownerAvatarUrl = await this.avatarStorageService.getAvatarUrl(
+        postOwner.userAvatar.avatarKey,
       );
-      const ownerAvatarKey = await this.avatarRepository.getAvatarKeyByUserId(
-        postOwner.id,
-      );
-      const ownerAvatar =
-        await this.avatarStorageService.getAvatarUrl(ownerAvatarKey);
-      const postPhotosInfo = await this.postsQueryRepository.getPostPhotosInfo(
-        post.id,
-      );
-      let photosUrls;
-      if (postPhotosInfo) {
-        photosUrls = postPhotosInfo.map((postPhoto) =>
-          this.postPhotoStorageService.getPhotoUrl(postPhoto.photoKey),
-        );
-      }
 
       const postInfo = postToOutputMapper(
         post,
         postOwner,
-        ownerAvatar,
-        photosUrls,
+        ownerAvatarUrl,
+        post.postPhotos.map((postPhoto) =>
+          this.postPhotoStorageService.getPhotoUrl(postPhoto.photoKey),
+        ),
       );
       notification.setData(postInfo);
-    } catch {
+    } catch (e) {
+      this.logger.log('error', 'transaction error', { e });
       notification.setCode(GetPostCodes.TransactionError);
     }
     return notification;

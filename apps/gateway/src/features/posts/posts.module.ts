@@ -16,6 +16,7 @@ import { PostsQueryRepository } from './infrastructure/posts.query-repository';
 import { AvatarRepository } from '../users/infrastructure/avatar.repository';
 import { AvatarStorageService } from '../users/infrastructure/avatar-storage.service';
 import { GetPublicPostUseCase } from './application/use-cases/get-public-post.use-case';
+import { GetPostsUseCase } from './application/use-cases/get-posts.use-case';
 
 const useCases = [
   AddPostUseCase,
@@ -23,6 +24,7 @@ const useCases = [
   DeletePostUseCase,
   UploadPhotoUseCase,
   GetPublicPostUseCase,
+  GetPostsUseCase,
 ];
 const repositories = [
   PostsRepository,

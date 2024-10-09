@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
@@ -10,6 +11,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UnprocessableEntityException,
   UploadedFile,
   UseGuards,
@@ -27,19 +29,19 @@ import {
   AddPostCodes,
   AddPostCommand,
 } from '../application/use-cases/add-post.use-case';
-import { AddPostSwagger } from './swagger/add-post-swagger';
+import { AddPostSwagger } from './swagger/add-post.swagger';
 import {
   UpdatePostCodes,
   UpdatePostCommand,
 } from '../application/use-cases/update-post.use-case';
-import { UpdatePostSwagger } from './swagger/update-post-swagger';
+import { UpdatePostSwagger } from './swagger/update-post.swagger';
 import { AddPostDto } from './dto/input-dto/add-post.dto';
-import { DeletePostSwagger } from './swagger/delete-post-swagger';
+import { DeletePostSwagger } from './swagger/delete-postswagger';
 import {
   DeletePostCodes,
   DeletePostCommand,
 } from '../application/use-cases/delete-post.use-case';
-import { AddPhotoSwagger } from './swagger/add-photo-swagger';
+import { AddPhotoSwagger } from './swagger/add-photo.swagger';
 import {
   UploadPhotoCodes,
   UploadPhotoCommand,
@@ -55,6 +57,12 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { GetPostsSwagger } from './swagger/get-posts.swagger';
+import {
+  GetPostsCodes,
+  GetPostsCommand,
+} from '../application/use-cases/get-posts.use-case';
+import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -201,6 +209,24 @@ export class PostsController {
         message: 'User not owner of post',
       });
     if (code === DeletePostCodes.TransactionError)
+      throw new InternalServerErrorException();
+  }
+
+  @Get(':userId')
+  @HttpCode(HttpStatus.OK)
+  @GetPostsSwagger()
+  async getPosts(
+    @Param('userId') userId: string,
+    @Query() query: SearchQueryParametersType,
+  ) {
+    const result: Notification<PostOutputDto[], ValidationError> =
+      await this.commandBus.execute(new GetPostsCommand(userId, query));
+
+    const code = result.getCode();
+    if (code === GetPostsCodes.Success) {
+      return result.getData();
+    }
+    if (code === GetPostsCodes.TransactionError)
       throw new InternalServerErrorException();
   }
 }

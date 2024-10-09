@@ -1,4 +1,4 @@
-import { User, UserPost } from '@prisma/gateway';
+import { PostPhoto, User, UserPost } from '@prisma/gateway';
 
 export class PostOutputDto {
   id: string;
@@ -9,6 +9,7 @@ export class PostOutputDto {
   postOwnerInfo: {
     userId: string;
     username: string;
+    about: string;
     avatarUrl: string;
   };
 
@@ -18,7 +19,14 @@ export class PostOutputDto {
 }
 
 export const postToOutputMapper = (
-  post: UserPost,
+  post: {
+    id: UserPost['id'];
+    userId: UserPost['userId'];
+    createdAt: UserPost['createdAt'];
+    updatedAt: UserPost['updatedAt'] | null;
+    description?: UserPost['description'] | null;
+    postPhotos?: PostPhoto[];
+  },
   user: User,
   avatarUrl: string,
   images: string[],
@@ -32,6 +40,7 @@ export const postToOutputMapper = (
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
+      about: user.about,
       avatarUrl: avatarUrl,
     },
   });
