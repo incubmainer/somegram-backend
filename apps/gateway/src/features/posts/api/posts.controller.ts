@@ -57,7 +57,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
-import { GetPostsSwagger } from './swagger/get-posts.swagger';
+import { GetUserPostsSwagger } from './swagger/get-user-posts.swagger';
 import {
   GetPostsCodes,
   GetPostsCommand,
@@ -214,7 +214,7 @@ export class PostsController {
 
   @Get(':userId')
   @HttpCode(HttpStatus.OK)
-  @GetPostsSwagger()
+  @GetUserPostsSwagger()
   async getPosts(
     @Param('userId') userId: string,
     @Query() query: SearchQueryParametersType,

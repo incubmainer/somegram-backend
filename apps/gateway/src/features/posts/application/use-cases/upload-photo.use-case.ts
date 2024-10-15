@@ -20,6 +20,7 @@ export const UploadPhotoCodes = {
 
 export class UploadPhotoCommand {
   public readonly userId: string;
+  //исправить передавать не полностью файл а уже размер и тип и его валидировать
   @IsValidFile(MAX_PHOTO_SIZE)
   public readonly file: Express.Multer.File;
   constructor(userId: string, file: Express.Multer.File) {

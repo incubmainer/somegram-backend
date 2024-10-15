@@ -17,6 +17,7 @@ import { AvatarRepository } from '../users/infrastructure/avatar.repository';
 import { AvatarStorageService } from '../users/infrastructure/avatar-storage.service';
 import { GetPublicPostUseCase } from './application/use-cases/get-public-post.use-case';
 import { GetPostsUseCase } from './application/use-cases/get-posts.use-case';
+import { PublicPostsController } from './api/public-posts.controller';
 
 const useCases = [
   AddPostUseCase,
@@ -42,7 +43,7 @@ const services = [
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule],
-  controllers: [PostsController],
+  controllers: [PostsController, PublicPostsController],
   providers: [...services, ...useCases, ...repositories],
   exports: [],
 })

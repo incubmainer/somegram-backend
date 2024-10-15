@@ -8,8 +8,9 @@ export class PostOutputDto {
   images: string[];
   postOwnerInfo: {
     userId: string;
-    username: string;
-    about: string;
+    userName: string;
+    firstName: string;
+    lastName: string;
     avatarUrl: string;
   };
 
@@ -39,8 +40,9 @@ export const postToOutputMapper = (
     images: images,
     postOwnerInfo: {
       userId: user.id,
-      username: user.username,
-      about: user.about,
+      userName: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
       avatarUrl: avatarUrl,
     },
   });

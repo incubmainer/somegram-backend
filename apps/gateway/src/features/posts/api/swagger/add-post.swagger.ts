@@ -20,6 +20,8 @@ export function AddPostSwagger() {
           postOwnerInfo: {
             userId: 'd207dc73-8002-4804-a6d2-037b786eb568',
             username: 'john_dou',
+            firstName: 'John',
+            lastName: 'Doue',
             avatarUrl:
               'http://serveroleg.ru:9000/somegram/users/d207dc73-8002-4804-a6d2-037b786eb568/avatars/66841f84-cec2-4ea8-a3fd-661f74dca54b.jpeg',
           },

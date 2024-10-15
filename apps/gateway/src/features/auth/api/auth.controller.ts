@@ -241,7 +241,6 @@ export class AuthController {
   async googleAuthCallback(
     @GoogleUser() googleProfile: GoogleProfile | null,
     @Res() response: Response,
-    @Req() request: Request,
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ): Promise<any> {
