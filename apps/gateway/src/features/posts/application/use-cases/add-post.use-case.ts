@@ -22,6 +22,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { PostPhotoRepository } from '../../infrastructure/posts-photo.repository';
 
 export const DESCRIPTION_MAX_LENGTH = 500;
 
@@ -62,6 +63,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     >,
     private readonly postsRepository: PostsRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
+    private readonly postPhotoRepository: PostPhotoRepository,
   ) {
     logger.setContext(AddPostUseCase.name);
   }
@@ -93,7 +95,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
         });
 
         for (const fileKey of filesKeys) {
-          await this.postsRepository.addInfoAboutPhoto({
+          await this.postPhotoRepository.addInfoAboutPhoto({
             postId,
             photoKey: fileKey,
             createdAt: new Date(),

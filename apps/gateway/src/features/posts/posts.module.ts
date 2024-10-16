@@ -18,6 +18,7 @@ import { AvatarStorageService } from '../users/infrastructure/avatar-storage.ser
 import { GetPublicPostUseCase } from './application/use-cases/get-public-post.use-case';
 import { GetPostsUseCase } from './application/use-cases/get-posts.use-case';
 import { PublicPostsController } from './api/public-posts.controller';
+import { PostPhotoRepository } from './infrastructure/posts-photo.repository';
 
 const useCases = [
   AddPostUseCase,
@@ -33,6 +34,7 @@ const repositories = [
   UsersRepository,
   UsersQueryRepository,
   AvatarRepository,
+  PostPhotoRepository,
 ];
 
 const services = [

@@ -14,19 +14,6 @@ export class PostsRepository {
     >,
   ) {}
 
-  public async addInfoAboutPhoto(dto: {
-    postId: PostPhoto['postId'];
-    photoKey: PostPhoto['photoKey'];
-    createdAt: PostPhoto['createdAt'];
-  }): Promise<void> {
-    await this.txHost.tx.postPhoto.create({
-      data: {
-        postId: dto.postId,
-        photoKey: dto.photoKey,
-        createdAt: dto.createdAt,
-      },
-    });
-  }
   public async addPost(dto: {
     postId: UserPost['id'];
     userId: UserPost['userId'];
