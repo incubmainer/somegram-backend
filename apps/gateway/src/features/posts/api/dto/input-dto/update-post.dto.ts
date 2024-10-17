@@ -5,11 +5,6 @@ import { DESCRIPTION_MAX_LENGTH } from '../../../application/use-cases/add-post.
 
 export class UpdatePostDto {
   @ApiProperty({
-    type: Array,
-  })
-  files: string[];
-
-  @ApiProperty({
     description: `Post description, max length ${DESCRIPTION_MAX_LENGTH} characters.`,
     type: String,
     maxLength: DESCRIPTION_MAX_LENGTH,
