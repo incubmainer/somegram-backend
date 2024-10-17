@@ -61,7 +61,7 @@ import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import {
   GetPostsCodes,
   GetPostsByUserCommand,
-} from '../application/use-cases/get-posts.use-case';
+} from '../application/use-cases/get-posts-by-user.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
 @ApiTags('Posts')
@@ -225,7 +225,8 @@ export class PostsController {
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {
-      return result.getData();
+      const posts = result.getData();
+      return posts;
     }
 
     if (code === GetPostsCodes.UserNotFound) {
