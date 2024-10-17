@@ -49,7 +49,7 @@ import {
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
-  GetPublicPostCommand,
+  GetPostCommand,
 } from '../application/use-cases/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import {
@@ -60,7 +60,7 @@ import {
 import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import {
   GetPostsCodes,
-  GetPostsCommand,
+  GetPostsByUserCommand,
 } from '../application/use-cases/get-posts.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
@@ -91,18 +91,19 @@ export class PostsController {
         new AddPostCommand(userId, addPostDto.files, addPostDto.description),
       );
     const addPostResultCode = addPostResult.getCode();
-    let getPostResult: Notification<PostOutputDto, ValidationError>;
+    let getPostResultCode;
     if (addPostResultCode === AddPostCodes.Success) {
       const postId = addPostResult.getData();
-      getPostResult = await this.commandBus.execute(
-        new GetPublicPostCommand(postId),
+      const getPostResult = await this.commandBus.execute(
+        new GetPostCommand(postId),
       );
+      getPostResultCode = getPostResult.getCode();
+      if (getPostResultCode === GetPostCodes.Success) {
+        const data = getPostResult.getData();
+        return data;
+      }
     }
-    const getPostResultCode = getPostResult.getCode();
-    if (getPostResultCode === GetPostCodes.Success) {
-      const data = getPostResult.getData();
-      return data;
-    }
+
     if (getPostResultCode === GetPostCodes.PostNotFound) {
       throw new NotFoundException('Post not found');
     }
@@ -215,16 +216,20 @@ export class PostsController {
   @Get(':userId')
   @HttpCode(HttpStatus.OK)
   @GetPostsSwagger()
-  async getPosts(
+  async getPostsByUser(
     @Param('userId') userId: string,
-    @Query() query: SearchQueryParametersType,
+    @Query() query?: SearchQueryParametersType,
   ) {
     const result: Notification<PostOutputDto[], ValidationError> =
-      await this.commandBus.execute(new GetPostsCommand(userId, query));
+      await this.commandBus.execute(new GetPostsByUserCommand(userId, query));
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {
       return result.getData();
+    }
+
+    if (code === GetPostsCodes.UserNotFound) {
+      throw new NotFoundException();
     }
     if (code === GetPostsCodes.TransactionError)
       throw new InternalServerErrorException();

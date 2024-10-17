@@ -22,19 +22,17 @@ export const GetPostCodes = {
   PostNotFound: Symbol('postNotFound'),
 };
 
-export class GetPublicPostCommand {
+export class GetPostCommand {
   constructor(public postId: string) {}
 }
 
-@CommandHandler(GetPublicPostCommand)
+@CommandHandler(GetPostCommand)
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
-export class GetPublicPostUseCase
-  implements ICommandHandler<GetPublicPostCommand>
-{
+export class GetPostUseCase implements ICommandHandler<GetPostCommand> {
   constructor(
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly postsQueryRepository: PostsQueryRepository,
@@ -42,9 +40,9 @@ export class GetPublicPostUseCase
     private readonly avatarStorageService: AvatarStorageService,
     private readonly postPhotoStorageService: PostPhotoStorageService,
   ) {
-    logger.setContext(GetPublicPostUseCase.name);
+    logger.setContext(GetPostUseCase.name);
   }
-  async execute(command: GetPublicPostCommand) {
+  async execute(command: GetPostCommand) {
     const { postId } = command;
     const notification = new Notification<PostOutputDto>(GetPostCodes.Success);
     try {
