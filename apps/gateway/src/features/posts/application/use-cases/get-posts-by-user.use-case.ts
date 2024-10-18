@@ -66,9 +66,13 @@ export class GetPostsByUserUseCase
       (sanitizationQuery.pageNumber - 1) * sanitizationQuery.pageSize;
 
     try {
-      const avatarUrl = await this.avatarStorageService.getAvatarUrl(
-        user.userAvatar.avatarKey,
-      );
+      let avatarUrl;
+      if (user.userAvatar) {
+        avatarUrl = await this.avatarStorageService.getAvatarUrl(
+          user.userAvatar.avatarKey,
+        );
+      }
+
       const { posts, count } =
         await this.postsQueryRepository.getPostsWithPhotos(
           user.id,

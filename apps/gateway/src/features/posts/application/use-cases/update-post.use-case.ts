@@ -9,7 +9,7 @@ import {
 
 import { Notification } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
-import { DESCRIPTION_MAX_LENGTH } from './add-post.use-case';
+import { POST_CONSTRAINTS } from './add-post.use-case';
 
 export const UpdatePostCodes = {
   Success: Symbol('success'),
@@ -24,7 +24,7 @@ export class UpdatePostCommand {
   public readonly userId: string;
   @IsOptional()
   @IsString()
-  @MaxLength(DESCRIPTION_MAX_LENGTH)
+  @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
   public readonly description?: string;
 
   constructor(postId: string, userId: string, description?: string) {
@@ -51,7 +51,7 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     const { postId, userId, description } = command;
     const notification = new Notification<string>(UpdatePostCodes.Success);
     try {
-      const post = await this.postsRepository.findPost(postId);
+      const post = await this.postsRepository.getPostWithPhotosById(postId);
       if (!post) {
         notification.setCode(UpdatePostCodes.PostNotFound);
         return notification;
@@ -60,11 +60,10 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
         notification.setCode(UpdatePostCodes.UserNotOwner);
         return notification;
       }
-      const updatedAt = new Date();
       await this.postsRepository.updatePost({
         postId,
         description,
-        updatedAt,
+        updatedAt: new Date(),
       });
     } catch {
       notification.setCode(UpdatePostCodes.TransactionError);

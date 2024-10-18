@@ -1,13 +1,41 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiResponse,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+} from '@nestjs/swagger';
+import { POST_CONSTRAINTS } from '../../application/use-cases/add-post.use-case';
 
 export function AddPostSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Add user post' }),
     ApiBearerAuth('access-token'),
+    ApiConsumes('multipart/form-data'),
+    ApiBody({
+      type: 'multipart/form-data',
+      required: true,
+      schema: {
+        type: 'object',
+        required: ['files'],
+        properties: {
+          files: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'binary',
+            },
+          },
+          description: {
+            type: 'string',
+          },
+        },
+      },
+    }),
     ApiResponse({
       status: HttpStatus.OK,
-      description: 'Avatar upload successful',
+      description: 'Posted successful',
       schema: {
         example: {
           id: '4823a87c-2fcd-4623-9729-2e5f99fcd3e2',
@@ -39,10 +67,21 @@ export function AddPostSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'file',
+              property: 'fileName',
               constraints: {
-                isAvatarMimetype:
-                  'mimeType must be a valid MIME type: image/jpeg, image/png',
+                memetype: `Mimetype must be one of the following: ${POST_CONSTRAINTS.ALLOWED_MIMETYPES.join(', ')}`,
+              },
+            },
+            {
+              property: 'fileName',
+              constraints: {
+                isEmail: `File size must not exceed ${POST_CONSTRAINTS.MAX_PHOTO_SIZE} MB`,
+              },
+            },
+            {
+              property: 'description',
+              constraints: {
+                isEmail: `Description must not exceed ${POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH} symbols`,
               },
             },
           ],

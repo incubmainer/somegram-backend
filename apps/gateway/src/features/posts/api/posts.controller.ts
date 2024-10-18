@@ -13,22 +13,18 @@ import {
   Put,
   Query,
   UnprocessableEntityException,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { ValidationError } from 'class-validator';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
-import {
-  AddPostCodes,
-  AddPostCommand,
-} from '../application/use-cases/add-post.use-case';
 import { AddPostSwagger } from './swagger/add-post.swagger';
 import {
   UpdatePostCodes,
@@ -41,11 +37,10 @@ import {
   DeletePostCodes,
   DeletePostCommand,
 } from '../application/use-cases/delete-post.use-case';
-import { AddPhotoSwagger } from './swagger/add-photo.swagger';
 import {
-  UploadPhotoCodes,
-  UploadPhotoCommand,
-} from '../application/use-cases/upload-photo.use-case';
+  AddPostCodes,
+  AddPostCommand,
+} from '../application/use-cases/add-post.use-case';
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
@@ -66,11 +61,11 @@ import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.
 
 @ApiTags('Posts')
 @Controller('posts')
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class PostsController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -79,16 +74,18 @@ export class PostsController {
     logger.setContext(PostsController.name);
   }
   @Post()
+  @UseInterceptors(FilesInterceptor('files'))
   @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async addPost(
+    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
     const addPostResult: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new AddPostCommand(userId, addPostDto.files, addPostDto.description),
+        new AddPostCommand(userId, files, addPostDto.description),
       );
     const addPostResultCode = addPostResult.getCode();
     let getPostResultCode;
@@ -102,10 +99,6 @@ export class PostsController {
         const data = getPostResult.getData();
         return data;
       }
-    }
-
-    if (getPostResultCode === GetPostCodes.PostNotFound) {
-      throw new NotFoundException('Post not found');
     }
 
     if (addPostResultCode === AddPostCodes.ValidationCommandError) {
@@ -127,32 +120,32 @@ export class PostsController {
     }
   }
 
-  @Post('photo')
-  @UseInterceptors(FileInterceptor('file'))
-  @HttpCode(HttpStatus.OK)
-  @AddPhotoSwagger()
-  @UseGuards(JwtAuthGuard)
-  async addPhoto(
-    @UploadedFile() file: Express.Multer.File,
-    @CurrentUserId() userId: string,
-  ) {
-    this.logger.log('info', 'start upload photo request', {});
-    const result: Notification<string, ValidationError> =
-      await this.commandBus.execute(new UploadPhotoCommand(userId, file));
-    const code = result.getCode();
-    if (code === UploadPhotoCodes.Success) return result.getData();
-    if (code === UploadPhotoCodes.ValidationCommandError)
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
-          property: e.property,
-          constraints: e.constraints,
-        })),
-      });
-    if (code === UploadPhotoCodes.TransactionError)
-      throw new InternalServerErrorException();
-  }
+  // @Post('photos')
+  // @UseInterceptors(FilesInterceptor('files'))
+  // @HttpCode(HttpStatus.OK)
+  // @UploadPhotoSwagger()
+  // @UseGuards(JwtAuthGuard)
+  // async addPhoto(
+  //   @UploadedFiles() files: Express.Multer.File[],
+  //   @CurrentUserId() userId: string,
+  // ) {
+  //   this.logger.log('info', 'start upload photo request', {});
+  //   const result: Notification<string, ValidationError> =
+  //     await this.commandBus.execute(new UploadPhotosCommand(userId, file));
+  //   const code = result.getCode();
+  //   if (code === UploadPhotoCodes.Success) return result.getData();
+  //   if (code === UploadPhotoCodes.ValidationCommandError)
+  //     throw new UnprocessableEntityException({
+  //       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+  //       message: 'Validation failed',
+  //       errors: result.getErrors().map((e) => ({
+  //         property: e.property,
+  //         constraints: e.constraints,
+  //       })),
+  //     });
+  //   if (code === UploadPhotoCodes.TransactionError)
+  //     throw new InternalServerErrorException();
+  // }
 
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

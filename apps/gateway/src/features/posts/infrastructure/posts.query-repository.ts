@@ -28,6 +28,7 @@ export class PostsQueryRepository {
       },
     });
   }
+
   public async getPostsWithPhotos(
     userId: UserPost['userId'],
     offset: number,

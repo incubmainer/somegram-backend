@@ -19,7 +19,6 @@ import {
 export const GetPostCodes = {
   Success: Symbol('success'),
   TransactionError: Symbol('transactionError'),
-  PostNotFound: Symbol('postNotFound'),
 };
 
 export class GetPostCommand {
@@ -48,16 +47,14 @@ export class GetPostUseCase implements ICommandHandler<GetPostCommand> {
     try {
       const post =
         await this.postsQueryRepository.getPostWithPhotosById(postId);
-      if (!post) {
-        notification.setCode(GetPostCodes.PostNotFound);
-        return notification;
-      }
       const postOwner =
         await this.usersQueryRepository.findUserWithAvatarInfoById(post.userId);
-      const ownerAvatarUrl = await this.avatarStorageService.getAvatarUrl(
-        postOwner.userAvatar.avatarKey,
-      );
-
+      let ownerAvatarUrl = null;
+      if (postOwner.userAvatar) {
+        ownerAvatarUrl = await this.avatarStorageService.getAvatarUrl(
+          postOwner.userAvatar.avatarKey,
+        );
+      }
       const postInfo = postToOutputMapper(
         post,
         postOwner,
