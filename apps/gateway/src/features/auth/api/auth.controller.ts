@@ -97,6 +97,7 @@ import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.u
   active: () => process.env.NODE_ENV !== 'production',
 })
 export class AuthController {
+  private readonly frontendProvider: string;
   constructor(
     private readonly commandBus: CommandBus,
     private readonly configService: ConfigService,
@@ -104,6 +105,8 @@ export class AuthController {
     private readonly logger: CustomLoggerService,
   ) {
     logger.setContext(AuthController.name);
+    const config = this.configService.get<AuthConfig>('auth');
+    this.frontendProvider = config.frontendProvider;
   }
 
   @Post('registration')
@@ -284,7 +287,6 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    const origin = request.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'google auth callback success', {});
     response
       .cookie('refreshToken', tokens.refreshToken, {
@@ -292,7 +294,7 @@ export class AuthController {
         secure: true,
         sameSite: 'none',
       })
-      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
+      .redirect(`${this.frontendProvider}/?accessToken=${tokens.accessToken}`);
   }
 
   @Get('recaptcha-site-key')
@@ -478,7 +480,6 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    const origin = req.headers.origin || 'http://localhost:3000';
     this.logger.log('info', 'github auth callback success', {});
     res
       .cookie('refreshToken', tokens.refreshToken, {
@@ -486,7 +487,7 @@ export class AuthController {
         secure: true,
         sameSite: 'none',
       })
-      .redirect(`${origin}/?accessToken=${tokens.accessToken}`);
+      .redirect(`${this.frontendProvider}/?accessToken=${tokens.accessToken}`);
   }
 
   @Get('me')

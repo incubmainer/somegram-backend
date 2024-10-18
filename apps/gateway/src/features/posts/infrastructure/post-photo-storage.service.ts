@@ -12,6 +12,7 @@ export class PostPhotoStorageService {
   constructor(private readonly fileStorageService: FileStorageService) {}
   public async savePhoto(
     userId: string,
+    postId: string,
     photo: Buffer,
     mimeType: string,
   ): Promise<{
@@ -24,7 +25,7 @@ export class PostPhotoStorageService {
     const bucketName = this.fileStorageService.getBucketName();
     const params = {
       Bucket: bucketName,
-      Key: `users/${userId}/posts/${uuid}.${fileExtension}`,
+      Key: `users/${userId}/posts/${postId}/${uuid}.${fileExtension}`,
       Body: photo,
       ContentType: mimeType,
       ACL: ObjectCannedACL.public_read,
@@ -41,13 +42,13 @@ export class PostPhotoStorageService {
     return `${publicUrl}/${bucketName}/${photoKey}`;
   }
 
-  public async deletePhotoByKey(photoKey: string): Promise<void> {
+  public async deletePhotoByKey(photoKey: string) {
     const s3Client = this.fileStorageService.getS3Client();
     const bucketName = this.fileStorageService.getBucketName();
     const params = {
       Bucket: bucketName,
       Key: photoKey,
     };
-    await s3Client.send(new DeleteObjectCommand(params));
+    return await s3Client.send(new DeleteObjectCommand(params));
   }
 }
