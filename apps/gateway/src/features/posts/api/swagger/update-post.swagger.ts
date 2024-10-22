@@ -11,7 +11,7 @@ export function UpdatePostSwagger() {
   return applyDecorators(
     ApiTags('Posts'),
     ApiBearerAuth('access-token'),
-    ApiOperation({ summary: 'Update user post' }),
+    ApiOperation({ summary: 'Update user post by id' }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'No Content',

@@ -61,11 +61,11 @@ import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.
 
 @ApiTags('Posts')
 @Controller('posts')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
+@LogClass({
+  level: 'trace',
+  loggerClassField: 'logger',
+  active: () => process.env.NODE_ENV !== 'production',
+})
 export class PostsController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -120,45 +120,18 @@ export class PostsController {
     }
   }
 
-  // @Post('photos')
-  // @UseInterceptors(FilesInterceptor('files'))
-  // @HttpCode(HttpStatus.OK)
-  // @UploadPhotoSwagger()
-  // @UseGuards(JwtAuthGuard)
-  // async addPhoto(
-  //   @UploadedFiles() files: Express.Multer.File[],
-  //   @CurrentUserId() userId: string,
-  // ) {
-  //   this.logger.log('info', 'start upload photo request', {});
-  //   const result: Notification<string, ValidationError> =
-  //     await this.commandBus.execute(new UploadPhotosCommand(userId, file));
-  //   const code = result.getCode();
-  //   if (code === UploadPhotoCodes.Success) return result.getData();
-  //   if (code === UploadPhotoCodes.ValidationCommandError)
-  //     throw new UnprocessableEntityException({
-  //       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-  //       message: 'Validation failed',
-  //       errors: result.getErrors().map((e) => ({
-  //         property: e.property,
-  //         constraints: e.constraints,
-  //       })),
-  //     });
-  //   if (code === UploadPhotoCodes.TransactionError)
-  //     throw new InternalServerErrorException();
-  // }
-
-  @Put(':id')
+  @Put(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdatePostSwagger()
   @UseGuards(JwtAuthGuard)
   async updatePost(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('postId') postId: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new UpdatePostCommand(id, userId, updatePostDto.description),
+        new UpdatePostCommand(postId, userId, updatePostDto.description),
       );
 
     const code = result.getCode();
@@ -184,13 +157,16 @@ export class PostsController {
       throw new InternalServerErrorException();
   }
 
-  @Delete(':id')
+  @Delete(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @DeletePostSwagger()
   @UseGuards(JwtAuthGuard)
-  async deletePost(@CurrentUserId() userId: string, @Param('id') id: string) {
+  async deletePost(
+    @CurrentUserId() userId: string,
+    @Param('postId') postId: string,
+  ) {
     const result: Notification<string, ValidationError> =
-      await this.commandBus.execute(new DeletePostCommand(id, userId));
+      await this.commandBus.execute(new DeletePostCommand(postId, userId));
 
     const code = result.getCode();
     if (code === DeletePostCodes.Success) return;
