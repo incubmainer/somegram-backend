@@ -23,7 +23,6 @@ import {
   GetPublicPostsByUserQuery,
 } from '../application/use-cases/queryBus/get-public-posts.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
-import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import { GetPublicPostsSwagger } from './swagger/get-public-posts.swagger';
 
 @ApiTags('Public-Posts')
