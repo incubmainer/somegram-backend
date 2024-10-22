@@ -45,13 +45,13 @@ import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
   GetPostQuery,
-} from '../application/use-cases/get-public-post.use-case';
+} from '../application/use-cases/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import {
   GetPostsCodes,
-  GetPostsByUserCommand,
-} from '../application/use-cases/get-posts-by-user.use-case';
+  GetPostsByUserQuery,
+} from '../application/use-cases/queryBus/get-posts-by-user.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
 @ApiTags('Posts')
@@ -179,7 +179,7 @@ export class PostsController {
     @Query() query?: SearchQueryParametersType,
   ) {
     const result: Notification<PostOutputDto[], ValidationError> =
-      await this.commandBus.execute(new GetPostsByUserCommand(userId, query));
+      await this.queryBus.execute(new GetPostsByUserQuery(userId, query));
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {

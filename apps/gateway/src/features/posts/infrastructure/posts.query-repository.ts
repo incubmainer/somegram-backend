@@ -29,7 +29,7 @@ export class PostsQueryRepository {
     });
   }
 
-  public async getPostsWithPhotos(
+  public async getPostsWithPhotosByUser(
     userId: UserPost['userId'],
     offset: number,
     limit: number,
@@ -44,6 +44,20 @@ export class PostsQueryRepository {
     const count = await this.txHost.tx.userPost.count({
       where: { userId },
     });
+
+    return {
+      posts,
+      count,
+    };
+  }
+  public async getPostsWithPhotos(offset: number, limit: number) {
+    const posts = await this.txHost.tx.userPost.findMany({
+      include: { postPhotos: true },
+      skip: offset,
+      take: limit,
+    });
+
+    const count = await this.txHost.tx.userPost.count({});
 
     return {
       posts,

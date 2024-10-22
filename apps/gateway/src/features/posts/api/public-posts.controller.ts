@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  Query,
 } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
@@ -14,9 +15,16 @@ import { Notification } from 'apps/gateway/src/common/domain/notification';
 import {
   GetPostCodes,
   GetPostQuery,
-} from '../application/use-cases/get-public-post.use-case';
+} from '../application/use-cases/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPublicPostSwagger } from './swagger/get-public-post.swagger';
+import {
+  GetPublicPostsCodes,
+  GetPublicPostsByUserQuery,
+} from '../application/use-cases/queryBus/get-public-posts.use-case';
+import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
+import { GetPostsSwagger } from './swagger/get-posts.swagger';
+import { GetPublicPostsSwagger } from './swagger/get-public-posts.swagger';
 
 @ApiTags('Public-Posts')
 @Controller('public-posts')
@@ -33,6 +41,18 @@ export class PublicPostsController {
     if (code === GetPostCodes.PostNotFound)
       throw new NotFoundException('Post not found');
     if (code === GetPostCodes.TransactionError)
+      throw new InternalServerErrorException();
+  }
+
+  @Get()
+  @GetPublicPostsSwagger()
+  @HttpCode(HttpStatus.OK)
+  async getPublicPosts(@Query() query?: SearchQueryParametersType) {
+    const result: Notification<PostOutputDto, null> =
+      await this.queryBus.execute(new GetPublicPostsByUserQuery(query));
+    const code = result.getCode();
+    if (code === GetPublicPostsCodes.Success) return result.getData();
+    if (code === GetPublicPostsCodes.TransactionError)
       throw new InternalServerErrorException();
   }
 }

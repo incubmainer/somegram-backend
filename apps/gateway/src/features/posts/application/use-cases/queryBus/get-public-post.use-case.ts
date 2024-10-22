@@ -1,11 +1,6 @@
-import {
-  CommandHandler,
-  ICommandHandler,
-  IQueryHandler,
-  QueryHandler,
-} from '@nestjs/cqrs';
-import { Notification } from '../../../../common/domain/notification';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { Notification } from '../../../../../common/domain/notification';
+import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 
 import {
   CustomLoggerService,
@@ -13,13 +8,13 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { AvatarStorageService } from '../../../users/infrastructure/avatar-storage.service';
-import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
-import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
+import { AvatarStorageService } from '../../../../users/infrastructure/avatar-storage.service';
+import { PostPhotoStorageService } from '../../../infrastructure/post-photo-storage.service';
+import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
 import {
   PostOutputDto,
   postToOutputMapper,
-} from '../../api/dto/output-dto/post.output-dto';
+} from '../../../api/dto/output-dto/post.output-dto';
 
 export const GetPostCodes = {
   Success: Symbol('success'),

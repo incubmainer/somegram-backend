@@ -1,22 +1,22 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Notification } from '../../../../common/domain/notification';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { Notification } from '../../../../../common/domain/notification';
+import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
 
-import { AvatarStorageService } from '../../../users/infrastructure/avatar-storage.service';
-import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
+import { AvatarStorageService } from '../../../../users/infrastructure/avatar-storage.service';
+import { PostPhotoStorageService } from '../../../infrastructure/post-photo-storage.service';
 import {
   PostOutputDto,
   postToOutputMapper,
-} from '../../api/dto/output-dto/post.output-dto';
+} from '../../../api/dto/output-dto/post.output-dto';
 import { Paginator } from 'apps/gateway/src/common/domain/paginator';
 import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
-import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
+import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
 
 export const GetPostsCodes = {
   Success: Symbol('success'),
@@ -24,21 +24,21 @@ export const GetPostsCodes = {
   TransactionError: Symbol('transactionError'),
 };
 
-export class GetPostsByUserCommand {
+export class GetPostsByUserQuery {
   constructor(
     public userId: string,
     public queryString?: SearchQueryParametersType,
   ) {}
 }
 
-@CommandHandler(GetPostsByUserCommand)
+@QueryHandler(GetPostsByUserQuery)
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
 export class GetPostsByUserUseCase
-  implements ICommandHandler<GetPostsByUserCommand>
+  implements IQueryHandler<GetPostsByUserQuery>
 {
   constructor(
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
@@ -49,7 +49,7 @@ export class GetPostsByUserUseCase
   ) {
     logger.setContext(GetPostsByUserUseCase.name);
   }
-  async execute(command: GetPostsByUserCommand) {
+  async execute(command: GetPostsByUserQuery) {
     const { userId, queryString } = command;
     const notification = new Notification<Paginator<PostOutputDto[]>>(
       GetPostsCodes.Success,
@@ -74,7 +74,7 @@ export class GetPostsByUserUseCase
       }
 
       const { posts, count } =
-        await this.postsQueryRepository.getPostsWithPhotos(
+        await this.postsQueryRepository.getPostsWithPhotosByUser(
           user.id,
           offset,
           sanitizationQuery.pageSize,
