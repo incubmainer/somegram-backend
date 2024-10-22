@@ -32,7 +32,7 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async findUserWithAvatarInfoById(id: string) {
+  async findUserWithAvatarInfoById(id?: string) {
     const user = await this.txHost.tx.user.findFirst({
       where: { id },
       include: {

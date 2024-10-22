@@ -3,6 +3,7 @@ export class AuthConfig {
   public readonly emailConfirmationTokenExpireAfterMiliseconds: number;
   public readonly recaptchaSecretKey: string;
   public readonly recaptchaSiteKey: string;
+  public readonly frontendProvider: string;
 }
 
 export const authConfig = (): AuthConfig => {
@@ -44,10 +45,13 @@ export const authConfig = (): AuthConfig => {
   if (!recaptchaSiteKey) {
     throw new Error('RECAPTCHA_SITE_KEY is not defined');
   }
+  const frontendProvider = process.env.FRONTED_PROVIDER;
+  if (!frontendProvider) throw new Error('FRONTED_PROVIDER is not set');
   return {
     restorePasswordCodeExpireAfterMiliseconds,
     emailConfirmationTokenExpireAfterMiliseconds,
     recaptchaSecretKey,
     recaptchaSiteKey,
+    frontendProvider,
   };
 };

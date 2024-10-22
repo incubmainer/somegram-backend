@@ -6,25 +6,24 @@ import { ClsTransactionalModule } from '../../common/modules/cls-transactional.m
 import { PostPhotoStorageService } from './infrastructure/post-photo-storage.service';
 import { FileStorageService } from '../../common/utils/file-storage.service';
 import { PostsRepository } from './infrastructure/posts.repository';
-import { AddPostUseCase } from './application/use-cases/add-post.use-case';
 import { UsersRepository } from '../users/infrastructure/users.repository';
 import { UpdatePostUseCase } from './application/use-cases/update-post.use-case';
 import { DeletePostUseCase } from './application/use-cases/delete-post.use-case';
-import { UploadPhotoUseCase } from './application/use-cases/upload-photo.use-case';
 import { UsersQueryRepository } from '../users/infrastructure/users.query-repository';
 import { PostsQueryRepository } from './infrastructure/posts.query-repository';
 import { AvatarRepository } from '../users/infrastructure/avatar.repository';
 import { AvatarStorageService } from '../users/infrastructure/avatar-storage.service';
-import { GetPublicPostUseCase } from './application/use-cases/get-public-post.use-case';
-import { GetPostsUseCase } from './application/use-cases/get-posts.use-case';
+import { GetPostUseCase } from './application/use-cases/get-public-post.use-case';
+import { GetPostsByUserUseCase } from './application/use-cases/get-posts-by-user.use-case';
+import { PostPhotoRepository } from './infrastructure/post-photos.repository';
+import { AddPostUseCase } from './application/use-cases/add-post.use-case';
 
 const useCases = [
-  AddPostUseCase,
   UpdatePostUseCase,
   DeletePostUseCase,
-  UploadPhotoUseCase,
-  GetPublicPostUseCase,
-  GetPostsUseCase,
+  GetPostUseCase,
+  GetPostsByUserUseCase,
+  AddPostUseCase,
 ];
 const repositories = [
   PostsRepository,
@@ -32,6 +31,7 @@ const repositories = [
   UsersRepository,
   UsersQueryRepository,
   AvatarRepository,
+  PostPhotoRepository,
 ];
 
 const services = [

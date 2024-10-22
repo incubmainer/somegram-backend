@@ -10,7 +10,7 @@ export function DeletePostSwagger() {
   return applyDecorators(
     ApiTags('Posts'),
     ApiBearerAuth('access-token'),
-    ApiOperation({ summary: 'Delete user post' }),
+    ApiOperation({ summary: 'Delete user post by id' }),
     ApiResponse({
       status: HttpStatus.NO_CONTENT,
       description: 'No Content',
@@ -24,9 +24,9 @@ export function DeletePostSwagger() {
           message: 'Validation failed',
           errors: [
             {
-              property: 'userId',
+              property: 'postId',
               constraints: {
-                description: `userId must be a string`,
+                description: `postId must be a string`,
               },
             },
           ],

@@ -13,22 +13,18 @@ import {
   Put,
   Query,
   UnprocessableEntityException,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { ValidationError } from 'class-validator';
 import { Notification } from 'apps/gateway/src/common/domain/notification';
-import {
-  AddPostCodes,
-  AddPostCommand,
-} from '../application/use-cases/add-post.use-case';
 import { AddPostSwagger } from './swagger/add-post.swagger';
 import {
   UpdatePostCodes,
@@ -41,15 +37,14 @@ import {
   DeletePostCodes,
   DeletePostCommand,
 } from '../application/use-cases/delete-post.use-case';
-import { AddPhotoSwagger } from './swagger/add-photo.swagger';
 import {
-  UploadPhotoCodes,
-  UploadPhotoCommand,
-} from '../application/use-cases/upload-photo.use-case';
+  AddPostCodes,
+  AddPostCommand,
+} from '../application/use-cases/add-post.use-case';
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
-  GetPublicPostCommand,
+  GetPostCommand,
 } from '../application/use-cases/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import {
@@ -60,8 +55,8 @@ import {
 import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import {
   GetPostsCodes,
-  GetPostsCommand,
-} from '../application/use-cases/get-posts.use-case';
+  GetPostsByUserCommand,
+} from '../application/use-cases/get-posts-by-user.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
 @ApiTags('Posts')
@@ -79,32 +74,31 @@ export class PostsController {
     logger.setContext(PostsController.name);
   }
   @Post()
+  @UseInterceptors(FilesInterceptor('files'))
   @AddPostSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async addPost(
+    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
     const addPostResult: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new AddPostCommand(userId, addPostDto.files, addPostDto.description),
+        new AddPostCommand(userId, files, addPostDto.description),
       );
     const addPostResultCode = addPostResult.getCode();
-    let getPostResult: Notification<PostOutputDto, ValidationError>;
+    let getPostResultCode;
     if (addPostResultCode === AddPostCodes.Success) {
       const postId = addPostResult.getData();
-      getPostResult = await this.commandBus.execute(
-        new GetPublicPostCommand(postId),
+      const getPostResult = await this.commandBus.execute(
+        new GetPostCommand(postId),
       );
-    }
-    const getPostResultCode = getPostResult.getCode();
-    if (getPostResultCode === GetPostCodes.Success) {
-      const data = getPostResult.getData();
-      return data;
-    }
-    if (getPostResultCode === GetPostCodes.PostNotFound) {
-      throw new NotFoundException('Post not found');
+      getPostResultCode = getPostResult.getCode();
+      if (getPostResultCode === GetPostCodes.Success) {
+        const data = getPostResult.getData();
+        return data;
+      }
     }
 
     if (addPostResultCode === AddPostCodes.ValidationCommandError) {
@@ -126,45 +120,18 @@ export class PostsController {
     }
   }
 
-  @Post('photo')
-  @UseInterceptors(FileInterceptor('file'))
-  @HttpCode(HttpStatus.OK)
-  @AddPhotoSwagger()
-  @UseGuards(JwtAuthGuard)
-  async addPhoto(
-    @UploadedFile() file: Express.Multer.File,
-    @CurrentUserId() userId: string,
-  ) {
-    this.logger.log('info', 'start upload photo request', {});
-    const result: Notification<string, ValidationError> =
-      await this.commandBus.execute(new UploadPhotoCommand(userId, file));
-    const code = result.getCode();
-    if (code === UploadPhotoCodes.Success) return result.getData();
-    if (code === UploadPhotoCodes.ValidationCommandError)
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
-          property: e.property,
-          constraints: e.constraints,
-        })),
-      });
-    if (code === UploadPhotoCodes.TransactionError)
-      throw new InternalServerErrorException();
-  }
-
-  @Put(':id')
+  @Put(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdatePostSwagger()
   @UseGuards(JwtAuthGuard)
   async updatePost(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('postId') postId: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
     const result: Notification<string, ValidationError> =
       await this.commandBus.execute(
-        new UpdatePostCommand(id, userId, updatePostDto.description),
+        new UpdatePostCommand(postId, userId, updatePostDto.description),
       );
 
     const code = result.getCode();
@@ -190,13 +157,16 @@ export class PostsController {
       throw new InternalServerErrorException();
   }
 
-  @Delete(':id')
+  @Delete(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @DeletePostSwagger()
   @UseGuards(JwtAuthGuard)
-  async deletePost(@CurrentUserId() userId: string, @Param('id') id: string) {
+  async deletePost(
+    @CurrentUserId() userId: string,
+    @Param('postId') postId: string,
+  ) {
     const result: Notification<string, ValidationError> =
-      await this.commandBus.execute(new DeletePostCommand(id, userId));
+      await this.commandBus.execute(new DeletePostCommand(postId, userId));
 
     const code = result.getCode();
     if (code === DeletePostCodes.Success) return;
@@ -215,16 +185,21 @@ export class PostsController {
   @Get(':userId')
   @HttpCode(HttpStatus.OK)
   @GetPostsSwagger()
-  async getPosts(
+  async getPostsByUser(
     @Param('userId') userId: string,
-    @Query() query: SearchQueryParametersType,
+    @Query() query?: SearchQueryParametersType,
   ) {
     const result: Notification<PostOutputDto[], ValidationError> =
-      await this.commandBus.execute(new GetPostsCommand(userId, query));
+      await this.commandBus.execute(new GetPostsByUserCommand(userId, query));
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {
-      return result.getData();
+      const posts = result.getData();
+      return posts;
+    }
+
+    if (code === GetPostsCodes.UserNotFound) {
+      throw new NotFoundException();
     }
     if (code === GetPostsCodes.TransactionError)
       throw new InternalServerErrorException();
