@@ -66,7 +66,7 @@ export class GetPostsByUserUseCase
       (sanitizationQuery.pageNumber - 1) * sanitizationQuery.pageSize;
 
     try {
-      let avatarUrl;
+      let avatarUrl = null;
       if (user.userAvatar) {
         avatarUrl = await this.avatarStorageService.getAvatarUrl(
           user.userAvatar.avatarKey,

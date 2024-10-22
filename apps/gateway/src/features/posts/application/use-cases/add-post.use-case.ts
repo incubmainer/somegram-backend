@@ -47,9 +47,9 @@ export class AddPostCommand {
   @ValidateNested({ each: true })
   public readonly files: Express.Multer.File[];
 
-  @IsOptional()
   @IsString()
   @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
+  @IsOptional()
   public readonly description?: string;
   constructor(
     userId: string,
@@ -124,7 +124,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
           const post = await this.postsRepository.addPost({
             userId,
             createdAt,
-            description,
+            description: description ? description : null,
           });
 
           for (const file of files) {

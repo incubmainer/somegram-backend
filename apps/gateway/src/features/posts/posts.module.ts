@@ -17,6 +17,7 @@ import { GetPostUseCase } from './application/use-cases/get-public-post.use-case
 import { GetPostsByUserUseCase } from './application/use-cases/get-posts-by-user.use-case';
 import { PostPhotoRepository } from './infrastructure/post-photos.repository';
 import { AddPostUseCase } from './application/use-cases/add-post.use-case';
+import { PublicPostsController } from './api/public-posts.controller';
 
 const useCases = [
   UpdatePostUseCase,
@@ -42,7 +43,7 @@ const services = [
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule],
-  controllers: [PostsController],
+  controllers: [PostsController, PublicPostsController],
   providers: [...services, ...useCases, ...repositories],
   exports: [],
 })

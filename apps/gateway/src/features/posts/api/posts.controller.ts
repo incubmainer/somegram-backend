@@ -17,7 +17,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -44,14 +44,9 @@ import {
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
-  GetPostCommand,
+  GetPostQuery,
 } from '../application/use-cases/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
 import { GetPostsSwagger } from './swagger/get-posts.swagger';
 import {
   GetPostsCodes,
@@ -61,18 +56,11 @@ import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.
 
 @ApiTags('Posts')
 @Controller('posts')
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
 export class PostsController {
   constructor(
     private readonly commandBus: CommandBus,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
-  ) {
-    logger.setContext(PostsController.name);
-  }
+    private readonly queryBus: QueryBus,
+  ) {}
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
   @AddPostSwagger()
@@ -91,8 +79,8 @@ export class PostsController {
     let getPostResultCode;
     if (addPostResultCode === AddPostCodes.Success) {
       const postId = addPostResult.getData();
-      const getPostResult = await this.commandBus.execute(
-        new GetPostCommand(postId),
+      const getPostResult = await this.queryBus.execute(
+        new GetPostQuery(postId),
       );
       getPostResultCode = getPostResult.getCode();
       if (getPostResultCode === GetPostCodes.Success) {
@@ -114,7 +102,8 @@ export class PostsController {
 
     if (
       addPostResultCode === AddPostCodes.TransactionError ||
-      getPostResultCode === GetPostCodes.TransactionError
+      getPostResultCode === GetPostCodes.TransactionError ||
+      getPostResultCode === GetPostCodes.PostNotFound
     ) {
       throw new InternalServerErrorException();
     }

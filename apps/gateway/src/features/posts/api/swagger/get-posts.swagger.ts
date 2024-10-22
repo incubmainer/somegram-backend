@@ -39,7 +39,7 @@ export function GetPostsSwagger() {
               ],
               postOwnerInfo: {
                 userId: 'd207dc73-8002-4804-a6d2-037b786eb568',
-                username: 'valek007943',
+                username: 'jphn_dou',
                 avatarUrl:
                   'http://serveroleg.ru:9000/somegram/users/d207dc73-8002-4804-a6d2-037b786eb568/avatars/66841f84-cec2-4ea8-a3fd-661f74dca54b.jpeg',
               },
