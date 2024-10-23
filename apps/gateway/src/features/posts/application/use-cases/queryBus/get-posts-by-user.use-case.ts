@@ -62,9 +62,6 @@ export class GetPostsByUserUseCase
       return notification;
     }
     const sanitizationQuery = getSanitizationQuery(queryString);
-    const offset =
-      (sanitizationQuery.pageNumber - 1) * sanitizationQuery.pageSize;
-
     try {
       let avatarUrl = null;
       if (user.userAvatar) {
@@ -76,8 +73,7 @@ export class GetPostsByUserUseCase
       const { posts, count } =
         await this.postsQueryRepository.getPostsWithPhotosByUser(
           user.id,
-          offset,
-          sanitizationQuery.pageSize,
+          queryString,
         );
 
       const mappedPosts = posts.map((post) => {

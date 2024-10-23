@@ -5,7 +5,6 @@ import {
 } from '@app/custom-logger';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { ProfileInfoOutputDto } from '../../../api/dto/output-dto/profile-info-output-dto';
 import { AvatarStorageService } from '../../../infrastructure/avatar-storage.service';
 import { AvatarRepository } from '../../../infrastructure/avatar.repository';
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';

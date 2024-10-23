@@ -47,7 +47,7 @@ import {
   GetPostQuery,
 } from '../application/use-cases/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
-import { GetPostsSwagger } from './swagger/get-posts.swagger';
+import { GetPostsSwagger } from './swagger/get-user-posts.swagger';
 import {
   GetPostsCodes,
   GetPostsByUserQuery,

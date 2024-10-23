@@ -52,15 +52,9 @@ export class GetPublicPostsByUserUseCase
     );
 
     const sanitizationQuery = getSanitizationQuery(queryString);
-    const offset =
-      (sanitizationQuery.pageNumber - 1) * sanitizationQuery.pageSize;
-
     try {
       const { posts, count } =
-        await this.postsQueryRepository.getPostsWithPhotos(
-          offset,
-          sanitizationQuery.pageSize,
-        );
+        await this.postsQueryRepository.getAllPostsWithPhotos(queryString);
 
       const mappedPosts = await Promise.all(
         posts.map(async (post) => {

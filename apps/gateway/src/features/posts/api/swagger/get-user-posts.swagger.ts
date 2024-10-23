@@ -19,6 +19,23 @@ export function GetPostsSwagger() {
       type: Number,
       example: 8,
     }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      description:
+        'Sort by parameters. Available values: createdAt, updatedAt. Default value: createdAt',
+      type: String,
+      example: 'createdAt',
+    }),
+    ApiQuery({
+      name: 'sortDirection',
+      required: false,
+      description:
+        'Sort by desc or asc. Available values: asc, desc. Default value: desc',
+      type: String,
+      enum: ['asc', 'desc'],
+      example: 'desc',
+    }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'Getting successful',
@@ -50,7 +67,7 @@ export function GetPostsSwagger() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'User posts not found',
+      description: 'User not found',
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
