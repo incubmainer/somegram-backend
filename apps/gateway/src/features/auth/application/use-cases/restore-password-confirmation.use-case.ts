@@ -4,7 +4,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IsString, validateSync } from 'class-validator';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsUserPassword } from '../decorators/is-user-password';
@@ -45,8 +45,8 @@ export class RestorePasswordConfirmationUseCase
 
   public async execute(
     command: RestorePasswordConfirmationCommand,
-  ): Promise<Notification<void>> {
-    const notification = new Notification(
+  ): Promise<NotificationObject<void>> {
+    const notification = new NotificationObject(
       RestorePasswordConfirmationCodes.Success,
     );
     const { code, password } = command;

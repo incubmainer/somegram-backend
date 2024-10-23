@@ -11,7 +11,7 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import {
   GetPostCodes,
   GetPostQuery,
@@ -33,7 +33,7 @@ export class PublicPostsController {
   @GetPublicPostSwagger()
   @HttpCode(HttpStatus.OK)
   async getPublicPost(@Param('postId') postId: string) {
-    const result: Notification<PostOutputDto, null> =
+    const result: NotificationObject<PostOutputDto, null> =
       await this.queryBus.execute(new GetPostQuery(postId));
     const code = result.getCode();
     if (code === GetPostCodes.Success) return result.getData();
@@ -47,7 +47,7 @@ export class PublicPostsController {
   @GetPublicPostsSwagger()
   @HttpCode(HttpStatus.OK)
   async getPublicPosts(@Query() query?: SearchQueryParametersType) {
-    const result: Notification<PostOutputDto, null> =
+    const result: NotificationObject<PostOutputDto, null> =
       await this.queryBus.execute(new GetPublicPostsByUserQuery(query));
     const code = result.getCode();
     if (code === GetPublicPostsCodes.Success) return result.getData();

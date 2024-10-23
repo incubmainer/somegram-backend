@@ -13,7 +13,7 @@ import { AvatarStorageService } from '../../infrastructure/avatar-storage.servic
 import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
@@ -57,18 +57,21 @@ export class UploadAvatarUseCase {
   public async execute(
     command: UploadAvatarCommand,
   ): Promise<
-    Notification<null, ValidationError> | Notification<null | string>
+    | NotificationObject<null, ValidationError>
+    | NotificationObject<null | string>
   > {
     const errors = validateSync(command);
     if (errors.length) {
-      const notification = new Notification<null, ValidationError>(
+      const notification = new NotificationObject<null, ValidationError>(
         UploadAvatarCodes.ValidationCommandError,
       );
       notification.addErrors(errors);
       return notification;
     }
     const { userId, file } = command;
-    const notification = new Notification<string>(UploadAvatarCodes.Success);
+    const notification = new NotificationObject<string>(
+      UploadAvatarCodes.Success,
+    );
     const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
       command.userId,
     );

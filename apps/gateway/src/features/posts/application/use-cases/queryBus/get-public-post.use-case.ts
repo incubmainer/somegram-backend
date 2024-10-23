@@ -1,5 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Notification } from '../../../../../common/domain/notification';
+import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 
 import {
@@ -44,7 +44,9 @@ export class GetPostUseCase implements IQueryHandler<GetPostQuery> {
   }
   async execute(command: GetPostQuery) {
     const { postId } = command;
-    const notification = new Notification<PostOutputDto>(GetPostCodes.Success);
+    const notification = new NotificationObject<PostOutputDto>(
+      GetPostCodes.Success,
+    );
     try {
       const post =
         await this.postsQueryRepository.getPostWithPhotosById(postId);

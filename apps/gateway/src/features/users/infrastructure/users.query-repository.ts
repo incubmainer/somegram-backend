@@ -12,10 +12,6 @@ import {
   MeOutputDto,
   userMapper,
 } from '../../auth/api/dto/output-dto/me-output-dto';
-import {
-  ProfileInfoOutputDto,
-  userProfileInfoMapper,
-} from '../api/dto/output-dto/profile-info-output-dto';
 
 @Injectable()
 @LogClass({
@@ -54,14 +50,15 @@ export class UsersQueryRepository {
     }
     return userMapper(user);
   }
-  async getProfileInfo(userId: string): Promise<ProfileInfoOutputDto | null> {
+
+  async getProfileInfo2(userId: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: { id: userId },
     });
     if (!user) {
       return null;
     }
-    return userProfileInfoMapper(user);
+    return user;
   }
 
   public async getUserByUsername(username: string): Promise<User | null> {
@@ -71,5 +68,9 @@ export class UsersQueryRepository {
       },
     });
     return user;
+  }
+
+  public async getTotalCountUsers() {
+    return await this.txHost.tx.user.count();
   }
 }

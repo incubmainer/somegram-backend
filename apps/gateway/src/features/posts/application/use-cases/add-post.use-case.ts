@@ -20,7 +20,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { UnauthorizedException } from '@nestjs/common';
 
-import { Notification } from '../../../../common/domain/notification';
+import { NotificationObject } from '../../../../common/domain/notification';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
@@ -103,7 +103,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       }
     }
     if (errors.length) {
-      const notification = new Notification<null, ValidationError>(
+      const notification = new NotificationObject<null, ValidationError>(
         AddPostCodes.ValidationCommandError,
       );
       notification.addErrors(errors);
@@ -115,7 +115,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       throw new UnauthorizedException();
     }
 
-    const notification = new Notification<string>(AddPostCodes.Success);
+    const notification = new NotificationObject<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(
         { timeout: TRANSACTION_TIMEOUT },

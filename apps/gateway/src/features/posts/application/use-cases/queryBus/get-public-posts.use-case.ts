@@ -1,5 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Notification } from '../../../../../common/domain/notification';
+import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 import {
   CustomLoggerService,
@@ -47,7 +47,7 @@ export class GetPublicPostsByUserUseCase
   }
   async execute(command: GetPublicPostsByUserQuery) {
     const { queryString } = command;
-    const notification = new Notification<Paginator<PostOutputDto[]>>(
+    const notification = new NotificationObject<Paginator<PostOutputDto[]>>(
       GetPublicPostsCodes.Success,
     );
 

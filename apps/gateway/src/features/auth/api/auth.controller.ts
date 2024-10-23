@@ -27,7 +27,7 @@ import {
   RegistrationCodes,
   RegistrationCommand,
 } from '../application/use-cases/registration.use-case';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
@@ -114,14 +114,15 @@ export class AuthController {
   @RegistrationSwagger()
   public async registration(@Body() body: RegistrationBodyInputDto) {
     this.logger.log('info', 'start registration', {});
-    const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationCommand(
-        body.username,
-        body.email,
-        body.password,
-        body.html,
-      ),
-    );
+    const notification: NotificationObject<null> =
+      await this.commandBus.execute(
+        new RegistrationCommand(
+          body.username,
+          body.email,
+          body.password,
+          body.html,
+        ),
+      );
     const code = notification.getCode();
     if (code === RegistrationCodes.Success) {
       this.logger.log('info', 'registration success', {});
@@ -164,9 +165,10 @@ export class AuthController {
     @Body() body: RegistrationConfirmationBodyInputDto,
   ) {
     this.logger.log('info', 'start registration confirmation', {});
-    const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationConfirmationCommand(body.token),
-    );
+    const notification: NotificationObject<null> =
+      await this.commandBus.execute(
+        new RegistrationConfirmationCommand(body.token),
+      );
     const code = notification.getCode();
     if (code === RegistrationConfirmationCodes.Success) {
       this.logger.log('info', 'registration confirmation success', {});
@@ -201,9 +203,10 @@ export class AuthController {
     @Body() body: RegistrationEmailResendingBodyInputDto,
   ) {
     this.logger.log('info', 'start registration-email-resending', {});
-    const notification: Notification<null> = await this.commandBus.execute(
-      new RegistrationEmailResendingCommand(body.token, body.html),
-    );
+    const notification: NotificationObject<null> =
+      await this.commandBus.execute(
+        new RegistrationEmailResendingCommand(body.token, body.html),
+      );
     const code = notification.getCode();
     if (code === RegistrationEmailResendingCodes.Success) {
       this.logger.log('info', 'registration-email-resending success', {});
@@ -246,14 +249,15 @@ export class AuthController {
     @UserAgent() userAgent?: string,
   ): Promise<any> {
     this.logger.log('info', 'start google auth callback', {});
-    const notification: Notification<string> = await this.commandBus.execute(
-      new LoginByGoogleCommand(
-        googleProfile.id,
-        googleProfile.name,
-        googleProfile.email,
-        googleProfile.emailVerified,
-      ),
-    );
+    const notification: NotificationObject<string> =
+      await this.commandBus.execute(
+        new LoginByGoogleCommand(
+          googleProfile.id,
+          googleProfile.name,
+          googleProfile.email,
+          googleProfile.emailVerified,
+        ),
+      );
     const code = notification.getCode();
     if (code === LoginByGoogleCodes.WrongEmail) {
       this.logger.log('warn', 'wrong email', {});
@@ -312,9 +316,10 @@ export class AuthController {
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
     this.logger.log('info', 'start restore password', {});
-    const notification: Notification<null> = await this.commandBus.execute(
-      new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
-    );
+    const notification: NotificationObject<null> =
+      await this.commandBus.execute(
+        new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
+      );
     const code = notification.getCode();
     if (code === RestorePasswordCodes.Success) {
       this.logger.log('info', 'restore password success', {});
@@ -352,9 +357,10 @@ export class AuthController {
     @Body() body: RestorePasswordConfirmationBodyInputDto,
   ) {
     this.logger.log('info', 'start restore password confirmation', {});
-    const notification: Notification<null> = await this.commandBus.execute(
-      new RestorePasswordConfirmationCommand(body.code, body.password),
-    );
+    const notification: NotificationObject<null> =
+      await this.commandBus.execute(
+        new RestorePasswordConfirmationCommand(body.code, body.password),
+      );
     const code = notification.getCode();
     if (code === RestorePasswordConfirmationCodes.Success) {
       this.logger.log('info', 'restore password confirmation success', {});
@@ -452,9 +458,8 @@ export class AuthController {
   ) {
     this.logger.log('info', 'start github auth callback', {});
     const user: UserFromGithub = req.user;
-    const notification: Notification<string> = await this.commandBus.execute(
-      new AuthWithGithubCommand(user),
-    );
+    const notification: NotificationObject<string> =
+      await this.commandBus.execute(new AuthWithGithubCommand(user));
     const code = notification.getCode();
     if (code === LoginWithGithubCodes.TransactionError) {
       this.logger.log('error', 'transaction error', {});
@@ -496,7 +501,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.log('info', 'start me request', {});
-    const notification: Notification<MeOutputDto> =
+    const notification: NotificationObject<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
     const code = notification.getCode();
     if (code === MeCodes.TransactionError) {

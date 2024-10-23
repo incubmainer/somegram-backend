@@ -13,9 +13,10 @@ import { AvatarStorageService } from './infrastructure/avatar-storage.service';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.use-case';
 import { AvatarRepository } from './infrastructure/avatar.repository';
 import { FillingUserProfileUseCase } from './application/use-cases/filling-user-profile.use-case';
-import { GetProfileInfoUseCase } from './application/use-cases/get-profile-info.use-case';
 import { UsersQueryRepository } from './infrastructure/users.query-repository';
 import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case';
+import { PublicUsersController } from './api/public-users.controller';
+import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
 
 const useCases = [
   UploadAvatarUseCase,
@@ -41,7 +42,7 @@ const services = [
       secret: jwtConstants.JWT_SECRET,
     }),
   ],
-  controllers: [UsersController],
+  controllers: [UsersController, PublicUsersController],
   providers: [JwtStrategy, ...services, ...useCases, ...repositories],
   exports: [],
 })

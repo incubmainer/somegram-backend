@@ -1,7 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IsString, validateSync } from 'class-validator';
@@ -34,8 +34,8 @@ export class RegistrationConfirmationUseCase {
 
   public async execute(
     command: RegistrationConfirmationCommand,
-  ): Promise<Notification<void>> {
-    const notification = new Notification(
+  ): Promise<NotificationObject<void>> {
+    const notification = new NotificationObject(
       RegistrationConfirmationCodes.Success,
     );
     const { token } = command;

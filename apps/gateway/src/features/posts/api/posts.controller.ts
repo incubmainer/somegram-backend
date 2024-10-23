@@ -24,7 +24,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { ValidationError } from 'class-validator';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { AddPostSwagger } from './swagger/add-post.swagger';
 import {
   UpdatePostCodes,
@@ -71,7 +71,7 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
-    const addPostResult: Notification<string, ValidationError> =
+    const addPostResult: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(
         new AddPostCommand(userId, files, addPostDto.description),
       );
@@ -118,7 +118,7 @@ export class PostsController {
     @Param('postId') postId: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    const result: Notification<string, ValidationError> =
+    const result: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(
         new UpdatePostCommand(postId, userId, updatePostDto.description),
       );
@@ -154,7 +154,7 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Param('postId') postId: string,
   ) {
-    const result: Notification<string, ValidationError> =
+    const result: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(new DeletePostCommand(postId, userId));
 
     const code = result.getCode();
@@ -178,7 +178,7 @@ export class PostsController {
     @Param('userId') userId: string,
     @Query() query?: SearchQueryParametersType,
   ) {
-    const result: Notification<PostOutputDto[], ValidationError> =
+    const result: NotificationObject<PostOutputDto[], ValidationError> =
       await this.queryBus.execute(new GetPostsByUserQuery(userId, query));
 
     const code = result.getCode();

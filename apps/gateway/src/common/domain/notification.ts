@@ -1,4 +1,4 @@
-export class Notification<T = null, E = null> {
+export class NotificationObject<T = null, E = null> {
   code: symbol;
   data: T | null = null;
   errors: E[] = [];
