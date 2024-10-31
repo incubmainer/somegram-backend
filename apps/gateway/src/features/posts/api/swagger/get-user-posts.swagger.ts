@@ -30,8 +30,7 @@ export function GetPostsSwagger() {
     ApiQuery({
       name: 'sortDirection',
       required: false,
-      description:
-        'Sort by desc or asc. Available values: asc, desc. Default value: desc',
+      description: 'Sort by desc or asc.  Default value: desc',
       type: String,
       enum: ['asc', 'desc'],
       example: 'desc',
