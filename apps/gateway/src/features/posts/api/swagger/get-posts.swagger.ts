@@ -49,6 +49,10 @@ export function GetPostsSwagger() {
       },
     }),
     ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: 'User posts not found',
+    }),
+    ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Transaction error',
     }),

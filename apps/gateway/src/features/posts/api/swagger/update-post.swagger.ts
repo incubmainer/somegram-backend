@@ -5,13 +5,13 @@ import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { DESCRIPTION_MAX_LENGTH } from '../../application/use-cases/add-post.use-case';
+import { POST_CONSTRAINTS } from '../../application/use-cases/add-post.use-case';
 
 export function UpdatePostSwagger() {
   return applyDecorators(
     ApiTags('Posts'),
     ApiBearerAuth('access-token'),
-    ApiOperation({ summary: 'Update user post' }),
+    ApiOperation({ summary: 'Update user post by id' }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'No Content',
@@ -27,7 +27,7 @@ export function UpdatePostSwagger() {
             {
               property: 'description',
               constraints: {
-                description: `Post description, max length ${DESCRIPTION_MAX_LENGTH} characters.`,
+                description: `Post description, max length ${POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH} characters.`,
               },
             },
           ],

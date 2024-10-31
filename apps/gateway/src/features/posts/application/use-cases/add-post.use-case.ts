@@ -1,29 +1,38 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
+  ArrayMaxSize,
   IsArray,
   IsOptional,
   IsString,
   MaxLength,
+  ValidateNested,
   validateSync,
   ValidationError,
 } from 'class-validator';
-
-import { Notification } from '../../../../common/domain/notification';
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { v4 as uuidv4 } from 'uuid';
-import { PostsRepository } from '../../infrastructure/posts.repository';
-import { UploadAvatarCodes } from '../../../users/application/use-cases/upload-avatar.use-case';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
-import { UnauthorizedException } from '@nestjs/common';
+import * as sharp from 'sharp';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { UnauthorizedException } from '@nestjs/common';
 
-export const DESCRIPTION_MAX_LENGTH = 500;
+import { Notification } from '../../../../common/domain/notification';
+import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
+import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
+import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
+import { PostsRepository } from '../../infrastructure/posts.repository';
+
+export const POST_CONSTRAINTS = {
+  MAX_PHOTO_COUNT: 10,
+  MAX_PHOTO_SIZE: 20,
+  DESCRIPTION_MAX_LENGTH: 500,
+  ALLOWED_MIMETYPES: ['image/jpeg', 'image/png'],
+};
+const TRANSACTION_TIMEOUT = 50000; //necessary to wait upload all files wihtout timeout error
 
 export const AddPostCodes = {
   Success: Symbol('success'),
@@ -34,16 +43,21 @@ export const AddPostCodes = {
 export class AddPostCommand {
   public readonly userId: string;
   @IsArray()
-  @IsString({ each: true })
-  public readonly filesKeys: string[];
+  @ArrayMaxSize(POST_CONSTRAINTS.MAX_PHOTO_COUNT)
+  @ValidateNested({ each: true })
+  public readonly files: Express.Multer.File[];
+
   @IsOptional()
   @IsString()
-  @MaxLength(DESCRIPTION_MAX_LENGTH)
+  @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
   public readonly description?: string;
-
-  constructor(userId: string, filesKeys: string[], description?: string) {
+  constructor(
+    userId: string,
+    files: Express.Multer.File[],
+    description?: string,
+  ) {
     this.userId = userId;
-    this.filesKeys = filesKeys;
+    this.files = files;
     this.description = description;
   }
 }
@@ -57,50 +71,83 @@ export class AddPostCommand {
 export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
   constructor(
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly postPhotoStorageService: PostPhotoStorageService,
+    private readonly postPhotoRepository: PostPhotoRepository,
+    private readonly postsRepository: PostsRepository,
+    private readonly usersQueryRepository: UsersQueryRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    private readonly postsRepository: PostsRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
   ) {
     logger.setContext(AddPostUseCase.name);
   }
   async execute(command: AddPostCommand) {
+    const { userId, files, description } = command;
     const errors = validateSync(command);
+    for (const file of files) {
+      if (file.size > POST_CONSTRAINTS.MAX_PHOTO_SIZE * 1024 * 1024) {
+        errors.push({
+          property: `${file.originalname}`,
+          constraints: {
+            fileSize: `File size must not exceed ${POST_CONSTRAINTS.MAX_PHOTO_SIZE} MB`,
+          },
+        });
+      }
+      if (!POST_CONSTRAINTS.ALLOWED_MIMETYPES.includes(file.mimetype)) {
+        errors.push({
+          property: `${file.originalname}`,
+          constraints: {
+            memetype: `Mimetype must be one of the following: ${POST_CONSTRAINTS.ALLOWED_MIMETYPES.join(', ')}`,
+          },
+        });
+      }
+    }
     if (errors.length) {
       const notification = new Notification<null, ValidationError>(
-        UploadAvatarCodes.ValidationCommandError,
+        AddPostCodes.ValidationCommandError,
       );
       notification.addErrors(errors);
       return notification;
     }
-    const { userId, filesKeys, description } = command;
+    const user =
+      await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
     const notification = new Notification<string>(AddPostCodes.Success);
     try {
-      await this.txHost.withTransaction(async () => {
-        const user =
-          await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
-        if (!user) {
-          throw new UnauthorizedException();
-        }
-        const postId = uuidv4();
-        const createdAt = new Date();
-        const post = await this.postsRepository.addPost({
-          postId,
-          userId,
-          createdAt,
-          description,
-        });
-
-        for (const fileKey of filesKeys) {
-          await this.postsRepository.addInfoAboutPhoto({
-            postId,
-            photoKey: fileKey,
-            createdAt: new Date(),
+      await this.txHost.withTransaction(
+        { timeout: TRANSACTION_TIMEOUT },
+        async () => {
+          const createdAt = new Date();
+          const post = await this.postsRepository.addPost({
+            userId,
+            createdAt,
+            description,
           });
-        }
-        notification.setData(post.id);
-      });
+
+          for (const file of files) {
+            const savedFile = await this.postPhotoStorageService.savePhoto(
+              userId,
+              post.id,
+              file.buffer,
+              file.mimetype,
+            );
+            const metadata = await sharp(file.buffer).metadata();
+            await this.postPhotoRepository.addInfoAboutUploadedPhoto({
+              userId,
+              postId: post.id,
+              photoKey: savedFile.photoKey,
+              createdAt,
+              width: metadata.width,
+              height: metadata.height,
+              size: metadata.size,
+            });
+          }
+          notification.setData(post.id);
+        },
+      );
     } catch (e) {
       this.logger.log('error', 'transaction error', { e });
       notification.setCode(AddPostCodes.TransactionError);

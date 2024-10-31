@@ -2,6 +2,8 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { Notification } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
+import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
+import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
 
 export const DeletePostCodes = {
   Success: Symbol('success'),
@@ -21,11 +23,15 @@ export class DeletePostCommand {
 }
 @CommandHandler(DeletePostCommand)
 export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
-  constructor(private readonly postsRepository: PostsRepository) {}
+  constructor(
+    private readonly postsRepository: PostsRepository,
+    private readonly postPhotoStorageService: PostPhotoStorageService,
+    private readonly postPhotoRepository: PostPhotoRepository,
+  ) {}
   async execute(command: DeletePostCommand): Promise<Notification<string[]>> {
     const { postId, userId } = command;
     const notification = new Notification<string[]>(DeletePostCodes.Success);
-    const post = await this.postsRepository.findPost(postId);
+    const post = await this.postsRepository.getPostWithPhotosById(postId);
     if (!post) {
       notification.setCode(DeletePostCodes.PostNotFound);
       return notification;
@@ -35,6 +41,12 @@ export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
       return notification;
     }
     try {
+      if (post.postPhotos) {
+        for (const photo of post.postPhotos) {
+          await this.postPhotoStorageService.deletePhotoByKey(photo.photoKey);
+        }
+      }
+      await this.postPhotoRepository.deletePhotosInfo(postId);
       await this.postsRepository.deletePost({
         postId,
       });

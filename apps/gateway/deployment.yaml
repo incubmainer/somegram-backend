@@ -147,6 +147,11 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS
+             - name: FRONTED_PROVIDER
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: FRONTED_PROVIDER
              - name: PORT
                valueFrom:
                  secretKeyRef:

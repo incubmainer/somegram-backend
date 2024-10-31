@@ -20,23 +20,26 @@ import { PostsQueryRepository } from '../../infrastructure/posts.query-repositor
 
 export const GetPostsCodes = {
   Success: Symbol('success'),
+  UserNotFound: Symbol('userNotFound'),
   TransactionError: Symbol('transactionError'),
 };
 
-export class GetPostsCommand {
+export class GetPostsByUserCommand {
   constructor(
     public userId: string,
     public queryString?: SearchQueryParametersType,
   ) {}
 }
 
-@CommandHandler(GetPostsCommand)
+@CommandHandler(GetPostsByUserCommand)
 @LogClass({
   level: 'trace',
   loggerClassField: 'logger',
   active: () => process.env.NODE_ENV !== 'production',
 })
-export class GetPostsUseCase implements ICommandHandler<GetPostsCommand> {
+export class GetPostsByUserUseCase
+  implements ICommandHandler<GetPostsByUserCommand>
+{
   constructor(
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
@@ -44,22 +47,32 @@ export class GetPostsUseCase implements ICommandHandler<GetPostsCommand> {
     private readonly avatarStorageService: AvatarStorageService,
     private readonly postPhotoStorageService: PostPhotoStorageService,
   ) {
-    logger.setContext(GetPostsUseCase.name);
+    logger.setContext(GetPostsByUserUseCase.name);
   }
-  async execute(command: GetPostsCommand) {
+  async execute(command: GetPostsByUserCommand) {
     const { userId, queryString } = command;
     const notification = new Notification<Paginator<PostOutputDto[]>>(
       GetPostsCodes.Success,
     );
+
+    const user =
+      await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
+    if (!user) {
+      notification.setCode(GetPostsCodes.UserNotFound);
+      return notification;
+    }
     const sanitizationQuery = getSanitizationQuery(queryString);
     const offset =
       (sanitizationQuery.pageNumber - 1) * sanitizationQuery.pageSize;
+
     try {
-      const user =
-        await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
-      const avatarUrl = await this.avatarStorageService.getAvatarUrl(
-        user.userAvatar.avatarKey,
-      );
+      let avatarUrl;
+      if (user.userAvatar) {
+        avatarUrl = await this.avatarStorageService.getAvatarUrl(
+          user.userAvatar.avatarKey,
+        );
+      }
+
       const { posts, count } =
         await this.postsQueryRepository.getPostsWithPhotos(
           user.id,

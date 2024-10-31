@@ -14,28 +14,13 @@ export class PostsRepository {
     >,
   ) {}
 
-  public async addInfoAboutPhoto(dto: {
-    postId: PostPhoto['postId'];
-    photoKey: PostPhoto['photoKey'];
-    createdAt: PostPhoto['createdAt'];
-  }): Promise<void> {
-    await this.txHost.tx.postPhoto.create({
-      data: {
-        postId: dto.postId,
-        photoKey: dto.photoKey,
-        createdAt: dto.createdAt,
-      },
-    });
-  }
   public async addPost(dto: {
-    postId: UserPost['id'];
     userId: UserPost['userId'];
     createdAt: UserPost['createdAt'];
     description: UserPost['description'];
   }): Promise<UserPost> {
     return await this.txHost.tx.userPost.create({
       data: {
-        id: dto.postId,
         createdAt: dto.createdAt,
         userId: dto.userId,
         description: dto.description,
@@ -43,10 +28,17 @@ export class PostsRepository {
     });
   }
 
-  public async findPost(postId: UserPost['id']): Promise<UserPost | null> {
+  public async getPostWithPhotosById(postId: UserPost['id']): Promise<
+    {
+      postPhotos: PostPhoto[];
+    } & UserPost
+  > {
     return await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
+      },
+      include: {
+        postPhotos: true,
       },
     });
   }
