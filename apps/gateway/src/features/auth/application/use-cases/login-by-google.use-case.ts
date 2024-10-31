@@ -1,7 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IsBoolean, IsEmail, IsString, validateSync } from 'class-validator';
@@ -54,9 +54,11 @@ export class LoginByGoogleUseCase {
 
   public async execute(
     command: LoginByGoogleCommand,
-  ): Promise<Notification<UserId>> {
+  ): Promise<NotificationObject<UserId>> {
     const { googleId, googleEmail, googleEmailVerified, googleName } = command;
-    const notification = new Notification<UserId>(LoginByGoogleCodes.Success);
+    const notification = new NotificationObject<UserId>(
+      LoginByGoogleCodes.Success,
+    );
     if (!googleEmailVerified) {
       notification.setCode(LoginByGoogleCodes.GoogleEmailNotVerified);
       return notification;

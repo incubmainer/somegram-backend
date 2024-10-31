@@ -7,7 +7,7 @@ import {
   ValidationError,
 } from 'class-validator';
 
-import { Notification } from '../../../../common/domain/notification';
+import { NotificationObject } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { POST_CONSTRAINTS } from './add-post.use-case';
 
@@ -39,17 +39,21 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
   constructor(private readonly postsRepository: PostsRepository) {}
   async execute(
     command: UpdatePostCommand,
-  ): Promise<Notification<string> | Notification<null, ValidationError>> {
+  ): Promise<
+    NotificationObject<string> | NotificationObject<null, ValidationError>
+  > {
     const errors = validateSync(command);
     if (errors.length) {
-      const note = new Notification<null, ValidationError>(
+      const note = new NotificationObject<null, ValidationError>(
         UpdatePostCodes.ValidationCommandError,
       );
       note.addErrors(errors);
       return note;
     }
     const { postId, userId, description } = command;
-    const notification = new Notification<string>(UpdatePostCodes.Success);
+    const notification = new NotificationObject<string>(
+      UpdatePostCodes.Success,
+    );
     try {
       const post = await this.postsRepository.getPostWithPhotosById(postId);
       if (!post) {

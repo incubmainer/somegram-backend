@@ -10,7 +10,7 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecapchaService } from 'apps/gateway/src/common/utils/recapcha.service';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 
 export const RestorePasswordCodes = {
   Success: Symbol('success'),
@@ -54,8 +54,8 @@ export class RestorePasswordUseCase {
 
   public async execute(
     command: RestorePasswordCommand,
-  ): Promise<Notification<void>> {
-    const notification = new Notification(RestorePasswordCodes.Success);
+  ): Promise<NotificationObject<void>> {
+    const notification = new NotificationObject(RestorePasswordCodes.Success);
     const { email, recaptchaToken } = command;
     const isValidRecaptcha =
       await this.recapchaService.verifyRecaptchaToken(recaptchaToken);

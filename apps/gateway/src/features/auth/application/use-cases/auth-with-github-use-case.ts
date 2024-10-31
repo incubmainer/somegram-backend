@@ -4,7 +4,7 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { Notification } from '../../../../common/domain/notification';
+import { NotificationObject } from '../../../../common/domain/notification';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import {
   CustomLoggerService,
@@ -43,8 +43,12 @@ export class AuthWithGithubUseCase
   ) {
     logger.setContext(AuthWithGithubUseCase.name);
   }
-  async execute(command: AuthWithGithubCommand): Promise<Notification<UserId>> {
-    const notification = new Notification<UserId>(LoginWithGithubCodes.Success);
+  async execute(
+    command: AuthWithGithubCommand,
+  ): Promise<NotificationObject<UserId>> {
+    const notification = new NotificationObject<UserId>(
+      LoginWithGithubCodes.Success,
+    );
     const { user } = command;
     try {
       await this.txHost.withTransaction(async () => {

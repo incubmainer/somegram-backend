@@ -1,6 +1,7 @@
 import { User } from '@prisma/gateway';
 
 export class ProfileInfoOutputDto {
+  id: string;
   userName: string;
   email: string;
   firstName: string | null;
@@ -16,13 +17,12 @@ export class ProfileInfoOutputDto {
   constructor(data?: Partial<ProfileInfoOutputDto>) {
     Object.assign(this, data);
   }
-
-  addAvatar(url: string) {
-    this.avatar = { url };
-  }
 }
 
-export const userProfileInfoMapper = (user: User): ProfileInfoOutputDto => {
+export const userProfileInfoMapper = (
+  user: User,
+  avatarUrl?: string | null,
+): ProfileInfoOutputDto => {
   return new ProfileInfoOutputDto({
     email: user.email,
     userName: user.username,
@@ -32,5 +32,20 @@ export const userProfileInfoMapper = (user: User): ProfileInfoOutputDto => {
     about: user.about ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
+    avatar: avatarUrl ? { url: avatarUrl } : undefined,
+  });
+};
+
+export const userPublicProfileInfoMapper = (
+  user: User,
+  avatarUrl?: string | null,
+): ProfileInfoOutputDto => {
+  return new ProfileInfoOutputDto({
+    id: user.id,
+    userName: user.username,
+    about: user.about ?? null,
+    avatar: {
+      url: avatarUrl ? avatarUrl : null,
+    },
   });
 };

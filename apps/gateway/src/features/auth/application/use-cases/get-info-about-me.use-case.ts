@@ -6,7 +6,7 @@ import {
   LogClass,
 } from '../../../../../../../libs/custom-logger/src';
 import { MeOutputDto } from '../../api/dto/output-dto/me-output-dto';
-import { Notification } from '../../../../common/domain/notification';
+import { NotificationObject } from '../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 
 export const MeCodes = {
@@ -35,8 +35,8 @@ export class GetInfoAboutMeUseCase
   }
   async execute(
     command: GetInfoAboutMeCommand,
-  ): Promise<Notification<MeOutputDto>> {
-    const notification = new Notification<MeOutputDto>(MeCodes.Success);
+  ): Promise<NotificationObject<MeOutputDto>> {
+    const notification = new NotificationObject<MeOutputDto>(MeCodes.Success);
     console.log(command.userId);
     try {
       const user = await this.usersQueryRepository.getInfoAboutMe(

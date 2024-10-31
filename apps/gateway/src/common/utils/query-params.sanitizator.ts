@@ -1,9 +1,14 @@
-import { SearchQueryParametersType } from '../domain/query.types';
+import {
+  SearchQueryParametersType,
+  SortDirection,
+} from '../domain/query.types';
 
 const defaultSearchQueryParameters = {
   pageNumber: 1,
   pageSize: 8,
   maxPageSize: 100,
+  sortBy: 'createdAt',
+  sortDirection: 'desc' as SortDirection,
 };
 
 export const getSanitizationQuery = (
@@ -18,5 +23,10 @@ export const getSanitizationQuery = (
       query!.pageSize! <= defaultSearchQueryParameters.maxPageSize
         ? +query!.pageSize
         : defaultSearchQueryParameters.pageSize,
+    sortBy: query?.sortBy ? query.sortBy : defaultSearchQueryParameters.sortBy,
+    sortDirection:
+      query?.sortDirection && query.sortDirection.toLowerCase() === 'asc'
+        ? 'asc'
+        : defaultSearchQueryParameters.sortDirection,
   };
 };

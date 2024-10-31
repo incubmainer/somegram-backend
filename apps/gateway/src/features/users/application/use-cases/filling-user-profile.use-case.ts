@@ -7,7 +7,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { IsUsername } from '../../../auth/application/decorators/is-username';
 import { IsFirstName } from '../decorators/is-first-name';
 import { IsLastName } from '../decorators/is-last-name';
@@ -83,10 +83,12 @@ export class FillingUserProfileUseCase {
 
   public async execute(
     command: FillingUserProfileCommand,
-  ): Promise<Notification<null | User> | Notification<null, ValidationError>> {
+  ): Promise<
+    NotificationObject<null | User> | NotificationObject<null, ValidationError>
+  > {
     const errors = validateSync(command);
     if (errors.length) {
-      const note = new Notification<null, ValidationError>(
+      const note = new NotificationObject<null, ValidationError>(
         FillingUserProfileCodes.ValidationCommandError,
       );
       note.addErrors(errors);
@@ -102,7 +104,7 @@ export class FillingUserProfileUseCase {
       city,
       country,
     } = command;
-    const notification = new Notification<User | null>(
+    const notification = new NotificationObject<User | null>(
       FillingUserProfileCodes.Success,
     );
     try {

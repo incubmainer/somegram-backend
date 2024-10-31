@@ -1,10 +1,10 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 
-export function GetPostsSwagger() {
+export function GetPublicPostsSwagger() {
   return applyDecorators(
-    ApiTags('Posts'),
-    ApiOperation({ summary: 'Get user posts' }),
+    ApiTags('Public-Posts'),
+    ApiOperation({ summary: 'Get public posts' }),
     ApiQuery({
       name: 'pageNumber',
       required: false,
@@ -18,6 +18,23 @@ export function GetPostsSwagger() {
       description: 'Number of items per page',
       type: Number,
       example: 8,
+    }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      description:
+        'Sort by parameters. Available values: createdAt, updatedAt. Default value: createdAt',
+      type: String,
+      example: 'createdAt',
+    }),
+    ApiQuery({
+      name: 'sortDirection',
+      required: false,
+      description:
+        'Sort by desc or asc. Available values: asc, desc. Default value: desc',
+      type: String,
+      enum: ['asc', 'desc'],
+      example: 'desc',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -39,7 +56,7 @@ export function GetPostsSwagger() {
               ],
               postOwnerInfo: {
                 userId: 'd207dc73-8002-4804-a6d2-037b786eb568',
-                username: 'valek007943',
+                username: 'jphn_dou',
                 avatarUrl:
                   'http://serveroleg.ru:9000/somegram/users/d207dc73-8002-4804-a6d2-037b786eb568/avatars/66841f84-cec2-4ea8-a3fd-661f74dca54b.jpeg',
               },
@@ -47,10 +64,6 @@ export function GetPostsSwagger() {
           ],
         },
       },
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: 'User posts not found',
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
