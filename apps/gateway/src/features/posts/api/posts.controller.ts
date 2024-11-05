@@ -31,7 +31,7 @@ import {
   UpdatePostCommand,
 } from '../application/use-cases/update-post.use-case';
 import { UpdatePostSwagger } from './swagger/update-post.swagger';
-import { AddPostDto } from './dto/input-dto/add-post.dto';
+import { AddPostDto, FileDto } from './dto/input-dto/add-post.dto';
 import { DeletePostSwagger } from './swagger/delete-postswagger';
 import {
   DeletePostCodes,
@@ -71,9 +71,13 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
+    const uploadedFiles: FileDto[] = files.map(
+      (file) =>
+        new FileDto(file.originalname, file.size, file.mimetype, file.buffer),
+    );
     const addPostResult: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(
-        new AddPostCommand(userId, files, addPostDto.description),
+        new AddPostCommand(userId, uploadedFiles, addPostDto.description),
       );
     const addPostResultCode = addPostResult.getCode();
     let getPostResultCode;

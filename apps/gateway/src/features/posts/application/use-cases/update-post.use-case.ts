@@ -9,7 +9,7 @@ import {
 
 import { NotificationObject } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
-import { POST_CONSTRAINTS } from './add-post.use-case';
+import { POST_CONSTRAINTS } from '../../api/dto/input-dto/add-post.dto';
 
 export const UpdatePostCodes = {
   Success: Symbol('success'),
