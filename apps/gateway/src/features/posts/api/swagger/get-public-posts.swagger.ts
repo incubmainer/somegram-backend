@@ -46,7 +46,6 @@ export function GetPublicPostsSwagger() {
       description: 'Getting successful',
       schema: {
         example: {
-          page: 1,
           pageSize: 8,
           totalCount: 1,
           pagesCount: 1,
