@@ -171,15 +171,18 @@ export class PostsController {
       throw new InternalServerErrorException();
   }
 
-  @Get(':userId')
+  @Get(':userId/:endCursorPostId?')
   @HttpCode(HttpStatus.OK)
   @GetPostsSwagger()
   async getPostsByUser(
     @Param('userId') userId: string,
+    @Param('endCursorPostId') endCursorPostId?: string,
     @Query() query?: SearchQueryParametersType,
   ) {
     const result: NotificationObject<PostOutputDto[], ValidationError> =
-      await this.queryBus.execute(new GetPostsByUserQuery(userId, query));
+      await this.queryBus.execute(
+        new GetPostsByUserQuery(userId, query, endCursorPostId),
+      );
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {

@@ -15,9 +15,6 @@ export const getSanitizationQuery = (
   query?: SearchQueryParametersType,
 ): SearchQueryParametersType => {
   return {
-    pageNumber: !isNaN(query!.pageNumber!)
-      ? +query!.pageNumber
-      : defaultSearchQueryParameters.pageNumber,
     pageSize:
       !isNaN(query!.pageSize!) ||
       query!.pageSize! <= defaultSearchQueryParameters.maxPageSize

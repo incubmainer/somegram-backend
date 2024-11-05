@@ -24,7 +24,10 @@ export const GetPublicPostsCodes = {
 };
 
 export class GetPublicPostsByUserQuery {
-  constructor(public queryString?: SearchQueryParametersType) {}
+  constructor(
+    public queryString?: SearchQueryParametersType,
+    public endCursorPostId?: string,
+  ) {}
 }
 
 @QueryHandler(GetPublicPostsByUserQuery)
@@ -46,7 +49,7 @@ export class GetPublicPostsByUserUseCase
     logger.setContext(GetPublicPostsByUserUseCase.name);
   }
   async execute(command: GetPublicPostsByUserQuery) {
-    const { queryString } = command;
+    const { queryString, endCursorPostId } = command;
     const notification = new NotificationObject<Paginator<PostOutputDto[]>>(
       GetPublicPostsCodes.Success,
     );
@@ -54,7 +57,10 @@ export class GetPublicPostsByUserUseCase
     const sanitizationQuery = getSanitizationQuery(queryString);
     try {
       const { posts, count } =
-        await this.postsQueryRepository.getAllPostsWithPhotos(queryString);
+        await this.postsQueryRepository.getAllPostsWithPhotos(
+          queryString,
+          endCursorPostId,
+        );
 
       const mappedPosts = await Promise.all(
         posts.map(async (post) => {
@@ -81,7 +87,6 @@ export class GetPublicPostsByUserUseCase
       );
 
       const result = new Paginator<PostOutputDto[]>(
-        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

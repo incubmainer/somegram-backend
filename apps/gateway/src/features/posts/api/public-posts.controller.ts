@@ -29,6 +29,23 @@ import { GetPublicPostsSwagger } from './swagger/get-public-posts.swagger';
 @Controller('public-posts')
 export class PublicPostsController {
   constructor(private readonly queryBus: QueryBus) {}
+  @Get('all/:endCursorPostId?')
+  @GetPublicPostsSwagger()
+  @HttpCode(HttpStatus.OK)
+  async getPublicPosts(
+    @Query() query?: SearchQueryParametersType,
+    @Param('endCursorPostId') endCursorPostId?: string,
+  ) {
+    const result: NotificationObject<PostOutputDto, null> =
+      await this.queryBus.execute(
+        new GetPublicPostsByUserQuery(query, endCursorPostId),
+      );
+    const code = result.getCode();
+    if (code === GetPublicPostsCodes.Success) return result.getData();
+    if (code === GetPublicPostsCodes.TransactionError)
+      throw new InternalServerErrorException();
+  }
+
   @Get(':postId')
   @GetPublicPostSwagger()
   @HttpCode(HttpStatus.OK)
@@ -40,18 +57,6 @@ export class PublicPostsController {
     if (code === GetPostCodes.PostNotFound)
       throw new NotFoundException('Post not found');
     if (code === GetPostCodes.TransactionError)
-      throw new InternalServerErrorException();
-  }
-
-  @Get()
-  @GetPublicPostsSwagger()
-  @HttpCode(HttpStatus.OK)
-  async getPublicPosts(@Query() query?: SearchQueryParametersType) {
-    const result: NotificationObject<PostOutputDto, null> =
-      await this.queryBus.execute(new GetPublicPostsByUserQuery(query));
-    const code = result.getCode();
-    if (code === GetPublicPostsCodes.Success) return result.getData();
-    if (code === GetPublicPostsCodes.TransactionError)
       throw new InternalServerErrorException();
   }
 }

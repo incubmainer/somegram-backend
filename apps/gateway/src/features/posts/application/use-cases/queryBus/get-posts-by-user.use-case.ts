@@ -28,6 +28,7 @@ export class GetPostsByUserQuery {
   constructor(
     public userId: string,
     public queryString?: SearchQueryParametersType,
+    public endCursorPostId?: string,
   ) {}
 }
 
@@ -50,7 +51,7 @@ export class GetPostsByUserUseCase
     logger.setContext(GetPostsByUserUseCase.name);
   }
   async execute(command: GetPostsByUserQuery) {
-    const { userId, queryString } = command;
+    const { userId, queryString, endCursorPostId } = command;
     const notification = new NotificationObject<Paginator<PostOutputDto[]>>(
       GetPostsCodes.Success,
     );
@@ -74,6 +75,7 @@ export class GetPostsByUserUseCase
         await this.postsQueryRepository.getPostsWithPhotosByUser(
           user.id,
           queryString,
+          endCursorPostId,
         );
 
       const mappedPosts = posts.map((post) => {
@@ -88,7 +90,6 @@ export class GetPostsByUserUseCase
       });
 
       const result = new Paginator<PostOutputDto[]>(
-        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

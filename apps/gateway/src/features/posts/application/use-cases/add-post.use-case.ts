@@ -82,6 +82,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     logger.setContext(AddPostUseCase.name);
   }
   async execute(command: AddPostCommand) {
+    //TODO: вынести
     const { userId, files, description } = command;
     const errors = validateSync(command);
     for (const file of files) {

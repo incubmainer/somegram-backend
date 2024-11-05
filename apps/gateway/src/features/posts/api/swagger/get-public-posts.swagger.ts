@@ -1,16 +1,22 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiResponse,
+  ApiOperation,
+  ApiTags,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 
 export function GetPublicPostsSwagger() {
   return applyDecorators(
     ApiTags('Public-Posts'),
     ApiOperation({ summary: 'Get public posts' }),
-    ApiQuery({
-      name: 'pageNumber',
+    ApiParam({
+      name: 'endCursorPostId',
       required: false,
-      description: 'Page number',
-      type: Number,
-      example: 1,
+      description:
+        'ID of the last uploaded post. If endCursorPostId not provided, the first set of posts is returned.',
+      type: String,
     }),
     ApiQuery({
       name: 'pageSize',
