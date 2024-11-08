@@ -122,6 +122,16 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: GITHUB_CLIENT_SECRET
+             - name: PHOTO_SERVICE_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: PHOTO_SERVICE_HOST
+             - name: PHOTO_SERVICE_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: PHOTO_SERVICE_PORT
              - name: PORT
                valueFrom:
                  secretKeyRef:
