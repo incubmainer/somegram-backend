@@ -1,7 +1,4 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { IsString, validateSync, ValidationError } from 'class-validator';
 import {
   CustomLoggerService,
@@ -9,11 +6,10 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../infrastructure/avatar.repository';
 import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
@@ -43,12 +39,8 @@ export class UploadAvatarCommand {
 })
 export class UploadAvatarUseCase {
   constructor(
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-    private readonly avatarStorageService: AvatarStorageService,
-    private readonly avatarRepository: AvatarRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
     logger.setContext(UploadAvatarUseCase.name);
@@ -72,31 +64,16 @@ export class UploadAvatarUseCase {
     const notification = new NotificationObject<string>(
       UploadAvatarCodes.Success,
     );
-    const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
-      command.userId,
-    );
+    const user = await this.usersQueryRepository.findUserById(command.userId);
     if (!user) {
       notification.setCode(UploadAvatarCodes.UserNotFound);
       return notification;
     }
+
     try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-        const previousAvatarKey =
-          await this.avatarRepository.getAvatarKeyByUserId(userId);
-        if (previousAvatarKey) {
-          await this.avatarStorageService.deleteAvatarByKey(previousAvatarKey);
-        }
-        const urls = await this.avatarStorageService.saveAvatar(
-          userId,
-          file.buffer,
-          file.mimetype,
-        );
-        await this.avatarRepository.setCurrentAvatar({
-          userId,
-          avatarKey: urls.avatarKey,
-          createdAt: currentDate,
-        });
+      await this.photoServiceAdapter.uploadAvatar({
+        ownerId: userId,
+        file,
       });
     } catch (e) {
       this.logger.log('error', 'transaction error', { e });

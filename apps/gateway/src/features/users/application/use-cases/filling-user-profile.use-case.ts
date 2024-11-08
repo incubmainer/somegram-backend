@@ -108,9 +108,7 @@ export class FillingUserProfileUseCase {
       FillingUserProfileCodes.Success,
     );
     try {
-      const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
-        command.userId,
-      );
+      const user = await this.usersQueryRepository.findUserById(command.userId);
       if (!user) {
         notification.setCode(FillingUserProfileCodes.UserNotFound);
         return notification;

@@ -6,11 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/somegram-backend/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -18,13 +14,18 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json",
+    "test:e2e2": "jest --passWithNoTests --config ./apps/files/test/jest-e2e.json",
     "prisma:gen:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma",
     "prisma:gen-watch:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma --watch",
     "prisma:migrate-dev:gateway": "dotenv -e ./apps/gateway/.env.dev -- prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
     "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "cross-env NODE_ENV=development nest start gateway --watch",
-    "start:gateway": "NODE_ENV=production node dist/apps/gateway/main"
+    "start:gateway": "NODE_ENV=production node dist/apps/gateway/main",
+
+    "build:files": "nest build files",
+    "start:dev:files": "cross-env NODE_ENV=development nest start files --watch",
+    "start:files": "NODE_ENV=production node dist/apps/files/main"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.614.0",
@@ -37,6 +38,7 @@
     "@nestjs/cqrs": "^10.2.7",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/microservices": "^10.3.10",
+    "@nestjs/mongoose": "^10.1.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.3.10",
     "@nestjs/swagger": "^7.4.0",
@@ -48,6 +50,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
+    "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
     "nestjs-cls": "^4.3.0",
     "nodemailer": "^6.9.14",

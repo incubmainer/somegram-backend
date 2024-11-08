@@ -21,24 +21,16 @@ model User {
   securityDevices   SecurityDevices[]
   userGithubInfo    UserGithubInfo?
   googleInfo        UserGoogleInfo?
-  userAvatar        UserAvatar?
-  userPosts         UserPost[]
   firstName         String?
   lastName          String?
   dateOfBirth       DateTime?
   about             String?
   city              String?
   country           String?
+  UserPost          UserPost[]
 
   @@index([username])
   @@index([email])
-}
-
-model UserAvatar {
-  userId    String   @unique()
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  avatarKey String
-  createdAt DateTime
 }
 
 model UserGithubInfo {
@@ -83,25 +75,10 @@ model SecurityDevices {
   @@index([deviceId])
 }
 
-model PostPhoto {
-  id        String    @id @default(uuid())
-  userId    String
-  postId    String
-  photoKey  String
-  createdAt DateTime
-  UserPost  UserPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
-  width     Int
-  height    Int
-  size      Int
-
-  @@index([photoKey])
-}
-
 model UserPost {
-  id          String      @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
-  User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postPhotos  PostPhoto[]
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime
   updatedAt   DateTime?
   description String?

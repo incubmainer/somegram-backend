@@ -5,11 +5,10 @@ import {
 } from '@app/custom-logger';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { AvatarStorageService } from '../../../infrastructure/avatar-storage.service';
-import { AvatarRepository } from '../../../infrastructure/avatar.repository';
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { User } from '@prisma/gateway';
+import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 
 export const ProfileInfoCodes = {
   Success: Symbol('success'),
@@ -31,8 +30,7 @@ export class GetProfileInfoUseCase
 {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
-    private readonly avatarStorageService: AvatarStorageService,
-    private readonly avatarRepository: AvatarRepository,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
     @InjectCustomLoggerService()
     private readonly logger: CustomLoggerService,
   ) {
@@ -43,23 +41,17 @@ export class GetProfileInfoUseCase
   ): Promise<NotificationObject<{ user: User; avatarUrl: string | null }>> {
     const notification = new NotificationObject<{
       user: User;
-      avatarUrl: string;
+      avatarUrl: string | null;
     }>(ProfileInfoCodes.Success);
     try {
-      const user = await this.usersQueryRepository.getProfileInfo2(
+      const user = await this.usersQueryRepository.getProfileInfo(
         command.userId,
       );
       if (!user) {
         notification.setCode(ProfileInfoCodes.UserNotFound);
         return notification;
       }
-      const avatarKey = await this.avatarRepository.getAvatarKeyByUserId(
-        command.userId,
-      );
-      let avatarUrl = null;
-      if (avatarKey) {
-        avatarUrl = this.avatarStorageService.getAvatarUrl(avatarKey);
-      }
+      const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
       notification.setData({ user, avatarUrl });
     } catch (e) {
       this.logger.log('error', 'transaction error', { e });

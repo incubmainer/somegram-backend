@@ -2,8 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { NotificationObject } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
-import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
-import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 
 export const DeletePostCodes = {
   Success: Symbol('success'),
@@ -25,8 +24,7 @@ export class DeletePostCommand {
 export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
   constructor(
     private readonly postsRepository: PostsRepository,
-    private readonly postPhotoStorageService: PostPhotoStorageService,
-    private readonly postPhotoRepository: PostPhotoRepository,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {}
   async execute(
     command: DeletePostCommand,
@@ -35,7 +33,7 @@ export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
     const notification = new NotificationObject<string[]>(
       DeletePostCodes.Success,
     );
-    const post = await this.postsRepository.getPostWithPhotosById(postId);
+    const post = await this.postsRepository.getPostById(postId);
     if (!post) {
       notification.setCode(DeletePostCodes.PostNotFound);
       return notification;
@@ -45,13 +43,8 @@ export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
       return notification;
     }
     try {
-      if (post.postPhotos) {
-        for (const photo of post.postPhotos) {
-          await this.postPhotoStorageService.deletePhotoByKey(photo.photoKey);
-        }
-      }
-      await this.postPhotoRepository.deletePhotosInfo(postId);
-      await this.postsRepository.deletePost({
+      await this.photoServiceAdapter.deletePostPhotos(postId);
+      await await this.postsRepository.deletePost({
         postId,
       });
     } catch {

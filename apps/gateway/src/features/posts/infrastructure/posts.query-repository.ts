@@ -2,11 +2,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
 
-import {
-  PrismaClient as GatewayPrismaClient,
-  PostPhoto,
-  UserPost,
-} from '@prisma/gateway';
+import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
 
@@ -18,22 +14,15 @@ export class PostsQueryRepository {
     >,
   ) {}
 
-  public async getPostWithPhotosById(postId: UserPost['id']): Promise<
-    {
-      postPhotos: PostPhoto[];
-    } & UserPost
-  > {
+  public async getPostById(postId: UserPost['id']): Promise<UserPost> {
     return await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
       },
-      include: {
-        postPhotos: true,
-      },
     });
   }
 
-  public async getPostsWithPhotosByUser(
+  public async getPostsByUser(
     userId: UserPost['userId'],
     queryString?: SearchQueryParametersType,
     endCursorPostId?: string,
@@ -77,10 +66,8 @@ export class PostsQueryRepository {
           }
         : {}),
     };
-    console.log(where, endCursorPostId);
     const posts = await this.txHost.tx.userPost.findMany({
       where,
-      include: { postPhotos: true },
       orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
       take: sanitizationQuery.pageSize,
     });
@@ -95,7 +82,7 @@ export class PostsQueryRepository {
     };
   }
 
-  public async getAllPostsWithPhotos(
+  public async getAllPosts(
     queryString?: SearchQueryParametersType,
     endCursorPostId?: string,
   ) {
@@ -139,7 +126,6 @@ export class PostsQueryRepository {
     };
 
     const posts = await this.txHost.tx.userPost.findMany({
-      include: { postPhotos: true },
       orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
       where,
       take: sanitizationQuery.pageSize,

@@ -7,8 +7,6 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { AvatarStorageService } from '../../../../users/infrastructure/avatar-storage.service';
-import { PostPhotoStorageService } from '../../../infrastructure/post-photo-storage.service';
 import {
   PostOutputDto,
   postToOutputMapper,
@@ -17,6 +15,7 @@ import { Paginator } from 'apps/gateway/src/common/domain/paginator';
 import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
+import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 
 export const GetPublicPostsCodes = {
   Success: Symbol('success'),
@@ -43,8 +42,7 @@ export class GetPublicPostsByUserUseCase
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
-    private readonly avatarStorageService: AvatarStorageService,
-    private readonly postPhotoStorageService: PostPhotoStorageService,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
     logger.setContext(GetPublicPostsByUserUseCase.name);
   }
@@ -56,33 +54,23 @@ export class GetPublicPostsByUserUseCase
 
     const sanitizationQuery = getSanitizationQuery(queryString);
     try {
-      const { posts, count } =
-        await this.postsQueryRepository.getAllPostsWithPhotos(
-          queryString,
-          endCursorPostId,
-        );
+      const { posts, count } = await this.postsQueryRepository.getAllPosts(
+        queryString,
+        endCursorPostId,
+      );
 
       const mappedPosts = await Promise.all(
         posts.map(async (post) => {
-          const user =
-            await this.usersQueryRepository.findUserWithAvatarInfoById(
-              post.userId,
-            );
-          let avatarUrl = null;
-          if (user.userAvatar) {
-            avatarUrl = this.avatarStorageService.getAvatarUrl(
-              user.userAvatar.avatarKey,
-            );
-          }
-
-          return postToOutputMapper(
-            post,
-            user,
-            avatarUrl,
-            post.postPhotos.map((photo) =>
-              this.postPhotoStorageService.getPhotoUrl(photo.photoKey),
-            ),
+          const user = await this.usersQueryRepository.findUserById(
+            post.userId,
           );
+          const avatarUrl = await this.photoServiceAdapter.getAvatar(
+            post.userId,
+          );
+          const postPhotos = await this.photoServiceAdapter.getPostPhotos(
+            post.id,
+          );
+          return postToOutputMapper(post, user, avatarUrl, postPhotos);
         }),
       );
 
