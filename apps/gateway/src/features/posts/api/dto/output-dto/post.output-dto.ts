@@ -9,7 +9,6 @@ export class PostOutputDto {
   postOwnerInfo: {
     userId: string;
     username: string;
-    about: string;
     avatarUrl: string;
   };
 
@@ -40,7 +39,6 @@ export const postToOutputMapper = (
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
-      about: user.about,
       avatarUrl: avatarUrl,
     },
   });

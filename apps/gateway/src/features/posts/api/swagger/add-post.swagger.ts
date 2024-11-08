@@ -6,7 +6,7 @@ import {
   ApiBody,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { POST_CONSTRAINTS } from '../../application/use-cases/add-post.use-case';
+import { POST_CONSTRAINTS } from '../dto/input-dto/add-post.dto';
 
 export function AddPostSwagger() {
   return applyDecorators(

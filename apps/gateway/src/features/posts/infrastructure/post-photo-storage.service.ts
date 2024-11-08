@@ -38,8 +38,7 @@ export class PostPhotoStorageService {
 
   public getPhotoUrl(photoKey: string): string {
     const publicUrl = this.fileStorageService.getPublicUrl();
-    const bucketName = this.fileStorageService.getBucketName();
-    return `${publicUrl}/${bucketName}/${photoKey}`;
+    return `${publicUrl}/${photoKey}`;
   }
 
   public async deletePhotoByKey(photoKey: string) {

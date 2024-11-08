@@ -1,16 +1,22 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiResponse,
+  ApiOperation,
+  ApiTags,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 
-export function GetPostsSwagger() {
+export function GetPublicPostsSwagger() {
   return applyDecorators(
-    ApiTags('Posts'),
-    ApiOperation({ summary: 'Get user posts' }),
-    ApiQuery({
-      name: 'pageNumber',
+    ApiTags('Public-Posts'),
+    ApiOperation({ summary: 'Get public posts' }),
+    ApiParam({
+      name: 'endCursorPostId',
       required: false,
-      description: 'Page number',
-      type: Number,
-      example: 1,
+      description:
+        'ID of the last uploaded post. If endCursorPostId not provided, the first set of posts is returned.',
+      type: String,
     }),
     ApiQuery({
       name: 'pageSize',
@@ -19,12 +25,27 @@ export function GetPostsSwagger() {
       type: Number,
       example: 8,
     }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      description:
+        'Sort by parameters. Available values: createdAt, updatedAt. Default value: createdAt',
+      type: String,
+      example: 'createdAt',
+    }),
+    ApiQuery({
+      name: 'sortDirection',
+      required: false,
+      description: 'Sort by desc or asc. Default value: desc',
+      type: String,
+      enum: ['asc', 'desc'],
+      example: 'desc',
+    }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'Getting successful',
       schema: {
         example: {
-          page: 1,
           pageSize: 8,
           totalCount: 1,
           pagesCount: 1,
@@ -39,7 +60,7 @@ export function GetPostsSwagger() {
               ],
               postOwnerInfo: {
                 userId: 'd207dc73-8002-4804-a6d2-037b786eb568',
-                username: 'valek007943',
+                username: 'jphn_dou',
                 avatarUrl:
                   'http://serveroleg.ru:9000/somegram/users/d207dc73-8002-4804-a6d2-037b786eb568/avatars/66841f84-cec2-4ea8-a3fd-661f74dca54b.jpeg',
               },
@@ -47,10 +68,6 @@ export function GetPostsSwagger() {
           ],
         },
       },
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: 'User posts not found',
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,

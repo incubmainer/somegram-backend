@@ -17,21 +17,21 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { ValidationError } from 'class-validator';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { AddPostSwagger } from './swagger/add-post.swagger';
 import {
   UpdatePostCodes,
   UpdatePostCommand,
 } from '../application/use-cases/update-post.use-case';
 import { UpdatePostSwagger } from './swagger/update-post.swagger';
-import { AddPostDto } from './dto/input-dto/add-post.dto';
+import { AddPostDto, FileDto } from './dto/input-dto/add-post.dto';
 import { DeletePostSwagger } from './swagger/delete-postswagger';
 import {
   DeletePostCodes,
@@ -44,35 +44,23 @@ import {
 import { UpdatePostDto } from './dto/input-dto/update-post.dto';
 import {
   GetPostCodes,
-  GetPostCommand,
-} from '../application/use-cases/get-public-post.use-case';
+  GetPostQuery,
+} from '../application/use-cases/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-import { GetPostsSwagger } from './swagger/get-posts.swagger';
+import { GetPostsSwagger } from './swagger/get-user-posts.swagger';
 import {
   GetPostsCodes,
-  GetPostsByUserCommand,
-} from '../application/use-cases/get-posts-by-user.use-case';
+  GetPostsByUserQuery,
+} from '../application/use-cases/queryBus/get-posts-by-user.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 
 @ApiTags('Posts')
 @Controller('posts')
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
 export class PostsController {
   constructor(
     private readonly commandBus: CommandBus,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
-  ) {
-    logger.setContext(PostsController.name);
-  }
+    private readonly queryBus: QueryBus,
+  ) {}
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
   @AddPostSwagger()
@@ -83,16 +71,20 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Body() addPostDto: AddPostDto,
   ) {
-    const addPostResult: Notification<string, ValidationError> =
+    const uploadedFiles: FileDto[] = files.map(
+      (file) =>
+        new FileDto(file.originalname, file.size, file.mimetype, file.buffer),
+    );
+    const addPostResult: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(
-        new AddPostCommand(userId, files, addPostDto.description),
+        new AddPostCommand(userId, uploadedFiles, addPostDto.description),
       );
     const addPostResultCode = addPostResult.getCode();
     let getPostResultCode;
     if (addPostResultCode === AddPostCodes.Success) {
       const postId = addPostResult.getData();
-      const getPostResult = await this.commandBus.execute(
-        new GetPostCommand(postId),
+      const getPostResult = await this.queryBus.execute(
+        new GetPostQuery(postId),
       );
       getPostResultCode = getPostResult.getCode();
       if (getPostResultCode === GetPostCodes.Success) {
@@ -114,7 +106,8 @@ export class PostsController {
 
     if (
       addPostResultCode === AddPostCodes.TransactionError ||
-      getPostResultCode === GetPostCodes.TransactionError
+      getPostResultCode === GetPostCodes.TransactionError ||
+      getPostResultCode === GetPostCodes.PostNotFound
     ) {
       throw new InternalServerErrorException();
     }
@@ -129,7 +122,7 @@ export class PostsController {
     @Param('postId') postId: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    const result: Notification<string, ValidationError> =
+    const result: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(
         new UpdatePostCommand(postId, userId, updatePostDto.description),
       );
@@ -165,7 +158,7 @@ export class PostsController {
     @CurrentUserId() userId: string,
     @Param('postId') postId: string,
   ) {
-    const result: Notification<string, ValidationError> =
+    const result: NotificationObject<string, ValidationError> =
       await this.commandBus.execute(new DeletePostCommand(postId, userId));
 
     const code = result.getCode();
@@ -182,15 +175,18 @@ export class PostsController {
       throw new InternalServerErrorException();
   }
 
-  @Get(':userId')
+  @Get(':userId/:endCursorPostId?')
   @HttpCode(HttpStatus.OK)
   @GetPostsSwagger()
   async getPostsByUser(
     @Param('userId') userId: string,
+    @Param('endCursorPostId') endCursorPostId?: string,
     @Query() query?: SearchQueryParametersType,
   ) {
-    const result: Notification<PostOutputDto[], ValidationError> =
-      await this.commandBus.execute(new GetPostsByUserCommand(userId, query));
+    const result: NotificationObject<PostOutputDto[], ValidationError> =
+      await this.queryBus.execute(
+        new GetPostsByUserQuery(userId, query, endCursorPostId),
+      );
 
     const code = result.getCode();
     if (code === GetPostsCodes.Success) {

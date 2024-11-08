@@ -13,16 +13,19 @@ import { UsersQueryRepository } from '../users/infrastructure/users.query-reposi
 import { PostsQueryRepository } from './infrastructure/posts.query-repository';
 import { AvatarRepository } from '../users/infrastructure/avatar.repository';
 import { AvatarStorageService } from '../users/infrastructure/avatar-storage.service';
-import { GetPostUseCase } from './application/use-cases/get-public-post.use-case';
-import { GetPostsByUserUseCase } from './application/use-cases/get-posts-by-user.use-case';
+import { GetPostUseCase } from './application/use-cases/queryBus/get-public-post.use-case';
+import { GetPostsByUserUseCase } from './application/use-cases/queryBus/get-posts-by-user.use-case';
 import { PostPhotoRepository } from './infrastructure/post-photos.repository';
 import { AddPostUseCase } from './application/use-cases/add-post.use-case';
+import { PublicPostsController } from './api/public-posts.controller';
+import { GetPublicPostsByUserUseCase } from './application/use-cases/queryBus/get-public-posts.use-case';
 
 const useCases = [
   UpdatePostUseCase,
   DeletePostUseCase,
   GetPostUseCase,
   GetPostsByUserUseCase,
+  GetPublicPostsByUserUseCase,
   AddPostUseCase,
 ];
 const repositories = [
@@ -42,7 +45,7 @@ const services = [
 
 @Module({
   imports: [CqrsModule, ClsTransactionalModule],
-  controllers: [PostsController],
+  controllers: [PostsController, PublicPostsController],
   providers: [...services, ...useCases, ...repositories],
   exports: [],
 })

@@ -10,7 +10,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigService } from '@nestjs/config';
@@ -61,9 +61,9 @@ export class RegistrationEmailResendingUseCase {
 
   public async execute(
     command: RegistrationEmailResendingCommand,
-  ): Promise<Notification<void>> {
+  ): Promise<NotificationObject<void>> {
     this.logger.log('info', 'Registration email resending', {});
-    const notification = new Notification(
+    const notification = new NotificationObject(
       RegistrationEmailResendingCodes.Success,
     );
     const { token, html } = command;

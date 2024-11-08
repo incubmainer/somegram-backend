@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MaxLength } from 'class-validator';
-
-import { POST_CONSTRAINTS } from '../../../application/use-cases/add-post.use-case';
+import { POST_CONSTRAINTS } from './add-post.dto';
 
 export class UpdatePostDto {
   @ApiProperty({

@@ -10,7 +10,7 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
@@ -71,9 +71,9 @@ export class RegistrationUseCase {
 
   public async execute(
     command: RegistrationCommand,
-  ): Promise<Notification<void>> {
+  ): Promise<NotificationObject<void>> {
     this.logger.log('info', 'registration command', {});
-    const notification = new Notification(RegistrationCodes.Success);
+    const notification = new NotificationObject(RegistrationCodes.Success);
     const { username, email, password, html } = command;
     try {
       await this.txHost.withTransaction(async () => {

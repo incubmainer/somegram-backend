@@ -1,7 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { AvatarStorageService } from '../../infrastructure/avatar-storage.service';
 import { AvatarRepository } from '../../infrastructure/avatar.repository';
@@ -46,9 +46,11 @@ export class DeleteAvatarUseCase {
 
   public async execute(
     command: DeleteAvatarCommand,
-  ): Promise<Notification<null | string>> {
+  ): Promise<NotificationObject<null | string>> {
     const { userId } = command;
-    const notification = new Notification<string>(DeleteAvatarCodes.Success);
+    const notification = new NotificationObject<string>(
+      DeleteAvatarCodes.Success,
+    );
     const user = await this.usersQueryRepository.findUserWithAvatarInfoById(
       command.userId,
     );

@@ -19,7 +19,7 @@ describe('GatewayController (e2e)', () => {
     await app.close();
   });
 
-  it('/ (GET)', async () => {
+  it('/ (POST)', async () => {
     await request(app.getHttpServer()).post('/auth/registration').send({
       email: 'some@mail.com',
       password: 'abcABC123+',

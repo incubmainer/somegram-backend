@@ -53,8 +53,7 @@ export class AvatarStorageService {
 
   public getAvatarUrl(avatarKey: string): string {
     const publicUrl = this.fileStorageService.getPublicUrl();
-    const bucketName = this.fileStorageService.getBucketName();
-    return `${publicUrl}/${bucketName}/${avatarKey}`;
+    return `${publicUrl}/${avatarKey}`;
   }
 
   public async deleteAvatarByKey(

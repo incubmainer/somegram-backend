@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsOptional,
   IsString,
@@ -20,18 +21,16 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { UnauthorizedException } from '@nestjs/common';
 
-import { Notification } from '../../../../common/domain/notification';
+import { NotificationObject } from '../../../../common/domain/notification';
 import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
 import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { PostsRepository } from '../../infrastructure/posts.repository';
+import {
+  FileDto,
+  POST_CONSTRAINTS,
+} from '../../api/dto/input-dto/add-post.dto';
 
-export const POST_CONSTRAINTS = {
-  MAX_PHOTO_COUNT: 10,
-  MAX_PHOTO_SIZE: 20,
-  DESCRIPTION_MAX_LENGTH: 500,
-  ALLOWED_MIMETYPES: ['image/jpeg', 'image/png'],
-};
 const TRANSACTION_TIMEOUT = 50000; //necessary to wait upload all files wihtout timeout error
 
 export const AddPostCodes = {
@@ -43,19 +42,16 @@ export const AddPostCodes = {
 export class AddPostCommand {
   public readonly userId: string;
   @IsArray()
+  @ArrayMinSize(POST_CONSTRAINTS.MIN_PHOTO_COUNT)
   @ArrayMaxSize(POST_CONSTRAINTS.MAX_PHOTO_COUNT)
   @ValidateNested({ each: true })
-  public readonly files: Express.Multer.File[];
+  public readonly files: FileDto[];
 
-  @IsOptional()
   @IsString()
   @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
+  @IsOptional()
   public readonly description?: string;
-  constructor(
-    userId: string,
-    files: Express.Multer.File[],
-    description?: string,
-  ) {
+  constructor(userId: string, files: FileDto[], description?: string) {
     this.userId = userId;
     this.files = files;
     this.description = description;
@@ -84,26 +80,14 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
   async execute(command: AddPostCommand) {
     const { userId, files, description } = command;
     const errors = validateSync(command);
-    for (const file of files) {
-      if (file.size > POST_CONSTRAINTS.MAX_PHOTO_SIZE * 1024 * 1024) {
-        errors.push({
-          property: `${file.originalname}`,
-          constraints: {
-            fileSize: `File size must not exceed ${POST_CONSTRAINTS.MAX_PHOTO_SIZE} MB`,
-          },
-        });
-      }
-      if (!POST_CONSTRAINTS.ALLOWED_MIMETYPES.includes(file.mimetype)) {
-        errors.push({
-          property: `${file.originalname}`,
-          constraints: {
-            memetype: `Mimetype must be one of the following: ${POST_CONSTRAINTS.ALLOWED_MIMETYPES.join(', ')}`,
-          },
-        });
+    for (const file of command.files) {
+      const fileErrors = validateSync(file);
+      if (fileErrors.length) {
+        errors.push(...fileErrors);
       }
     }
     if (errors.length) {
-      const notification = new Notification<null, ValidationError>(
+      const notification = new NotificationObject<null, ValidationError>(
         AddPostCodes.ValidationCommandError,
       );
       notification.addErrors(errors);
@@ -115,7 +99,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       throw new UnauthorizedException();
     }
 
-    const notification = new Notification<string>(AddPostCodes.Success);
+    const notification = new NotificationObject<string>(AddPostCodes.Success);
     try {
       await this.txHost.withTransaction(
         { timeout: TRANSACTION_TIMEOUT },
@@ -124,7 +108,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
           const post = await this.postsRepository.addPost({
             userId,
             createdAt,
-            description,
+            description: description ? description : null,
           });
 
           for (const file of files) {

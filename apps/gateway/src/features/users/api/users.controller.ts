@@ -15,7 +15,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { UploadAvatarSwagger } from './swagger/upload-avatar.swagger';
@@ -25,7 +25,7 @@ import {
   UploadAvatarCodes,
   UploadAvatarCommand,
 } from '../application/use-cases/upload-avatar.use-case';
-import { Notification } from 'apps/gateway/src/common/domain/notification';
+import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { FillProfileInputDto } from './dto/input-dto/fill-profile.input-dto';
 import {
   FillingUserProfileCodes,
@@ -42,16 +42,18 @@ import {
   ProfileInfoOutputDto,
   userProfileInfoMapper,
 } from './dto/output-dto/profile-info-output-dto';
-import {
-  GetProfileInfoCommand,
-  ProfileInfoCodes,
-} from '../application/use-cases/get-profile-info.use-case';
+
 import { ProfileInfoSwagger } from './swagger/profile-info.swagger';
 import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
 import {
   DeleteAvatarCodes,
   DeleteAvatarCommand,
 } from '../application/use-cases/delete-avatar.use-case';
+import {
+  GetProfileInfoQuery,
+  ProfileInfoCodes,
+} from '../application/use-cases/queryBus/get-profile-info.use-case';
+import { User } from '@prisma/gateway';
 
 @ApiTags('Users')
 @Controller('users')
@@ -63,6 +65,7 @@ import {
 export class UsersController {
   constructor(
     private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
   ) {
     logger.setContext(UsersController.name);
@@ -72,15 +75,18 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   async gerProfileInfo(@CurrentUserId() userId: string) {
     this.logger.log('info', 'start profile info request', {});
-    const notification: Notification<ProfileInfoOutputDto> =
-      await this.commandBus.execute(new GetProfileInfoCommand(userId));
+    const notification: NotificationObject<{
+      user: User;
+      avatarUrl: string | null;
+    }> = await this.queryBus.execute(new GetProfileInfoQuery(userId));
     const code = notification.getCode();
     if (code === ProfileInfoCodes.UserNotFound)
       throw new UnauthorizedException();
     if (code === ProfileInfoCodes.TransactionError) {
       throw new InternalServerErrorException();
     }
-    const outputUser = notification.getData();
+    const { user, avatarUrl } = notification.getData();
+    const outputUser = userProfileInfoMapper(user, avatarUrl);
     return outputUser;
   }
 
@@ -94,7 +100,7 @@ export class UsersController {
     @CurrentUserId() userId: string,
   ) {
     this.logger.log('info', 'start upload avatar request', {});
-    const result: Notification<null, ValidationError> =
+    const result: NotificationObject<null, ValidationError> =
       await this.commandBus.execute(new UploadAvatarCommand(userId, file));
     const code = result.getCode();
     if (code === UploadAvatarCodes.Success) {
@@ -125,18 +131,19 @@ export class UsersController {
     @Body() fillProfileDto: FillProfileInputDto,
   ) {
     this.logger.log('info', 'start profile fill info request', {});
-    const command = new FillingUserProfileCommand(
-      userId,
-      fillProfileDto.userName,
-      fillProfileDto.firstName,
-      fillProfileDto.lastName,
-      fillProfileDto.dateOfBirth,
-      fillProfileDto.about,
-      fillProfileDto.city,
-      fillProfileDto.country,
-    );
-    const result: Notification<null, ValidationError> =
-      await this.commandBus.execute(command);
+    const result: NotificationObject<null, ValidationError> =
+      await this.commandBus.execute(
+        new FillingUserProfileCommand(
+          userId,
+          fillProfileDto.userName,
+          fillProfileDto.firstName,
+          fillProfileDto.lastName,
+          fillProfileDto.dateOfBirth,
+          fillProfileDto.about,
+          fillProfileDto.city,
+          fillProfileDto.country,
+        ),
+      );
     const code = result.getCode();
     if (code === FillingUserProfileCodes.Success) {
       const data = result.getData();
@@ -170,7 +177,7 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUserAvatar(@CurrentUserId() userId: string) {
     this.logger.log('info', 'start delete avatar request', {});
-    const notification: Notification<ProfileInfoOutputDto> =
+    const notification: NotificationObject<ProfileInfoOutputDto> =
       await this.commandBus.execute(new DeleteAvatarCommand(userId));
     const code = notification.getCode();
     if (code === DeleteAvatarCodes.Success) return;
