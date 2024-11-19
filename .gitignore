@@ -43,6 +43,7 @@ lerna-debug.log*
 .env.local
 apps/gateway/.env.dev
 apps/files/.env.dev
+apps/payments/.env.dev
 
 # temp directory
 .temp

@@ -16,16 +16,19 @@
     "test:e2e": "jest --passWithNoTests --config ./apps/gateway/test/jest-e2e.json",
     "test:e2e2": "jest --passWithNoTests --config ./apps/files/test/jest-e2e.json",
     "prisma:gen:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma",
-    "prisma:gen-watch:gateway": "prisma generate --schema prisma/gateway/gateway-schema.prisma --watch",
+    "prisma:gen:payments": "prisma generate --schema prisma/payments/payments-schema.prisma",
     "prisma:migrate-dev:gateway": "dotenv -e ./apps/gateway/.env.dev -- prisma migrate dev --schema prisma/gateway/gateway-schema.prisma",
+    "prisma:migrate-dev:payments": "dotenv -e ./apps/payments/.env.dev -- prisma migrate dev --schema prisma/payments/payments-schema.prisma",
     "prisma:migrate-deploy:gateway": "prisma migrate deploy --schema prisma/gateway/gateway-schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "cross-env NODE_ENV=development nest start gateway --watch",
     "start:gateway": "NODE_ENV=production node dist/apps/gateway/main",
-
     "build:files": "nest build files",
     "start:dev:files": "cross-env NODE_ENV=development nest start files --watch",
-    "start:files": "NODE_ENV=production node dist/apps/files/main"
+    "start:files": "NODE_ENV=production node dist/apps/files/main",
+    "build:payments": "yarn prisma:gen:payments && nest build payments",
+    "start:dev:payments": "cross-env NODE_ENV=development nest start payments --watch",
+    "start:payments": "NODE_ENV=production node dist/apps/payments/main"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.614.0",

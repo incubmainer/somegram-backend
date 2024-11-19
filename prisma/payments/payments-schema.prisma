@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/payments"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PAYMENTS_DATABASE_URL")
+}
+
+model Orders {
+  id                  String              @id @default(uuid())
+  userId              String
+  subscriptionType    String
+  price               Int
+  paymentTransactions PaymentTransactions @relation(fields: [paymentId], references: [id])
+  paymentId           String              @unique
+  createdAt           DateTime
+  updatedAt           DateTime?
+
+  @@index([userId])
+}
+
+model PaymentTransactions {
+  id            String    @id @default(uuid())
+  price         Int
+  paymentSystem String
+  status        String
+  createdAt     DateTime
+  updatedAt     DateTime?
+
+  Orders Orders?
+}
