@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient as PaymentsPrismaClient } from '@prisma/gateway';
+import { PrismaClient as PaymentsPrismaClient } from '@prisma/payments';
 
 export const PaymentsPrismaServiceToken = Symbol('PaymentsPrismaServiceToken');
 

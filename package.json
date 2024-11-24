@@ -28,7 +28,8 @@
     "start:files": "NODE_ENV=production node dist/apps/files/main",
     "build:payments": "yarn prisma:gen:payments && nest build payments",
     "start:dev:payments": "cross-env NODE_ENV=development nest start payments --watch",
-    "start:payments": "NODE_ENV=production node dist/apps/payments/main"
+    "start:payments": "NODE_ENV=production node dist/apps/payments/main",
+    "ngrok:connect": "ngrok http 3000"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.614.0",
@@ -50,12 +51,14 @@
     "@types/passport-github2": "^1.2.9",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@types/stripe": "^8.0.417",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
     "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
     "nestjs-cls": "^4.3.0",
+    "ngrok": "^5.0.0-beta.2",
     "nodemailer": "^6.9.14",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
@@ -67,6 +70,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "sharp": "^0.33.5",
+    "stripe": "^17.3.1",
     "uuid": "^10.0.0",
     "winston": "^3.13.1",
     "winston-transport": "^4.7.1"

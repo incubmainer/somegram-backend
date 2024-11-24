@@ -22,6 +22,26 @@ spec:
              - containerPort: PORT_CONTAINER
 
            env:
+             - name: STRIPE_SIGNATURE_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: some-payments-service-production-config-secret
+                   key: STRIPE_SIGNATURE_SECRET
+             - name: PAYMENTS_SERVICE_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: some-payments-service-production-config-secret
+                   key: PAYMENTS_SERVICE_HOST
+             - name: PAYMENTS_SERVICE_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: some-payments-service-production-config-secret
+                   key: PAYMENTS_SERVICE_PORT
+             - name: PAYMENTS_DATABASE_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: some-payments-service-production-config-secret
+                   key: PAYMENTS_DATABASE_URL
              - name: STRIPE_API_SECRET_KEY
                valueFrom:
                  secretKeyRef:
