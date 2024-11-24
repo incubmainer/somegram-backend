@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerConfig } from './common/config/configs/logger.config';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
+import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
 
 export const requestId = 'reduestId';
 
@@ -37,6 +38,7 @@ export const requestId = 'reduestId';
     AuthModule,
     UsersModule,
     PostsModule,
+    SubscriptionsModule,
     AlsModule.forRoot({ isGlobal: true }),
     RequestsModule.forRootAsync({
       useFactory: (als: AlsService) => {
