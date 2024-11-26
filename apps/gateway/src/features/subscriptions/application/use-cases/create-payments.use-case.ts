@@ -47,7 +47,11 @@ export class CreatePaymentUseCase
         throw new UnauthorizedException();
       }
       const result = await this.paymentsServiceAdapter.createSubscription({
-        userId: command.userId,
+        userInfo: {
+          userId: command.userId,
+          email: user.email,
+          userName: user.username,
+        },
         createSubscriptionDto: command.createSubscriptionDto,
       });
       notification.setData(result);
