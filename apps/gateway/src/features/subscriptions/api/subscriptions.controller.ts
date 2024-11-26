@@ -76,4 +76,16 @@ export class SubscriptionsController {
       signatureHeader,
     });
   }
+
+  @Post('canceled-auto-renewal')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async canceledAutoRenewal(@CurrentUserId() userId: string) {
+    // const result: NotificationObject<string, ValidationError> =
+    //   await this.commandBus.execute();
+    // const code = result.getCode();
+    // if (code === CreatePaymentCodes.Success) {
+    //   return true;
+    // }н
+  }
 }

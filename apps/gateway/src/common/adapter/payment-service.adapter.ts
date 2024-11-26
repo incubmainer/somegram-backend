@@ -21,7 +21,11 @@ export class PaymentsServiceAdapter {
   ) {}
 
   async createSubscription(payload: {
-    userId: string;
+    userInfo: {
+      userId: string;
+      email: string;
+      userName: string;
+    };
     createSubscriptionDto: CreateSubscriptionDto;
   }) {
     try {
