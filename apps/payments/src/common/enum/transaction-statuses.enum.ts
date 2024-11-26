@@ -1,4 +1,4 @@
 export enum TransactionStatuses {
-  PENDING = 'Pending',
-  COMPTITED = 'Complited',
+  PaymentSucceeded = 'payment_succeeded',
+  PaymentFailed = 'payment_failed',
 }

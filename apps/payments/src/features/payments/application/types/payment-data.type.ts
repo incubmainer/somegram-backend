@@ -3,6 +3,12 @@ import {
   PaymentTime,
 } from '../../../../../../../libs/common/enums/payments';
 
+export type UserInfo = {
+  userId: string;
+  email: string;
+  userName: string;
+};
+
 export type PaymentData = {
   successFrontendUrl: string;
   cancelFrontendUrl: string;
@@ -10,11 +16,11 @@ export type PaymentData = {
     name: string;
     description: string;
   };
-  totalPrice: number;
+  price: number;
   paymentCount: number;
   paymentSystem: PaymentSystem;
   typeSubscription: PaymentTime;
   autoRenewal: boolean;
-  userId: string;
-  paymentId: string | null;
+  userInfo: UserInfo;
+  orderId: string | null;
 };

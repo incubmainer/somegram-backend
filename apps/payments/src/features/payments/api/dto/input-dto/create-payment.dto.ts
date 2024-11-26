@@ -6,6 +6,6 @@ import {
 export class CreatePaymentDto {
   typeSubscription: PaymentTime;
   paymentSystem: PaymentSystem;
-  paymentCount: number;
-  autoRenewal: boolean;
+  // paymentCount: number;
+  // autoRenewal: boolean;
 }

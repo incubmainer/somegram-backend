@@ -4,14 +4,13 @@ import { StripeAdapter } from '../adapters/stripe.adapter';
 
 export class PaymentManager {
   constructor() {}
-
-  async makePayment(payment: PaymentData) {
+  async createAutoPayment(payment: PaymentData) {
     if (payment.paymentSystem === PaymentSystem.PAYPAL) {
     }
 
     if (payment.paymentSystem === PaymentSystem.STRIPE) {
       const stripeAdapter = new StripeAdapter();
-      return await stripeAdapter.createPayment(payment);
+      return await stripeAdapter.createAutoPayment(payment);
     }
   }
 }

@@ -10,9 +10,9 @@ import { CreatePaymentUseCase } from './features/payments/application/use-cases/
 import { PaymentManager } from './common/managers/payment.manager';
 import { PaymentsRepository } from './features/payments/infrastructure/payments.repository';
 import { StripeAdapter } from './common/adapters/stripe.adapter';
-import { SripeWebhookUseCase } from './features/payments/application/use-cases/stripe-webhook.use-case';
+import { StripeWebhookUseCase } from './features/payments/application/use-cases/stripe-webhook.use-case';
 
-const useCases = [CreatePaymentUseCase, SripeWebhookUseCase];
+const useCases = [CreatePaymentUseCase, StripeWebhookUseCase];
 
 const repositories = [PaymentsRepository];
 
