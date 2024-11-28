@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerConfig } from './common/config/configs/logger.config';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
+import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
 
 export const requestId = 'reduestId';
 
@@ -82,6 +83,7 @@ export const requestId = 'reduestId';
       },
       inject: [AlsService, ConfigService],
     }),
+    CountryCatalogModule,
   ],
   controllers: [],
   providers: [],
