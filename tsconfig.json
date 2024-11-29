@@ -41,6 +41,12 @@
       ],
       "@app/requests/*": [
         "libs/requests/src/*"
+      ],
+      "@app/paginator": [
+        "libs/paginator/src"
+      ],
+      "@app/paginator/*": [
+        "libs/paginator/src/*"
       ]
     }
   }

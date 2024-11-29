@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/files/tsconfig.app.json"
       }
+    },
+    "paginator": {
+      "type": "library",
+      "root": "libs/paginator",
+      "entryFile": "index",
+      "sourceRoot": "libs/paginator/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/paginator/tsconfig.lib.json"
+      }
     }
   }
 }
