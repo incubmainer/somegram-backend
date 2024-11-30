@@ -22,7 +22,6 @@
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "cross-env NODE_ENV=development nest start gateway --watch",
     "start:gateway": "NODE_ENV=production node dist/apps/gateway/main",
-
     "build:files": "nest build files",
     "start:dev:files": "cross-env NODE_ENV=development nest start files --watch",
     "start:files": "NODE_ENV=production node dist/apps/files/main"
@@ -119,7 +118,8 @@
       "^@app/databases(|/.*)$": "<rootDir>/libs/databases/src/$1",
       "^@app/als(|/.*)$": "<rootDir>/libs/als/src/$1",
       "^@app/custom-logger(|/.*)$": "<rootDir>/libs/custom-logger/src/$1",
-      "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1"
+      "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1",
+      "^@app/application-notification(|/.*)$": "<rootDir>/libs/application-notification/src/$1"
     }
   }
 }

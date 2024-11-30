@@ -41,6 +41,12 @@
       ],
       "@app/requests/*": [
         "libs/requests/src/*"
+      ],
+      "@app/application-notification": [
+        "libs/application-notification/src"
+      ],
+      "@app/application-notification/*": [
+        "libs/application-notification/src/*"
       ]
     }
   }

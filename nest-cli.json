@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/files/tsconfig.app.json"
       }
+    },
+    "application-notification": {
+      "type": "library",
+      "root": "libs/application-notification",
+      "entryFile": "index",
+      "sourceRoot": "libs/application-notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/application-notification/tsconfig.lib.json"
+      }
     }
   }
 }
