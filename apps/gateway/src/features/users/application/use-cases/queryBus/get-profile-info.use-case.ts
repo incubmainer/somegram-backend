@@ -9,6 +9,7 @@ import { UsersQueryRepository } from '../../../infrastructure/users.query-reposi
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { User } from '@prisma/gateway';
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
 
 export const ProfileInfoCodes = {
   Success: Symbol('success'),
@@ -20,21 +21,22 @@ export class GetProfileInfoQuery {
 }
 
 @QueryHandler(GetProfileInfoQuery)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GetProfileInfoUseCase
   implements IQueryHandler<GetProfileInfoQuery>
 {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    // @InjectCustomLoggerService()
+    // private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(GetProfileInfoUseCase.name);
+    this.logger.setContext(GetProfileInfoUseCase.name);
   }
   async execute(
     command: GetProfileInfoQuery,
@@ -54,7 +56,7 @@ export class GetProfileInfoUseCase
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
       notification.setData({ user, avatarUrl });
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(ProfileInfoCodes.TransactionError);
     }
     return notification;

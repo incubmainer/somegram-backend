@@ -41,6 +41,18 @@
       ],
       "@app/requests/*": [
         "libs/requests/src/*"
+      ],
+      "@app/logger": [
+        "libs/logger/src"
+      ],
+      "@app/logger/*": [
+        "libs/logger/src/*"
+      ],
+      "@app/async-local-storage": [
+        "libs/async-local-storage/src"
+      ],
+      "@app/async-local-storage/*": [
+        "libs/async-local-storage/src/*"
       ]
     }
   }

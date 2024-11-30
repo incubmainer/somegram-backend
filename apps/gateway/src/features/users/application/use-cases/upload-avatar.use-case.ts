@@ -10,6 +10,7 @@ import { IsValidFile } from '../../../../common/decorators/is-valid-file';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
 
 export const UploadAvatarCodes = {
   Success: Symbol('success'),
@@ -32,18 +33,19 @@ export class UploadAvatarCommand {
 }
 
 @CommandHandler(UploadAvatarCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class UploadAvatarUseCase {
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(UploadAvatarUseCase.name);
+    this.logger.setContext(UploadAvatarUseCase.name);
   }
 
   public async execute(
@@ -76,7 +78,7 @@ export class UploadAvatarUseCase {
         file,
       });
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(UploadAvatarCodes.TransactionError);
     }
     return notification;

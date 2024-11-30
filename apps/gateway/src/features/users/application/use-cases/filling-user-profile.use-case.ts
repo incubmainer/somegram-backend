@@ -19,6 +19,7 @@ import { UsersRepository } from '../../infrastructure/users.repository';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { IsAbout } from '../decorators/is-about';
 import { IsCountry } from '../decorators/is-coutry';
+import { LoggerService } from '@app/logger';
 
 export const FillingUserProfileCodes = {
   Success: Symbol('success'),
@@ -67,18 +68,19 @@ export class FillingUserProfileCommand {
 }
 
 @CommandHandler(FillingUserProfileCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class FillingUserProfileUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(FillingUserProfileUseCase.name);
+    this.logger.setContext(FillingUserProfileUseCase.name);
   }
 
   public async execute(
@@ -140,7 +142,7 @@ export class FillingUserProfileUseCase {
       );
       notification.setData(updatedUser);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(FillingUserProfileCodes.TransactionError);
     }
     return notification;
