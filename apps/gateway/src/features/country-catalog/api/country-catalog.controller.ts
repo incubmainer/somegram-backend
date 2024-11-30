@@ -9,35 +9,27 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { GetCountriesQueryCommand } from '../application/query-command/get-countries.query.command';
 import { GetCitiesByCountryIdQueryCommand } from '../application/query-command/get-cities-by-country-id.query.command';
+import { COUNTRY_CATALOG_ROUTE } from '../../../common/config/constants/route.constants';
 
 /*
- Нужна ли авторизация для получения каталогов стран?
- Есть ли какой нибдуь токен для внутрених запросов от фронта?
- Внедрение паггинатора как зависимость query command?
+  TODO:
+ Общий класс для обычного query и отнаследоваться от него?
  Внедрение query factory как зависимость?
  Создание query factory как класс?
  */
 
-/*
- TODO:
- Общий класс для обычного query и отнаследоваться от него?
- Добавить константы в либу для максимальной и минимальной длины ?
- Валидация для параметров ?
- Сделать либу с декораторами, сейчас нужно для Trim + EntityId
-*/
-
 @ApiTags('Country catalog')
-@Controller('country-catalog')
+@Controller(COUNTRY_CATALOG_ROUTE.MAIN)
 export class CountryCatalogController {
   constructor(private readonly queryBus: QueryBus) {}
 
-  @Get('country')
+  @Get(COUNTRY_CATALOG_ROUTE.COUNTRY)
   @CountriesInfoSwagger()
   async getCountries(): Promise<CountryOutputDto[]> {
     return await this.queryBus.execute(new GetCountriesQueryCommand());
   }
 
-  @Get(':countryId/city')
+  @Get(`:countryId/${COUNTRY_CATALOG_ROUTE.CITY}`)
   @CitiesInfoSwagger()
   async getCities(
     @Param('countryId') countryId: string,
