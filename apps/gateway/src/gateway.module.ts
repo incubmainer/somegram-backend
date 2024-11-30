@@ -22,6 +22,7 @@ import { LoggerConfig } from './common/config/configs/logger.config';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
 import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
+import { ApplicationNotificationModule } from '@app/application-notification';
 
 export const requestId = 'reduestId';
 
@@ -83,6 +84,7 @@ export const requestId = 'reduestId';
       },
       inject: [AlsService, ConfigService],
     }),
+    ApplicationNotificationModule,
     CountryCatalogModule,
   ],
   controllers: [],

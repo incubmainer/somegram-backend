@@ -6,6 +6,10 @@ import {
   PullCountryWithCityResponseType,
   PullCountryWithCityType,
 } from '../../domain/type/type';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 export class UpdateOrCreateOrCreateCatalogCommand {
   constructor() {}
@@ -13,21 +17,33 @@ export class UpdateOrCreateOrCreateCatalogCommand {
 
 @CommandHandler(UpdateOrCreateOrCreateCatalogCommand)
 export class UpdateOrCreateCatalogCommandHandler
-  implements ICommandHandler<UpdateOrCreateOrCreateCatalogCommand, any>
+  implements
+    ICommandHandler<
+      UpdateOrCreateOrCreateCatalogCommand,
+      AppNotificationResultType<void>
+    >
 {
+  private readonly COUNTRY_API_URI: string;
+  private readonly COUNTRY_API_METHOD: string;
   constructor(
     @Inject(CountryCatalogEntity.name)
     private readonly countryCatalogEntity: typeof CountryCatalogEntity,
     private readonly countryCityRepository: CountryCityRepository,
-  ) {}
-  async execute(command: UpdateOrCreateOrCreateCatalogCommand): Promise<any> {
+    private readonly applicationNotification: ApplicationNotification,
+  ) {
+    this.COUNTRY_API_URI = 'https://countriesnow.space/api/v0.1/countries/';
+    this.COUNTRY_API_METHOD = 'GET';
+  }
+  async execute(
+    command: UpdateOrCreateOrCreateCatalogCommand,
+  ): Promise<AppNotificationResultType<void>> {
     const countriesArr: CountryCatalogEntity[] = [];
 
     const data: PullCountryWithCityResponseType | null = await this.pullData();
 
-    if (!data) return;
+    if (!data) return this.applicationNotification.notFound();
 
-    data.data.forEach((country: PullCountryWithCityType) => {
+    data.data.forEach((country: PullCountryWithCityType): void => {
       const newCountry: CountryCatalogEntity = this.countryCatalogEntity.create(
         country.country,
         country.iso2,
@@ -36,22 +52,23 @@ export class UpdateOrCreateCatalogCommandHandler
       countriesArr.push(newCountry);
     });
 
-    await this.countryCityRepository.saveMany(countriesArr);
+    const result: boolean =
+      await this.countryCityRepository.saveMany(countriesArr);
+    if (!result) return this.applicationNotification.internalServerError();
+
+    return this.applicationNotification.success(null);
   }
 
   private async pullData(): Promise<PullCountryWithCityResponseType | null> {
     try {
-      const API_URL = 'https://countriesnow.space/api/v0.1/countries/';
-
-      const response = await fetch(API_URL, {
-        method: 'GET',
+      const response = await fetch(this.COUNTRY_API_URI, {
+        method: this.COUNTRY_API_METHOD,
         headers: {
           'Content-Type': 'application/json',
         },
       });
       return await response.json();
     } catch (e) {
-      console.log(e);
       return null;
     }
   }
