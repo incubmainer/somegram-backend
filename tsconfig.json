@@ -47,6 +47,12 @@
       ],
       "@app/paginator/*": [
         "libs/paginator/src/*"
+      ],
+      "@app/application-notification": [
+        "libs/application-notification/src"
+      ],
+      "@app/application-notification/*": [
+        "libs/application-notification/src/*"
       ]
     }
   }
