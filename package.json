@@ -122,6 +122,7 @@
       "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1",
       "^@app/application-notification(|/.*)$": "<rootDir>/libs/application-notification/src/$1",
       "^@app/paginator(|/.*)$": "<rootDir>/libs/paginator/src/$1"
+      "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1"
     }
   }
 }

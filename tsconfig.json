@@ -53,6 +53,12 @@
       ],
       "@app/application-notification/*": [
         "libs/application-notification/src/*"
+      ],
+      "@app/decorators": [
+        "libs/decorators/src"
+      ],
+      "@app/decorators/*": [
+        "libs/decorators/src/*"
       ]
     }
   }

@@ -81,6 +81,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/paginator/tsconfig.lib.json"
       }
+    },
+    "decorators": {
+      "type": "library",
+      "root": "libs/decorators",
+      "entryFile": "index",
+      "sourceRoot": "libs/decorators/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/decorators/tsconfig.lib.json"
+      }
     }
   }
 }
