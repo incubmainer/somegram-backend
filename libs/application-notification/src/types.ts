@@ -5,3 +5,4 @@ export type AppNotificationResultType<T, D = null> = {
   errorField?: D;
   appResult: AppNotificationResultEnum;
 };
+//

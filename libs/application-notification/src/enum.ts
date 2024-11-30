@@ -5,4 +5,5 @@ export enum AppNotificationResultEnum {
   'Forbidden' = 'Forbidden',
   'Unauthorized' = 'Unauthorized',
   'InternalError' = 'InternalError',
+  'UnprocessableEntity' = 'UnprocessableEntity',
 }
