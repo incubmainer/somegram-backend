@@ -3,7 +3,14 @@ import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../../apps/gateway/src/settings/configuration/configuration';
-import { EnvSettings } from '../../../../apps/gateway/src/settings/env/env.settings';
+import {
+  EnvSettings,
+  EnvState,
+} from '../../../../apps/gateway/src/settings/env/env.settings';
+import {
+  ConsoleTransportInstance,
+  HttpTransportInstance,
+} from 'winston/lib/winston/transports';
 
 const customLevels = {
   levels: {
@@ -16,47 +23,56 @@ const customLevels = {
   },
 };
 
-const timeFormat = 'YYYY-MM-DD HH:mm:ss';
+const timeFormat: string = 'YYYY-MM-DD HH:mm:ss'; // Format for timestamp in log
 
+// Extracting formatting functions for logs from the winston library
 const { combine, prettyPrint, timestamp, errors, colorize } = winston.format;
 
 @Injectable()
 export class WinstonService {
   private readonly logger: winston.Logger;
-  private readonly serviceName: string;
+  private readonly serviceName: string; // Service name
 
   constructor(
     private readonly configService: ConfigService<ConfigurationType, true>,
-    appName: string,
+    appName: string, // Service name
   ) {
-    // TODO
     const envSettings: EnvSettings = this.configService.get('envSettings', {
       infer: true,
     });
     this.serviceName = appName;
 
-    const consoleTransport = new winston.transports.Console({
-      format: combine(
-        timestamp({ format: timeFormat }),
-        errors({ stack: true }),
-        prettyPrint(),
-        colorize({ all: true, colors: { trace: 'yellow' } }),
-      ),
-    });
-
-    const transports: Transport[] = [consoleTransport];
-
     const isProduction: boolean = envSettings.isProductionState();
 
+    // Configuring transport for console logging
+    const consoleTransport: ConsoleTransportInstance =
+      new winston.transports.Console({
+        format: combine(
+          timestamp({ format: timeFormat }),
+          errors({ stack: true }),
+          prettyPrint(),
+          colorize({ all: true, colors: { trace: 'yellow' } }),
+        ),
+      });
+
+    const transports: Transport[] = []; // An array of transportites that will be used for logging
+
+    if (!isProduction) {
+      transports.push(consoleTransport);
+    }
+
+    // In a production environment, you can add additional transports
     if (isProduction) {
-      // const httpTransport = new winston.transports.Http({
+      // TODO
+      // const httpTransport: HttpTransportInstance = new winston.transports.Http({
       //   host: loggerSettings.HOST,
       //   path: loggerSettings.URL_PATH,
       //   ssl: true,
       // });
-      //transports.push(httpTransport);
+      // transports.push(httpTransport);
     }
 
+    // Create a logger with the specified logging levels and protractors
     this.logger = winston.createLogger({
       format: winston.format.timestamp({ format: timeFormat }),
       level: 'trace',
