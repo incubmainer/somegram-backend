@@ -11,13 +11,6 @@ import { GetCountriesQueryCommand } from '../application/query-command/get-count
 import { GetCitiesByCountryIdQueryCommand } from '../application/query-command/get-cities-by-country-id.query.command';
 import { COUNTRY_CATALOG_ROUTE } from '../../../common/config/constants/route.constants';
 
-/*
-  TODO:
- Общий класс для обычного query и отнаследоваться от него?
- Внедрение query factory как зависимость?
- Создание query factory как класс?
- */
-
 @ApiTags('Country catalog')
 @Controller(COUNTRY_CATALOG_ROUTE.MAIN)
 export class CountryCatalogController {

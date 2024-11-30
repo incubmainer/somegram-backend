@@ -6,7 +6,7 @@ import { UpdateOrCreateOrCreateCatalogCommand } from '../../features/country-cat
 export class CommandExecutorService implements OnApplicationBootstrap {
   constructor(private readonly commandBus: CommandBus) {}
 
-  async onApplicationBootstrap() {
-    await this.commandBus.execute(new UpdateOrCreateOrCreateCatalogCommand());
+  onApplicationBootstrap() {
+    this.commandBus.execute(new UpdateOrCreateOrCreateCatalogCommand());
   }
 }
