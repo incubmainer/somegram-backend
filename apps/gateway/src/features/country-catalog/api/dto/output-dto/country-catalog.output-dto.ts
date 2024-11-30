@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Injectable } from '@nestjs/common';
-import { CountryAvailableLanguageEnum } from '../../../domain/enum/country-catalog.enum';
+import { CountryCatalog, CityCatalog } from '@prisma/gateway';
 
 export class CountryOutputDto {
   @ApiProperty({
@@ -46,20 +46,12 @@ export class CityOutputDto {
 
 @Injectable()
 export class CountryOutputDtoMapper {
-  /*
-   TODO:
-   1. Сделать типизацию
-   2. Сделать обработку языка
-   */
-  mapCountries(
-    countries: any[],
-    language: CountryAvailableLanguageEnum,
-  ): CountryOutputDto[] {
-    return countries.map((country: any): CountryOutputDto => {
+  mapCountries(countries: CountryCatalog[]): CountryOutputDto[] {
+    return countries.map((country: CountryCatalog): CountryOutputDto => {
       return {
         id: country.id.toString(),
-        countryCode: country.countryCode,
-        name: '',
+        countryCode: country.code,
+        name: country.name,
       };
     });
   }
@@ -67,20 +59,12 @@ export class CountryOutputDtoMapper {
 
 @Injectable()
 export class CityOutputDtoMapper {
-  /*
-   TODO:
-   1. Сделать типизацию
-   2. Сделать обработку языка
-   */
-  mapCities(
-    cities: any[],
-    language: CountryAvailableLanguageEnum,
-  ): CityOutputDto[] {
-    return cities.map((city: any): CityOutputDto => {
+  mapCities(cities: CityCatalog[]): CityOutputDto[] {
+    return cities.map((city: CityCatalog): CityOutputDto => {
       return {
         id: city.id.toString(),
         countryId: city.countryId.toString(),
-        name: '',
+        name: city.name,
       };
     });
   }

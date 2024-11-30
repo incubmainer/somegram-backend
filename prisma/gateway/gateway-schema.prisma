@@ -91,3 +91,19 @@ model UserGoogleInfo {
   email         String
   emailVerified Boolean
 }
+
+model CountryCatalog {
+  id          Int           @id @default(autoincrement())
+  code        String        @unique
+  name        String
+  CityCatalog CityCatalog[]
+}
+
+model CityCatalog {
+  id             Int            @id @default(autoincrement())
+  name           String
+  countryId      Int
+  CountryCatalog CountryCatalog @relation(fields: [countryId], references: [id])
+
+  @@unique([countryId, name])
+}

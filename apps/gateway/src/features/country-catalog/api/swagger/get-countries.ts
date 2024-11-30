@@ -6,7 +6,8 @@ export function CountriesInfoSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Get list of countries' }),
     ApiOkResponse({
-      description: 'Success',
+      description: 'Success. Or an empty array',
+      isArray: true,
       type: CountryOutputDto,
     }),
   );
