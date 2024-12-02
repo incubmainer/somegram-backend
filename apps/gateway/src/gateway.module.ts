@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerConfig } from './common/config/configs/logger.config';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
+import { SecurityDevicesModule } from './features/security-devices/security-devices.module';
 import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
 import { ApplicationNotificationModule } from '@app/application-notification';
 
@@ -28,6 +29,7 @@ export const requestId = 'reduestId';
 
 @Module({
   imports: [
+    SecurityDevicesModule,
     ClientsModule.registerAsync([photoServiceOptions()]),
     ConfigModule.forRoot({
       isGlobal: true,
