@@ -37,6 +37,18 @@ export class SecurityDevicesRepository {
     });
   }
 
+  public async deleteSessionsById(sessionsId: string[]): Promise<boolean> {
+    try {
+      await this.txHost.tx.securityDevices.deleteMany({
+        where: { deviceId: { in: sessionsId } },
+      });
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public async deleteDevice(deviceId: string): Promise<boolean> {
     const result = await this.txHost.tx.securityDevices.delete({
       where: { deviceId: deviceId },
@@ -44,12 +56,25 @@ export class SecurityDevicesRepository {
     if (!result) return null;
     return true;
   }
+
   async getDiviceById(deviceId: string): Promise<SecurityDevices | null> {
     const device = await this.txHost.tx.securityDevices.findFirst({
       where: { deviceId },
     });
     if (!device) return null;
     return device;
+  }
+
+  public async getDevicesByUserId(
+    userId: string,
+  ): Promise<SecurityDevices[] | null> {
+    const devices: SecurityDevices[] | [] =
+      await this.txHost.tx.securityDevices.findMany({
+        where: { userId: userId },
+      });
+
+    if (devices.length <= 0) return null;
+    return devices;
   }
 
   async updateLastActiveDate(

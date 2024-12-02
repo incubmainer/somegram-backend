@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiForbiddenResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOperation,
 } from '@nestjs/swagger';
 
@@ -11,8 +11,6 @@ export function TerminateAllDevicesExcludeCurrentSwagger() {
     ApiNoContentResponse({
       description: 'Success',
     }),
-    ApiForbiddenResponse({
-      description: 'If the devices do not belong to the current user',
-    }),
+    ApiNotFoundResponse({ description: 'Sessions not found' }),
   );
 }

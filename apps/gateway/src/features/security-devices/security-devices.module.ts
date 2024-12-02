@@ -5,6 +5,7 @@ import { GetAllDevicesQueryCommandHandler } from './application/query-bus/get-al
 import { CqrsModule } from '@nestjs/cqrs';
 import { TerminateDevicesExcludeCurrentCommandHandler } from './application/use-cases/terminate-devices-exclude-current.use-case';
 import { TerminateDeviceByIdCommandHandler } from './application/use-cases/terminate-device-by-id.use-case';
+import { SecurityDevicesRepository } from './infrastructure/security-devices.repository';
 
 @Module({
   imports: [CqrsModule],
@@ -14,6 +15,7 @@ import { TerminateDeviceByIdCommandHandler } from './application/use-cases/termi
     GetAllDevicesQueryCommandHandler,
     TerminateDevicesExcludeCurrentCommandHandler,
     TerminateDeviceByIdCommandHandler,
+    SecurityDevicesRepository,
   ],
 })
 export class SecurityDevicesModule {}
