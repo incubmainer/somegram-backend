@@ -12,7 +12,7 @@ import { SecurityDevicesOutputDto } from '../../api/dto/output/security-devices.
 import {
   GetAllDevicesQueryCommand,
   GetAllDevicesQueryCommandHandler,
-} from '../query-bus/get-all-devices.query';
+} from '../query-command/get-all-devices.query';
 import {
   TerminateDeviceByIdCommand,
   TerminateDeviceByIdCommandHandler,

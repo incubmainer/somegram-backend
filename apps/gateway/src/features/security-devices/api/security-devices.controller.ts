@@ -16,7 +16,7 @@ import {
 import { SecurityDevicesOutputDto } from './dto/output/security-devices.output-dto';
 import { GetAllDevicesSwagger } from './swagger/get-all-devices.swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { GetAllDevicesQueryCommand } from '../application/query-bus/get-all-devices.query';
+import { GetAllDevicesQueryCommand } from '../application/query-command/get-all-devices.query';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { TerminateAllDevicesExcludeCurrentSwagger } from './swagger/terminate-all-devices-exclude-current.swagger';
