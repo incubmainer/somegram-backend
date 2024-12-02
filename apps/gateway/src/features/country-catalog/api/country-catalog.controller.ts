@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CountriesInfoSwagger } from './swagger/get-countries';
 import { CitiesInfoSwagger } from './swagger/get-city';
@@ -29,7 +29,7 @@ export class CountryCatalogController {
     @EntityId('countryId') countryId: number,
   ): Promise<CityOutputDto[]> {
     return await this.queryBus.execute(
-      new GetCitiesByCountryIdQueryCommand(+countryId),
+      new GetCitiesByCountryIdQueryCommand(countryId),
     );
   }
 }

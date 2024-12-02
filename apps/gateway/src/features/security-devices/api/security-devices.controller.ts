@@ -1,9 +1,12 @@
 import {
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   UseGuards,
 } from '@nestjs/common';
@@ -23,6 +26,10 @@ import { TerminateAllDevicesExcludeCurrentSwagger } from './swagger/terminate-al
 import { TerminateDevicesByIdSwagger } from './swagger/terminate-devices-by-id.swagger';
 import { TerminateDeviceByIdCommand } from '../application/use-cases/terminate-device-by-id.use-case';
 import { TerminateDevicesExcludeCurrentCommand } from '../application/use-cases/terminate-devices-exclude-current.use-case';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 // TODO maybe create by refresh token?
 @ApiTags('Security Devices')
@@ -48,18 +55,25 @@ export class SecurityDevicesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @TerminateDevicesByIdSwagger()
   async terminateDeviceById(
-    @Param() deviceId: string,
+    @Param('deviceId') deviceId: string,
     @CurrentUserId() userId: string,
   ): Promise<void> {
     // TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем ее
-    // TODO Notification
-    const result = await this.commandBus.execute(
-      new TerminateDeviceByIdCommand(userId, deviceId),
-    );
-    // TODO switch result
-    // switch () {}
+    const result: AppNotificationResultType<void> =
+      await this.commandBus.execute(
+        new TerminateDeviceByIdCommand(userId, deviceId),
+      );
 
-    return;
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        throw new ForbiddenException();
+      case AppNotificationResultEnum.NotFound:
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Delete(`${SECURITY_DEVICES_ROUTE.TERMINATE}`)
@@ -69,13 +83,21 @@ export class SecurityDevicesController {
     @CurrentUserId() userId: string,
   ): Promise<void> {
     // TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем ее
-    // TODO Notification
     // TODO Decorator client info with device id
-    const result = await this.commandBus.execute(
-      new TerminateDevicesExcludeCurrentCommand(userId, ''),
-    );
-    // TODO switch result
-    // switch () {}
-    return;
+    const result: AppNotificationResultType<void> =
+      await this.commandBus.execute(
+        new TerminateDevicesExcludeCurrentCommand(userId, ''),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        throw new ForbiddenException();
+      case AppNotificationResultEnum.NotFound:
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 }

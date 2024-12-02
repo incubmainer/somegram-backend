@@ -29,11 +29,10 @@ export class SecurityDevicesOutputDto {
   lastVisit: string;
 }
 
-// TODO
 @Injectable()
 export class SecurityDevicesOutputMapper {
   mapDevices(devices: SecurityDevices[]): SecurityDevicesOutputDto[] {
-    return devices.map((device: SecurityDevices) => {
+    return devices.map((device: SecurityDevices): SecurityDevicesOutputDto => {
       return {
         deviceId: device.deviceId,
         deviceName: device.title,

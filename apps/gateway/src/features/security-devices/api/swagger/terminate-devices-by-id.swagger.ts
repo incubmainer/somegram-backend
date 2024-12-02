@@ -4,10 +4,12 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiParam,
 } from '@nestjs/swagger';
 
 export function TerminateDevicesByIdSwagger() {
   return applyDecorators(
+    ApiParam({ name: 'deviceId' }),
     ApiOperation({ summary: 'End session by ID' }),
     ApiNoContentResponse({
       description: 'Success',

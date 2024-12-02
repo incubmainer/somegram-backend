@@ -1,19 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { SecurityDevicesOutputDto } from '../dto/output/security-devices.output-dto';
 
 export function GetAllDevicesSwagger() {
   return applyDecorators(
-    ApiOperation({ summary: 'Add user post' }),
+    ApiOperation({
+      summary: 'Get all active sessions of the current user',
+    }),
     ApiOkResponse({
       description: 'Success',
       type: SecurityDevicesOutputDto,
       isArray: true,
     }),
-    //ApiUnauthorizedResponse({ description: 'Unauthorized' }),
   );
 }

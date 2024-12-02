@@ -21,6 +21,11 @@ import {
   TerminateDevicesExcludeCurrentCommand,
   TerminateDevicesExcludeCurrentCommandHandler,
 } from './terminate-devices-exclude-current.use-case';
+import {
+  ApplicationNotificationModule,
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 type UserInsertType = {
   username: string;
@@ -52,6 +57,7 @@ describe('Terminate devices', () => {
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
       imports: [
         SecurityDevicesModule,
+        ApplicationNotificationModule,
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: false,
@@ -125,10 +131,10 @@ describe('Terminate devices', () => {
         title: 'Android',
       });
 
-      // TODO Notification
-      const res = await commandBus.execute(
+      const res: AppNotificationResultType<void> = await commandBus.execute(
         new TerminateDeviceByIdCommand(userId, deviceIdToDellDto),
       );
+      expect(res.appResult).toBe(AppNotificationResultEnum.Success);
 
       const devices: SecurityDevicesOutputDto[] = await queryBus.execute(
         new GetAllDevicesQueryCommand(userId),
@@ -164,9 +170,13 @@ describe('Terminate devices', () => {
       });
       const user2Id: string = user2.id;
 
-      // TODO notification
-      const resultForbidden = await commandBus.execute(
-        new TerminateDeviceByIdCommand(user2Id, deviceIdToDellDto),
+      const resultForbidden: AppNotificationResultType<void> =
+        await commandBus.execute(
+          new TerminateDeviceByIdCommand(user2Id, deviceIdToDellDto),
+        );
+
+      expect(resultForbidden.appResult).toBe(
+        AppNotificationResultEnum.Forbidden,
       );
 
       const devices: SecurityDevicesOutputDto[] = await queryBus.execute(
@@ -187,10 +197,11 @@ describe('Terminate devices', () => {
         },
       ]);
 
-      // TODO Notification
-      const result = await commandBus.execute(
+      const result: AppNotificationResultType<void> = await commandBus.execute(
         new TerminateDeviceByIdCommand(userId, deviceIdToDellDto),
       );
+
+      expect(result.appResult).toBe(AppNotificationResultEnum.Success);
 
       const getDevices2: SecurityDevicesOutputDto[] = await queryBus.execute(
         new GetAllDevicesQueryCommand(userId),
@@ -212,10 +223,11 @@ describe('Terminate devices', () => {
       const userId: string = user.id;
       await insertDevices({ ...insertDeviceDto, userId: userId });
 
-      // TODO Notification
-      const result = await commandBus.execute(
+      const result: AppNotificationResultType<void> = await commandBus.execute(
         new TerminateDeviceByIdCommand(userId, deviceIdToDellDto),
       );
+
+      expect(result.appResult).toBe(AppNotificationResultEnum.NotFound);
 
       const devices: SecurityDevicesOutputDto[] = await queryBus.execute(
         new GetAllDevicesQueryCommand(userId),
@@ -244,13 +256,13 @@ describe('Terminate devices', () => {
         title: 'Android',
       });
 
-      // TODO Notification
-      const res = await commandBus.execute(
+      const res: AppNotificationResultType<void> = await commandBus.execute(
         new TerminateDevicesExcludeCurrentCommand(
           userId,
           insertDeviceDto.deviceId,
         ),
       );
+      expect(res.appResult).toBe(AppNotificationResultEnum.Success);
 
       const devices: SecurityDevicesOutputDto[] = await queryBus.execute(
         new GetAllDevicesQueryCommand(userId),
@@ -271,13 +283,13 @@ describe('Terminate devices', () => {
       const userId: string = user.id;
       await insertDevices({ ...insertDeviceDto, userId: userId });
 
-      // TODO Notification
-      const result = await commandBus.execute(
+      const result: AppNotificationResultType<void> = await commandBus.execute(
         new TerminateDevicesExcludeCurrentCommand(
           userId,
           insertDeviceDto.deviceId,
         ),
       );
+      expect(result.appResult).toBe(AppNotificationResultEnum.NotFound);
 
       const devices: SecurityDevicesOutputDto[] = await queryBus.execute(
         new GetAllDevicesQueryCommand(userId),
