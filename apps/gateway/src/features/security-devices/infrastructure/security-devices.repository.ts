@@ -5,6 +5,8 @@ import {
   PrismaClient as GatewayPrismaClient,
   SecurityDevices,
 } from '@prisma/gateway';
+
+// TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем девайс
 @Injectable()
 export class SecurityDevicesRepository {
   constructor(

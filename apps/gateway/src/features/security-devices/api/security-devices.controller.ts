@@ -20,8 +20,6 @@ import { SecurityDevicesOutputDto } from './dto/output/security-devices.output-d
 import { GetAllDevicesSwagger } from './swagger/get-all-devices.swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetAllDevicesQueryCommand } from '../application/query-command/get-all-devices.query';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
-import { AuthGuard } from '@nestjs/passport';
 import { TerminateAllDevicesExcludeCurrentSwagger } from './swagger/terminate-all-devices-exclude-current.swagger';
 import { TerminateDevicesByIdSwagger } from './swagger/terminate-devices-by-id.swagger';
 import { TerminateDeviceByIdCommand } from '../application/use-cases/terminate-device-by-id.use-case';
@@ -30,12 +28,14 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
+import { CurrentUser } from '@app/decorators/http-parse/current-user';
+import { JWTRefreshTokenPayloadType } from '../../../common/domain/types/types';
 
-// TODO maybe create by refresh token?
 @ApiTags('Security Devices')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('refresh-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(RefreshJWTAccessGuard)
 @Controller(SECURITY_DEVICES_ROUTE.MAIN)
 export class SecurityDevicesController {
   constructor(
@@ -46,9 +46,11 @@ export class SecurityDevicesController {
   @Get()
   @GetAllDevicesSwagger()
   async getAll(
-    @CurrentUserId() userId: string,
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
   ): Promise<SecurityDevicesOutputDto[]> {
-    return await this.queryBus.execute(new GetAllDevicesQueryCommand(userId));
+    return await this.queryBus.execute(
+      new GetAllDevicesQueryCommand(user.userId),
+    );
   }
 
   @Delete(`${SECURITY_DEVICES_ROUTE.TERMINATE}/:deviceId`)
@@ -56,12 +58,11 @@ export class SecurityDevicesController {
   @TerminateDevicesByIdSwagger()
   async terminateDeviceById(
     @Param('deviceId') deviceId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
   ): Promise<void> {
-    // TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем ее
     const result: AppNotificationResultType<void> =
       await this.commandBus.execute(
-        new TerminateDeviceByIdCommand(userId, deviceId),
+        new TerminateDeviceByIdCommand(user.userId, deviceId),
       );
 
     switch (result.appResult) {
@@ -80,13 +81,11 @@ export class SecurityDevicesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @TerminateAllDevicesExcludeCurrentSwagger()
   async terminateAllExcludeCurrent(
-    @CurrentUserId() userId: string,
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
   ): Promise<void> {
-    // TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем ее
-    // TODO Decorator client info with device id
     const result: AppNotificationResultType<void> =
       await this.commandBus.execute(
-        new TerminateDevicesExcludeCurrentCommand(userId, ''),
+        new TerminateDevicesExcludeCurrentCommand(user.userId, user.deviceId),
       );
 
     switch (result.appResult) {

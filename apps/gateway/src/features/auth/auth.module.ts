@@ -15,7 +15,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthService } from './application/auth.service';
 import { LoginUserUseCase } from './application/use-cases/login-use-case';
 import { SecurityDevicesRepository } from '../security-devices/infrastructure/security-devices.repository';
-import { SecurityDevicesService } from '../security-devices/application/security-devices.service';
 import { SecurityDevicesController } from '../security-devices/api/security-devices.controller';
 import { RegistrationConfirmationUseCase } from './application/use-cases/registration-confirmation.use-case';
 import { LogoutUseCase } from './application/use-cases/logout-use-case';
@@ -41,7 +40,6 @@ const services = [
   CryptoAuthService,
   CryptoService,
   EmailAuthService,
-  SecurityDevicesService,
 ];
 const useCases = [
   LoginUserUseCase,

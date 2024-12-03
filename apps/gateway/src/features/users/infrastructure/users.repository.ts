@@ -30,6 +30,11 @@ export class UsersRepository {
   ) {
     this.logger.setContext(UsersRepository.name);
   }
+
+  public getUserById(userId: string): Promise<User | null> {
+    return this.txHost.tx.user.findUnique({ where: { id: userId } });
+  }
+
   public async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: {

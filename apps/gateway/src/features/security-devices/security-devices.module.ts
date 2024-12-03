@@ -17,5 +17,6 @@ import { SecurityDevicesRepository } from './infrastructure/security-devices.rep
     TerminateDeviceByIdCommandHandler,
     SecurityDevicesRepository,
   ],
+  exports: [SecurityDevicesRepository],
 })
 export class SecurityDevicesModule {}
