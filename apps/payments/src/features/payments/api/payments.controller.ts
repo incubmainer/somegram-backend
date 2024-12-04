@@ -6,11 +6,13 @@ import {
   CREATE_AUTO_PAYMENT,
   STRIPE_WEBHOOK_HANDLER,
   ENABLE_AUTO_RENEWAL,
+  GET_PAYMENTS,
 } from '../../../../../gateway/src/common/config/constants/service.constants';
 import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case';
 import { StripeWebhookCommand } from '../application/use-cases/stripe-webhook.use-case';
 import { DisableAutoRenewalCommand } from '../application/use-cases/disable-autorenewal.use-case';
 import { EnableAutoRenewalCommand } from '../application/use-cases/enable-autorenewal.use-case';
+import { GetPaymentsQuery } from '../application/use-cases/get-payments.use-case';
 
 @Controller('payments')
 export class PaymentsController {
@@ -42,5 +44,10 @@ export class PaymentsController {
     return this.commandBus.execute(
       new EnableAutoRenewalCommand(payload.userId),
     );
+  }
+
+  @MessagePattern({ cmd: GET_PAYMENTS })
+  async getPayments({ payload }) {
+    return this.commandBus.execute(new GetPaymentsQuery(payload.userId));
   }
 }

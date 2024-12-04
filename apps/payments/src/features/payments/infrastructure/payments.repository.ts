@@ -61,6 +61,22 @@ export class PaymentsRepository {
     });
   }
 
+  public async getPaymentsByUserId(userId: string) {
+    const subscriptionsWithPayments =
+      await this.txHost.tx.subscription.findMany({
+        where: { userId },
+        include: {
+          payments: true,
+        },
+      });
+
+    const payments = subscriptionsWithPayments.flatMap(
+      (subscription) => subscription.payments,
+    );
+
+    return payments.length > 0 ? payments : null;
+  }
+
   public async getSubscriptionByUserId(userId: string) {
     const subscription = await this.txHost.tx.subscription.findFirst({
       where: { userId },

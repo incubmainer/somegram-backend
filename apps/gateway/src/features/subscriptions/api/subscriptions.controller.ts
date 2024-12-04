@@ -67,6 +67,15 @@ export class SubscriptionsController {
     }
   }
 
+  @Get('my-payments')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async geyPayments(@CurrentUserId() userId: string): Promise<void> {
+    return await this.paymentsServiceAdapter.getPayments({
+      userId,
+    });
+  }
+
   @Post('stripe-webhook')
   @ApiExcludeEndpoint()
   async stripeWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {

@@ -10,3 +10,4 @@ export const CREATE_AUTO_PAYMENT = 'create_auto_payment';
 export const STRIPE_WEBHOOK_HANDLER = 'stripe_webhook_handler';
 export const DISABLE_AUTO_RENEWAL = 'disable_auto_renewal';
 export const ENABLE_AUTO_RENEWAL = 'enable_auto_renewal';
+export const GET_PAYMENTS = 'get_payments';

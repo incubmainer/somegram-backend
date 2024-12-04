@@ -14,12 +14,14 @@ import { StripeWebhookUseCase } from './features/payments/application/use-cases/
 import { DisableAutoRenewalUseCase } from './features/payments/application/use-cases/disable-autorenewal.use-case';
 import { EnableAutoRenewalUseCase } from './features/payments/application/use-cases/enable-autorenewal.use-case';
 import { PaymentsService } from './features/payments/api/payments.service';
+import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/get-payments.use-case';
 
 const useCases = [
   CreatePaymentUseCase,
   StripeWebhookUseCase,
   DisableAutoRenewalUseCase,
   EnableAutoRenewalUseCase,
+  GetPaymentsQueryUseCase,
 ];
 
 const repositories = [PaymentsRepository];

@@ -11,6 +11,7 @@ import {
   CREATE_AUTO_PAYMENT,
   STRIPE_WEBHOOK_HANDLER,
   ENABLE_AUTO_RENEWAL,
+  GET_PAYMENTS,
 } from '../config/constants/service.constants';
 import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
 
@@ -72,6 +73,19 @@ export class PaymentsServiceAdapter {
     try {
       const responseOfService = this.paymentsServiceClient
         .send({ cmd: ENABLE_AUTO_RENEWAL }, { payload })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPayments(payload: { userId: string }) {
+    try {
+      const responseOfService = this.paymentsServiceClient
+        .send({ cmd: GET_PAYMENTS }, { payload })
         .pipe(timeout(10000));
 
       const result = await firstValueFrom(responseOfService);
