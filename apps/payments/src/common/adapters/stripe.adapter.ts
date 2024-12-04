@@ -155,6 +155,8 @@ export class StripeAdapter {
       const updatedSubscription = await this.stripe.subscriptions.update(
         activeSubscription.id,
         {
+          trial_end: activeSubscription.current_period_end,
+          proration_behavior: 'none',
           items: [
             {
               id: existingSubscriptionItem.id,
