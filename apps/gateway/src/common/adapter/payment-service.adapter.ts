@@ -7,8 +7,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import {
-  CREATE_PAYMENT,
+  DISABLE_AUTO_RENEWAL,
+  CREATE_AUTO_PAYMENT,
   STRIPE_WEBHOOK_HANDLER,
+  ENABLE_AUTO_RENEWAL,
 } from '../config/constants/service.constants';
 import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
 
@@ -30,7 +32,7 @@ export class PaymentsServiceAdapter {
   }) {
     try {
       const responseOfService = this.paymentsServiceClient
-        .send({ cmd: CREATE_PAYMENT }, { payload })
+        .send({ cmd: CREATE_AUTO_PAYMENT }, { payload })
         .pipe(timeout(10000));
 
       const result = await firstValueFrom(responseOfService);
@@ -44,6 +46,32 @@ export class PaymentsServiceAdapter {
     try {
       const responseOfService = this.paymentsServiceClient
         .send({ cmd: STRIPE_WEBHOOK_HANDLER }, { payload })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async disableAutoRenewal(payload: { userId: string }) {
+    try {
+      const responseOfService = this.paymentsServiceClient
+        .send({ cmd: DISABLE_AUTO_RENEWAL }, { payload })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async enableAutoRenewal(payload: { userId: string }) {
+    try {
+      const responseOfService = this.paymentsServiceClient
+        .send({ cmd: ENABLE_AUTO_RENEWAL }, { payload })
         .pipe(timeout(10000));
 
       const result = await firstValueFrom(responseOfService);

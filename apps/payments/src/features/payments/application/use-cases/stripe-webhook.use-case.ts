@@ -35,85 +35,118 @@ export class StripeWebhookUseCase
 
       if (event.type === 'invoice.payment_succeeded') {
         const invoce = event.data.object as Stripe.Stripe.Invoice;
-        console.log(event.type);
         const subscriptionId = invoce.subscription as string;
-        console.log(subscriptionId);
-        const order =
-          await this.paymentsRepository.getOrderByPaymentSystemOrderId(
+
+        const subscription =
+          await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
             subscriptionId,
           );
-        if (!order) {
+        if (!subscription) {
           throw new BadRequestException(
             'Webhook Error: Subscription not found',
           );
         }
-        const subscriptionPeriod = invoce.lines.data[0].period;
-        const newPayment = {
-          status: TransactionStatuses.PaymentSucceeded,
-          price: order.price,
-          paymentSystem: PaymentSystem.STRIPE,
-          orderId: order.id,
-          createdAt: new Date(subscriptionPeriod.start * 1000),
-        };
 
-        await this.paymentsRepository.createPaymentTransaction(newPayment);
+        const subscriptionData = invoce.lines.data;
 
-        order.updatedAt = new Date();
-        order.dateOfPayment = new Date(subscriptionPeriod.start * 1000);
-        order.endDateOfSubscription = new Date(subscriptionPeriod.end * 1000);
-        await this.paymentsRepository.updateOrder(order);
-        console.log('Pyment successfully');
+        subscriptionData.forEach(async (sb) => {
+          const subscriptionDataPeriod = {
+            start: new Date(sb.period.start * 1000),
+            end: new Date(sb.period.end * 1000),
+          };
+          const newPayment = {
+            status: TransactionStatuses.PaymentSucceeded,
+            price: sb.amount,
+            paymentSystem: PaymentSystem.STRIPE,
+            subscriptionType: sb.plan.interval,
+            subId: subscription.id,
+            dateOfPayment: subscriptionDataPeriod.start,
+            endDateOfSubscription: subscriptionDataPeriod.end,
+          };
+
+          await this.paymentsRepository.createPaymentTransaction(newPayment);
+        });
       }
 
       if (event.type === 'invoice.payment_failed') {
         const invoce = event.data.object as Stripe.Stripe.Invoice;
-        console.log(event.type);
         const subscriptionId = invoce.subscription as string;
-        console.log(subscriptionId);
-        const order =
-          await this.paymentsRepository.getOrderByPaymentSystemOrderId(
+        const subscription =
+          await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
             subscriptionId,
           );
-        if (!order) {
+        if (!subscription) {
           throw new BadRequestException(
             'Webhook Error: Subscription not found',
           );
         }
-        const subscriptionPeriod = invoce.lines.data[0].period;
+        const subscriptionData = invoce.lines.data[0];
         const newPayment = {
           status: TransactionStatuses.PaymentFailed,
-          price: order.price,
+          price: subscriptionData.amount,
           paymentSystem: PaymentSystem.STRIPE,
-          orderId: order.id,
-          createdAt: new Date(subscriptionPeriod.start * 1000),
+          subscriptionType: subscriptionData.plan.interval,
+          subId: subscription.id,
+          dateOfPayment: new Date(subscriptionData.period.start * 1000),
         };
         await this.paymentsRepository.createPaymentTransaction(newPayment);
-        console.log('Pyment failed');
       }
 
-      if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as Stripe.Stripe.Checkout.Session;
-        console.log(event.type);
-        const orderId = session.client_reference_id;
-        const subscriptionId = session.subscription as string;
-
-        console.log(orderId);
-        console.log(subscriptionId);
-
-        const order = await this.paymentsRepository.getOrderById(orderId);
-
-        if (!order) {
-          throw new BadRequestException(
-            'Webhook Error: Subscription not found',
+      if (event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object as Stripe.Stripe.Subscription;
+        const subId = subscription.id;
+        const existingSubscription =
+          await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
+            subId,
           );
+        if (existingSubscription) {
+          existingSubscription.status = subscription.status;
+          existingSubscription.autoRenewal = subscription.cancel_at_period_end
+            ? false
+            : true;
+          existingSubscription.paymentSystemSubId = subId;
+          existingSubscription.updatedAt = new Date();
+          existingSubscription.dateOfPayment =
+            existingSubscription.endDateOfSubscription = new Date(
+              subscription.current_period_start * 1000,
+            );
+          existingSubscription.endDateOfSubscription = new Date(
+            subscription.current_period_end * 1000,
+          );
+          await this.paymentsRepository.updateSubscription(
+            existingSubscription,
+          );
+        } else {
+          await this.paymentsRepository.createSubscription({
+            userId: subscription.metadata.userId,
+            autoRenewal: true,
+            paymentSystem: PaymentSystem.STRIPE,
+            paymentSystemSubId: subId,
+            status: subscription.status,
+            dateOfPayment: new Date(subscription.current_period_start * 1000),
+            endDateOfSubscription: new Date(
+              subscription.current_period_end * 1000,
+            ),
+          });
         }
-        order.paymentSystemOrderId = subscriptionId;
-        order.updatedAt = new Date();
-        await this.paymentsRepository.updateOrder(order);
-
-        console.log('Subscription successfully');
       }
 
+      if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object as Stripe.Stripe.Subscription;
+        const subId = subscription.id;
+        const subscriptionInfo =
+          await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
+            subId,
+          );
+        if (subscriptionInfo) {
+          const remainingEndDate = subscriptionInfo.endDateOfSubscription;
+          subscriptionInfo.updatedAt = new Date();
+          subscriptionInfo.status = subscription.status;
+          subscriptionInfo.autoRenewal = false;
+          subscriptionInfo.endDateOfSubscription = remainingEndDate;
+          await this.paymentsRepository.updateSubscription(subscriptionInfo);
+        }
+      }
       return true;
     } catch (err) {
       console.error(err);

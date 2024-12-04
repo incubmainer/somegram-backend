@@ -13,4 +13,39 @@ export class PaymentManager {
       return await stripeAdapter.createAutoPayment(payment);
     }
   }
+
+  async updateCurrentSub(payment: PaymentData) {
+    if (payment.paymentSystem === PaymentSystem.PAYPAL) {
+    }
+
+    if (payment.paymentSystem === PaymentSystem.STRIPE) {
+      const stripeAdapter = new StripeAdapter();
+      return await stripeAdapter.updateAutoPayment(payment);
+    }
+  }
+  async disableAutoRenewal(
+    paymentSystem: PaymentSystem,
+    paymentSubscriptionSubId: string,
+  ) {
+    if (paymentSystem === PaymentSystem.PAYPAL) {
+    }
+
+    if (paymentSystem === PaymentSystem.STRIPE) {
+      const stripeAdapter = new StripeAdapter();
+      return await stripeAdapter.disableAutoRenewal(paymentSubscriptionSubId);
+    }
+  }
+
+  async enableAutoRenewal(
+    paymentSystem: PaymentSystem,
+    paymentSubscriptionSubId: string,
+  ) {
+    if (paymentSystem === PaymentSystem.PAYPAL) {
+    }
+
+    if (paymentSystem === PaymentSystem.STRIPE) {
+      const stripeAdapter = new StripeAdapter();
+      return await stripeAdapter.enableAutoRenewal(paymentSubscriptionSubId);
+    }
+  }
 }

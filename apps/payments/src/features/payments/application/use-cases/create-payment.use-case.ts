@@ -3,9 +3,10 @@ import { InternalServerErrorException } from '@nestjs/common';
 
 import { PaymentsRepository } from '../../infrastructure/payments.repository';
 import { CreatePaymentDto } from '../../api/dto/input-dto/create-payment.dto';
-import { PaymentManager } from '../../../../common/managers/payment.manager';
 import { PaymentTime } from '../../../../../../../libs/common/enums/payments';
 import { PaymentData, UserInfo } from '../types/payment-data.type';
+import { PaymentsService } from '../../api/payments.service';
+import { ConfigService } from '@nestjs/config';
 
 const SUBSCRIPTION_PRICE = 1; //USD per day
 export class CreatePaymentCommand {
@@ -19,9 +20,16 @@ export class CreatePaymentCommand {
 export class CreatePaymentUseCase
   implements ICommandHandler<CreatePaymentCommand>
 {
+  configService = new ConfigService();
+  successFrontendUrl = this.configService.get<string>(
+    'FRONTEND_SUCCESS_PAYMENT_URL',
+  );
+  cancelFrontendUrl = this.configService.get<string>(
+    'FRONTEND_CANCEL_PAYMENT_URL',
+  );
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly paymentManager: PaymentManager,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async execute(command: CreatePaymentCommand) {
@@ -40,34 +48,38 @@ export class CreatePaymentUseCase
     }
 
     const paymentData: PaymentData = {
-      successFrontendUrl: 'http://localhost:3000/subscriptions/success',
-      cancelFrontendUrl: 'http://localhost:3000/subscriptions/cancel',
+      successFrontendUrl: this.successFrontendUrl,
+      cancelFrontendUrl: this.cancelFrontendUrl,
       productData: {
         name: 'Бизнесс аккаунт',
         description: 'c автопродлением',
       },
-      price: price,
+      price,
       paymentCount: 1,
       paymentSystem,
       typeSubscription,
-      autoRenewal: true,
       userInfo: command.userInfo,
-      orderId: null,
     };
 
     try {
-      const newOrder = await this.paymentsRepository.createOrder({
-        userId: command.userInfo.userId,
-        subscriptionType: typeSubscription,
-        price: price,
-        paymentCount: paymentData.paymentCount,
-        autoRenewal: paymentData.autoRenewal,
-      });
-      paymentData.orderId = newOrder.id;
-      const newPayment =
-        await this.paymentManager.createAutoPayment(paymentData);
+      const subscriptionInfo =
+        await this.paymentsRepository.getSubscriptionByUserId(
+          command.userInfo.userId,
+        );
 
-      return { url: newPayment.url };
+      if (
+        subscriptionInfo &&
+        (subscriptionInfo.autoRenewal === true ||
+          subscriptionInfo.endDateOfSubscription > new Date())
+      ) {
+        await this.paymentsService.updateCurrentSub(paymentData);
+        return 'Subscription plan changed';
+      } else {
+        const newPayment =
+          await this.paymentsService.createAutoPayment(paymentData);
+
+        return { url: newPayment };
+      }
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException();

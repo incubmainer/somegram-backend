@@ -3,7 +3,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import {
   PrismaClient as PaymentsPrismaClient,
-  Order,
+  Subscription,
   PaymentTransaction,
 } from '@prisma/payments';
 
@@ -14,21 +14,25 @@ export class PaymentsRepository {
       TransactionalAdapterPrisma<PaymentsPrismaClient>
     >,
   ) {}
-  public async createOrder(dto: {
-    userId: Order['userId'];
-    subscriptionType: Order['subscriptionType'];
-    price: Order['price'];
-    paymentCount: Order['paymentCount'];
-    autoRenewal: Order['autoRenewal'];
+  public async createSubscription(dto: {
+    userId: Subscription['userId'];
+    autoRenewal: Subscription['autoRenewal'];
+    status: Subscription['status'];
+    paymentSystem: Subscription['paymentSystem'];
+    paymentSystemSubId: Subscription['paymentSystemSubId'];
+    dateOfPayment: Subscription['dateOfPayment'];
+    endDateOfSubscription?: Subscription['endDateOfSubscription'];
   }) {
-    return await this.txHost.tx.order.create({
+    return await this.txHost.tx.subscription.create({
       data: {
-        price: dto.price,
-        paymentCount: dto.paymentCount,
         userId: dto.userId,
-        subscriptionType: dto.subscriptionType,
+        status: dto.status,
         createdAt: new Date(),
+        paymentSystem: dto.paymentSystem,
         autoRenewal: dto.autoRenewal,
+        paymentSystemSubId: dto.paymentSystemSubId,
+        endDateOfSubscription: dto.endDateOfSubscription,
+        dateOfPayment: dto.dateOfPayment,
       },
     });
   }
@@ -36,45 +40,53 @@ export class PaymentsRepository {
   public async createPaymentTransaction(dto: {
     price: PaymentTransaction['price'];
     paymentSystem: PaymentTransaction['paymentSystem'];
+    subscriptionType: PaymentTransaction['subscriptionType'];
     status: PaymentTransaction['status'];
-    orderId: PaymentTransaction['orderId'];
-    createdAt: PaymentTransaction['createdAt'];
+    subId: PaymentTransaction['subId'];
+    dateOfPayment: PaymentTransaction['dateOfPayment'];
+    endDateOfSubscription?: PaymentTransaction['endDateOfSubscription'];
   }) {
     return await this.txHost.tx.paymentTransaction.create({
       data: {
         price: dto.price,
         paymentSystem: dto.paymentSystem,
         status: dto.status,
-        createdAt: dto.createdAt,
-        orderId: dto.orderId,
+        dateOfPayment: dto.dateOfPayment,
+        subscriptionType: dto.subscriptionType,
+        endDateOfSubscription: dto.endDateOfSubscription
+          ? dto.endDateOfSubscription
+          : null,
+        subId: dto.subId,
       },
     });
   }
 
-  public async getOrderById(orderId: string) {
-    const order = await this.txHost.tx.order.findUnique({
-      where: { id: orderId },
+  public async getSubscriptionByUserId(userId: string) {
+    const subscription = await this.txHost.tx.subscription.findFirst({
+      where: { userId },
     });
-    return order ? order : null;
+    return subscription ? subscription : null;
   }
 
-  public async getOrderByPaymentSystemOrderId(paymentSystemOrderId: string) {
-    const order = await this.txHost.tx.order.findFirst({
-      where: { paymentSystemOrderId: paymentSystemOrderId },
+  public async getSubscriptionByPaymentSystemSubId(paymentSystemSubId: string) {
+    const subscription = await this.txHost.tx.subscription.findFirst({
+      where: { paymentSystemSubId: paymentSystemSubId },
     });
-    return order ? order : null;
+    return subscription ? subscription : null;
   }
 
-  public async updateOrder(oder: Order) {
-    return await this.txHost.tx.order.update({
+  public async updateSubscription(subscription: Subscription) {
+    return await this.txHost.tx.subscription.update({
       data: {
-        dateOfPayment: oder.dateOfPayment,
-        updatedAt: oder.updatedAt,
-        endDateOfSubscription: oder.endDateOfSubscription,
-        paymentSystemOrderId: oder.paymentSystemOrderId,
+        dateOfPayment: subscription.dateOfPayment,
+        updatedAt: subscription.updatedAt,
+        endDateOfSubscription: subscription.endDateOfSubscription,
+        paymentSystemSubId: subscription.paymentSystemSubId,
+        status: subscription.status,
+        autoRenewal: subscription.autoRenewal,
       },
       where: {
-        id: oder.id,
+        id: subscription.id,
       },
     });
   }

@@ -8,17 +8,16 @@ datasource db {
   url      = env("PAYMENTS_DATABASE_URL")
 }
 
-model Order {
+model Subscription {
   id                    String               @id @default(uuid())
   userId                String
-  subscriptionType      String
-  price                 Int
-  paymentCount          Int
   createdAt             DateTime
   updatedAt             DateTime?
   dateOfPayment         DateTime?
   endDateOfSubscription DateTime?
-  paymentSystemOrderId  String?
+  paymentSystemSubId    String?
+  paymentSystem         String
+  status                String
   autoRenewal           Boolean              @default(false)
   payments              PaymentTransaction[] @relation("OrderPayments")
 
@@ -26,12 +25,13 @@ model Order {
 }
 
 model PaymentTransaction {
-  id            String    @id @default(uuid())
-  price         Int
-  paymentSystem String
-  status        String
-  createdAt     DateTime
-  updatedAt     DateTime?
-  orderId       String
-  order         Order?    @relation("OrderPayments", fields: [orderId], references: [id])
+  id                    String        @id @default(uuid())
+  subscriptionType      String
+  price                 Int
+  paymentSystem         String
+  status                String
+  dateOfPayment         DateTime
+  endDateOfSubscription DateTime?
+  subId                 String
+  subscription          Subscription? @relation("OrderPayments", fields: [subId], references: [id])
 }

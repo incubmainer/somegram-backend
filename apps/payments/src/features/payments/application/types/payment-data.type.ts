@@ -20,7 +20,5 @@ export type PaymentData = {
   paymentCount: number;
   paymentSystem: PaymentSystem;
   typeSubscription: PaymentTime;
-  autoRenewal: boolean;
   userInfo: UserInfo;
-  orderId: string | null;
 };

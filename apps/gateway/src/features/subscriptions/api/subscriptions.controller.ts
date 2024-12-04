@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Post,
   RawBodyRequest,
   Req,
@@ -77,15 +78,29 @@ export class SubscriptionsController {
     });
   }
 
-  @Post('canceled-auto-renewal')
+  @Post('disable-auto-renewal')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async canceledAutoRenewal(@CurrentUserId() userId: string) {
-    // const result: NotificationObject<string, ValidationError> =
-    //   await this.commandBus.execute();
-    // const code = result.getCode();
-    // if (code === CreatePaymentCodes.Success) {
-    //   return true;
-    // }н
+  async disableAutoRenewal(@CurrentUserId() userId: string) {
+    const result = await this.paymentsServiceAdapter.disableAutoRenewal({
+      userId,
+    });
+    if (!result) {
+      throw new NotFoundException();
+    }
+    return result;
+  }
+
+  @Post('enable-auto-renewal')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async enableAutoRenewal(@CurrentUserId() userId: string) {
+    const result = await this.paymentsServiceAdapter.enableAutoRenewal({
+      userId,
+    });
+    if (!result) {
+      throw new NotFoundException();
+    }
+    return result;
   }
 }

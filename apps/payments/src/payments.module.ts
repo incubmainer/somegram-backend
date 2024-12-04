@@ -11,12 +11,20 @@ import { PaymentManager } from './common/managers/payment.manager';
 import { PaymentsRepository } from './features/payments/infrastructure/payments.repository';
 import { StripeAdapter } from './common/adapters/stripe.adapter';
 import { StripeWebhookUseCase } from './features/payments/application/use-cases/stripe-webhook.use-case';
+import { DisableAutoRenewalUseCase } from './features/payments/application/use-cases/disable-autorenewal.use-case';
+import { EnableAutoRenewalUseCase } from './features/payments/application/use-cases/enable-autorenewal.use-case';
+import { PaymentsService } from './features/payments/api/payments.service';
 
-const useCases = [CreatePaymentUseCase, StripeWebhookUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  StripeWebhookUseCase,
+  DisableAutoRenewalUseCase,
+  EnableAutoRenewalUseCase,
+];
 
 const repositories = [PaymentsRepository];
 
-const services = [PaymentManager, StripeAdapter];
+const services = [PaymentsService, PaymentManager, StripeAdapter];
 
 @Module({
   imports: [
