@@ -92,7 +92,10 @@ export class StripeWebhookUseCase
         await this.paymentsRepository.createPaymentTransaction(newPayment);
       }
 
-      if (event.type === 'customer.subscription.updated') {
+      if (
+        event.type === 'customer.subscription.updated' ||
+        event.type === 'customer.subscription.created'
+      ) {
         const subscription = event.data.object as Stripe.Stripe.Subscription;
         const subId = subscription.id;
         const existingSubscription =

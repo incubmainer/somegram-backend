@@ -21,4 +21,5 @@ export type PaymentData = {
   paymentSystem: PaymentSystem;
   typeSubscription: PaymentTime;
   userInfo: UserInfo;
+  billing_cycle_anchor?: Date;
 };

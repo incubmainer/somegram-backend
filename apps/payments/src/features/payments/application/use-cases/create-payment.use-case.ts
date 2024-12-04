@@ -72,14 +72,20 @@ export class CreatePaymentUseCase
         (subscriptionInfo.autoRenewal === true ||
           subscriptionInfo.endDateOfSubscription > new Date())
       ) {
-        await this.paymentsService.updateCurrentSub(paymentData);
-        return 'Subscription plan changed';
-      } else {
-        const newPayment =
-          await this.paymentsService.createAutoPayment(paymentData);
+        //await this.paymentsService.updateCurrentSub(paymentData);
 
-        return { url: newPayment };
+        paymentData.billing_cycle_anchor =
+          subscriptionInfo.endDateOfSubscription;
+        await this.paymentsService.disableAutoRenewal(
+          paymentData.paymentSystem,
+          subscriptionInfo.paymentSystemSubId,
+        );
       }
+
+      const newPayment =
+        await this.paymentsService.createAutoPayment(paymentData);
+
+      return { url: newPayment };
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException();

@@ -33,6 +33,18 @@ export class StripeAdapter {
         });
       }
 
+      const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData =
+        {
+          metadata: {
+            userId: payload.userInfo.userId,
+          },
+        };
+      if (payload.billing_cycle_anchor) {
+        subscriptionData.trial_end = Math.floor(
+          payload.billing_cycle_anchor.getTime() / 1000,
+        );
+      }
+
       const result = await this.stripe.checkout.sessions.create({
         success_url: payload.successFrontendUrl,
         cancel_url: payload.cancelFrontendUrl,
@@ -54,11 +66,7 @@ export class StripeAdapter {
           },
         ],
         mode: 'subscription',
-        subscription_data: {
-          metadata: {
-            userId: payload.userInfo.userId,
-          },
-        },
+        subscription_data: subscriptionData,
         customer: customer.id,
         metadata: {
           userId: payload.userInfo.userId,
