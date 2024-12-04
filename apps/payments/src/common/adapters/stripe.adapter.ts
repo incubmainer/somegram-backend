@@ -40,7 +40,7 @@ export class StripeAdapter {
           },
         };
       if (payload.billing_cycle_anchor) {
-        subscriptionData.trial_end = Math.floor(
+        subscriptionData.billing_cycle_anchor = Math.floor(
           payload.billing_cycle_anchor.getTime() / 1000,
         );
       }
