@@ -13,6 +13,7 @@ import {
 } from './get-all-devices.query';
 import { SecurityDevicesModule } from '../../security-devices.module';
 import { SecurityDevicesOutputDto } from '../../api/dto/output/security-devices.output-dto';
+import { ApplicationNotificationModule } from '@app/application-notification';
 
 type UserInsertType = {
   username: string;
@@ -42,6 +43,7 @@ describe('Get all security devices', () => {
     */
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
       imports: [
+        ApplicationNotificationModule,
         SecurityDevicesModule,
         ConfigModule.forRoot({
           isGlobal: true,
