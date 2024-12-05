@@ -20,7 +20,7 @@ export class PaymentsRepository {
     status: Subscription['status'];
     paymentSystem: Subscription['paymentSystem'];
     paymentSystemSubId: Subscription['paymentSystemSubId'];
-    dateOfPayment: Subscription['dateOfPayment'];
+    dateOfPayment?: Subscription['dateOfPayment'];
     endDateOfSubscription?: Subscription['endDateOfSubscription'];
   }) {
     return await this.txHost.tx.subscription.create({

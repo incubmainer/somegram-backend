@@ -14,6 +14,7 @@ export class PaymentsService {
   async updateCurrentSub(payload: PaymentData) {
     return await this.paymentManager.updateCurrentSub(payload);
   }
+
   async disableAutoRenewal(
     paymentSystem: PaymentSystem,
     paymentSubscriptionSubId: string,

@@ -54,6 +54,10 @@ export class StripeWebhookUseCase
             start: new Date(sb.period.start * 1000),
             end: new Date(sb.period.end * 1000),
           };
+
+          subscription.dateOfPayment = new Date(sb.period.start * 1000);
+          subscription.endDateOfSubscription = new Date(sb.period.end * 1000);
+          await this.paymentsRepository.updateSubscription(subscription);
           const newPayment = {
             status: TransactionStatuses.PaymentSucceeded,
             price: sb.amount,
@@ -80,6 +84,9 @@ export class StripeWebhookUseCase
             'Webhook Error: Subscription not found',
           );
         }
+        subscription.dateOfPayment = new Date(invoce.period_start * 1000);
+        subscription.endDateOfSubscription = new Date(invoce.period_end * 1000);
+        await this.paymentsRepository.updateSubscription(subscription);
         const subscriptionData = invoce.lines.data[0];
         const newPayment = {
           status: TransactionStatuses.PaymentFailed,
@@ -106,13 +113,13 @@ export class StripeWebhookUseCase
             : true;
           existingSubscription.paymentSystemSubId = subId;
           existingSubscription.updatedAt = new Date();
-          existingSubscription.dateOfPayment =
-            existingSubscription.endDateOfSubscription = new Date(
-              subscription.current_period_start * 1000,
-            );
-          existingSubscription.endDateOfSubscription = new Date(
-            subscription.current_period_end * 1000,
-          );
+          // existingSubscription.dateOfPayment =
+          //   existingSubscription.endDateOfSubscription = new Date(
+          //     subscription.current_period_start * 1000,
+          //   );
+          // existingSubscription.endDateOfSubscription = new Date(
+          //   subscription.current_period_end * 1000,
+          // );
           await this.paymentsRepository.updateSubscription(
             existingSubscription,
           );
@@ -123,10 +130,10 @@ export class StripeWebhookUseCase
             paymentSystem: PaymentSystem.STRIPE,
             paymentSystemSubId: subId,
             status: subscription.status,
-            dateOfPayment: new Date(subscription.current_period_start * 1000),
-            endDateOfSubscription: new Date(
-              subscription.current_period_end * 1000,
-            ),
+            // dateOfPayment: new Date(subscription.current_period_start * 1000),
+            // endDateOfSubscription: new Date(
+            //   subscription.current_period_end * 1000,
+            // ),
           });
         }
       }
