@@ -93,16 +93,16 @@ model UserGoogleInfo {
 }
 
 model CountryCatalog {
-  id          Int           @id @default(autoincrement())
+  id          String        @id @default(uuid())
   code        String        @unique
   name        String
   CityCatalog CityCatalog[]
 }
 
 model CityCatalog {
-  id             Int            @id @default(autoincrement())
+  id             String         @id @default(uuid())
   name           String
-  countryId      Int
+  countryId      String
   CountryCatalog CountryCatalog @relation(fields: [countryId], references: [id])
 
   @@unique([countryId, name])

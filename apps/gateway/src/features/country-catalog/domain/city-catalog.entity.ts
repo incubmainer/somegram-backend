@@ -1,9 +1,9 @@
 import { CountryCatalog, CityCatalog } from '@prisma/gateway';
 
 export class CityCatalogEntity implements CityCatalog {
-  public id: number;
+  public id: string;
   public name: string;
-  public countryId: number;
+  public countryId: string;
   public CountryCatalog: CountryCatalog;
 
   static create(name: string): CityCatalogEntity {

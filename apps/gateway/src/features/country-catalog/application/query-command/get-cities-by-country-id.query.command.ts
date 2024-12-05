@@ -12,7 +12,7 @@ import {
 import { NotFoundException } from '@nestjs/common';
 
 export class GetCitiesByCountryIdQueryCommand {
-  constructor(public countryId: number) {}
+  constructor(public countryId: string) {}
 }
 
 @QueryHandler(GetCitiesByCountryIdQueryCommand)

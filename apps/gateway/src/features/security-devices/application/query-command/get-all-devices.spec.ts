@@ -77,7 +77,7 @@ describe('Get all security devices', () => {
     };
 
     insertDeviceDto = {
-      userId: '1234f',
+      userId: '',
       ip: '0.0.0.0',
       deviceId: '12345-12345',
       lastActiveDate: new Date().toISOString(),

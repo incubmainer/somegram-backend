@@ -32,11 +32,49 @@ import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { CommandExecutorService } from '../../common/services/command-executor-service';
 import { CountryCityRepository } from './infrastructure/country-city.repository';
+import { PullCountryWithCityResponseType } from './domain/type/type';
 
 class CommandExecutorServiceMock implements OnApplicationBootstrap {
   constructor(private readonly commandBus: CommandBus) {}
   onApplicationBootstrap() {}
 }
+
+export const testData: PullCountryWithCityResponseType = {
+  error: false,
+  msg: 'Data retrieved successfully',
+  data: [
+    {
+      iso2: 'US',
+      iso3: 'USA',
+      country: 'United States',
+      cities: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+    },
+    {
+      iso2: 'CA',
+      iso3: 'CAN',
+      country: 'Canada',
+      cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa'],
+    },
+    {
+      iso2: 'GB',
+      iso3: 'GBR',
+      country: 'United Kingdom',
+      cities: ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Leeds'],
+    },
+    {
+      iso2: 'AU',
+      iso3: 'AUS',
+      country: 'Australia',
+      cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'],
+    },
+    {
+      iso2: 'IN',
+      iso3: 'IND',
+      country: 'India',
+      cities: ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai'],
+    },
+  ],
+};
 
 describe('CountryCityCatalog', () => {
   let commandBus: CommandBus;
@@ -100,6 +138,12 @@ describe('CountryCityCatalog', () => {
   };
 
   it('should create countries and cities, then get them', async () => {
+    const spy = jest
+      .spyOn<any, any>(updateOrCreateCatalogHandler, 'pullData')
+      .mockImplementation(() => {
+        return Promise.resolve(testData);
+      });
+
     const result: AppNotificationResultType<void> = await commandBus.execute(
       new UpdateOrCreateOrCreateCatalogCommand(),
     );
@@ -114,14 +158,15 @@ describe('CountryCityCatalog', () => {
     const countryId = getCountry[0].id;
 
     const getCitiesByCountryId: CityOutputDto[] = await queryBus.execute(
-      new GetCitiesByCountryIdQueryCommand(+countryId),
+      new GetCitiesByCountryIdQueryCommand(countryId),
     );
     expect(getCitiesByCountryId).toBeDefined();
+    spy.mockRestore();
   });
 
   it('should not get city by id', async () => {
     await expect(
-      queryBus.execute(new GetCitiesByCountryIdQueryCommand(1)),
+      queryBus.execute(new GetCitiesByCountryIdQueryCommand('1')),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -135,7 +180,9 @@ describe('CountryCityCatalog', () => {
   it('should not create countries and cities, pull error', async () => {
     const spy = jest
       .spyOn<any, any>(updateOrCreateCatalogHandler, 'pullData')
-      .mockResolvedValue(null);
+      .mockImplementation(() => {
+        return Promise.resolve(null);
+      });
 
     const result: AppNotificationResultType<void> = await commandBus.execute(
       new UpdateOrCreateOrCreateCatalogCommand(),
@@ -147,6 +194,11 @@ describe('CountryCityCatalog', () => {
   });
 
   it('should not create countries and cities, repository error', async () => {
+    const spyPull = jest
+      .spyOn<any, any>(updateOrCreateCatalogHandler, 'pullData')
+      .mockImplementation(() => {
+        return Promise.resolve(testData);
+      });
     const spy = jest
       .spyOn<any, any>(countryCityRepository, 'saveMany')
       .mockResolvedValue(false);
@@ -158,5 +210,6 @@ describe('CountryCityCatalog', () => {
     expect(result.appResult).toEqual(AppNotificationResultEnum.InternalError);
 
     spy.mockRestore();
+    spyPull.mockRestore();
   });
 });

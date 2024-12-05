@@ -2,7 +2,7 @@ import { CountryCatalog, CityCatalog } from '@prisma/gateway';
 import { CityCatalogEntity } from './city-catalog.entity';
 
 export class CountryCatalogEntity implements CountryCatalog {
-  public id: number;
+  public id: string;
   public code: string;
   public name: string;
   public CityCatalog: CityCatalog[];
