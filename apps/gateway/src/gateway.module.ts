@@ -19,11 +19,14 @@ import {
 } from '@app/requests';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerConfig } from './common/config/configs/logger.config';
+import { ClientsModule } from '@nestjs/microservices';
+import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
 
 export const requestId = 'reduestId';
 
 @Module({
   imports: [
+    ClientsModule.registerAsync([photoServiceOptions()]),
     ConfigModule.forRoot({
       isGlobal: true,
       ignoreEnvFile: false,

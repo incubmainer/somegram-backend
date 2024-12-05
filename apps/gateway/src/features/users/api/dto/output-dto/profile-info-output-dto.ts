@@ -32,7 +32,7 @@ export const userProfileInfoMapper = (
     about: user.about ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
-    avatar: avatarUrl ? { url: avatarUrl } : undefined,
+    avatar: { url: avatarUrl ? avatarUrl : null },
   });
 };
 

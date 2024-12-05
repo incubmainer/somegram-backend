@@ -55,7 +55,7 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
       UpdatePostCodes.Success,
     );
     try {
-      const post = await this.postsRepository.getPostWithPhotosById(postId);
+      const post = await this.postsRepository.getPostById(postId);
       if (!post) {
         notification.setCode(UpdatePostCodes.PostNotFound);
         return notification;

@@ -10,7 +10,6 @@ import {
   validateSync,
   ValidationError,
 } from 'class-validator';
-import * as sharp from 'sharp';
 import {
   CustomLoggerService,
   InjectCustomLoggerService,
@@ -22,14 +21,13 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { UnauthorizedException } from '@nestjs/common';
 
 import { NotificationObject } from '../../../../common/domain/notification';
-import { PostPhotoStorageService } from '../../infrastructure/post-photo-storage.service';
-import { PostPhotoRepository } from '../../infrastructure/post-photos.repository';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import {
   FileDto,
   POST_CONSTRAINTS,
 } from '../../api/dto/input-dto/add-post.dto';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 
 const TRANSACTION_TIMEOUT = 50000; //necessary to wait upload all files wihtout timeout error
 
@@ -67,13 +65,12 @@ export class AddPostCommand {
 export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
   constructor(
     @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
-    private readonly postPhotoStorageService: PostPhotoStorageService,
-    private readonly postPhotoRepository: PostPhotoRepository,
     private readonly postsRepository: PostsRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
     logger.setContext(AddPostUseCase.name);
   }
@@ -93,8 +90,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       notification.addErrors(errors);
       return notification;
     }
-    const user =
-      await this.usersQueryRepository.findUserWithAvatarInfoById(userId);
+    const user = await this.usersQueryRepository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -112,21 +108,10 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
           });
 
           for (const file of files) {
-            const savedFile = await this.postPhotoStorageService.savePhoto(
-              userId,
-              post.id,
-              file.buffer,
-              file.mimetype,
-            );
-            const metadata = await sharp(file.buffer).metadata();
-            await this.postPhotoRepository.addInfoAboutUploadedPhoto({
-              userId,
+            await this.photoServiceAdapter.uploadPostPhoto({
+              ownerId: userId,
               postId: post.id,
-              photoKey: savedFile.photoKey,
-              createdAt,
-              width: metadata.width,
-              height: metadata.height,
-              size: metadata.size,
+              file,
             });
           }
           notification.setData(post.id);

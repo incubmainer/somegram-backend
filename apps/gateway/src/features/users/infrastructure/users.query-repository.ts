@@ -28,17 +28,11 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async findUserWithAvatarInfoById(id?: string) {
+  async findUserById(id?: string) {
     const user = await this.txHost.tx.user.findFirst({
       where: { id },
-      include: {
-        userAvatar: true,
-      },
     });
-    if (!user) {
-      return null;
-    }
-    return user;
+    return user ? user : null;
   }
 
   async getInfoAboutMe(currentUserId: string): Promise<MeOutputDto | null> {
@@ -51,7 +45,7 @@ export class UsersQueryRepository {
     return userMapper(user);
   }
 
-  async getProfileInfo2(userId: string): Promise<User | null> {
+  async getProfileInfo(userId: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: { id: userId },
     });

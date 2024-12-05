@@ -1,11 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
-import {
-  PrismaClient as GatewayPrismaClient,
-  PostPhoto,
-  UserPost,
-} from '@prisma/gateway';
+import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
 @Injectable()
 export class PostsRepository {
   constructor(
@@ -28,17 +24,10 @@ export class PostsRepository {
     });
   }
 
-  public async getPostWithPhotosById(postId: UserPost['id']): Promise<
-    {
-      postPhotos: PostPhoto[];
-    } & UserPost
-  > {
+  public async getPostById(postId: UserPost['id']): Promise<UserPost> {
     return await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
-      },
-      include: {
-        postPhotos: true,
       },
     });
   }

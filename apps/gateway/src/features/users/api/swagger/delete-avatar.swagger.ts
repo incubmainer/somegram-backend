@@ -13,11 +13,11 @@ export function DeleteAvatarSwagger() {
     ApiOperation({ summary: 'Delete user avatar' }),
     ApiResponse({
       status: HttpStatus.NO_CONTENT,
-      description: 'Delete avatar successfully',
+      description: 'Success deleted avatar',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'User not found or not authorized',
+      description: 'Unauthorized',
     }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
