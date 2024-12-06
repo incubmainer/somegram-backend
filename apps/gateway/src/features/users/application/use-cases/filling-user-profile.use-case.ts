@@ -123,19 +123,17 @@ export class FillingUserProfileUseCase {
           return notification;
         }
       }
-      const currentDate = new Date();
-      const dateOfBirthDate = parseDateDDMMYYYY(dateOfBirth);
       const updatedUser = await this.usersRepository.updateUserProfileInfo(
         userId,
         {
           userName,
           firstName,
           lastName,
-          dateOfBirth: dateOfBirthDate,
-          about,
-          updatedAt: currentDate,
-          city,
-          country,
+          dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,
+          about: about ? about : null,
+          updatedAt: new Date(),
+          city: city ? city : null,
+          country: country ? country : null,
         },
       );
       notification.setData(updatedUser);
