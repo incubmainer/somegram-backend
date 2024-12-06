@@ -19,6 +19,10 @@ export function IsCountry(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any) {
+          if (!value) {
+            return true;
+          }
+
           if (typeof value !== 'string') {
             return false;
           }

@@ -41,6 +41,6 @@ const services = [AuthService, CryptoService, PhotoServiceAdapter];
   ],
   controllers: [UsersController, PublicUsersController],
   providers: [JwtStrategy, ...services, ...useCases, ...repositories],
-  exports: [],
+  exports: [UsersRepository],
 })
 export class UsersModule {}
