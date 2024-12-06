@@ -64,6 +64,33 @@
         "tsConfigPath": "apps/files/tsconfig.app.json"
       }
     },
+    "application-notification": {
+      "type": "library",
+      "root": "libs/application-notification",
+      "entryFile": "index",
+      "sourceRoot": "libs/application-notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/application-notification/tsconfig.lib.json"
+      }
+    },
+    "paginator": {
+      "type": "library",
+      "root": "libs/paginator",
+      "entryFile": "index",
+      "sourceRoot": "libs/paginator/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/paginator/tsconfig.lib.json"
+      }
+    },
+    "decorators": {
+      "type": "library",
+      "root": "libs/decorators",
+      "entryFile": "index",
+      "sourceRoot": "libs/decorators/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/decorators/tsconfig.lib.json"
+      }
+    },
     "payments": {
       "type": "application",
       "root": "apps/payments",

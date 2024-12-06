@@ -21,12 +21,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerConfig } from './common/config/configs/logger.config';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
+import { ApplicationNotificationModule } from '../../../libs/application-notification/src';
+import { CommonModule } from './common/common.module';
+import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
+import { SecurityDevicesModule } from './features/security-devices/security-devices.module';
 import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
 
 export const requestId = 'reduestId';
 
 @Module({
   imports: [
+    SecurityDevicesModule,
     ClientsModule.registerAsync([photoServiceOptions()]),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -84,6 +89,9 @@ export const requestId = 'reduestId';
       },
       inject: [AlsService, ConfigService],
     }),
+    ApplicationNotificationModule,
+    CountryCatalogModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],
