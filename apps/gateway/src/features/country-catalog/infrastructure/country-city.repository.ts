@@ -5,6 +5,8 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { CountryCatalogEntity } from '../domain/country-catalog.entity';
 import { CityCatalogEntity } from '../domain/city-catalog.entity';
 
+const TRANSACTION_TIMEOUT = 50000; //necessary to wait add all sities and contries wihtout timeout error
+
 @Injectable()
 export class CountryCityRepository {
   constructor(
@@ -15,29 +17,35 @@ export class CountryCityRepository {
 
   async saveMany(countries: CountryCatalogEntity[]): Promise<boolean> {
     try {
-      await this.txHost.withTransaction(async (): Promise<void> => {
-        const promises = countries.map((country: CountryCatalogEntity) => {
-          return this.txHost.tx.countryCatalog.upsert({
-            where: { code: country.code },
-            update: {},
-            create: {
-              code: country.code,
-              name: country.name,
-              CityCatalog: {
-                createMany: {
-                  data: country.CityCatalog.map((city: CityCatalogEntity) => ({
-                    name: city.name,
-                  })),
+      await this.txHost.withTransaction(
+        { timeout: TRANSACTION_TIMEOUT },
+        async (): Promise<void> => {
+          const promises = countries.map((country: CountryCatalogEntity) => {
+            return this.txHost.tx.countryCatalog.upsert({
+              where: { code: country.code },
+              update: {},
+              create: {
+                code: country.code,
+                name: country.name,
+                CityCatalog: {
+                  createMany: {
+                    data: country.CityCatalog.map(
+                      (city: CityCatalogEntity) => ({
+                        name: city.name,
+                      }),
+                    ),
+                  },
                 },
               },
-            },
+            });
           });
-        });
 
-        await Promise.all(promises);
-      });
+          await Promise.all(promises);
+        },
+      );
       return true;
     } catch (e) {
+      console.error(e);
       return false;
     }
   }

@@ -54,6 +54,7 @@ export class UpdateOrCreateCatalogCommandHandler
 
     const result: boolean =
       await this.countryCityRepository.saveMany(countriesArr);
+
     if (!result) return this.applicationNotification.internalServerError();
 
     return this.applicationNotification.success(null);
@@ -69,6 +70,7 @@ export class UpdateOrCreateCatalogCommandHandler
       });
       return await response.json();
     } catch (e) {
+      console.error(e);
       return null;
     }
   }
