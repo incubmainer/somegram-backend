@@ -10,7 +10,6 @@ import { QueryBus } from '@nestjs/cqrs';
 import { GetCountriesQueryCommand } from '../application/query-command/get-countries.query.command';
 import { GetCitiesByCountryIdQueryCommand } from '../application/query-command/get-cities-by-country-id.query.command';
 import { COUNTRY_CATALOG_ROUTE } from '../../../common/config/constants/route.constants';
-import { EntityId } from '@app/decorators';
 
 @ApiTags('Country catalog')
 @Controller(COUNTRY_CATALOG_ROUTE.MAIN)
@@ -25,7 +24,9 @@ export class CountryCatalogController {
 
   @Get(`:countryId/${COUNTRY_CATALOG_ROUTE.CITY}`)
   @CitiesInfoSwagger()
-  async getCities(@Param() countryId: string): Promise<CityOutputDto[]> {
+  async getCities(
+    @Param('countryId') countryId: string,
+  ): Promise<CityOutputDto[]> {
     return await this.queryBus.execute(
       new GetCitiesByCountryIdQueryCommand(countryId),
     );
