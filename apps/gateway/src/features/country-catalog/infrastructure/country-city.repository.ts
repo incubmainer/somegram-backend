@@ -38,6 +38,7 @@ export class CountryCityRepository {
       });
       return true;
     } catch (e) {
+      console.error(e);
       return false;
     }
   }

@@ -51,10 +51,10 @@ export class UpdateOrCreateCatalogCommandHandler
       );
       countriesArr.push(newCountry);
     });
-    console.log(countriesArr[0]);
+
     const result: boolean =
       await this.countryCityRepository.saveMany(countriesArr);
-
+    console.log(result);
     if (!result) return this.applicationNotification.internalServerError();
 
     return this.applicationNotification.success(null);
