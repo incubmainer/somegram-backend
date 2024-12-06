@@ -67,8 +67,10 @@ export class UpdateOrCreateCatalogCommandHandler
           'Content-Type': 'application/json',
         },
       });
+      console.log(response);
       return await response.json();
     } catch (e) {
+      console.error(e);
       return null;
     }
   }
