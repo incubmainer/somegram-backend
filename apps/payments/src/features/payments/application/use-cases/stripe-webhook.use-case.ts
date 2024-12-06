@@ -57,6 +57,7 @@ export class StripeWebhookUseCase
 
           subscription.dateOfPayment = new Date(sb.period.start * 1000);
           subscription.endDateOfSubscription = new Date(sb.period.end * 1000);
+          subscription.paymentSystemCustomerId = invoce.customer as string;
           await this.paymentsRepository.updateSubscription(subscription);
           const newPayment = {
             status: TransactionStatuses.PaymentSucceeded,
@@ -113,13 +114,8 @@ export class StripeWebhookUseCase
             : true;
           existingSubscription.paymentSystemSubId = subId;
           existingSubscription.updatedAt = new Date();
-          // existingSubscription.dateOfPayment =
-          //   existingSubscription.endDateOfSubscription = new Date(
-          //     subscription.current_period_start * 1000,
-          //   );
-          // existingSubscription.endDateOfSubscription = new Date(
-          //   subscription.current_period_end * 1000,
-          // );
+          existingSubscription.paymentSystemCustomerId =
+            subscription.customer as string;
           await this.paymentsRepository.updateSubscription(
             existingSubscription,
           );
@@ -130,10 +126,6 @@ export class StripeWebhookUseCase
             paymentSystem: PaymentSystem.STRIPE,
             paymentSystemSubId: subId,
             status: subscription.status,
-            // dateOfPayment: new Date(subscription.current_period_start * 1000),
-            // endDateOfSubscription: new Date(
-            //   subscription.current_period_end * 1000,
-            // ),
           });
         }
       }

@@ -21,4 +21,5 @@ export type PaymentData = {
   paymentSystem: PaymentSystem;
   typeSubscription: PaymentTime;
   userInfo: UserInfo;
+  customerId?: string;
 };

@@ -136,22 +136,16 @@ export class StripeAdapter {
 
   public async updateAutoPayment(payload: PaymentData) {
     try {
-      // Получаем список подписок для пользователя
       const subscriptions = await this.stripe.subscriptions.list({
-        customer: await this.getCustomerId(payload.userInfo.email),
-        status: 'active',
+        customer: payload.customerId,
       });
-
-      // Находим активную подписку
       const activeSubscription = subscriptions.data.find(
         (subscription) =>
           subscription.metadata.userId === payload.userInfo.userId,
       );
 
-      // Получаем существующий элемент подписки
       const existingSubscriptionItem = activeSubscription.items.data[0];
 
-      // Обновляем существующий элемент подписки с новым планом цен
       const updatedSubscription = await this.stripe.subscriptions.update(
         activeSubscription.id,
         {
@@ -163,24 +157,15 @@ export class StripeAdapter {
               price: await this.createPricePlan(payload),
             },
           ],
+          metadata: {
+            userId: payload.userInfo.userId,
+          },
         },
       );
 
       return updatedSubscription;
     } catch (e) {
       console.error(e);
-      throw new InternalServerErrorException();
-    }
-  }
-
-  private async getCustomerId(email: string) {
-    const customers = await this.stripe.customers.list({
-      email: email,
-    });
-
-    if (customers.data.length > 0) {
-      return customers.data[0].id;
-    } else {
       throw new InternalServerErrorException();
     }
   }

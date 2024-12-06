@@ -22,6 +22,7 @@ export class PaymentsRepository {
     paymentSystemSubId: Subscription['paymentSystemSubId'];
     dateOfPayment?: Subscription['dateOfPayment'];
     endDateOfSubscription?: Subscription['endDateOfSubscription'];
+    paymentSystemCustomerId?: Subscription['paymentSystemCustomerId'];
   }) {
     return await this.txHost.tx.subscription.create({
       data: {
@@ -33,6 +34,7 @@ export class PaymentsRepository {
         paymentSystemSubId: dto.paymentSystemSubId,
         endDateOfSubscription: dto.endDateOfSubscription,
         dateOfPayment: dto.dateOfPayment,
+        paymentSystemCustomerId: dto.paymentSystemCustomerId,
       },
     });
   }
@@ -100,6 +102,7 @@ export class PaymentsRepository {
         paymentSystemSubId: subscription.paymentSystemSubId,
         status: subscription.status,
         autoRenewal: subscription.autoRenewal,
+        paymentSystemCustomerId: subscription.paymentSystemCustomerId,
       },
       where: {
         id: subscription.id,

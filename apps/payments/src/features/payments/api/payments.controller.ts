@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
   DISABLE_AUTO_RENEWAL,
@@ -16,7 +16,10 @@ import { GetPaymentsQuery } from '../application/use-cases/get-payments.use-case
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @MessagePattern({ cmd: CREATE_AUTO_PAYMENT })
   async createPayment({ payload }) {
@@ -48,6 +51,6 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments({ payload }) {
-    return this.commandBus.execute(new GetPaymentsQuery(payload.userId));
+    return this.queryBus.execute(new GetPaymentsQuery(payload.userId));
   }
 }

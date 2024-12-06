@@ -69,9 +69,11 @@ export class CreatePaymentUseCase
 
       if (
         subscriptionInfo &&
+        subscriptionInfo.status !== 'canceled' &&
         (subscriptionInfo.autoRenewal === true ||
           subscriptionInfo.endDateOfSubscription > new Date())
       ) {
+        paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
         await this.paymentsService.updateCurrentSub(paymentData);
         return 'Subscription plan changed';
       } else {

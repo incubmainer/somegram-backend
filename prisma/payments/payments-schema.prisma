@@ -9,17 +9,18 @@ datasource db {
 }
 
 model Subscription {
-  id                    String               @id @default(uuid())
-  userId                String
-  createdAt             DateTime
-  updatedAt             DateTime?
-  dateOfPayment         DateTime?
-  endDateOfSubscription DateTime?
-  paymentSystemSubId    String?
-  paymentSystem         String
-  status                String
-  autoRenewal           Boolean              @default(false)
-  payments              PaymentTransaction[] @relation("OrderPayments")
+  id                      String               @id @default(uuid())
+  userId                  String
+  createdAt               DateTime
+  updatedAt               DateTime?
+  dateOfPayment           DateTime?
+  endDateOfSubscription   DateTime?
+  paymentSystemSubId      String?
+  paymentSystemCustomerId String?
+  paymentSystem           String
+  status                  String
+  autoRenewal             Boolean              @default(false)
+  payments                PaymentTransaction[] @relation("OrderPayments")
 
   @@index([userId])
 }

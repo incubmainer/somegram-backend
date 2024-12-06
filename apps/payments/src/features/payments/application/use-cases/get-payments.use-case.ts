@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalServerErrorException } from '@nestjs/common';
 
 import { PaymentsRepository } from '../../infrastructure/payments.repository';
@@ -7,9 +7,9 @@ export class GetPaymentsQuery {
   constructor(public userId: string) {}
 }
 
-@CommandHandler(GetPaymentsQuery)
+@QueryHandler(GetPaymentsQuery)
 export class GetPaymentsQueryUseCase
-  implements ICommandHandler<GetPaymentsQuery>
+  implements IQueryHandler<GetPaymentsQuery>
 {
   constructor(private readonly paymentsRepository: PaymentsRepository) {}
 
