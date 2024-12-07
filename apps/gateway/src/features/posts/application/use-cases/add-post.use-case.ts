@@ -28,6 +28,7 @@ import {
   POST_CONSTRAINTS,
 } from '../../api/dto/input-dto/add-post.dto';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
 
 const TRANSACTION_TIMEOUT = 50000; //necessary to wait upload all files wihtout timeout error
 
@@ -57,14 +58,15 @@ export class AddPostCommand {
 }
 
 @CommandHandler(AddPostCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
   constructor(
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
     private readonly postsRepository: PostsRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly txHost: TransactionHost<
@@ -72,7 +74,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
     >,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
-    logger.setContext(AddPostUseCase.name);
+    this.logger.setContext(AddPostUseCase.name);
   }
   async execute(command: AddPostCommand) {
     const { userId, files, description } = command;
@@ -118,7 +120,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
         },
       );
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(AddPostCodes.TransactionError);
     }
     return notification;

@@ -16,6 +16,7 @@ import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
 
 export const GetPostsCodes = {
   Success: Symbol('success'),
@@ -32,21 +33,22 @@ export class GetPostsByUserQuery {
 }
 
 @QueryHandler(GetPostsByUserQuery)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GetPostsByUserUseCase
   implements IQueryHandler<GetPostsByUserQuery>
 {
   constructor(
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
-    logger.setContext(GetPostsByUserUseCase.name);
+    this.logger.setContext(GetPostsByUserUseCase.name);
   }
   async execute(command: GetPostsByUserQuery) {
     const { userId, queryString, endCursorPostId } = command;
@@ -85,7 +87,8 @@ export class GetPostsByUserUseCase
       );
       notification.setData(result);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
+      //this.logger.log('error', 'transaction error', { e });
       notification.setCode(GetPostsCodes.TransactionError);
     }
     return notification;

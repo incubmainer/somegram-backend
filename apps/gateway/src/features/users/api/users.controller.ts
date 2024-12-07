@@ -54,6 +54,7 @@ import {
   ProfileInfoCodes,
 } from '../application/use-cases/queryBus/get-profile-info.use-case';
 import { User } from '@prisma/gateway';
+import { LoggerService } from '@app/logger';
 
 @ApiTags('Users')
 @Controller('users')
@@ -66,15 +67,16 @@ export class UsersController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(UsersController.name);
+    this.logger.setContext(UsersController.name);
   }
   @Get('profile-info')
   @ProfileInfoSwagger()
   @UseGuards(AuthGuard('jwt'))
   async gerProfileInfo(@CurrentUserId() userId: string) {
-    this.logger.log('info', 'start profile info request', {});
+    this.logger.debug('start profile info request', this.gerProfileInfo.name);
     const notification: NotificationObject<{
       user: User;
       avatarUrl: string | null;
@@ -99,7 +101,7 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @CurrentUserId() userId: string,
   ) {
-    this.logger.log('info', 'start upload avatar request', {});
+    this.logger.debug('start upload avatar request', this.uploadAvatar.name);
     const result: NotificationObject<null, ValidationError> =
       await this.commandBus.execute(new UploadAvatarCommand(userId, file));
     const code = result.getCode();
@@ -130,7 +132,7 @@ export class UsersController {
     @CurrentUserId() userId: string,
     @Body() fillProfileDto: FillProfileInputDto,
   ) {
-    this.logger.log('info', 'start profile fill info request', {});
+    this.logger.debug('start profile fill info request', this.fillProfile.name);
     const result: NotificationObject<null, ValidationError> =
       await this.commandBus.execute(
         new FillingUserProfileCommand(
@@ -176,7 +178,10 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUserAvatar(@CurrentUserId() userId: string) {
-    this.logger.log('info', 'start delete avatar request', {});
+    this.logger.debug(
+      'start delete avatar request',
+      this.deleteUserAvatar.name,
+    );
     const notification: NotificationObject<ProfileInfoOutputDto> =
       await this.commandBus.execute(new DeleteAvatarCommand(userId));
     const code = notification.getCode();

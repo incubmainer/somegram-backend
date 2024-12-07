@@ -11,6 +11,7 @@ import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecapchaService } from 'apps/gateway/src/common/utils/recapcha.service';
 import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
+import { ConfigurationType } from '../../../../settings/configuration/configuration';
 
 export const RestorePasswordCodes = {
   Success: Symbol('success'),
@@ -44,12 +45,16 @@ export class RestorePasswordUseCase {
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly emailAuthService: EmailAuthService,
-    private readonly configService: ConfigService,
+    //private readonly configService: ConfigService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly recapchaService: RecapchaService,
   ) {
-    const config = this.configService.get<AuthConfig>('auth');
-    this.expireAfterMiliseconds =
-      config.restorePasswordCodeExpireAfterMiliseconds;
+    // const config = this.configService.get<AuthConfig>('auth');
+    // this.expireAfterMiliseconds =
+    //   config.restorePasswordCodeExpireAfterMiliseconds;
+    this.expireAfterMiliseconds = this.configService.get('envSettings', {
+      infer: true,
+    }).RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS;
   }
 
   public async execute(

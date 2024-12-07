@@ -8,6 +8,7 @@ import {
 } from '@app/custom-logger';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
 
 export const DeleteAvatarCodes = {
   Success: Symbol('success'),
@@ -23,18 +24,19 @@ export class DeleteAvatarCommand {
 }
 
 @CommandHandler(DeleteAvatarCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class DeleteAvatarUseCase {
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    // @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
-    logger.setContext(DeleteAvatarUseCase.name);
+    this.logger.setContext(DeleteAvatarUseCase.name);
   }
 
   public async execute(
@@ -51,9 +53,8 @@ export class DeleteAvatarUseCase {
     }
     try {
       const result = await this.photoServiceAdapter.deleteAvatar(userId);
-      console.log('54', result);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(DeleteAvatarCodes.TransactionError);
     }
     return notification;
