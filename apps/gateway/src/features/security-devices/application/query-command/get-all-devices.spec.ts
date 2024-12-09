@@ -3,7 +3,6 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { loadEnvFileNames } from '../../../../common/config/load-env-file-names';
 import { finalConfig } from '../../../../common/config/config';
 import { ClsTransactionalModule } from '../../../../common/modules/cls-transactional.module';
 import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
@@ -14,6 +13,7 @@ import {
 import { SecurityDevicesModule } from '../../security-devices.module';
 import { SecurityDevicesOutputDto } from '../../api/dto/output/security-devices.output-dto';
 import { ApplicationNotificationModule } from '@app/application-notification';
+import { loadEnv } from '../../../../settings/configuration/configuration';
 
 type UserInsertType = {
   username: string;
@@ -48,7 +48,7 @@ describe('Get all security devices', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: false,
-          envFilePath: loadEnvFileNames(),
+          envFilePath: loadEnv(),
           load: [finalConfig],
         }),
         ClsTransactionalModule,

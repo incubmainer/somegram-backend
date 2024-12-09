@@ -108,6 +108,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/async-local-storage/tsconfig.lib.json"
       }
+    },
+    "base-types-enum": {
+      "type": "library",
+      "root": "libs/base-types-enum",
+      "entryFile": "index",
+      "sourceRoot": "libs/base-types-enum/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/base-types-enum/tsconfig.lib.json"
+      }
     }
   }
 }

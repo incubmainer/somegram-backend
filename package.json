@@ -121,9 +121,10 @@
       "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1",
       "^@app/application-notification(|/.*)$": "<rootDir>/libs/application-notification/src/$1",
       "^@app/paginator(|/.*)$": "<rootDir>/libs/paginator/src/$1",
-      "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1"
+      "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1",
       "^@app/logger(|/.*)$": "<rootDir>/libs/logger/src/$1",
-      "^@app/async-local-storage(|/.*)$": "<rootDir>/libs/async-local-storage/src/$1"
+      "^@app/async-local-storage(|/.*)$": "<rootDir>/libs/async-local-storage/src/$1",
+      "^@app/base-types-enum(|/.*)$": "<rootDir>/libs/base-types-enum/src/$1"
     }
   }
 }

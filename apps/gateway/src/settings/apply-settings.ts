@@ -1,15 +1,13 @@
-import {
-  INestApplication,
-  UnprocessableEntityException,
-  ValidationPipe,
-} from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
-import { useContainer, ValidationError } from 'class-validator';
+import { useContainer } from 'class-validator';
 import * as cookieParser from 'cookie-parser';
 import { GatewayModule } from '../gateway.module';
 import { ConfigurationType } from './configuration/configuration';
 import { EnvSettings } from './env/env.settings';
+import { ValidationPipeOption } from '../common/pipe/validation/validation-options.pipe';
+import { HttpExceptionFilter } from '../common/exception-filter/http/http.exception-filter';
 
 export const applySettings = (app: INestApplication): void => {
   /*
@@ -25,24 +23,9 @@ export const applySettings = (app: INestApplication): void => {
 
   const globalPrefix: string = enableGlobalPrefix(app);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      stopAtFirstError: false,
-      exceptionFactory: (errors: ValidationError[]) => {
-        const formattedErrors = errors.map((error) => {
-          return {
-            property: error.property,
-            constraints: error.constraints,
-          };
-        });
-        return new UnprocessableEntityException({
-          statusCode: 422,
-          message: 'Validation failed',
-          errors: formattedErrors,
-        });
-      },
-    }),
-  );
+  setPipes(app);
+  //
+  setExceptionFilter(app);
 
   enableSwagger(app, globalPrefix);
 };
@@ -107,4 +90,17 @@ const enableGlobalPrefix = (app: INestApplication): string => {
 
 const enableCookieParser = (app: INestApplication): void => {
   app.use(cookieParser());
+};
+
+const setPipes = (app: INestApplication) => {
+  const validationPipeOptions: ValidationPipeOption =
+    new ValidationPipeOption();
+  const validationPipe: ValidationPipe = new ValidationPipe(
+    validationPipeOptions,
+  );
+  app.useGlobalPipes(validationPipe);
+};
+
+const setExceptionFilter = (app: INestApplication) => {
+  app.useGlobalFilters(new HttpExceptionFilter());
 };

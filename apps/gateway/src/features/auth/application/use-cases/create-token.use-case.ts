@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import {
   jwtConstants,
   tokensLivesConstants,
-} from 'apps/gateway/src/common/config/constants/jwt-basic-constants';
+} from '../../../../common/constants/jwt-basic-constants';
 
 export class CreateTokensCommand {
   constructor(

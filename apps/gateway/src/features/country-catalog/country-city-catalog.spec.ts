@@ -5,7 +5,6 @@ import {
   UpdateOrCreateOrCreateCatalogCommand,
 } from './application/use-cases/update-or-create-catalog';
 import { ConfigModule } from '@nestjs/config';
-import { loadEnvFileNames } from '../../common/config/load-env-file-names';
 import { finalConfig } from '../../common/config/config';
 import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import {
@@ -33,6 +32,7 @@ import { NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { CommandExecutorService } from '../../common/services/command-executor-service';
 import { CountryCityRepository } from './infrastructure/country-city.repository';
 import { PullCountryWithCityResponseType } from './domain/type/type';
+import { loadEnv } from '../../settings/configuration/configuration';
 
 class CommandExecutorServiceMock implements OnApplicationBootstrap {
   constructor(private readonly commandBus: CommandBus) {}
@@ -94,7 +94,7 @@ describe('CountryCityCatalog', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: false,
-          envFilePath: loadEnvFileNames(),
+          envFilePath: loadEnv(),
           load: [finalConfig],
         }),
         ClsTransactionalModule,

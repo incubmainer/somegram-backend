@@ -3,12 +3,6 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
 import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-
-import {
   MeOutputDto,
   userMapper,
 } from '../../auth/api/dto/output-dto/me-output-dto';
@@ -66,7 +60,7 @@ export class UsersQueryRepository {
     return user;
   }
 
-  public async getTotalCountUsers() {
-    return await this.txHost.tx.user.count();
+  public async getTotalCountUsers(): Promise<number> {
+    return this.txHost.tx.user.count();
   }
 }

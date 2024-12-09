@@ -8,20 +8,20 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import {
-  ProfileInfoOutputDto,
-  userProfileInfoMapper,
+  ProfilePublicInfoOutputDtoModel,
+  userPublicProfileInfoMapper,
 } from '../../../api/dto/output-dto/profile-info-output-dto';
 
-export class GetProfileInfoQuery {
+export class GetPublicProfileInfoQuery {
   constructor(public userId: string) {}
 }
 
-@QueryHandler(GetProfileInfoQuery)
-export class GetProfileInfoUseCase
+@QueryHandler(GetPublicProfileInfoQuery)
+export class GetPublicProfileInfoUseCase
   implements
     IQueryHandler<
-      GetProfileInfoQuery,
-      AppNotificationResultType<ProfileInfoOutputDto>
+      GetPublicProfileInfoQuery,
+      AppNotificationResultType<ProfilePublicInfoOutputDtoModel>
     >
 {
   constructor(
@@ -30,11 +30,11 @@ export class GetProfileInfoUseCase
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
   ) {
-    this.logger.setContext(GetProfileInfoUseCase.name);
+    this.logger.setContext(GetPublicProfileInfoUseCase.name);
   }
   async execute(
-    command: GetProfileInfoQuery,
-  ): Promise<AppNotificationResultType<ProfileInfoOutputDto>> {
+    command: GetPublicProfileInfoQuery,
+  ): Promise<AppNotificationResultType<ProfilePublicInfoOutputDtoModel>> {
     try {
       const user: User | null = await this.usersQueryRepository.getProfileInfo(
         command.userId,
@@ -43,10 +43,9 @@ export class GetProfileInfoUseCase
 
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
 
-      const mapUser: ProfileInfoOutputDto = userProfileInfoMapper(
-        user,
-        avatarUrl,
-      );
+      const mapUser: ProfilePublicInfoOutputDtoModel =
+        userPublicProfileInfoMapper(user, avatarUrl);
+
       return this.appNotification.success(mapUser);
     } catch (e) {
       this.logger.error(e, this.execute.name);

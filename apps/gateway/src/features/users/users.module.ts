@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
-import { jwtConstants } from '../../common/config/constants/jwt-basic-constants';
+import { jwtConstants } from '../../common/constants/jwt-basic-constants';
 import { UsersController } from './api/users.controller';
 import { AuthService } from '../auth/application/auth.service';
 import { UsersRepository } from './infrastructure/users.repository';
@@ -18,12 +18,14 @@ import { PublicUsersController } from './api/public-users.controller';
 import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
 import { PhotoServiceAdapter } from '../../common/adapter/photo-service.adapter';
 import { photoServiceOptions } from '../../common/config/module-options/get-photo-service.options';
+import { GetPublicProfileInfoUseCase } from './application/use-cases/queryBus/get-public-profile-info.use-case';
 
 const useCases = [
   UploadAvatarUseCase,
   FillingUserProfileUseCase,
   GetProfileInfoUseCase,
   DeleteAvatarUseCase,
+  GetPublicProfileInfoUseCase,
 ];
 
 const repositories = [UsersRepository, UsersQueryRepository];

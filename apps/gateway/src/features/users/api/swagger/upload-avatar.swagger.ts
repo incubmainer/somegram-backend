@@ -1,16 +1,17 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
-  ApiResponse,
   ApiOperation,
   ApiConsumes,
   ApiBody,
-  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiUnprocessableEntityResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import { UnprocessableExceptionDto } from '@app/base-types-enum';
 
 export function UploadAvatarSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Upload User Avatar' }),
-    ApiBearerAuth('access-token'),
     ApiConsumes('multipart/form-data'),
     ApiBody({
       type: 'multipart/form-data',
@@ -28,36 +29,11 @@ export function UploadAvatarSwagger() {
         },
       },
     }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
-      description: 'Avatar upload successful',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: 'User not found or not authorized',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+    ApiNoContentResponse({ description: 'Avatar upload successful' }),
+    ApiUnprocessableEntityResponse({
       description: 'Validation failed',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'file',
-              constraints: {
-                isAvatarMimetype:
-                  'mimeType must be a valid MIME type: image/jpeg, image/png',
-              },
-            },
-          ],
-        },
-      },
+      type: UnprocessableExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
+    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }

@@ -7,189 +7,171 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   Post,
   Put,
-  UnauthorizedException,
-  UnprocessableEntityException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { UploadAvatarSwagger } from './swagger/upload-avatar.swagger';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { AuthGuard } from '@nestjs/passport';
-import {
-  UploadAvatarCodes,
-  UploadAvatarCommand,
-} from '../application/use-cases/upload-avatar.use-case';
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { FillProfileInputDto } from './dto/input-dto/fill-profile.input-dto';
-import {
-  FillingUserProfileCodes,
-  FillingUserProfileCommand,
-} from '../application/use-cases/filling-user-profile.use-case';
-import { ValidationError } from 'class-validator';
+import { FillingUserProfileCommand } from '../application/use-cases/filling-user-profile.use-case';
 import { ProfileFillInfoSwagger } from './swagger/profile-fill-info.swagger';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-import {
-  ProfileInfoOutputDto,
-  userProfileInfoMapper,
-} from './dto/output-dto/profile-info-output-dto';
-
+import { ProfileInfoOutputDto } from './dto/output-dto/profile-info-output-dto';
 import { ProfileInfoSwagger } from './swagger/profile-info.swagger';
 import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
-import {
-  DeleteAvatarCodes,
-  DeleteAvatarCommand,
-} from '../application/use-cases/delete-avatar.use-case';
-import {
-  GetProfileInfoQuery,
-  ProfileInfoCodes,
-} from '../application/use-cases/queryBus/get-profile-info.use-case';
-import { User } from '@prisma/gateway';
+import { DeleteAvatarCommand } from '../application/use-cases/delete-avatar.use-case';
+import { GetProfileInfoQuery } from '../application/use-cases/queryBus/get-profile-info.use-case';
 import { LoggerService } from '@app/logger';
+import { USER_ROUTE } from '../../../common/constants/route.constants';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { UploadAvatarCommand } from '../application/use-cases/upload-avatar.use-case';
+import { fileValidationPipe } from '../../../common/pipe/validation/validation-file.pipe';
+import {
+  ALLOWED_AVATAR_MIMETYPES,
+  ALLOWED_AVATAR_SIZE,
+} from '../../../common/constants/allowed-mimetype-size.constants';
 
 @ApiTags('Users')
-@Controller('users')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiBearerAuth('access-token')
+@Controller(USER_ROUTE.MAIN)
 export class UsersController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersController.name);
   }
-  @Get('profile-info')
+
+  @Get(USER_ROUTE.PROFILE_INFO)
   @ProfileInfoSwagger()
   @UseGuards(AuthGuard('jwt'))
-  async gerProfileInfo(@CurrentUserId() userId: string) {
-    this.logger.debug('start profile info request', this.gerProfileInfo.name);
-    const notification: NotificationObject<{
-      user: User;
-      avatarUrl: string | null;
-    }> = await this.queryBus.execute(new GetProfileInfoQuery(userId));
-    const code = notification.getCode();
-    if (code === ProfileInfoCodes.UserNotFound)
-      throw new UnauthorizedException();
-    if (code === ProfileInfoCodes.TransactionError) {
-      throw new InternalServerErrorException();
+  async gerProfileInfo(
+    @CurrentUserId() userId: string,
+  ): Promise<ProfileInfoOutputDto> {
+    this.logger.debug(
+      `Execute: Get profile info, user id: ${userId}`,
+      this.gerProfileInfo.name,
+    );
+
+    const result: AppNotificationResultType<ProfileInfoOutputDto> =
+      await this.queryBus.execute(new GetProfileInfoQuery(userId));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.gerProfileInfo.name);
+        return result.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.gerProfileInfo.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
-    const { user, avatarUrl } = notification.getData();
-    const outputUser = userProfileInfoMapper(user, avatarUrl);
-    return outputUser;
   }
 
-  @Post('profile-upload-avatar')
+  @Post(USER_ROUTE.PROFILE_UPLOAD_AVATAR)
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
   async uploadAvatar(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      fileValidationPipe(ALLOWED_AVATAR_MIMETYPES, ALLOWED_AVATAR_SIZE, 'file'),
+    )
+    file: Express.Multer.File,
     @CurrentUserId() userId: string,
-  ) {
-    this.logger.debug('start upload avatar request', this.uploadAvatar.name);
-    const result: NotificationObject<null, ValidationError> =
+  ): Promise<void> {
+    this.logger.debug(
+      `Execute: Upload avatar, user id: ${userId}`,
+      this.uploadAvatar.name,
+    );
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(new UploadAvatarCommand(userId, file));
-    const code = result.getCode();
-    if (code === UploadAvatarCodes.Success) {
-      return;
-    }
-    if (code === UploadAvatarCodes.ValidationCommandError)
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
-          property: e.property,
-          constraints: e.constraints,
-        })),
-      });
-    if (code === UploadAvatarCodes.UserNotFound)
-      throw new UnauthorizedException();
-    if (code === UploadAvatarCodes.TransactionError) {
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.uploadAvatar.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.uploadAvatar.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
   }
 
-  @Put('profile-fill-info')
+  @Put(USER_ROUTE.PROFILE_FILL_INFO)
   @UseGuards(AuthGuard('jwt'))
   @ProfileFillInfoSwagger()
   @HttpCode(HttpStatus.OK)
   async fillProfile(
     @CurrentUserId() userId: string,
     @Body() fillProfileDto: FillProfileInputDto,
-  ) {
-    this.logger.debug('start profile fill info request', this.fillProfile.name);
-    const result: NotificationObject<null, ValidationError> =
+  ): Promise<ProfileInfoOutputDto> {
+    this.logger.debug(
+      `Execute: Profile fill info, user id: ${userId}, body: ${JSON.stringify(fillProfileDto)}`,
+      this.fillProfile.name,
+    );
+
+    const result: AppNotificationResultType<string> =
       await this.commandBus.execute(
-        new FillingUserProfileCommand(
-          userId,
-          fillProfileDto.userName,
-          fillProfileDto.firstName,
-          fillProfileDto.lastName,
-          fillProfileDto.dateOfBirth,
-          fillProfileDto.about,
-          fillProfileDto.city,
-          fillProfileDto.country,
-        ),
+        new FillingUserProfileCommand(userId, fillProfileDto),
       );
-    const code = result.getCode();
-    if (code === FillingUserProfileCodes.Success) {
-      const data = result.getData();
-      return userProfileInfoMapper(data);
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.fillProfile.name);
+        const userProfile: AppNotificationResultType<ProfileInfoOutputDto> =
+          await this.queryBus.execute(new GetProfileInfoQuery(result.data));
+        return userProfile.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.fillProfile.name);
+        throw new NotFoundException();
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug(`Bad request`, this.fillProfile.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
     }
-    if (code === FillingUserProfileCodes.ValidationCommandError)
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Validation failed',
-        errors: result.getErrors().map((e) => ({
-          property: e.property,
-          constraints: e.constraints,
-        })),
-      });
-    if (code === FillingUserProfileCodes.UserNotFound)
-      throw new UnauthorizedException();
-    if (code === FillingUserProfileCodes.UsernameAlreadyExists) {
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'Username already exists',
-        message: 'Error updating profile because username already exists',
-      });
-    }
-    if (code === FillingUserProfileCodes.TransactionError)
-      throw new InternalServerErrorException();
   }
 
-  @Delete('profile-delete-avatar')
+  @Delete(USER_ROUTE.PROFILE_DELETE_AVATAR)
   @DeleteAvatarSwagger()
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteUserAvatar(@CurrentUserId() userId: string) {
+  async deleteUserAvatar(@CurrentUserId() userId: string): Promise<void> {
     this.logger.debug(
-      'start delete avatar request',
+      `Execute: Delete avatar, user id: ${userId}`,
       this.deleteUserAvatar.name,
     );
-    const notification: NotificationObject<ProfileInfoOutputDto> =
+
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(new DeleteAvatarCommand(userId));
-    const code = notification.getCode();
-    if (code === DeleteAvatarCodes.Success) return;
-    if (code === DeleteAvatarCodes.UserNotFound)
-      throw new UnauthorizedException();
-    if (code === DeleteAvatarCodes.TransactionError) {
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.deleteUserAvatar.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.deleteUserAvatar.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
   }
 }

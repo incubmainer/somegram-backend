@@ -71,6 +71,12 @@
       ],
       "@app/async-local-storage/*": [
         "libs/async-local-storage/src/*"
+      ],
+      "@app/base-types-enum": [
+        "libs/base-types-enum/src"
+      ],
+      "@app/base-types-enum/*": [
+        "libs/base-types-enum/src/*"
       ]
     }
   }
