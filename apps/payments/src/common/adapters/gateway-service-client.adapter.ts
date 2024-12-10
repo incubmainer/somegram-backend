@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { SEND_SUBSCRIPTION_INFO } from '../../../../gateway/src/common/config/constants/service.constants';
+
 import { SubscriptionDto } from '../../../../../libs/common/enums/payments';
+import { SEND_SUBSCRIPTION_INFO } from '../../../../gateway/src/common/constants/service.constants';
 
 @Injectable()
 export class GatewayServiceClientAdapter {

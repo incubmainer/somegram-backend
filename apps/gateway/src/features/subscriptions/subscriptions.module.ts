@@ -7,9 +7,9 @@ import { CreatePaymentUseCase } from './application/use-cases/create-payments.us
 import { UsersQueryRepository } from '../users/infrastructure/users.query-repository';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
 import { ClientsModule } from '@nestjs/microservices';
-import { paymentsServiceOptions } from '../../common/config/module-options/get-pyments-service.options';
 import { UpdateSubscriptionInfoUseCase } from './application/use-cases/update-subscription-info.use-case';
 import { UsersRepository } from '../users/infrastructure/users.repository';
+import { paymentsServiceOptions } from '../../settings/configuration/get-pyments-service.options';
 
 const useCases = [CreatePaymentUseCase, UpdateSubscriptionInfoUseCase];
 

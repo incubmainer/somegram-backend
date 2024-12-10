@@ -1,18 +1,19 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
-import {
-  DISABLE_AUTO_RENEWAL,
-  CREATE_AUTO_PAYMENT,
-  STRIPE_WEBHOOK_HANDLER,
-  ENABLE_AUTO_RENEWAL,
-  GET_PAYMENTS,
-} from '../../../../../gateway/src/common/config/constants/service.constants';
+
 import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case';
 import { StripeWebhookCommand } from '../application/use-cases/stripe-webhook.use-case';
 import { DisableAutoRenewalCommand } from '../application/use-cases/disable-autorenewal.use-case';
 import { EnableAutoRenewalCommand } from '../application/use-cases/enable-autorenewal.use-case';
 import { GetPaymentsQuery } from '../application/use-cases/get-payments.use-case';
+import {
+  CREATE_AUTO_PAYMENT,
+  STRIPE_WEBHOOK_HANDLER,
+  DISABLE_AUTO_RENEWAL,
+  ENABLE_AUTO_RENEWAL,
+  GET_PAYMENTS,
+} from '../../../../../gateway/src/common/constants/service.constants';
 
 @Controller('payments')
 export class PaymentsController {

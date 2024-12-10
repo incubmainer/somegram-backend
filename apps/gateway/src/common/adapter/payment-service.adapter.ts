@@ -6,14 +6,14 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
 import {
-  DISABLE_AUTO_RENEWAL,
   CREATE_AUTO_PAYMENT,
-  STRIPE_WEBHOOK_HANDLER,
+  DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
-} from '../config/constants/service.constants';
-import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
+  STRIPE_WEBHOOK_HANDLER,
+} from '../constants/service.constants';
 
 @Injectable()
 export class PaymentsServiceAdapter {

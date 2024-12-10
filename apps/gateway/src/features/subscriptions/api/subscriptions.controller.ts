@@ -25,14 +25,9 @@ import { CreateSubscriptionDto } from './dto/input-dto/create-subscription.dto';
 import { NotificationObject } from '../../../common/domain/notification';
 import { PaymentsServiceAdapter } from '../../../common/adapter/payment-service.adapter';
 import { CreateSubscriptionSwagger } from './swagger/create-subscription.swagger';
-import {
-  Ctx,
-  MessagePattern,
-  Payload,
-  RmqContext,
-} from '@nestjs/microservices';
-import { SEND_SUBSCRIPTION_INFO } from '../../../common/config/constants/service.constants';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UpdateSubscriptionInfoCommand } from '../application/use-cases/update-subscription-info.use-case';
+import { SEND_SUBSCRIPTION_INFO } from '../../../common/constants/service.constants';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')

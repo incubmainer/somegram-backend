@@ -70,7 +70,7 @@ export class FillingUserProfileUseCase
           country: country ? country : null,
         },
       );
-      notification.setData(updatedUser);
+      this.appNotification.success(updatedUser);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
