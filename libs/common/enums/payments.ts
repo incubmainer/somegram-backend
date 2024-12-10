@@ -11,7 +11,7 @@ export enum PaymentTime {
 
 export class SubscriptionDto {
   userId: string;
-  endDateOfSubscription: string;
+  endDateOfSubscription: Date;
   autoRenewal: boolean;
   status: string;
 }

@@ -122,27 +122,9 @@ export class SubscriptionsController {
   }
 
   @MessagePattern({ cmd: SEND_SUBSCRIPTION_INFO })
-  async sendSubscriptionInfo(@Payload() payload, @Ctx() context: RmqContext) {
+  async sendSubscriptionInfo(@Payload() { payload }) {
     return await this.commandBus.execute(
       new UpdateSubscriptionInfoCommand(payload),
     );
   }
-
-  // @Post()
-  // sendSubscriptionInfo() {
-  //   const payload = {
-  //     id: '4460e1a2-9509-44f9-b59b-c47e5ddc1f31',
-  //     userId: '6b6c9423-556f-4a7f-ae11-8af730c4fd1f',
-  //     createdAt: '2024-12-10T11:22:35.947Z',
-  //     updatedAt: '2024-12-10T11:23:55.827Z',
-  //     dateOfPayment: '2024-12-10T11:22:33.000Z',
-  //     endDateOfSubscription: '2024-12-09T11:22:33.000Z',
-  //     paymentSystemSubId: 'sub_1QURWPGfwHAXrVUim1uZyZ5b',
-  //     paymentSystemCustomerId: 'cus_RN9jxSLSh1FqWX',
-  //     paymentSystem: 'STRIPE',
-  //     status: 'canceled',
-  //     autoRenewal: false,
-  //   };
-  //   return this.commandBus.execute(new UpdateSubscriptionInfoCommand(payload));
-  // }
 }

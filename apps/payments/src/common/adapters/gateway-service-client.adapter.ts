@@ -1,10 +1,5 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { SEND_SUBSCRIPTION_INFO } from '../../../../gateway/src/common/config/constants/service.constants';
 import { SubscriptionDto } from '../../../../../libs/common/enums/payments';
