@@ -6,7 +6,7 @@ import { ConfigurationType } from './settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(GatewayModule);
+  const app = await NestFactory.create(GatewayModule, { rawBody: true });
   applySettings(app);
 
   const logger: LoggerService = await app.resolve(LoggerService);

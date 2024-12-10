@@ -17,17 +17,24 @@ export const applySettings = (app: INestApplication): void => {
    */
   useContainer(app.select(GatewayModule), { fallbackOnErrors: true });
 
+  const configService: ConfigService = app.get(
+    ConfigService<ConfigurationType, true>,
+  );
+  const envSettings: EnvSettings = configService.get('envSettings', {
+    infer: true,
+  });
+
   enableCors(app);
 
   enableCookieParser(app);
 
-  const globalPrefix: string = enableGlobalPrefix(app);
+  enableGlobalPrefix(app, envSettings);
 
   setPipes(app);
   //
   setExceptionFilter(app);
 
-  enableSwagger(app, globalPrefix);
+  enableSwagger(app, envSettings);
 };
 
 const enableCors = (app: INestApplication): void => {
@@ -50,7 +57,15 @@ const enableCors = (app: INestApplication): void => {
   });
 };
 
-const enableSwagger = (app: INestApplication, globalPrefix: string): void => {
+const enableSwagger = (
+  app: INestApplication,
+  envSettings: EnvSettings,
+): void => {
+  const enable: boolean = envSettings.SWAGGER_ENABLED;
+
+  if (!enable) return;
+
+  const globalPrefix: string = envSettings.GLOBAL_PREFIX;
   const config: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
     .setTitle('api')
     .addBearerAuth(
@@ -69,23 +84,15 @@ const enableSwagger = (app: INestApplication, globalPrefix: string): void => {
   const swaggerPath: string = globalPrefix
     ? `${globalPrefix}/swagger`
     : 'swagger';
-
   SwaggerModule.setup(swaggerPath, app, document);
 };
 
-const enableGlobalPrefix = (app: INestApplication): string => {
-  const configService: ConfigService = app.get(
-    ConfigService<ConfigurationType, true>,
-  );
-  const envSettings: EnvSettings = configService.get('envSettings', {
-    infer: true,
-  });
-
+const enableGlobalPrefix = (
+  app: INestApplication,
+  envSettings: EnvSettings,
+): void => {
   const prefix: string = envSettings.GLOBAL_PREFIX;
-
   app.setGlobalPrefix(prefix);
-
-  return prefix;
 };
 
 const enableCookieParser = (app: INestApplication): void => {
