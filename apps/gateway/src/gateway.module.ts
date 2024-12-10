@@ -12,6 +12,7 @@ import { SecurityDevicesModule } from './features/security-devices/security-devi
 import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
+import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommonModule } from './common/common.module';
     PostsModule,
     ApplicationNotificationModule,
     CountryCatalogModule,
+    SubscriptionsModule,
     CommonModule,
     LoggerModule.forRoot('Gateway'),
   ],
