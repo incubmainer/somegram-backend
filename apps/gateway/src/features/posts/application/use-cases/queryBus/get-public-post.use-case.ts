@@ -51,7 +51,7 @@ export class GetPostUseCase implements IQueryHandler<GetPostQuery> {
         notification.setCode(GetPostCodes.PostNotFound);
         return notification;
       }
-      const postOwner = await this.usersQueryRepository.getUserById(
+      const postOwner = await this.usersQueryRepository.findUserById(
         post.userId,
       );
       const ownerAvatarUrl = await this.photoServiceAdapter.getAvatar(

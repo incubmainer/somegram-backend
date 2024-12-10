@@ -54,7 +54,7 @@ export class GetPostsByUserUseCase
       GetPostsCodes.Success,
     );
 
-    const user = await this.usersQueryRepository.getUserById(userId);
+    const user = await this.usersQueryRepository.findUserById(userId);
     if (!user) {
       notification.setCode(GetPostsCodes.UserNotFound);
       return notification;

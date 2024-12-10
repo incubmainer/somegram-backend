@@ -90,7 +90,7 @@ export class AddPostUseCase implements ICommandHandler<AddPostCommand> {
       notification.addErrors(errors);
       return notification;
     }
-    const user = await this.usersQueryRepository.getUserById(userId);
+    const user = await this.usersQueryRepository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException();
     }

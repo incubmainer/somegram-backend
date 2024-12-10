@@ -42,7 +42,7 @@ export class CreatePaymentUseCase
       CreatePaymentCodes.Success,
     );
     try {
-      const user = await this.usersQueryRepository.getUserById(command.userId);
+      const user = await this.usersQueryRepository.findUserById(command.userId);
       if (!user) {
         throw new UnauthorizedException();
       }

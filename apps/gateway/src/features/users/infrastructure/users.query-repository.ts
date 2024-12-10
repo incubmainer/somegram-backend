@@ -28,7 +28,7 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async getUserById(id?: string): Promise<User | null> {
+  async findUserById(id?: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findUnique({
       where: { id },
     });
