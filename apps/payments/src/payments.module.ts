@@ -15,6 +15,7 @@ import { DisableAutoRenewalUseCase } from './features/payments/application/use-c
 import { EnableAutoRenewalUseCase } from './features/payments/application/use-cases/enable-autorenewal.use-case';
 import { PaymentsService } from './features/payments/api/payments.service';
 import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/get-payments.use-case';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -32,6 +33,21 @@ const services = [PaymentsService, PaymentManager, StripeAdapter];
   imports: [
     CqrsModule,
     ClsTransactionalModule,
+    ClientsModule.register([
+      {
+        name: 'PAYMENTS_SERVICE_RMQ',
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            'amqps://xbnnkzhp:ohtRICSwQSNQnsx2HCgdIwSfgtWZcKXj@kebnekaise.lmq.cloudamqp.com/xbnnkzhp',
+          ],
+          queue: 'payments_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       ignoreEnvFile: false,

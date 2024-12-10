@@ -11,3 +11,5 @@ export const STRIPE_WEBHOOK_HANDLER = 'stripe_webhook_handler';
 export const DISABLE_AUTO_RENEWAL = 'disable_auto_renewal';
 export const ENABLE_AUTO_RENEWAL = 'enable_auto_renewal';
 export const GET_PAYMENTS = 'get_payments';
+
+export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';

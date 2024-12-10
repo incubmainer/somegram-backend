@@ -25,6 +25,9 @@ import { CreateSubscriptionDto } from './dto/input-dto/create-subscription.dto';
 import { NotificationObject } from '../../../common/domain/notification';
 import { PaymentsServiceAdapter } from '../../../common/adapter/payment-service.adapter';
 import { CreateSubscriptionSwagger } from './swagger/create-subscription.swagger';
+import { MessagePattern } from '@nestjs/microservices';
+import { SEND_SUBSCRIPTION_INFO } from '../../../common/config/constants/service.constants';
+import { UpdateSubscriptionInfoCommand } from '../application/use-cases/update-subscription-info.use-case';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
@@ -111,5 +114,10 @@ export class SubscriptionsController {
       throw new NotFoundException();
     }
     return result;
+  }
+
+  @MessagePattern({ cmd: SEND_SUBSCRIPTION_INFO })
+  async sendSubscriptionInfo({ payload }) {
+    return this.commandBus.execute(new UpdateSubscriptionInfoCommand(payload));
   }
 }

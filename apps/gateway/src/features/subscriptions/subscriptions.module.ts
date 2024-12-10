@@ -8,8 +8,9 @@ import { UsersQueryRepository } from '../users/infrastructure/users.query-reposi
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
 import { ClientsModule } from '@nestjs/microservices';
 import { paymentsServiceOptions } from '../../common/config/module-options/get-pyments-service.options';
+import { UpdateSubscriptionInfoUseCase } from './application/use-cases/update-subscription-info.use-case';
 
-const useCases = [CreatePaymentUseCase];
+const useCases = [CreatePaymentUseCase, UpdateSubscriptionInfoUseCase];
 
 const repositories = [UsersQueryRepository];
 
@@ -17,6 +18,7 @@ const services = [PaymentsServiceAdapter];
 @Module({
   imports: [
     ClientsModule.registerAsync([paymentsServiceOptions()]),
+
     CqrsModule,
     ClsTransactionalModule,
   ],
