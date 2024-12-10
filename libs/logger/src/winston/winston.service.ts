@@ -3,14 +3,8 @@ import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../../apps/gateway/src/settings/configuration/configuration';
-import {
-  EnvSettings,
-  EnvState,
-} from '../../../../apps/gateway/src/settings/env/env.settings';
-import {
-  ConsoleTransportInstance,
-  HttpTransportInstance,
-} from 'winston/lib/winston/transports';
+import { EnvSettings } from '../../../../apps/gateway/src/settings/env/env.settings';
+import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 
 const customLevels = {
   levels: {

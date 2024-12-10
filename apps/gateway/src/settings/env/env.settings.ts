@@ -98,8 +98,8 @@ export class EnvSettings {
   public readonly GOOGLE_CLIENT_SECRET: string;
 
   constructor(envVariable: EnvVariableType) {
-    this.ENV = (envVariable.ENV as EnvState) || EnvState.DEVELOPMENT;
-    this.PORT = this.getNumberOrDefaultValue(envVariable.APP_PORT, 3000);
+    this.ENV = (envVariable.NODE_ENV as EnvState) || EnvState.DEVELOPMENT;
+    this.PORT = this.getNumberOrDefaultValue(envVariable.PORT, 3000);
     this.GLOBAL_PREFIX = envVariable.GLOBAL_PREFIX || '';
     this.SWAGGER_ENABLED = envVariable.SWAGGER_ENABLED === 'true' || true;
 

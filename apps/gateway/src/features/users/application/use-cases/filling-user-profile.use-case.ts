@@ -56,21 +56,18 @@ export class FillingUserProfileUseCase
           return this.appNotification.badRequest('Username already exist.');
         }
       }
-      const updatedUser = await this.usersRepository.updateUserProfileInfo(
-        userId,
-        {
-          ...user,
-          username: userName,
-          firstName,
-          lastName,
-          dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,
-          about: about ? about : null,
-          updatedAt: new Date(),
-          city: city ? city : null,
-          country: country ? country : null,
-        },
-      );
-      this.appNotification.success(updatedUser);
+      await this.usersRepository.updateUserProfileInfo(userId, {
+        ...user,
+        username: userName,
+        firstName,
+        lastName,
+        dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,
+        about: about ? about : null,
+        updatedAt: new Date(),
+        city: city ? city : null,
+        country: country ? country : null,
+      });
+      return this.appNotification.success(userId);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
