@@ -4,8 +4,8 @@ import {
   LogClass,
 } from '@app/custom-logger';
 import { Injectable } from '@nestjs/common';
-import { EmailSender } from 'apps/gateway/src/common/utils/email.sender';
 import { LoggerService } from '@app/logger';
+import { EmailSender } from '../../../common/utils/email.sender';
 
 // @LogClass({
 //   level: 'trace',

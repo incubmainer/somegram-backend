@@ -9,22 +9,18 @@ import {
 import { LoggerService } from '@app/logger';
 
 @Injectable()
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class UsersQueryRepository {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async findUserById(id?: string) {
+  async findUserById(id?: string): Promise<User | null> {
+    this.logger.debug(`Find user by id: ${id}`, this.findUserById.name);
+
     const user = await this.txHost.tx.user.findFirst({
       where: { id },
     });
@@ -32,6 +28,11 @@ export class UsersQueryRepository {
   }
 
   async getInfoAboutMe(currentUserId: string): Promise<MeOutputDto | null> {
+    this.logger.debug(
+      `Find user by current user id: ${currentUserId}`,
+      this.getInfoAboutMe.name,
+    );
+
     const user = await this.txHost.tx.user.findFirst({
       where: { id: currentUserId },
     });
@@ -42,25 +43,32 @@ export class UsersQueryRepository {
   }
 
   async getProfileInfo(userId: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
+    this.logger.debug(
+      `Find user by user id: ${userId}`,
+      this.getProfileInfo.name,
+    );
+
+    return this.txHost.tx.user.findFirst({
       where: { id: userId },
     });
-    if (!user) {
-      return null;
-    }
-    return user;
   }
 
   public async getUserByUsername(username: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
+    this.logger.debug(
+      `Find user by username: ${username}`,
+      this.getUserByUsername.name,
+    );
+
+    return this.txHost.tx.user.findFirst({
       where: {
         username,
       },
     });
-    return user;
   }
 
   public async getTotalCountUsers(): Promise<number> {
+    this.logger.debug(`Get total users count`, this.getTotalCountUsers.name);
+
     return this.txHost.tx.user.count();
   }
 }

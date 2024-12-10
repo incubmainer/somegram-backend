@@ -6,10 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import {
-  BadRequestExceptionDto,
-  UnprocessableExceptionErrorDto,
-} from '@app/base-types-enum';
+import { UnprocessableExceptionErrorDto } from '@app/base-types-enum';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {

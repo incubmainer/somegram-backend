@@ -72,7 +72,6 @@ import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagge
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
 import {
   GetInfoAboutMeCommand,

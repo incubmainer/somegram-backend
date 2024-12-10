@@ -20,6 +20,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { GetPublicProfileInfoQuery } from '../application/use-cases/queryBus/get-public-profile-info.use-case';
+import { LoggerService } from '@app/logger';
 
 @ApiTags('Public-Users')
 @Controller(USER_PUBLIC_ROUTE.MAIN)
@@ -27,20 +28,30 @@ export class PublicUsersController {
   constructor(
     private readonly queryBus: QueryBus,
     private readonly usersQueryRepository: UsersQueryRepository,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PublicUsersController.name);
+  }
 
   @Get(`${USER_PUBLIC_ROUTE.PROFILE}/:userId`)
   @PublicProfileInfoSwagger()
   async gerProfileInfo(
     @Param('userId') userId: string,
   ): Promise<ProfilePublicInfoOutputDtoModel> {
+    this.logger.debug(
+      `Execute: Get profile info, user id: ${userId}`,
+      this.gerProfileInfo.name,
+    );
+
     const result: AppNotificationResultType<ProfilePublicInfoOutputDtoModel> =
       await this.queryBus.execute(new GetPublicProfileInfoQuery(userId));
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.gerProfileInfo.name);
         return result.data;
       case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.gerProfileInfo.name);
         throw new NotFoundException();
       default:
         throw new InternalServerErrorException();
@@ -50,6 +61,10 @@ export class PublicUsersController {
   @Get()
   @PublicGetUsersCountSwagger()
   async getTotalRegistredUsersCount(): Promise<UserCountOutputDto> {
+    this.logger.debug(
+      `Execute: Get total users count`,
+      this.getTotalRegistredUsersCount.name,
+    );
     return { totalCount: await this.usersQueryRepository.getTotalCountUsers() };
   }
 }

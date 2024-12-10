@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { parseDateDDMMYYYY } from 'apps/gateway/src/common/utils/parse-date-dd-mm-yyyy';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { LoggerService } from '@app/logger';
@@ -9,6 +8,7 @@ import {
 } from '@app/application-notification';
 import { FillProfileInputDto } from '../../api/dto/input-dto/fill-profile.input-dto';
 import { User } from '@prisma/gateway';
+import { parseDateDDMMYYYY } from '../../../../common/utils/parse-date-dd-mm-yyyy';
 
 export class FillingUserProfileCommand {
   constructor(

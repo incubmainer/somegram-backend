@@ -11,12 +11,12 @@ import {
   PostOutputDto,
   postToOutputMapper,
 } from '../../../api/dto/output-dto/post.output-dto';
-import { Paginator } from 'apps/gateway/src/common/domain/paginator';
-import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
+import { SearchQueryParametersType } from '../../../../../common/domain/query.types';
+import { Paginator } from '../../../../../common/domain/paginator';
+import { getSanitizationQuery } from '../../../../../common/utils/query-params.sanitizator';
 
 export const GetPostsCodes = {
   Success: Symbol('success'),

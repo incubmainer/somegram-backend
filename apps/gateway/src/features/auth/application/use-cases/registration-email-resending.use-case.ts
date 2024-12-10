@@ -10,13 +10,12 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigService } from '@nestjs/config';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RegistrationEmailResendingCodes = {
   Success: Symbol('success'),

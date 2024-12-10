@@ -6,7 +6,6 @@ import {
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { GoogleConfig } from '../../../TRASH/common/config/configs/google.config';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';

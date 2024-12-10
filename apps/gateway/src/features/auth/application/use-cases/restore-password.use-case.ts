@@ -5,13 +5,11 @@ import { randomUUID } from 'crypto';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { IsEmail, IsString, validateSync } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
-
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
-import { RecapchaService } from 'apps/gateway/src/common/utils/recapcha.service';
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
+import { RecapchaService } from '../../../../common/utils/recapcha.service';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RestorePasswordCodes = {
   Success: Symbol('success'),

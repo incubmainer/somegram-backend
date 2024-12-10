@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUsername } from '../../../../auth/application/decorators/is-username';
-import { IsFirstName } from '../../../application/decorators/is-first-name';
-import { IsLastName } from '../../../application/decorators/is-last-name';
-import { IsDateOfBirth } from '../../../application/decorators/is-date-of-birth';
-import { IsAbout } from '../../../application/decorators/is-about';
-import { IsCityName } from '../../../application/decorators/is-city';
-import { IsCountry } from '../../../application/decorators/is-coutry';
+import { IsFirstName } from '../../../../../common/decorators/validation/is-first-name';
+import { IsLastName } from '../../../../../common/decorators/validation/is-last-name';
+import { IsDateOfBirth } from '../../../../../common/decorators/validation/is-date-of-birth';
+import { IsAbout } from '../../../../../common/decorators/validation/is-about';
+import { IsCityName } from '../../../../../common/decorators/validation/is-city';
+import { IsCountry } from '../../../../../common/decorators/validation/is-coutry';
 
 export class FillProfileInputDto {
   @IsUsername()

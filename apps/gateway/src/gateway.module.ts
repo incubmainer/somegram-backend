@@ -1,10 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './features/auth/auth.module';
-import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
 import { UsersModule } from './features/users/users.module';
 import { PostsModule } from './features/posts/posts.module';
-import { ClientsModule } from '@nestjs/microservices';
-import { photoServiceOptions } from './common/config/module-options/get-photo-service.options';
 import { configModule } from './settings/configuration/config.module';
 import {
   AsyncLocalStorageService,
@@ -19,9 +16,7 @@ import { CommonModule } from './common/common.module';
 @Module({
   imports: [
     SecurityDevicesModule,
-    ClientsModule.registerAsync([photoServiceOptions()]),
     configModule,
-    ClsTransactionalModule,
     AuthModule,
     UsersModule,
     PostsModule,

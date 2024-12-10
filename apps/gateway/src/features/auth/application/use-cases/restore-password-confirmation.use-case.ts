@@ -4,11 +4,11 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IsString, validateSync } from 'class-validator';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsUserPassword } from '../decorators/is-user-password';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RestorePasswordConfirmationCodes = {
   Success: Symbol('success'),

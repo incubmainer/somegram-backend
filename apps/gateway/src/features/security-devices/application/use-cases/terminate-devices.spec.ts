@@ -2,11 +2,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
-import { ConfigModule } from '@nestjs/config';
-import { finalConfig } from '../../../../common/config/config';
-import { ClsTransactionalModule } from '../../../../common/modules/cls-transactional.module';
 import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
-import { SecurityDevicesModule } from '../../security-devices.module';
 import { SecurityDevicesOutputDto } from '../../api/dto/output/security-devices.output-dto';
 import {
   GetAllDevicesQueryCommand,
@@ -21,11 +17,10 @@ import {
   TerminateDevicesExcludeCurrentCommandHandler,
 } from './terminate-devices-exclude-current.use-case';
 import {
-  ApplicationNotificationModule,
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { loadEnv } from '../../../../settings/configuration/configuration';
+import { GatewayModule } from '../../../../gateway.module';
 
 type UserInsertType = {
   username: string;
@@ -50,22 +45,8 @@ describe('Terminate devices', () => {
   let insertDeviceDto: DeviceInsertType;
 
   beforeAll(async () => {
-    /*
-    Просто зарегестрировать GatewayModule не получается, сыпяться ошибки
-    из-за notification (НЕ Application-Notification)
-    */
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
-      imports: [
-        SecurityDevicesModule,
-        ApplicationNotificationModule,
-        ConfigModule.forRoot({
-          isGlobal: true,
-          ignoreEnvFile: false,
-          envFilePath: loadEnv(),
-          load: [finalConfig],
-        }),
-        ClsTransactionalModule,
-      ],
+      imports: [GatewayModule],
     });
 
     const module: TestingModule = await moduleBuilder.compile();
