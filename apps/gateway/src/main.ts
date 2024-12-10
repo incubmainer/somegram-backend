@@ -11,9 +11,8 @@ async function bootstrap() {
     rawBody: true,
   });
   applySettings(app);
-  const app2 = await NestFactory.createMicroservice<MicroserviceOptions>(
-    GatewayModule,
-    {
+  const appMicroservice =
+    await NestFactory.createMicroservice<MicroserviceOptions>(GatewayModule, {
       transport: Transport.RMQ,
       options: {
         urls: [
@@ -24,9 +23,8 @@ async function bootstrap() {
           durable: false,
         },
       },
-    },
-  );
-  await app2.listen();
+    });
+  await appMicroservice.listen();
 
   const logger: LoggerService = await app.resolve(LoggerService);
   const configService = app.get(ConfigService<ConfigurationType, true>);
