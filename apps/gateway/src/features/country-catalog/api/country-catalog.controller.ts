@@ -9,7 +9,7 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { GetCountriesQueryCommand } from '../application/query-command/get-countries.query.command';
 import { GetCitiesByCountryIdQueryCommand } from '../application/query-command/get-cities-by-country-id.query.command';
-import { COUNTRY_CATALOG_ROUTE } from '../../../common/config/constants/route.constants';
+import { COUNTRY_CATALOG_ROUTE } from '../../../common/constants/route.constants';
 
 @ApiTags('Country catalog')
 @Controller(COUNTRY_CATALOG_ROUTE.MAIN)

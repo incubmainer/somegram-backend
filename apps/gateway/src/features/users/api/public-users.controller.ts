@@ -2,52 +2,69 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  NotFoundException,
   Param,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
-
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
-import { userPublicProfileInfoMapper } from './dto/output-dto/profile-info-output-dto';
 import {
-  GetProfileInfoQuery,
-  ProfileInfoCodes,
-} from '../application/use-cases/queryBus/get-profile-info.use-case';
+  ProfilePublicInfoOutputDtoModel,
+  UserCountOutputDto,
+} from './dto/output-dto/profile-info-output-dto';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
-import { User } from '@prisma/gateway';
 import { PublicProfileInfoSwagger } from './swagger/public-profile-info.swagger';
 import { PublicGetUsersCountSwagger } from './swagger/public-get-users-count.swagger';
+import { USER_PUBLIC_ROUTE } from '../../../common/constants/route.constants';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { GetPublicProfileInfoQuery } from '../application/use-cases/queryBus/get-public-profile-info.use-case';
+import { LoggerService } from '@app/logger';
 
 @ApiTags('Public-Users')
-@Controller('public-users')
+@Controller(USER_PUBLIC_ROUTE.MAIN)
 export class PublicUsersController {
   constructor(
     private readonly queryBus: QueryBus,
     private readonly usersQueryRepository: UsersQueryRepository,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PublicUsersController.name);
+  }
 
-  @Get('/profile/:userId')
+  @Get(`${USER_PUBLIC_ROUTE.PROFILE}/:userId`)
   @PublicProfileInfoSwagger()
-  async gerProfileInfo(@Param('userId') userId: string) {
-    const notification: NotificationObject<{
-      user: User;
-      avatarUrl: string | null;
-    }> = await this.queryBus.execute(new GetProfileInfoQuery(userId));
-    const code = notification.getCode();
-    if (code === ProfileInfoCodes.UserNotFound)
-      throw new UnauthorizedException();
-    if (code === ProfileInfoCodes.TransactionError) {
-      throw new InternalServerErrorException();
+  async gerProfileInfo(
+    @Param('userId') userId: string,
+  ): Promise<ProfilePublicInfoOutputDtoModel> {
+    this.logger.debug(
+      `Execute: Get profile info, user id: ${userId}`,
+      this.gerProfileInfo.name,
+    );
+
+    const result: AppNotificationResultType<ProfilePublicInfoOutputDtoModel> =
+      await this.queryBus.execute(new GetPublicProfileInfoQuery(userId));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.gerProfileInfo.name);
+        return result.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.gerProfileInfo.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
-    const { user, avatarUrl } = notification.getData();
-    const outputUser = userPublicProfileInfoMapper(user, avatarUrl);
-    return outputUser;
   }
 
   @Get()
   @PublicGetUsersCountSwagger()
-  async getTotalRegistredUsersCount() {
+  async getTotalRegistredUsersCount(): Promise<UserCountOutputDto> {
+    this.logger.debug(
+      `Execute: Get total users count`,
+      this.getTotalRegistredUsersCount.name,
+    );
     return { totalCount: await this.usersQueryRepository.getTotalCountUsers() };
   }
 }

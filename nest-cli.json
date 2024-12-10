@@ -91,6 +91,33 @@
         "tsConfigPath": "libs/decorators/tsconfig.lib.json"
       }
     },
+    "logger": {
+      "type": "library",
+      "root": "libs/logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/logger/tsconfig.lib.json"
+      }
+    },
+    "async-local-storage": {
+      "type": "library",
+      "root": "libs/async-local-storage",
+      "entryFile": "index",
+      "sourceRoot": "libs/async-local-storage/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/async-local-storage/tsconfig.lib.json"
+      }
+    },
+    "base-types-enum": {
+      "type": "library",
+      "root": "libs/base-types-enum",
+      "entryFile": "index",
+      "sourceRoot": "libs/base-types-enum/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/base-types-enum/tsconfig.lib.json"
+      }
+    },
     "payments": {
       "type": "application",
       "root": "apps/payments",

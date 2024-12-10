@@ -1,62 +1,56 @@
-import {
-  LogClass,
-  InjectCustomLoggerService,
-  CustomLoggerService,
-} from '@app/custom-logger';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
-import { NotificationObject } from '../../../../../common/domain/notification';
 import { User } from '@prisma/gateway';
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import {
+  ProfileInfoOutputDto,
+  userProfileInfoMapper,
+} from '../../../api/dto/output-dto/profile-info-output-dto';
 
-export const ProfileInfoCodes = {
-  Success: Symbol('success'),
-  UserNotFound: Symbol('userNotFound'),
-  TransactionError: Symbol('transactionError'),
-};
 export class GetProfileInfoQuery {
   constructor(public userId: string) {}
 }
 
 @QueryHandler(GetProfileInfoQuery)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
 export class GetProfileInfoUseCase
-  implements IQueryHandler<GetProfileInfoQuery>
+  implements
+    IQueryHandler<
+      GetProfileInfoQuery,
+      AppNotificationResultType<ProfileInfoOutputDto>
+    >
 {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
   ) {
-    logger.setContext(GetProfileInfoUseCase.name);
+    this.logger.setContext(GetProfileInfoUseCase.name);
   }
   async execute(
     command: GetProfileInfoQuery,
-  ): Promise<NotificationObject<{ user: User; avatarUrl: string | null }>> {
-    const notification = new NotificationObject<{
-      user: User;
-      avatarUrl: string | null;
-    }>(ProfileInfoCodes.Success);
+  ): Promise<AppNotificationResultType<ProfileInfoOutputDto>> {
     try {
-      const user = await this.usersQueryRepository.getProfileInfo(
+      const user: User | null = await this.usersQueryRepository.getProfileInfo(
         command.userId,
       );
-      if (!user) {
-        notification.setCode(ProfileInfoCodes.UserNotFound);
-        return notification;
-      }
+      if (!user) return this.appNotification.notFound();
+
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
-      notification.setData({ user, avatarUrl });
+
+      const mapUser: ProfileInfoOutputDto = userProfileInfoMapper(
+        user,
+        avatarUrl,
+      );
+      return this.appNotification.success(mapUser);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
-      notification.setCode(ProfileInfoCodes.TransactionError);
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
   }
 }

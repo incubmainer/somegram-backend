@@ -10,11 +10,12 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigService } from '@nestjs/config';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
+import { ConfigurationType } from '../../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RegistrationEmailResendingCodes = {
   Success: Symbol('success'),
@@ -36,11 +37,11 @@ export class RegistrationEmailResendingCommand {
   }
 }
 
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 @CommandHandler(RegistrationEmailResendingCommand)
 export class RegistrationEmailResendingUseCase {
   private readonly expireAfterMiliseconds: number;
@@ -50,19 +51,26 @@ export class RegistrationEmailResendingUseCase {
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly emailAuthService: EmailAuthService,
-    private readonly configService: ConfigService,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //private readonly configService: ConfigService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+
+    // @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    const config = this.configService.get<AuthConfig>('auth');
-    this.expireAfterMiliseconds =
-      config.emailConfirmationTokenExpireAfterMiliseconds;
-    logger.setContext(RegistrationEmailResendingUseCase.name);
+    //const config = this.configService.get<AuthConfig>('auth');
+    // this.expireAfterMiliseconds =
+    //   config.emailConfirmationTokenExpireAfterMiliseconds;
+
+    this.expireAfterMiliseconds = this.configService.get('envSettings', {
+      infer: true,
+    }).EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS;
+    this.logger.setContext(RegistrationEmailResendingUseCase.name);
   }
 
   public async execute(
     command: RegistrationEmailResendingCommand,
   ): Promise<NotificationObject<void>> {
-    this.logger.log('info', 'Registration email resending', {});
+    this.logger.debug('Registration email resending', this.execute.name);
     const notification = new NotificationObject(
       RegistrationEmailResendingCodes.Success,
     );
@@ -72,18 +80,14 @@ export class RegistrationEmailResendingUseCase {
         const userByToken = await this.userRepository.findUserByToken(token);
         if (!userByToken) {
           notification.setCode(RegistrationEmailResendingCodes.UserNotFound);
-          this.logger.log('warn', 'user not found', {
-            payload: { token },
-          });
+          this.logger.debug('user not found', this.execute.name);
           return notification;
         }
         if (userByToken && userByToken.isConfirmed) {
           notification.setCode(
             RegistrationEmailResendingCodes.EmailAlreadyConfirmated,
           );
-          this.logger.log('warn', 'email already confirmated', {
-            payload: { token },
-          });
+          this.logger.debug('email already confirmed', this.execute.name);
           return notification;
         }
         const confirmationToken = randomUUID().replaceAll('-', '');
@@ -106,10 +110,13 @@ export class RegistrationEmailResendingUseCase {
           confirmationToken,
           html,
         });
-        this.logger.log('info', 'Email sended success', {});
+        this.logger.debug(
+          'Email have been confirmed success ',
+          this.execute.name,
+        );
       });
-    } catch {
-      this.logger.log('error', 'transaction error', {});
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
       notification.setCode(RegistrationEmailResendingCodes.TransactionError);
     }
     return notification;
