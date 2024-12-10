@@ -25,7 +25,7 @@ export class CheckRefreshTokenUseCase
       throw new UnauthorizedException();
     }
 
-    const user = await this.userRepository.findUserById(payload.userId);
+    const user = await this.userRepository.getUserById(payload.userId);
     const device = await this.securityDevicesRepository.getDiviceById(
       payload.deviceId,
     );

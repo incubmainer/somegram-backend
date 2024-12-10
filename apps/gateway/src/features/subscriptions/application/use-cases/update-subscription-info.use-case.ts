@@ -1,36 +1,49 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { validateSync, ValidationError } from 'class-validator';
-import { UnauthorizedException } from '@nestjs/common';
 
-import { CreateSubscriptionDto } from '../../api/dto/input-dto/create-subscription.dto';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
-import { NotificationObject } from '../../../../common/domain/notification';
-import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
-
-export const CreatePaymentCodes = {
-  Success: Symbol('success'),
-  ValidationCommandError: Symbol('validationError'),
-  TransactionError: Symbol('transactionError'),
-};
+import {
+  AccountType,
+  SubscriptionDto,
+} from '../../../../../../../libs/common/enums/payments';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import {
+  InjectCustomLoggerService,
+  CustomLoggerService,
+  LogClass,
+} from '../../../../../../../libs/custom-logger/src';
+import { AddPostUseCase } from '../../../posts/application/use-cases/add-post.use-case';
 
 export class UpdateSubscriptionInfoCommand {
-  constructor(public payload: any) {}
+  constructor(public payload: SubscriptionDto) {}
 }
 
 @CommandHandler(UpdateSubscriptionInfoCommand)
 export class UpdateSubscriptionInfoUseCase
   implements ICommandHandler<UpdateSubscriptionInfoCommand>
 {
-  constructor(
-    private readonly usersQueryRepository: UsersQueryRepository,
-    private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
-  ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async execute(command: UpdateSubscriptionInfoCommand) {
-    try {
-    } catch (e) {
-      console.error(e);
+    const { userId, endDateOfSubscription, status, autoRenewal } =
+      command.payload;
+    //console.log(command.payload);
+
+    const user = await this.usersRepository.getUserById(userId);
+    //console.log(user);
+    if (user) {
+      const subscriptionExpireAt = new Date(endDateOfSubscription);
+
+      if (subscriptionExpireAt > new Date()) {
+        user.subscriptionExpireAt = subscriptionExpireAt;
+        user.accountType = AccountType.Business;
+        //user.autoRenewal = autoRenewal;
+      } else {
+        user.subscriptionExpireAt = null;
+        user.accountType = AccountType.Personal;
+        //user.autoRenewal = autoRenewal;
+      }
+      await this.usersRepository.updateUserProfileInfo(user.id, user);
     }
-    return null;
+
+    return true;
   }
 }

@@ -16,6 +16,7 @@ import { EnableAutoRenewalUseCase } from './features/payments/application/use-ca
 import { PaymentsService } from './features/payments/api/payments.service';
 import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/get-payments.use-case';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-client.adapter';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -27,7 +28,12 @@ const useCases = [
 
 const repositories = [PaymentsRepository];
 
-const services = [PaymentsService, PaymentManager, StripeAdapter];
+const services = [
+  PaymentsService,
+  PaymentManager,
+  StripeAdapter,
+  GatewayServiceClientAdapter,
+];
 
 @Module({
   imports: [

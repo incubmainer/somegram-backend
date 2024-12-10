@@ -93,7 +93,9 @@ export class PaymentsRepository {
     return subscription ? subscription : null;
   }
 
-  public async updateSubscription(subscription: Subscription) {
+  public async updateSubscription(
+    subscription: Subscription,
+  ): Promise<Subscription> {
     return await this.txHost.tx.subscription.update({
       data: {
         dateOfPayment: subscription.dateOfPayment,

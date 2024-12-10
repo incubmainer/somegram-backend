@@ -61,9 +61,7 @@ export class GetPublicPostsByUserUseCase
 
       const mappedPosts = await Promise.all(
         posts.map(async (post) => {
-          const user = await this.usersQueryRepository.findUserById(
-            post.userId,
-          );
+          const user = await this.usersQueryRepository.getUserById(post.userId);
           const avatarUrl = await this.photoServiceAdapter.getAvatar(
             post.userId,
           );

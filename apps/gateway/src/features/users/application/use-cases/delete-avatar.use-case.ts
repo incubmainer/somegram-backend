@@ -44,7 +44,7 @@ export class DeleteAvatarUseCase {
     const notification = new NotificationObject<string>(
       DeleteAvatarCodes.Success,
     );
-    const user = await this.usersQueryRepository.findUserById(command.userId);
+    const user = await this.usersQueryRepository.getUserById(command.userId);
     if (!user) {
       notification.setCode(DeleteAvatarCodes.UserNotFound);
       return notification;

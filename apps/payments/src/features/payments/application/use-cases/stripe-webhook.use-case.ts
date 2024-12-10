@@ -6,6 +6,7 @@ import { BadRequestException } from '@nestjs/common';
 import { PaymentsRepository } from '../../infrastructure/payments.repository';
 import { TransactionStatuses } from '../../../../common/enum/transaction-statuses.enum';
 import { PaymentSystem } from '../../../../../../../libs/common/enums/payments';
+import { GatewayServiceClientAdapter } from '../../../../common/adapters/gateway-service-client.adapter';
 
 export class StripeWebhookCommand {
   constructor(
@@ -20,7 +21,10 @@ export class StripeWebhookUseCase
 {
   configService = new ConfigService();
   signatureSecret = this.configService.get<string>('STRIPE_SIGNATURE_SECRET');
-  constructor(private readonly paymentsRepository: PaymentsRepository) {}
+  constructor(
+    private readonly paymentsRepository: PaymentsRepository,
+    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
+  ) {}
 
   async execute(command: StripeWebhookCommand) {
     const extractedRawBody = Buffer.from(command.rawBody);
@@ -58,7 +62,9 @@ export class StripeWebhookUseCase
           subscription.dateOfPayment = new Date(sb.period.start * 1000);
           subscription.endDateOfSubscription = new Date(sb.period.end * 1000);
           subscription.paymentSystemCustomerId = invoce.customer as string;
-          await this.paymentsRepository.updateSubscription(subscription);
+          const subInfo =
+            await this.paymentsRepository.updateSubscription(subscription);
+          this.gatewayServiceClientAdapter.sendSubscriptionInfo(subInfo);
           const newPayment = {
             status: TransactionStatuses.PaymentSucceeded,
             price: sb.amount,
@@ -143,7 +149,9 @@ export class StripeWebhookUseCase
           subscriptionInfo.status = subscription.status;
           subscriptionInfo.autoRenewal = false;
           subscriptionInfo.endDateOfSubscription = remainingEndDate;
-          await this.paymentsRepository.updateSubscription(subscriptionInfo);
+          const subInfo =
+            await this.paymentsRepository.updateSubscription(subscriptionInfo);
+          this.gatewayServiceClientAdapter.sendSubscriptionInfo(subInfo);
         }
       }
       return true;

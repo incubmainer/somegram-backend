@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEnum,
-  IsNotEmpty,
-  IsBoolean,
-  IsOptional,
-  IsInt,
-  Min,
-} from 'class-validator';
+import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
 import {
   PaymentTime,
   PaymentSystem,
@@ -33,24 +25,4 @@ export class CreateSubscriptionDto {
   @IsString()
   @IsEnum(PaymentSystem)
   paymentSystem: string;
-
-  // @ApiProperty({
-  //   description: 'The number of payments must be a positive integer',
-  //   type: Number,
-  //   required: true,
-  // })
-  // @IsNotEmpty()
-  // @IsInt()
-  // @Min(0)
-  // paymentCount: number;
-
-  // @ApiProperty({
-  //   description: 'Default value false',
-  //   type: Boolean,
-  //   required: false,
-  //   default: false,
-  // })
-  // @IsOptional()
-  // @IsBoolean()
-  // autoRenewal: boolean;
 }

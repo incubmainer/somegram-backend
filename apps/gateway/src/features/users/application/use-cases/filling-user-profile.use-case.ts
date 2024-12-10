@@ -108,7 +108,7 @@ export class FillingUserProfileUseCase {
       FillingUserProfileCodes.Success,
     );
     try {
-      const user = await this.usersQueryRepository.findUserById(command.userId);
+      const user = await this.usersQueryRepository.getUserById(command.userId);
       if (!user) {
         notification.setCode(FillingUserProfileCodes.UserNotFound);
         return notification;
@@ -126,7 +126,8 @@ export class FillingUserProfileUseCase {
       const updatedUser = await this.usersRepository.updateUserProfileInfo(
         userId,
         {
-          userName,
+          ...user,
+          username: userName,
           firstName,
           lastName,
           dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,

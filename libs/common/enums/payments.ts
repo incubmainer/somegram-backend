@@ -8,3 +8,15 @@ export enum PaymentTime {
   DAY = 'DAY',
   WEEKLY = 'WEEKLY',
 }
+
+export class SubscriptionDto {
+  userId: string;
+  endDateOfSubscription: string;
+  autoRenewal: boolean;
+  status: string;
+}
+
+export enum AccountType {
+  Personal = 'Personal',
+  Business = 'Business',
+}
