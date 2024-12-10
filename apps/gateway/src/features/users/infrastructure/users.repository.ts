@@ -9,25 +9,15 @@ import {
   UserResetPasswordCode,
 } from '@prisma/gateway';
 import { UserFromGithub } from '../../auth/api/dto/input-dto/user-from-github';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
 import { LoggerService } from '@app/logger';
 
 @Injectable()
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class UsersRepository {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersRepository.name);
