@@ -62,6 +62,14 @@ export const appSetting = (app: INestApplication) => {
       },
       'access-token',
     )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'refresh-token',
+    )
     .setDescription('api swagger')
     .setVersion('1.0')
     .build();

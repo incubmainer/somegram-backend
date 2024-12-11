@@ -41,6 +41,24 @@
       ],
       "@app/requests/*": [
         "libs/requests/src/*"
+      ],
+      "@app/paginator": [
+        "libs/paginator/src"
+      ],
+      "@app/paginator/*": [
+        "libs/paginator/src/*"
+      ],
+      "@app/application-notification": [
+        "libs/application-notification/src"
+      ],
+      "@app/application-notification/*": [
+        "libs/application-notification/src/*"
+      ],
+      "@app/decorators": [
+        "libs/decorators/src"
+      ],
+      "@app/decorators/*": [
+        "libs/decorators/src/*"
       ]
     }
   }
