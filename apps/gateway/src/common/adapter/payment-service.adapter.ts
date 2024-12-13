@@ -1,11 +1,9 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+
+import { ApplicationNotification } from '@app/application-notification';
 import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
 import {
   CREATE_AUTO_PAYMENT,
@@ -21,6 +19,7 @@ export class PaymentsServiceAdapter {
     @Inject('PAYMENTS_SERVICE')
     private readonly paymentsServiceClient: ClientProxy,
     private readonly configService: ConfigService,
+    private readonly appNotification: ApplicationNotification,
   ) {}
 
   async createSubscription(payload: {
@@ -39,7 +38,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -52,7 +51,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -65,7 +64,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -78,7 +77,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -91,7 +90,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 }

@@ -1,6 +1,6 @@
 import {
   PaymentSystem,
-  PaymentTime,
+  SubscriptionType,
 } from '../../../../../../../libs/common/enums/payments';
 
 export type UserInfo = {
@@ -19,7 +19,7 @@ export type PaymentData = {
   price: number;
   paymentCount: number;
   paymentSystem: PaymentSystem;
-  typeSubscription: PaymentTime;
+  subscriptionType: SubscriptionType;
   userInfo: UserInfo;
   customerId?: string;
 };

@@ -19,23 +19,24 @@ export class UpdateSubscriptionInfoUseCase
   async execute(command: UpdateSubscriptionInfoCommand) {
     const { userId, endDateOfSubscription, status, autoRenewal } =
       command.payload;
+    try {
+      const user = await this.usersRepository.getUserById(userId);
+      if (user) {
+        const subscriptionExpireAt = new Date(endDateOfSubscription);
 
-    const user = await this.usersRepository.getUserById(userId);
-    if (user) {
-      const subscriptionExpireAt = new Date(endDateOfSubscription);
-
-      if (subscriptionExpireAt > new Date()) {
-        user.subscriptionExpireAt = subscriptionExpireAt;
-        user.accountType = AccountType.Business;
-        //user.autoRenewal = autoRenewal;
-      } else {
-        user.subscriptionExpireAt = null;
-        user.accountType = AccountType.Personal;
-        //user.autoRenewal = autoRenewal;
+        if (subscriptionExpireAt > new Date()) {
+          user.subscriptionExpireAt = subscriptionExpireAt;
+          user.accountType = AccountType.Business;
+          //user.autoRenewal = autoRenewal;
+        } else {
+          user.subscriptionExpireAt = null;
+          user.accountType = AccountType.Personal;
+          //user.autoRenewal = autoRenewal;
+        }
+        await this.usersRepository.updateUserProfileInfo(user.id, user);
       }
-      await this.usersRepository.updateUserProfileInfo(user.id, user);
+    } catch (e) {
+      console.error(e);
     }
-
-    return true;
   }
 }

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { paymentsConfig } from './common/config/config';
@@ -17,6 +17,7 @@ import { PaymentsService } from './features/payments/api/payments.service';
 import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/get-payments.use-case';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-client.adapter';
+import { ApplicationNotificationModule } from '@app/application-notification';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -39,27 +40,30 @@ const services = [
   imports: [
     CqrsModule,
     ClsTransactionalModule,
-    ClientsModule.register([
-      {
-        name: 'PAYMENTS_SERVICE_RMQ',
-        transport: Transport.RMQ,
-        options: {
-          urls: [
-            'amqps://xbnnkzhp:ohtRICSwQSNQnsx2HCgdIwSfgtWZcKXj@kebnekaise.lmq.cloudamqp.com/xbnnkzhp',
-          ],
-          queue: 'payments_queue',
-          queueOptions: {
-            durable: false,
-          },
-        },
-      },
-    ]),
+    ApplicationNotificationModule,
     ConfigModule.forRoot({
       isGlobal: true,
       ignoreEnvFile: false,
       envFilePath: loadEnvFileNames(),
       load: [paymentsConfig],
     }),
+    ClientsModule.registerAsync([
+      {
+        name: 'PAYMENTS_SERVICE_RMQ',
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
+            queue: 'payments_queue',
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
   controllers: [PaymentsController],
   providers: [...useCases, ...repositories, ...services],

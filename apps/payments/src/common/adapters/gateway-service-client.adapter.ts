@@ -15,7 +15,7 @@ export class GatewayServiceClientAdapter {
 
   //TODO наменование и архитектура? общие dto в libs?
   async sendSubscriptionInfo(payload: SubscriptionDto) {
-    this.gatewayServiceClient.emit(
+    return this.gatewayServiceClient.emit(
       { cmd: SEND_SUBSCRIPTION_INFO },
       { payload },
     );

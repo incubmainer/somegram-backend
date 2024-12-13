@@ -21,3 +21,12 @@ export const USER_PUBLIC_ROUTE = {
   MAIN: 'public-users',
   PROFILE: 'profile',
 };
+
+export const SUBSCRIPTIONS_ROUTE = {
+  MAIN: 'subscriptions',
+  CREATE_PAYMENT: 'create-payment',
+  MY_PAYMENTS: 'my-payments',
+  STRIPE_WEBHOOK: 'stripe-webhook',
+  DISABLE_AUTO_RENEWAL: 'disable-auto-renewal',
+  ENABLE_AUTO_RENEWAL: 'enable-auto-renewal',
+};

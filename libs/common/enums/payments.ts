@@ -3,7 +3,7 @@ export enum PaymentSystem {
   PAYPAL = 'PAYPAL',
 }
 
-export enum PaymentTime {
+export enum SubscriptionType {
   MONTHLY = 'MONTHLY',
   DAY = 'DAY',
   WEEKLY = 'WEEKLY',

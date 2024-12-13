@@ -45,7 +45,7 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: ENABLE_AUTO_RENEWAL })
   async enableAutoRenewal({ payload }) {
-    return this.commandBus.execute(
+    return await this.commandBus.execute(
       new EnableAutoRenewalCommand(payload.userId),
     );
   }

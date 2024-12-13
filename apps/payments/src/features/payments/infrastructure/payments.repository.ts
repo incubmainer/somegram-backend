@@ -76,7 +76,7 @@ export class PaymentsRepository {
       (subscription) => subscription.payments,
     );
 
-    return payments.length > 0 ? payments : null;
+    return payments.length > 0 ? payments : [];
   }
 
   public async getSubscriptionByUserId(userId: string) {

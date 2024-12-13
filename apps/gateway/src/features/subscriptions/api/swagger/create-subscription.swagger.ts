@@ -1,10 +1,9 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiResponse, ApiOperation } from '@nestjs/swagger';
 
 export function CreateSubscriptionSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Create payment-subscriptions' }),
-    ApiBearerAuth('access-token'),
     ApiResponse({
       status: HttpStatus.OK,
       description:
@@ -14,14 +13,6 @@ export function CreateSubscriptionSwagger() {
           url: 'string',
         },
       },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorized',
     }),
     ApiResponse({
       status: HttpStatus.UNPROCESSABLE_ENTITY,

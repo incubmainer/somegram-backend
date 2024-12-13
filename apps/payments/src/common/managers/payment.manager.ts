@@ -1,16 +1,18 @@
+import { Injectable } from '@nestjs/common';
 import { PaymentSystem } from '../../../../../libs/common/enums/payments';
 import { PaymentData } from '../../features/payments/application/types/payment-data.type';
 import { StripeAdapter } from '../adapters/stripe.adapter';
 
+@Injectable()
 export class PaymentManager {
-  constructor() {}
-  async createAutoPayment(payment: PaymentData) {
+  constructor(private readonly stripeAdapter: StripeAdapter) {}
+
+  async createAutoPayment(payment: PaymentData): Promise<string> {
     if (payment.paymentSystem === PaymentSystem.PAYPAL) {
     }
 
     if (payment.paymentSystem === PaymentSystem.STRIPE) {
-      const stripeAdapter = new StripeAdapter();
-      return await stripeAdapter.createAutoPayment(payment);
+      return await this.stripeAdapter.createAutoPayment(payment);
     }
   }
 
@@ -19,10 +21,10 @@ export class PaymentManager {
     }
 
     if (payment.paymentSystem === PaymentSystem.STRIPE) {
-      const stripeAdapter = new StripeAdapter();
-      return await stripeAdapter.updateAutoPayment(payment);
+      return await this.stripeAdapter.updateAutoPayment(payment);
     }
   }
+
   async disableAutoRenewal(
     paymentSystem: PaymentSystem,
     paymentSubscriptionSubId: string,
@@ -31,8 +33,9 @@ export class PaymentManager {
     }
 
     if (paymentSystem === PaymentSystem.STRIPE) {
-      const stripeAdapter = new StripeAdapter();
-      return await stripeAdapter.disableAutoRenewal(paymentSubscriptionSubId);
+      return await this.stripeAdapter.disableAutoRenewal(
+        paymentSubscriptionSubId,
+      );
     }
   }
 
@@ -44,8 +47,9 @@ export class PaymentManager {
     }
 
     if (paymentSystem === PaymentSystem.STRIPE) {
-      const stripeAdapter = new StripeAdapter();
-      return await stripeAdapter.enableAutoRenewal(paymentSubscriptionSubId);
+      return await this.stripeAdapter.enableAutoRenewal(
+        paymentSubscriptionSubId,
+      );
     }
   }
 }

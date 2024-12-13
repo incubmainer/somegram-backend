@@ -1,10 +1,10 @@
 import {
-  PaymentTime,
+  SubscriptionType,
   PaymentSystem,
 } from '../../../../../../../../libs/common/enums/payments';
 
 export class CreatePaymentDto {
-  typeSubscription: PaymentTime;
+  subscriptionType: SubscriptionType;
   paymentSystem: PaymentSystem;
   // paymentCount: number;
   // autoRenewal: boolean;

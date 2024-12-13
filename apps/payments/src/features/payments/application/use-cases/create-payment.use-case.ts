@@ -1,12 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { PaymentsRepository } from '../../infrastructure/payments.repository';
 import { CreatePaymentDto } from '../../api/dto/input-dto/create-payment.dto';
-import { PaymentTime } from '../../../../../../../libs/common/enums/payments';
+import { SubscriptionType } from '../../../../../../../libs/common/enums/payments';
 import { PaymentData, UserInfo } from '../types/payment-data.type';
 import { PaymentsService } from '../../api/payments.service';
-import { ConfigService } from '@nestjs/config';
+import { ApplicationNotification } from '@app/application-notification';
 
 const SUBSCRIPTION_PRICE = 1; //USD per day
 export class CreatePaymentCommand {
@@ -30,20 +30,21 @@ export class CreatePaymentUseCase
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentsService: PaymentsService,
+    private readonly appNotification: ApplicationNotification,
   ) {}
 
   async execute(command: CreatePaymentCommand) {
-    const { typeSubscription, paymentSystem } = command.createSubscriptionDto;
+    const { subscriptionType, paymentSystem } = command.createSubscriptionDto;
 
     let price: number;
 
-    if (typeSubscription === PaymentTime.DAY) {
+    if (subscriptionType === SubscriptionType.DAY) {
       price = SUBSCRIPTION_PRICE * 100 * 1;
     }
-    if (typeSubscription === PaymentTime.WEEKLY) {
+    if (subscriptionType === SubscriptionType.WEEKLY) {
       price = SUBSCRIPTION_PRICE * 100 * 7 * 0.93;
     }
-    if (typeSubscription === PaymentTime.MONTHLY) {
+    if (subscriptionType === SubscriptionType.MONTHLY) {
       price = SUBSCRIPTION_PRICE * 100 * 30 * 0.75;
     }
 
@@ -57,7 +58,7 @@ export class CreatePaymentUseCase
       price,
       paymentCount: 1,
       paymentSystem,
-      typeSubscription,
+      subscriptionType,
       userInfo: command.userInfo,
     };
 
@@ -75,16 +76,14 @@ export class CreatePaymentUseCase
       ) {
         paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
         await this.paymentsService.updateCurrentSub(paymentData);
-        return 'Subscription plan changed';
+        return this.appNotification.success(null);
       } else {
-        const newPayment =
-          await this.paymentsService.createAutoPayment(paymentData);
-
-        return { url: newPayment };
+        const url = await this.paymentsService.createAutoPayment(paymentData);
+        return this.appNotification.success(url);
       }
     } catch (e) {
       console.error(e);
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 }

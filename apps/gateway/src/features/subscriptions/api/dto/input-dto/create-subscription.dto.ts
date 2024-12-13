@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
 import {
-  PaymentTime,
+  SubscriptionType,
   PaymentSystem,
 } from '../../../../../../../../libs/common/enums/payments';
 
@@ -9,12 +9,12 @@ export class CreateSubscriptionDto {
   @ApiProperty({
     type: String,
     required: true,
-    enum: PaymentTime,
+    enum: SubscriptionType,
   })
   @IsNotEmpty()
   @IsString()
-  @IsEnum(PaymentTime)
-  typeSubscription: string;
+  @IsEnum(SubscriptionType)
+  subscriptionType: string;
 
   @ApiProperty({
     type: String,

@@ -1,7 +1,14 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { InternalServerErrorException } from '@nestjs/common';
 
 import { PaymentsRepository } from '../../infrastructure/payments.repository';
+import {
+  myPaymentsMapper,
+  MyPaymentsOutputDto,
+} from '../../api/dto/output-dto/payments.output-dto';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 export class GetPaymentsQuery {
   constructor(public userId: string) {}
@@ -11,18 +18,24 @@ export class GetPaymentsQuery {
 export class GetPaymentsQueryUseCase
   implements IQueryHandler<GetPaymentsQuery>
 {
-  constructor(private readonly paymentsRepository: PaymentsRepository) {}
+  constructor(
+    private readonly paymentsRepository: PaymentsRepository,
+    private readonly appNotification: ApplicationNotification,
+  ) {}
 
-  async execute(command: GetPaymentsQuery) {
+  async execute(
+    command: GetPaymentsQuery,
+  ): Promise<AppNotificationResultType<MyPaymentsOutputDto[]>> {
     try {
-      const result = await this.paymentsRepository.getPaymentsByUserId(
+      const payments = await this.paymentsRepository.getPaymentsByUserId(
         command.userId,
       );
+      const mapPayments: MyPaymentsOutputDto[] = myPaymentsMapper(payments);
 
-      return result;
+      return this.appNotification.success(mapPayments);
     } catch (e) {
       console.error(e);
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 }
