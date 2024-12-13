@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
-import { CreateSubscriptionDto } from '../../api/dto/input-dto/create-subscription.dto';
+import { CreateSubscriptionDto } from '../../api/dto/input-dto/subscriptions.dto';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
 import {

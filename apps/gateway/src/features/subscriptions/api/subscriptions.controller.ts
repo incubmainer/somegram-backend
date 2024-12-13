@@ -23,7 +23,7 @@ import {
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { CreatePaymentCommand } from '../application/use-cases/create-payments.use-case';
-import { CreateSubscriptionDto } from './dto/input-dto/create-subscription.dto';
+import { CreateSubscriptionDto } from './dto/input-dto/subscriptions.dto';
 import { PaymentsServiceAdapter } from '../../../common/adapter/payment-service.adapter';
 import { CreateSubscriptionSwagger } from './swagger/create-subscription.swagger';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -38,6 +38,7 @@ import {
 import { EnableAutoRenewalSwagger } from './swagger/enable-autorenewal.swagger';
 import { DisableAutoRenewalSwagger } from './swagger/disable-autorenewal.swagger';
 import { MyPaymentsSwagger } from './swagger/my-payments.swagger';
+import { MyPaymentsOutputDto } from './dto/output-dto/subscriptions.output-dto';
 
 @ApiTags('Subscriptions')
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
@@ -77,8 +78,10 @@ export class SubscriptionsController {
   @MyPaymentsSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async geyPayments(@CurrentUserId() userId: string): Promise<void> {
-    const result: AppNotificationResultType<any> =
+  async geyPayments(
+    @CurrentUserId() userId: string,
+  ): Promise<MyPaymentsOutputDto[]> {
+    const result: AppNotificationResultType<MyPaymentsOutputDto[]> =
       await this.paymentsServiceAdapter.getPayments({
         userId,
       });
@@ -118,6 +121,7 @@ export class SubscriptionsController {
         this.logger.debug(`Success`, this.disableAutoRenewal.name);
         return result.data;
       case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.disableAutoRenewal.name);
         throw new NotFoundException();
       default:
         throw new InternalServerErrorException();
@@ -139,6 +143,7 @@ export class SubscriptionsController {
         this.logger.debug(`Success`, this.enableAutoRenewal.name);
         return result.data;
       case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.enableAutoRenewal.name);
         throw new NotFoundException();
       default:
         throw new InternalServerErrorException();

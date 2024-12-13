@@ -4,6 +4,6 @@ export enum TransactionStatuses {
 }
 
 export enum SubscriptionStatuses {
-  Canceled = 'Canceled',
   Active = 'Active',
+  Canceled = 'Canceled',
 }

@@ -4,7 +4,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 
 import { ApplicationNotification } from '@app/application-notification';
-import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
+import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/subscriptions.dto';
 import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,

@@ -27,7 +27,6 @@ export class DisableAutoRenewalUseCase
     if (!activeSubscription) {
       return this.appNotification.notFound();
     }
-    //сделать статусы enum
     try {
       if (activeSubscription.status !== SubscriptionStatuses.Canceled) {
         const result = await this.paymentsService.disableAutoRenewal(

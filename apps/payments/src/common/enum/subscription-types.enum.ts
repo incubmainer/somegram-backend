@@ -1,4 +1,4 @@
-export enum SubscriontionTypes {
+export enum SubscriptionTypes {
   MONTHLY,
   DAY,
   WEEKLY,
