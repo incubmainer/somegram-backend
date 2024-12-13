@@ -1,13 +1,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
-import {
-  AccountType,
-  SubscriptionDto,
-} from '../../../../../../../libs/common/enums/payments';
+import { AccountType } from '../../../../../../../libs/common/enums/payments';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 
 export class UpdateSubscriptionInfoCommand {
-  constructor(public payload: SubscriptionDto) {}
+  constructor(
+    public payload: {
+      userId: string;
+      endDateOfSubscription: Date;
+    },
+  ) {}
 }
 
 @CommandHandler(UpdateSubscriptionInfoCommand)
@@ -17,8 +19,7 @@ export class UpdateSubscriptionInfoUseCase
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async execute(command: UpdateSubscriptionInfoCommand) {
-    const { userId, endDateOfSubscription, status, autoRenewal } =
-      command.payload;
+    const { userId, endDateOfSubscription } = command.payload;
     try {
       const user = await this.usersRepository.getUserById(userId);
       if (user) {
@@ -27,11 +28,9 @@ export class UpdateSubscriptionInfoUseCase
         if (subscriptionExpireAt > new Date()) {
           user.subscriptionExpireAt = subscriptionExpireAt;
           user.accountType = AccountType.Business;
-          //user.autoRenewal = autoRenewal;
         } else {
           user.subscriptionExpireAt = null;
           user.accountType = AccountType.Personal;
-          //user.autoRenewal = autoRenewal;
         }
         await this.usersRepository.updateUserProfileInfo(user.id, user);
       }

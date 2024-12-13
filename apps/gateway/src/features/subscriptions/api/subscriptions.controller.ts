@@ -60,11 +60,10 @@ export class SubscriptionsController {
     @CurrentUserId() userId: string,
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
-    const result: AppNotificationResultType<any> =
+    const result: AppNotificationResultType<{ url: string } | null> =
       await this.commandBus.execute(
         new CreatePaymentCommand(userId, createSubscriptionDto),
       );
-
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.createSubscription.name);

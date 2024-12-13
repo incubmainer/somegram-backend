@@ -9,13 +9,6 @@ export enum SubscriptionType {
   WEEKLY = 'WEEKLY',
 }
 
-export class SubscriptionDto {
-  userId: string;
-  endDateOfSubscription: Date;
-  autoRenewal: boolean;
-  status: string;
-}
-
 export enum AccountType {
   Personal = 'Personal',
   Business = 'Business',

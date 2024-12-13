@@ -18,11 +18,7 @@ export class CreatePaymentCommand {
 
 @CommandHandler(CreatePaymentCommand)
 export class CreatePaymentUseCase
-  implements
-    ICommandHandler<
-      CreatePaymentCommand,
-      AppNotificationResultType<string, string>
-    >
+  implements ICommandHandler<CreatePaymentCommand>
 {
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
@@ -35,7 +31,7 @@ export class CreatePaymentUseCase
 
   async execute(
     command: CreatePaymentCommand,
-  ): Promise<AppNotificationResultType<string, string>> {
+  ): Promise<AppNotificationResultType<{ url: string }, null>> {
     try {
       const user = await this.usersQueryRepository.findUserById(command.userId);
       if (!user) {
@@ -49,7 +45,10 @@ export class CreatePaymentUseCase
         },
         createSubscriptionDto: command.createSubscriptionDto,
       });
-      return this.appNotification.success(result);
+      if (!result.data) {
+        return this.appNotification.success(null);
+      }
+      return this.appNotification.success({ url: result.data });
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

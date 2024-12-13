@@ -4,6 +4,7 @@ import { PaymentsRepository } from '../../infrastructure/payments.repository';
 import { PaymentSystem } from '../../../../../../../libs/common/enums/payments';
 import { PaymentsService } from '../../api/payments.service';
 import { ApplicationNotification } from '@app/application-notification';
+import { SubscriptionStatuses } from '../../../../common/enum/transaction-statuses.enum';
 
 export class EnableAutoRenewalCommand {
   constructor(public userId: string) {}
@@ -27,7 +28,7 @@ export class EnableAutoRenewalUseCase
       return this.appNotification.notFound();
     }
     try {
-      if (activeSubscription.status !== 'canceled') {
+      if (activeSubscription.status !== SubscriptionStatuses.Canceled) {
         const result = await this.paymentsService.enableAutoRenewal(
           activeSubscription.paymentSystem as PaymentSystem,
           activeSubscription.paymentSystemSubId,

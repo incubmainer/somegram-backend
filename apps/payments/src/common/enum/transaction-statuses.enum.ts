@@ -1,4 +1,9 @@
 export enum TransactionStatuses {
-  PaymentSucceeded = 'payment_succeeded',
-  PaymentFailed = 'payment_failed',
+  PaymentSucceeded = 'Success',
+  PaymentFailed = 'Failed',
+}
+
+export enum SubscriptionStatuses {
+  Canceled = 'Canceled',
+  Active = 'Active',
 }

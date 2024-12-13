@@ -18,6 +18,7 @@ import { GetPaymentsQueryUseCase } from './features/payments/application/use-cas
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-client.adapter';
 import { ApplicationNotificationModule } from '@app/application-notification';
+import { StripeEventAdapter } from './common/adapters/stripe-event.adaper';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -33,6 +34,7 @@ const services = [
   PaymentsService,
   PaymentManager,
   StripeAdapter,
+  StripeEventAdapter,
   GatewayServiceClientAdapter,
 ];
 

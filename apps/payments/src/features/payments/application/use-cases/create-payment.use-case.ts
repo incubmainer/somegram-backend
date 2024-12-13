@@ -6,7 +6,11 @@ import { CreatePaymentDto } from '../../api/dto/input-dto/create-payment.dto';
 import { SubscriptionType } from '../../../../../../../libs/common/enums/payments';
 import { PaymentData, UserInfo } from '../types/payment-data.type';
 import { PaymentsService } from '../../api/payments.service';
-import { ApplicationNotification } from '@app/application-notification';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { SubscriptionStatuses } from '../../../../common/enum/transaction-statuses.enum';
 
 const SUBSCRIPTION_PRICE = 1; //USD per day
 export class CreatePaymentCommand {
@@ -33,7 +37,9 @@ export class CreatePaymentUseCase
     private readonly appNotification: ApplicationNotification,
   ) {}
 
-  async execute(command: CreatePaymentCommand) {
+  async execute(
+    command: CreatePaymentCommand,
+  ): Promise<AppNotificationResultType<string | null>> {
     const { subscriptionType, paymentSystem } = command.createSubscriptionDto;
 
     let price: number;
@@ -70,7 +76,7 @@ export class CreatePaymentUseCase
 
       if (
         subscriptionInfo &&
-        subscriptionInfo.status !== 'canceled' &&
+        subscriptionInfo.status !== SubscriptionStatuses.Canceled &&
         (subscriptionInfo.autoRenewal === true ||
           subscriptionInfo.endDateOfSubscription > new Date())
       ) {
