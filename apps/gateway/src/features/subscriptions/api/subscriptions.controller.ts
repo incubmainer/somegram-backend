@@ -38,7 +38,11 @@ import {
 import { EnableAutoRenewalSwagger } from './swagger/enable-autorenewal.swagger';
 import { DisableAutoRenewalSwagger } from './swagger/disable-autorenewal.swagger';
 import { MyPaymentsSwagger } from './swagger/my-payments.swagger';
-import { MyPaymentsOutputDto } from './dto/output-dto/subscriptions.output-dto';
+import {
+  MyPaymentsOutputDto,
+  SubscriptionInfoOutputDto,
+} from './dto/output-dto/subscriptions.output-dto';
+import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
 
 @ApiTags('Subscriptions')
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
@@ -88,7 +92,28 @@ export class SubscriptionsController {
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
-        this.logger.debug(`Success`, this.createSubscription.name);
+        this.logger.debug(`Success`, this.geyPayments.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Get(SUBSCRIPTIONS_ROUTE.INFO)
+  @SubscriptionInfoSwagger()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async geySubscriptionInfo(
+    @CurrentUserId() userId: string,
+  ): Promise<SubscriptionInfoOutputDto> {
+    const result: AppNotificationResultType<SubscriptionInfoOutputDto> =
+      await this.paymentsServiceAdapter.getSubscriptionInfo({
+        userId,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.geySubscriptionInfo.name);
         return result.data;
       default:
         throw new InternalServerErrorException();

@@ -3,7 +3,7 @@ import stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 
-import { StripeEventAdapter } from '../../../../common/adapters/stripe-event.adaper';
+import { StripeEventAdapter } from '../../../../../common/adapters/stripe-event.adaper';
 
 export class StripeWebhookCommand {
   constructor(

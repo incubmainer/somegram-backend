@@ -10,6 +10,7 @@ import {
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
+  GET_SUBSCRIPTION_INFO,
   STRIPE_WEBHOOK_HANDLER,
 } from '../constants/service.constants';
 
@@ -85,6 +86,19 @@ export class PaymentsServiceAdapter {
     try {
       const responseOfService = this.paymentsServiceClient
         .send({ cmd: GET_PAYMENTS }, { payload })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async getSubscriptionInfo(payload: { userId: string }) {
+    try {
+      const responseOfService = this.paymentsServiceClient
+        .send({ cmd: GET_SUBSCRIPTION_INFO }, { payload })
         .pipe(timeout(10000));
 
       const result = await firstValueFrom(responseOfService);

@@ -1,16 +1,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
 
-import { PaymentsRepository } from '../../infrastructure/payments.repository';
-import { CreatePaymentDto } from '../../api/dto/input-dto/create-payment.dto';
-import { SubscriptionType } from '../../../../../../../libs/common/enums/payments';
-import { PaymentData, UserInfo } from '../types/payment-data.type';
-import { PaymentsService } from '../../api/payments.service';
+import { PaymentsRepository } from '../../../infrastructure/payments.repository';
+import { CreatePaymentDto } from '../../../api/dto/input-dto/create-payment.dto';
+import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
+import { PaymentData, UserInfo } from '../../types/payment-data.type';
+import { PaymentsService } from '../../../api/payments.service';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { SubscriptionStatuses } from '../../../../common/enum/transaction-statuses.enum';
 
 const SUBSCRIPTION_PRICE = 1; //USD per day
 export class CreatePaymentCommand {
@@ -70,13 +69,12 @@ export class CreatePaymentUseCase
 
     try {
       const subscriptionInfo =
-        await this.paymentsRepository.getSubscriptionByUserId(
+        await this.paymentsRepository.getActiveSubscriptionByUserId(
           command.userInfo.userId,
         );
 
       if (
         subscriptionInfo &&
-        subscriptionInfo.status !== SubscriptionStatuses.Canceled &&
         (subscriptionInfo.autoRenewal === true ||
           subscriptionInfo.endDateOfSubscription > new Date())
       ) {

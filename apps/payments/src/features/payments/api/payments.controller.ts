@@ -2,18 +2,20 @@ import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 
-import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case';
-import { StripeWebhookCommand } from '../application/use-cases/stripe-webhook.use-case';
-import { DisableAutoRenewalCommand } from '../application/use-cases/disable-autorenewal.use-case';
-import { EnableAutoRenewalCommand } from '../application/use-cases/enable-autorenewal.use-case';
-import { GetPaymentsQuery } from '../application/use-cases/get-payments.use-case';
+import { CreatePaymentCommand } from '../application/use-cases/command/create-payment.use-case';
+import { StripeWebhookCommand } from '../application/use-cases/command/stripe-webhook.use-case';
+import { DisableAutoRenewalCommand } from '../application/use-cases/command/disable-autorenewal.use-case';
+import { EnableAutoRenewalCommand } from '../application/use-cases/command/enable-autorenewal.use-case';
+import { GetPaymentsQuery } from '../application/use-cases/query/get-payments.use-case';
 import {
   CREATE_AUTO_PAYMENT,
   STRIPE_WEBHOOK_HANDLER,
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
+  GET_SUBSCRIPTION_INFO,
 } from '../../../../../gateway/src/common/constants/service.constants';
+import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 
 @Controller('payments')
 export class PaymentsController {
@@ -53,5 +55,10 @@ export class PaymentsController {
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments({ payload }) {
     return this.queryBus.execute(new GetPaymentsQuery(payload.userId));
+  }
+
+  @MessagePattern({ cmd: GET_SUBSCRIPTION_INFO })
+  async getSubscriptionInfo({ payload }) {
+    return this.queryBus.execute(new GetSubscriptionInfoQuery(payload.userId));
   }
 }

@@ -26,6 +26,7 @@ export const SUBSCRIPTIONS_ROUTE = {
   MAIN: 'subscriptions',
   CREATE_PAYMENT: 'create-payment',
   MY_PAYMENTS: 'my-payments',
+  INFO: 'info',
   STRIPE_WEBHOOK: 'stripe-webhook',
   DISABLE_AUTO_RENEWAL: 'disable-auto-renewal',
   ENABLE_AUTO_RENEWAL: 'enable-auto-renewal',

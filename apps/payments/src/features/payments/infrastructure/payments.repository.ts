@@ -6,6 +6,7 @@ import {
   Subscription,
   PaymentTransaction,
 } from '@prisma/payments';
+import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
 
 @Injectable()
 export class PaymentsRepository {
@@ -79,9 +80,11 @@ export class PaymentsRepository {
     return payments.length > 0 ? payments : [];
   }
 
-  public async getSubscriptionByUserId(userId: string) {
+  public async getActiveSubscriptionByUserId(
+    userId: string,
+  ): Promise<Subscription> {
     const subscription = await this.txHost.tx.subscription.findFirst({
-      where: { userId },
+      where: { userId, status: SubscriptionStatuses.Active },
     });
     return subscription ? subscription : null;
   }

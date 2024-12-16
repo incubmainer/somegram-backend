@@ -1,10 +1,10 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { PaymentsRepository } from '../../infrastructure/payments.repository';
 import {
-  myPaymentsMapper,
   MyPaymentsOutputDto,
-} from '../../api/dto/output-dto/payments.output-dto';
+  myPaymentsMapper,
+} from '../../../api/dto/output-dto/payments.output-dto';
+import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import {
   ApplicationNotification,
   AppNotificationResultType,

@@ -1,4 +1,4 @@
-import { PaymentTransaction } from '@prisma/payments';
+import { PaymentTransaction, Subscription } from '@prisma/payments';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
 
 const SUBSCRIPTION_TYPE = {
@@ -31,9 +31,42 @@ export const myPaymentsMapper = (
         price: payment.price / 100,
         paymentSystem: payment.paymentSystem,
         status: payment.status,
-        dateOfPayment: payment.dateOfPayment.toISOString(),
-        endDateOfSubscription: payment.endDateOfSubscription.toISOString(),
+        dateOfPayment: payment.dateOfPayment
+          ? payment.dateOfPayment.toISOString()
+          : null,
+        endDateOfSubscription: payment.endDateOfSubscription
+          ? payment.endDateOfSubscription.toISOString()
+          : null,
         subscriptionId: payment.subId,
       }),
   );
+};
+
+export class SubscriptionInfoOutputDto {
+  userId: string;
+  subscriptionId: string;
+  status: string;
+  dateOfPayment: string;
+  endDateOfSubscription: string;
+  autoRenewal: boolean;
+  constructor(data?: Partial<SubscriptionInfoOutputDto>) {
+    Object.assign(this, data);
+  }
+}
+
+export const subscriptionInfoMapper = (
+  subscription: Subscription,
+): SubscriptionInfoOutputDto => {
+  return new SubscriptionInfoOutputDto({
+    userId: subscription.userId,
+    subscriptionId: subscription.id,
+    status: subscription.status,
+    autoRenewal: subscription.autoRenewal,
+    dateOfPayment: subscription.dateOfPayment
+      ? subscription.dateOfPayment.toISOString()
+      : null,
+    endDateOfSubscription: subscription.endDateOfSubscription
+      ? subscription.endDateOfSubscription.toISOString()
+      : null,
+  });
 };
