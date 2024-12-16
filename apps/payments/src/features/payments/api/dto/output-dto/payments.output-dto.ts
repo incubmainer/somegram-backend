@@ -49,13 +49,16 @@ export class SubscriptionInfoOutputDto {
   dateOfPayment: string;
   endDateOfSubscription: string;
   autoRenewal: boolean;
+  subscriptionType: string;
   constructor(data?: Partial<SubscriptionInfoOutputDto>) {
     Object.assign(this, data);
   }
 }
 
 export const subscriptionInfoMapper = (
-  subscription: Subscription,
+  subscription: {
+    payments: PaymentTransaction[];
+  } & Subscription,
 ): SubscriptionInfoOutputDto => {
   return new SubscriptionInfoOutputDto({
     userId: subscription.userId,
@@ -68,5 +71,7 @@ export const subscriptionInfoMapper = (
     endDateOfSubscription: subscription.endDateOfSubscription
       ? subscription.endDateOfSubscription.toISOString()
       : null,
+    subscriptionType:
+      SUBSCRIPTION_TYPE[subscription.payments[0].subscriptionType],
   });
 };

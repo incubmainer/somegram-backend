@@ -67,4 +67,14 @@ export class SubscriptionInfoOutputDto {
     example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
   })
   subscriptionId: string;
+
+  @ApiProperty({
+    description: 'subscription id',
+    example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
+  })
+  @ApiProperty({
+    description: 'subscriptionType',
+    example: 'MONTHLY',
+  })
+  subscriptionType: string;
 }

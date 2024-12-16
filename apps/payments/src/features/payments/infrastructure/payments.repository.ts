@@ -80,11 +80,21 @@ export class PaymentsRepository {
     return payments.length > 0 ? payments : [];
   }
 
-  public async getActiveSubscriptionByUserId(
-    userId: string,
-  ): Promise<Subscription> {
+  public async getActiveSubscriptionByUserId(userId: string): Promise<
+    {
+      payments: PaymentTransaction[];
+    } & Subscription
+  > {
     const subscription = await this.txHost.tx.subscription.findFirst({
       where: { userId, status: SubscriptionStatuses.Active },
+      include: {
+        payments: {
+          orderBy: {
+            dateOfPayment: 'desc',
+          },
+          take: 1,
+        },
+      },
     });
     return subscription ? subscription : null;
   }

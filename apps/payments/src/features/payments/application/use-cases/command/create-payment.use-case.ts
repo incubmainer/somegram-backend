@@ -11,7 +11,11 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 
-const SUBSCRIPTION_PRICE = 1; //USD per day
+const SUBSCRIPTION_PRICE = {
+  day: 10,
+  weekly: 50,
+  monthly: 100,
+}; //USD per day
 export class CreatePaymentCommand {
   constructor(
     public userInfo: UserInfo,
@@ -44,13 +48,13 @@ export class CreatePaymentUseCase
     let price: number;
 
     if (subscriptionType === SubscriptionType.DAY) {
-      price = SUBSCRIPTION_PRICE * 100 * 1;
+      price = SUBSCRIPTION_PRICE.day * 100;
     }
     if (subscriptionType === SubscriptionType.WEEKLY) {
-      price = SUBSCRIPTION_PRICE * 100 * 7 * 0.93;
+      price = SUBSCRIPTION_PRICE.weekly * 100;
     }
     if (subscriptionType === SubscriptionType.MONTHLY) {
-      price = SUBSCRIPTION_PRICE * 100 * 30 * 0.75;
+      price = SUBSCRIPTION_PRICE.monthly * 100;
     }
 
     const paymentData: PaymentData = {
