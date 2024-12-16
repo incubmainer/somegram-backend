@@ -67,14 +67,18 @@ export class SubscriptionInfoOutputDto {
     example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
   })
   subscriptionId: string;
-
   @ApiProperty({
-    description: 'subscription id',
+    description: 'user id',
     example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
   })
+  userId: string;
   @ApiProperty({
-    description: 'subscriptionType',
+    description: 'subscription type',
     example: 'MONTHLY',
   })
   subscriptionType: string;
+  @ApiProperty({
+    description: 'autoRenewal',
+  })
+  autoRenewal: boolean;
 }
