@@ -177,7 +177,6 @@ export class SubscriptionsController {
 
   @MessagePattern({ cmd: SEND_SUBSCRIPTION_INFO })
   async sendSubscriptionInfo(@Payload() { payload }) {
-    console.log(payload);
     return await this.commandBus.execute(
       new UpdateSubscriptionInfoCommand(payload),
     );

@@ -25,37 +25,36 @@ export class InvoicePaymentSucceededHandler implements IStripeEventHandler {
       throw new BadRequestException('Webhook Error: Subscription not found');
     }
 
-    const subscriptionData = invoice.lines.data;
-    subscriptionData.forEach(async (sb) => {
-      if (sb.amount !== 0) {
-        const subscriptionDataPeriod = {
-          start: new Date(sb.period.start * 1000),
-          end: new Date(sb.period.end * 1000),
-        };
+    const subscriptionData = invoice.lines.data[0];
 
-        subscription.dateOfPayment = new Date(sb.period.start * 1000);
-        subscription.endDateOfSubscription = new Date(sb.period.end * 1000);
-        subscription.paymentSystemCustomerId = invoice.customer as string;
+    const subscriptionDataPeriod = {
+      start: new Date(subscriptionData.period.start * 1000),
+      end: new Date(subscriptionData.period.end * 1000),
+    };
 
-        const subInfo =
-          await this.paymentsRepository.updateSubscription(subscription);
-        this.gatewayServiceClientAdapter.sendSubscriptionInfo({
-          userId: subInfo.userId,
-          endDateOfSubscription: subInfo.endDateOfSubscription,
-        });
+    subscription.dateOfPayment = new Date(subscriptionData.period.start * 1000);
+    subscription.endDateOfSubscription = new Date(
+      subscriptionData.period.end * 1000,
+    );
+    subscription.paymentSystemCustomerId = invoice.customer as string;
 
-        const newPayment = {
-          status: TransactionStatuses.PaymentSucceeded,
-          price: sb.amount,
-          paymentSystem: PaymentSystem.STRIPE,
-          subscriptionType: sb.plan.interval,
-          subId: subscription.id,
-          dateOfPayment: subscriptionDataPeriod.start,
-          endDateOfSubscription: subscriptionDataPeriod.end,
-        };
-
-        await this.paymentsRepository.createPaymentTransaction(newPayment);
-      }
+    const subInfo =
+      await this.paymentsRepository.updateSubscription(subscription);
+    this.gatewayServiceClientAdapter.sendSubscriptionInfo({
+      userId: subInfo.userId,
+      endDateOfSubscription: subInfo.endDateOfSubscription,
     });
+
+    const newPayment = {
+      status: TransactionStatuses.PaymentSucceeded,
+      price: subscriptionData.amount,
+      paymentSystem: PaymentSystem.STRIPE,
+      subscriptionType: subscriptionData.plan.interval,
+      subId: subscription.id,
+      dateOfPayment: subscriptionDataPeriod.start,
+      endDateOfSubscription: subscriptionDataPeriod.end,
+    };
+
+    await this.paymentsRepository.createPaymentTransaction(newPayment);
   }
 }
