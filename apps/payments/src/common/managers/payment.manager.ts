@@ -1,11 +1,15 @@
 import { PaymentSystem } from '../../../../../libs/common/enums/payments';
 import { PaymentData } from '../../features/payments/application/types/payment-data.type';
 import { StripeAdapter } from '../adapters/stripe.adapter';
+import { PayPalAdapter } from '../adapters/paypal.adapter';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class PaymentManager {
-  constructor() {}
+  constructor(private readonly payPalAdapter: PayPalAdapter) {}
   async createAutoPayment(payment: PaymentData) {
     if (payment.paymentSystem === PaymentSystem.PAYPAL) {
+      return await this.payPalAdapter.createAutoPayment(payment);
     }
 
     if (payment.paymentSystem === PaymentSystem.STRIPE) {

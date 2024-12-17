@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { loadEnvFileNames } from './common/config/load-env-file-names';
 import { paymentsConfig } from './common/config/config';
@@ -17,6 +17,22 @@ import { PaymentsService } from './features/payments/api/payments.service';
 import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/get-payments.use-case';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-client.adapter';
+import { PayPalAdapter } from './common/adapters/paypal.adapter';
+import {
+  Client,
+  Environment,
+  LogLevel,
+  OrdersController,
+  PaymentsController as PayPalPaymentsController,
+} from '@paypal/paypal-server-sdk';
+import {
+  PAYPAL_CLIENT,
+  PAYPAL_ORDERS_CONTROLLER,
+  PAYPAL_PAYMENTS_CONTROLLER,
+} from './common/constants/adapters-name.constant';
+import { ApplicationNotificationModule } from '@app/application-notification';
+import { PayPalSignatureGuard } from './common/guards/paypal/paypal.guard';
+import { EventManager } from './common/managers/event.manager';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -28,11 +44,56 @@ const useCases = [
 
 const repositories = [PaymentsRepository];
 
+const paypalClient = {
+  provide: PAYPAL_CLIENT,
+  useFactory: (configService: ConfigService) => {
+    const clientId = configService.get<string>('PAYPAL_CLIENT_ID');
+    const clientSecret = configService.get<string>('PAYPAL_CLIENT_SECRET');
+
+    return new Client({
+      clientCredentialsAuthCredentials: {
+        oAuthClientId: clientId,
+        oAuthClientSecret: clientSecret,
+      },
+      timeout: 0,
+      environment: Environment.Sandbox,
+      logging: {
+        logLevel: LogLevel.Info,
+        logRequest: { logBody: true },
+        logResponse: { logHeaders: true },
+      },
+    });
+  },
+  inject: [ConfigService],
+};
+
+const paypalOrdersController = {
+  provide: PAYPAL_ORDERS_CONTROLLER,
+  useFactory: (client: Client) => {
+    return new OrdersController(client);
+  },
+  inject: [PAYPAL_CLIENT],
+};
+
+const paypalPaymentsController = {
+  provide: PAYPAL_PAYMENTS_CONTROLLER,
+  useFactory: (client: Client) => {
+    return new PayPalPaymentsController(client);
+  },
+  inject: [PAYPAL_CLIENT],
+};
+
 const services = [
   PaymentsService,
   PaymentManager,
   StripeAdapter,
   GatewayServiceClientAdapter,
+  PayPalAdapter,
+  paypalClient,
+  paypalOrdersController,
+  paypalPaymentsController,
+  PayPalSignatureGuard,
+  EventManager,
 ];
 
 @Module({
@@ -60,6 +121,7 @@ const services = [
       envFilePath: loadEnvFileNames(),
       load: [paymentsConfig],
     }),
+    ApplicationNotificationModule,
   ],
   controllers: [PaymentsController],
   providers: [...useCases, ...repositories, ...services],

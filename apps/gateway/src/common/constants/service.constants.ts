@@ -13,3 +13,5 @@ export const ENABLE_AUTO_RENEWAL = 'enable_auto_renewal';
 export const GET_PAYMENTS = 'get_payments';
 
 export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';
+
+export const PAYPAL_WEBHOOK_HANDLER = 'stripe_webhook_handler';

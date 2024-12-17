@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   NotFoundException,
   Post,
   RawBodyRequest,
@@ -28,6 +30,11 @@ import { CreateSubscriptionSwagger } from './swagger/create-subscription.swagger
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UpdateSubscriptionInfoCommand } from '../application/use-cases/update-subscription-info.use-case';
 import { SEND_SUBSCRIPTION_INFO } from '../../../common/constants/service.constants';
+import { IncomingHttpHeaders } from 'http';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
@@ -121,5 +128,28 @@ export class SubscriptionsController {
     return await this.commandBus.execute(
       new UpdateSubscriptionInfoCommand(payload),
     );
+  }
+
+  @Post('paypal-webhook')
+  @HttpCode(200)
+  @ApiExcludeEndpoint()
+  async paypalWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
+    const rawBody: Buffer = req.rawBody;
+    const headers: Headers = req.headers;
+
+    const result: AppNotificationResultType<null> =
+      await this.paymentsServiceAdapter.paypalWebhook({
+        rawBody,
+        headers,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        throw new ForbiddenException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 
@@ -13,13 +13,18 @@ import {
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
+  PAYPAL_WEBHOOK_HANDLER,
 } from '../../../../../gateway/src/common/constants/service.constants';
+import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
+import { EventManager } from '../../../common/managers/event.manager';
+import { PaymentSystem } from '../../../../../../libs/common/enums/payments';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly eventManager: EventManager,
   ) {}
 
   @MessagePattern({ cmd: CREATE_AUTO_PAYMENT })
@@ -34,6 +39,16 @@ export class PaymentsController {
     return this.commandBus.execute(
       new StripeWebhookCommand(payload.rawBody, payload.signatureHeader),
     );
+  }
+
+  @MessagePattern({ cmd: PAYPAL_WEBHOOK_HANDLER })
+  //@UseGuards(PayPalSignatureGuard)
+  async papalWebhookHandler({ payload }) {
+    const result = await this.eventManager.handleEvent(
+      PaymentSystem.PAYPAL,
+      payload.rawBody,
+    );
+    return 'OK';
   }
 
   @MessagePattern({ cmd: DISABLE_AUTO_RENEWAL })
