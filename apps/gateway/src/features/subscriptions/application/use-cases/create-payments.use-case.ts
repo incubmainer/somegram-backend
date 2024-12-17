@@ -1,17 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { validateSync, ValidationError } from 'class-validator';
-import { UnauthorizedException } from '@nestjs/common';
 
-import { CreateSubscriptionDto } from '../../api/dto/input-dto/create-subscription.dto';
+import { CreateSubscriptionDto } from '../../api/dto/input-dto/subscriptions.dto';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
-import { NotificationObject } from '../../../../common/domain/notification';
 import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
-
-export const CreatePaymentCodes = {
-  Success: Symbol('success'),
-  ValidationCommandError: Symbol('validationError'),
-  TransactionError: Symbol('transactionError'),
-};
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '../../../../../../../libs/application-notification/src';
+import { LoggerService } from '@app/logger';
 
 export class CreatePaymentCommand {
   constructor(
@@ -27,24 +23,19 @@ export class CreatePaymentUseCase
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
-  ) {}
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
+  ) {
+    this.logger.setContext(CreatePaymentUseCase.name);
+  }
 
-  async execute(command: CreatePaymentCommand) {
-    const errors = validateSync(command);
-    if (errors.length) {
-      const note = new NotificationObject<null, ValidationError>(
-        CreatePaymentCodes.ValidationCommandError,
-      );
-      note.addErrors(errors);
-      return note;
-    }
-    const notification = new NotificationObject<string>(
-      CreatePaymentCodes.Success,
-    );
+  async execute(
+    command: CreatePaymentCommand,
+  ): Promise<AppNotificationResultType<{ url: string }, null>> {
     try {
       const user = await this.usersQueryRepository.findUserById(command.userId);
       if (!user) {
-        throw new UnauthorizedException();
+        return this.appNotification.internalServerError();
       }
       const result = await this.paymentsServiceAdapter.createSubscription({
         userInfo: {
@@ -54,11 +45,13 @@ export class CreatePaymentUseCase
         },
         createSubscriptionDto: command.createSubscriptionDto,
       });
-      notification.setData(result);
+      if (!result.data) {
+        return this.appNotification.success(null);
+      }
+      return this.appNotification.success({ url: result.data });
     } catch (e) {
-      console.error(e);
-      notification.setCode(CreatePaymentCodes.TransactionError);
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
   }
 }

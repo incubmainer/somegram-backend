@@ -1,9 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InternalServerErrorException } from '@nestjs/common';
 
-import { PaymentsRepository } from '../../infrastructure/payments.repository';
-import { PaymentSystem } from '../../../../../../../libs/common/enums/payments';
-import { PaymentsService } from '../../api/payments.service';
+import { PaymentsRepository } from '../../../infrastructure/payments.repository';
+import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
+import { PaymentsService } from '../../../api/payments.service';
+import { ApplicationNotification } from '@app/application-notification';
 
 export class DisableAutoRenewalCommand {
   constructor(public userId: string) {}
@@ -16,26 +16,27 @@ export class DisableAutoRenewalUseCase
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentsService: PaymentsService,
+    private readonly appNotification: ApplicationNotification,
   ) {}
 
   async execute(command: DisableAutoRenewalCommand) {
     const activeSubscription =
-      await this.paymentsRepository.getSubscriptionByUserId(command.userId);
+      await this.paymentsRepository.getActiveSubscriptionByUserId(
+        command.userId,
+      );
 
     if (!activeSubscription) {
-      return null;
+      return this.appNotification.notFound();
     }
-
     try {
       const result = await this.paymentsService.disableAutoRenewal(
         activeSubscription.paymentSystem as PaymentSystem,
         activeSubscription.paymentSystemSubId,
       );
-
-      return result;
+      return this.appNotification.success(result);
     } catch (e) {
       console.error(e);
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 }

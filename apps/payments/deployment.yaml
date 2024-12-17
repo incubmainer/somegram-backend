@@ -52,6 +52,11 @@ spec:
                  secretKeyRef:
                    name: some-payments-service-production-config-secret
                    key: FRONTEND_CANCEL_PAYMENT_URL
+             - name: RMQ_CONNECTION_STRING
+               valueFrom:
+                 secretKeyRef:
+                   name: some-payments-service-production-config-secret
+                   key: RMQ_CONNECTION_STRING
              - name: STRIPE_API_SECRET_KEY
                valueFrom:
                  secretKeyRef:

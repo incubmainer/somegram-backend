@@ -7,7 +7,7 @@ import { PaymentSystem } from '../../../../../../libs/common/enums/payments';
 @Injectable()
 export class PaymentsService {
   constructor(private readonly paymentManager: PaymentManager) {}
-  async createAutoPayment(payload: PaymentData) {
+  async createAutoPayment(payload: PaymentData): Promise<string> {
     return await this.paymentManager.createAutoPayment(payload);
   }
 

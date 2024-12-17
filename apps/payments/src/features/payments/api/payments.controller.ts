@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 
@@ -13,8 +13,10 @@ import {
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
+  GET_SUBSCRIPTION_INFO,
   PAYPAL_WEBHOOK_HANDLER,
 } from '../../../../../gateway/src/common/constants/service.constants';
+import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
 import { EventManager } from '../../../common/managers/event.manager';
 import { PaymentSystem } from '../../../../../../libs/common/enums/payments';
@@ -24,7 +26,6 @@ export class PaymentsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly eventManager: EventManager,
   ) {}
 
   @MessagePattern({ cmd: CREATE_AUTO_PAYMENT })
@@ -68,5 +69,10 @@ export class PaymentsController {
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments({ payload }) {
     return this.queryBus.execute(new GetPaymentsQuery(payload.userId));
+  }
+
+  @MessagePattern({ cmd: GET_SUBSCRIPTION_INFO })
+  async getSubscriptionInfo({ payload }) {
+    return this.queryBus.execute(new GetSubscriptionInfoQuery(payload.userId));
   }
 }

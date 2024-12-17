@@ -1,17 +1,14 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/create-subscription.dto';
+import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/subscriptions.dto';
 import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
+  GET_SUBSCRIPTION_INFO,
   PAYPAL_WEBHOOK_HANDLER,
   STRIPE_WEBHOOK_HANDLER,
 } from '../constants/service.constants';
@@ -19,7 +16,6 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -28,10 +24,7 @@ export class PaymentsServiceAdapter {
     private readonly paymentsServiceClient: ClientProxy,
     private readonly configService: ConfigService,
     private readonly appNotification: ApplicationNotification,
-    private readonly logger: LoggerService,
-  ) {
-    this.logger.setContext(PaymentsServiceAdapter.name);
-  }
+  ) {}
 
   async createSubscription(payload: {
     userInfo: {
@@ -49,7 +42,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -62,7 +55,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -92,7 +85,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -105,7 +98,7 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
     }
   }
 
@@ -118,7 +111,20 @@ export class PaymentsServiceAdapter {
       const result = await firstValueFrom(responseOfService);
       return result;
     } catch (e) {
-      throw new InternalServerErrorException();
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async getSubscriptionInfo(payload: { userId: string }) {
+    try {
+      const responseOfService = this.paymentsServiceClient
+        .send({ cmd: GET_SUBSCRIPTION_INFO }, { payload })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      return this.appNotification.internalServerError();
     }
   }
 }

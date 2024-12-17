@@ -3,17 +3,10 @@ export enum PaymentSystem {
   PAYPAL = 'PAYPAL',
 }
 
-export enum PaymentTime {
+export enum SubscriptionType {
   MONTHLY = 'MONTHLY',
   DAY = 'DAY',
   WEEKLY = 'WEEKLY',
-}
-
-export class SubscriptionDto {
-  userId: string;
-  endDateOfSubscription: Date;
-  autoRenewal: boolean;
-  status: string;
 }
 
 export enum AccountType {

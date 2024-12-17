@@ -1,17 +1,20 @@
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
-import { InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { PaymentData } from '../../features/payments/application/types/payment-data.type';
-import { PaymentTime } from '../../../../../libs/common/enums/payments';
-
+import { SubscriptionType } from '../../../../../libs/common/enums/payments';
+@Injectable()
 export class StripeAdapter {
-  configService = new ConfigService();
-  stripe = new Stripe(this.configService.get<string>('STRIPE_API_SECRET_KEY'));
-  constructor() {}
+  private stripe: Stripe;
+  constructor(private readonly configService: ConfigService) {
+    this.stripe = new Stripe(
+      this.configService.get<string>('STRIPE_API_SECRET_KEY'),
+    );
+  }
 
-  public async createAutoPayment(payload: PaymentData) {
-    const interval = await this.getIntervalBySubType(payload.typeSubscription);
+  public async createAutoPayment(payload: PaymentData): Promise<string> {
+    const interval = await this.getIntervalBySubType(payload.subscriptionType);
 
     try {
       let customer;
@@ -115,7 +118,7 @@ export class StripeAdapter {
   }
 
   private async createPricePlan(payload: PaymentData) {
-    const interval = await this.getIntervalBySubType(payload.typeSubscription);
+    const interval = await this.getIntervalBySubType(payload.subscriptionType);
     const pricePlan = await this.stripe.prices.create({
       product: await this.stripe.products
         .create({
@@ -170,7 +173,7 @@ export class StripeAdapter {
     }
   }
 
-  private async getIntervalBySubType(typeSubscription: PaymentTime) {
+  private async getIntervalBySubType(typeSubscription: SubscriptionType) {
     let interval: Stripe.PriceCreateParams.Recurring.Interval;
 
     switch (typeSubscription) {

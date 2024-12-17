@@ -53,6 +53,9 @@ export class EnvSettings {
   @IsNotEmpty()
   @IsString()
   public readonly FRONTED_PROVIDER: string;
+  @IsNotEmpty()
+  @IsString()
+  public readonly RMQ_CONNECTION_STRING: string;
 
   /// --------
 
@@ -114,7 +117,7 @@ export class EnvSettings {
     this.RECAPTCHA_SECRET_KEY = envVariable.RECAPTCHA_SECRET_KEY;
     this.RECAPTCHA_SITE_KEY = envVariable.RECAPTCHA_SITE_KEY;
     this.FRONTED_PROVIDER = envVariable.FRONTED_PROVIDER;
-
+    this.RMQ_CONNECTION_STRING = envVariable.RMQ_CONNECTION_STRING;
     this.GATEWAY_DATABASE_URL = envVariable.GATEWAY_DATABASE_URL;
 
     this.EMAIL_SERVICE = envVariable.EMAIL_SERVICE;
