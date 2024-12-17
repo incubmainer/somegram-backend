@@ -18,10 +18,7 @@ import {
 } from './types/paypal/types';
 import { HttpMethod } from '@paypal/paypal-server-sdk/dist/types/core';
 import { PAYPAL_PLANS, SUBSCRIPTIONS } from '../constants/paypal-path.constant';
-import {
-  ApplicationNotification,
-  AppNotificationResultType,
-} from '@app/application-notification';
+import { ApplicationNotification } from '@app/application-notification';
 import {
   PayeePreferred,
   PayPalLinksRelEnum,
@@ -95,7 +92,7 @@ export class PayPalAdapter {
       const accessToken: string = await this.login();
 
       const {
-        typeSubscription,
+        subscriptionType,
         userInfo,
         cancelFrontendUrl,
         successFrontendUrl,
@@ -103,7 +100,7 @@ export class PayPalAdapter {
 
       const planKey: PayPalProductIdEnum =
         PayPalProductIdEnum[
-          typeSubscription as keyof typeof PayPalProductIdEnum
+          subscriptionType as keyof typeof PayPalProductIdEnum
         ];
 
       const plans: PayPalPlansResponseType = await this.fetch(

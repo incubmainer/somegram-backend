@@ -1,12 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
-
-import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case';
-import { StripeWebhookCommand } from '../application/use-cases/stripe-webhook.use-case';
-import { DisableAutoRenewalCommand } from '../application/use-cases/disable-autorenewal.use-case';
-import { EnableAutoRenewalCommand } from '../application/use-cases/enable-autorenewal.use-case';
-import { GetPaymentsQuery } from '../application/use-cases/get-payments.use-case';
 import {
   CREATE_AUTO_PAYMENT,
   STRIPE_WEBHOOK_HANDLER,
@@ -20,12 +14,18 @@ import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-sub
 import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
 import { EventManager } from '../../../common/managers/event.manager';
 import { PaymentSystem } from '../../../../../../libs/common/enums/payments';
+import { CreatePaymentCommand } from '../application/use-cases/command/create-payment.use-case';
+import { StripeWebhookCommand } from '../application/use-cases/command/stripe-webhook.use-case';
+import { EnableAutoRenewalCommand } from '../application/use-cases/command/enable-autorenewal.use-case';
+import { GetPaymentsQuery } from '../application/use-cases/query/get-payments.use-case';
+import { DisableAutoRenewalCommand } from '../application/use-cases/command/disable-autorenewal.use-case';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly eventManager: EventManager,
   ) {}
 
   @MessagePattern({ cmd: CREATE_AUTO_PAYMENT })

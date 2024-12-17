@@ -71,7 +71,6 @@ export class PaymentsServiceAdapter {
 
       return this.appNotification.success(null);
     } catch (e) {
-      this.logger.error(e, this.paypalWebhook.name);
       return this.appNotification.internalServerError();
     }
   }
