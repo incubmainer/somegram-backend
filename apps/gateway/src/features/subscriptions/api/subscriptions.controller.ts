@@ -46,7 +46,7 @@ import {
 } from '@app/application-notification';
 
 @ApiTags('Subscriptions')
-@Controller('sub')
+@Controller(SUBSCRIPTIONS_ROUTE.MAIN)
 export class SubscriptionsController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -77,11 +77,6 @@ export class SubscriptionsController {
       default:
         throw new InternalServerErrorException();
     }
-  }
-
-  @Get('success')
-  async success() {
-    return 'OK';
   }
 
   @Get(SUBSCRIPTIONS_ROUTE.MY_PAYMENTS)
@@ -190,7 +185,7 @@ export class SubscriptionsController {
   }
 
   // TODO Не приходят хуки возможно проблема с paypal проверить завтра
-  @Post('hook')
+  @Post(SUBSCRIPTIONS_ROUTE.PAYPAL_WEBHOOK)
   @HttpCode(200)
   @ApiExcludeEndpoint()
   async paypalWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
