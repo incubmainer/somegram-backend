@@ -27,7 +27,7 @@ export type PayPalPlansType = {
   id: string;
   product_id: string;
   name: string;
-  status: string;
+  status: 'ACTIVE' | 'INACTIVE';
   usage_type: string;
   create_time: Date;
   links: PayPalLinksType[];
@@ -52,7 +52,7 @@ export type CreateSubscriptionDataType = {
   plan_id: string;
   quantity?: string;
   auto_renewal?: boolean; // default false.
-  custom_id?: string;
+  custom_id: string;
   start_time?: string; // Date, default now
   shipping_amount?: ShippingAmountType;
   subscriber: SubscriberType;
@@ -111,6 +111,7 @@ export type SubscriptionCreatedType = {
   status: SubscriptionStatusEnum;
   create_time: Date;
   links: SubscriptionLinksType[];
+  custom_id: string; // User id
   // Shown with extended response from server
   status_update_time?: Date;
   plan_id?: string;
@@ -157,6 +158,7 @@ export type WHSubscriptionEventCreatedType = {
   subscriber: SubscriberType;
   create_time: Date;
   links: WebHookLinksType[];
+  custom_id: string; // User id
   id: string; // Sub id
   plan_overridden: boolean;
   plan_id: string;
@@ -177,6 +179,7 @@ export type WHSubscriptionActiveType = {
   subscriber: WHSubscriptionActiveSubscriberType;
   create_time: Date;
   update_time: Date;
+  custom_id: string; // User id
   links: PayPalLinksType[];
   id: string; // Sub id
   plan_overridden: boolean;
@@ -221,13 +224,14 @@ export type WHSubscriptionActiveBillingCycleExecutionsInfoType = {
 *
 */
 export type WHPaymentSaleType = {
-  billing_agreement_id: string;
+  billing_agreement_id: string; // Sub id
+  custom: string; // User id
   amount: WHPaymentSaleAmountType;
   payment_mode: PayPalPaymentModeEnum;
   update_time: Date;
   create_time: Date;
   links: WebHookLinksType[];
-  id: string;
+  id: string; // Invoice id
   state: string;
   invoice_number: string;
 };

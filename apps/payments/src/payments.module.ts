@@ -34,7 +34,10 @@ import {
 } from './common/constants/adapters-name.constant';
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { PayPalSignatureGuard } from './common/guards/paypal/paypal.guard';
-import { EventManager } from './common/managers/event.manager';
+import { PaypalEventAdapter } from './common/adapters/paypal-event.adapter';
+import { PayPalPaymentSucceededHandler } from './features/payments/application/handlers/paypal-payment-succeeded.handler';
+import { PaypalSubscriptionActiveHandler } from './features/payments/application/handlers/paypal-subscription-active.handler';
+import { PayPalSubscriptionCreateUseCaseHandler } from './features/payments/application/use-cases/command/paypal-subscription-create.use-case';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -43,6 +46,7 @@ const useCases = [
   EnableAutoRenewalUseCase,
   GetPaymentsQueryUseCase,
   GetSubscriptionInfoQueryUseCase,
+  PayPalSubscriptionCreateUseCaseHandler,
 ];
 
 const repositories = [PaymentsRepository];
@@ -97,7 +101,9 @@ const services = [
   paypalOrdersController,
   paypalPaymentsController,
   PayPalSignatureGuard,
-  EventManager,
+  PaypalEventAdapter,
+  PayPalPaymentSucceededHandler,
+  PaypalSubscriptionActiveHandler,
 ];
 
 @Module({

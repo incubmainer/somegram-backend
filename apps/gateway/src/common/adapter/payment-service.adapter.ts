@@ -71,6 +71,7 @@ export class PaymentsServiceAdapter {
 
       return this.appNotification.success(null);
     } catch (e) {
+      console.log(e);
       return this.appNotification.internalServerError();
     }
   }

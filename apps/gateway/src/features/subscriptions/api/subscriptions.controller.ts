@@ -46,7 +46,7 @@ import {
 } from '@app/application-notification';
 
 @ApiTags('Subscriptions')
-@Controller(SUBSCRIPTIONS_ROUTE.MAIN)
+@Controller('sub')
 export class SubscriptionsController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -77,6 +77,11 @@ export class SubscriptionsController {
       default:
         throw new InternalServerErrorException();
     }
+  }
+
+  @Get('success')
+  async success() {
+    return 'OK';
   }
 
   @Get(SUBSCRIPTIONS_ROUTE.MY_PAYMENTS)
@@ -184,10 +189,12 @@ export class SubscriptionsController {
     );
   }
 
-  @Post('paypal-webhook')
+  // TODO Не приходят хуки возможно проблема с paypal проверить завтра
+  @Post('hook')
   @HttpCode(200)
   @ApiExcludeEndpoint()
   async paypalWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
+    this.logger.debug('Execute: paypal webhook', this.paypalWebhook.name);
     const rawBody: Buffer = req.rawBody;
     const headers: Headers = req.headers;
 
@@ -199,8 +206,10 @@ export class SubscriptionsController {
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.paypalWebhook.name);
         return;
       case AppNotificationResultEnum.Forbidden:
+        this.logger.debug('Forbidden', this.paypalWebhook.name);
         throw new ForbiddenException();
       default:
         throw new InternalServerErrorException();

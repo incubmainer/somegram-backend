@@ -18,7 +18,11 @@ import {
 } from './types/paypal/types';
 import { HttpMethod } from '@paypal/paypal-server-sdk/dist/types/core';
 import { PAYPAL_PLANS, SUBSCRIPTIONS } from '../constants/paypal-path.constant';
-import { ApplicationNotification } from '@app/application-notification';
+import {
+  ApplicationNotification,
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 import {
   PayeePreferred,
   PayPalLinksRelEnum,
@@ -26,6 +30,8 @@ import {
   PreferEnum,
   UserAction,
 } from './types/paypal/enum';
+import { CommandBus } from '@nestjs/cqrs';
+import { PayPalSubscriptionCreateUseCase } from '../../features/payments/application/use-cases/command/paypal-subscription-create.use-case';
 
 // TODO Logger, App notification
 @Injectable()
@@ -33,6 +39,7 @@ export class PayPalAdapter {
   constructor(
     @Inject(PAYPAL_CLIENT) private readonly paypalClient: Client,
     private readonly appNotification: ApplicationNotification,
+    private readonly commandBus: CommandBus,
   ) {}
 
   private async handleResult<T = null>(response: ApiResponse<any>): Promise<T> {
@@ -110,12 +117,14 @@ export class PayPalAdapter {
       );
 
       const plan: PayPalPlansType = plans.plans.find(
-        (p: PayPalPlansType) => p.product_id === planKey,
+        (p: PayPalPlansType) =>
+          p.product_id === planKey && p.status === 'ACTIVE',
       );
 
       const body: CreateSubscriptionDataType = {
         plan_id: plan.id,
         auto_renewal: true,
+        custom_id: userInfo.userId,
         subscriber: {
           name: { given_name: userInfo.userName },
           email_address: userInfo.email,
@@ -144,6 +153,13 @@ export class PayPalAdapter {
       const link: SubscriptionLinksType = createSubscription.links.find(
         (l: SubscriptionLinksType) => l.rel === PayPalLinksRelEnum.APPROVE,
       );
+
+      const result: AppNotificationResultType<null> =
+        await this.commandBus.execute(
+          new PayPalSubscriptionCreateUseCase(createSubscription),
+        );
+
+      if (result.appResult !== AppNotificationResultEnum.Success) return null;
 
       return link.href;
     } catch (e) {

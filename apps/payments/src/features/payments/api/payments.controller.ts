@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, InternalServerErrorException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
@@ -12,20 +12,24 @@ import {
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
-import { EventManager } from '../../../common/managers/event.manager';
+import { PaypalEventAdapter } from '../../../common/adapters/paypal-event.adapter';
 import { PaymentSystem } from '../../../../../../libs/common/enums/payments';
 import { CreatePaymentCommand } from '../application/use-cases/command/create-payment.use-case';
 import { StripeWebhookCommand } from '../application/use-cases/command/stripe-webhook.use-case';
 import { EnableAutoRenewalCommand } from '../application/use-cases/command/enable-autorenewal.use-case';
 import { GetPaymentsQuery } from '../application/use-cases/query/get-payments.use-case';
 import { DisableAutoRenewalCommand } from '../application/use-cases/command/disable-autorenewal.use-case';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly eventManager: EventManager,
+    private readonly eventManager: PaypalEventAdapter,
   ) {}
 
   @MessagePattern({ cmd: CREATE_AUTO_PAYMENT })
@@ -44,12 +48,8 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: PAYPAL_WEBHOOK_HANDLER })
   //@UseGuards(PayPalSignatureGuard)
-  async papalWebhookHandler({ payload }) {
-    const result = await this.eventManager.handleEvent(
-      PaymentSystem.PAYPAL,
-      payload.rawBody,
-    );
-    return 'OK';
+  async paypalWebhookHandler({ payload }): Promise<any> {
+    return await this.eventManager.handleEvent(payload.rawBody);
   }
 
   @MessagePattern({ cmd: DISABLE_AUTO_RENEWAL })
