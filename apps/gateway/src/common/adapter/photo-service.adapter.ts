@@ -13,7 +13,7 @@ import {
   GET_USER_AVATAR,
   UPLOAD_AVATAR,
   UPLOAD_POST_PHOTO,
-} from '../config/constants/service.constants';
+} from '../constants/service.constants';
 import { FileDto } from '../../features/posts/api/dto/input-dto/add-post.dto';
 
 @Injectable()

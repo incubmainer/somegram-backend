@@ -10,7 +10,7 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
-import { SECURITY_DEVICES_ROUTE } from '../../../common/config/constants/route.constants';
+import { SECURITY_DEVICES_ROUTE } from '../../../common/constants/route.constants';
 import {
   ApiBearerAuth,
   ApiTags,

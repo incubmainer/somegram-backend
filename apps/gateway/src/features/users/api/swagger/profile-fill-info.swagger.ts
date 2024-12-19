@@ -1,107 +1,33 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
-  ApiResponse,
   ApiOperation,
-  ApiTags,
-  ApiBearerAuth,
+  ApiBadRequestResponse,
+  ApiUnprocessableEntityResponse,
+  ApiOkResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import {
+  BadRequestExceptionDto,
+  UnprocessableExceptionDto,
+} from '@app/base-types-enum';
+import { ProfileInfoOutputDtoModel } from '../dto/output-dto/profile-info-output-dto';
 
 export function ProfileFillInfoSwagger() {
   return applyDecorators(
-    ApiTags('Users'),
-    ApiBearerAuth('access-token'),
     ApiOperation({ summary: 'Fill User Profile' }),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiOkResponse({
       description: 'Profile filled successfully',
-      schema: {
-        example: {
-          userName: 'john_doe',
-          firstName: 'John',
-          lastName: 'Doe',
-          dateOfBirth: '1990-01-01',
-          about: 'Software Developer',
-          city: 'New York',
-          country: 'USA',
-        },
-      },
+      type: ProfileInfoOutputDtoModel,
     }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: 'User not found or not authorized',
+    ApiUnprocessableEntityResponse({
+      description: 'Validation failed',
+      type: UnprocessableExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
-      description: 'Validation error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'userName',
-              constraints: {
-                isUsername:
-                  'userName must be a valid username (6-30 characters, alphanumeric, underscore, or dash)',
-              },
-            },
-            {
-              property: 'firstName',
-              constraints: {
-                isFirstName:
-                  'firstName must be a valid first name (1-50 characters, only alphabetic characters are allowed)',
-              },
-            },
-            {
-              property: 'lastName',
-              constraints: {
-                isLastName:
-                  'lastName must be a valid first name (1-50 characters, only alphabetic characters are allowed)',
-              },
-            },
-            {
-              property: 'dateOfBirth',
-              constraints: {
-                isDateOfBirth:
-                  'dateOfBirth must be a valid date in the format dd.mm.yyyy and the person must be older than 13 years',
-              },
-            },
-            {
-              property: 'about',
-              constraints: {
-                isAbout:
-                  'about must be between 0 and 200 characters long and can include letters, numbers, and special characters.',
-              },
-            },
-            {
-              property: 'city',
-              constraints: {
-                isCityName:
-                  'city must be between 1 and 100 characters long and can include letters from any alphabet, spaces, hyphens, apostrophes, and periods.',
-              },
-            },
-          ],
-        },
-      },
+    ApiBadRequestResponse({
+      description:
+        'Bad request, if the current username belongs to another user',
+      type: BadRequestExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: 'Username already exists',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Username already exists',
-              message: 'Error updating profile because username already exists',
-            },
-          },
-        ],
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
+    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }

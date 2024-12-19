@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CryptoService } from 'apps/gateway/src/common/utils/crypto.service';
+import { CryptoService } from '../../../common/utils/crypto.service';
 
 @Injectable()
 export class CryptoAuthService {

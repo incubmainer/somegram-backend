@@ -1,61 +1,47 @@
-import { CommandHandler } from '@nestjs/cqrs';
-
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-
-export const DeleteAvatarCodes = {
-  Success: Symbol('success'),
-  UserNotFound: Symbol('userNotFound'),
-  TransactionError: Symbol('transactionError'),
-};
+import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { User } from '@prisma/gateway';
 
 export class DeleteAvatarCommand {
-  public readonly userId: string;
-  constructor(userId: string) {
-    this.userId = userId;
-  }
+  constructor(public userId: string) {}
 }
 
 @CommandHandler(DeleteAvatarCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
-export class DeleteAvatarUseCase {
+export class DeleteAvatarUseCase
+  implements
+    ICommandHandler<DeleteAvatarCommand, AppNotificationResultType<null>>
+{
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
+    private readonly appNotification: ApplicationNotification,
   ) {
-    logger.setContext(DeleteAvatarUseCase.name);
+    this.logger.setContext(DeleteAvatarUseCase.name);
   }
 
   public async execute(
     command: DeleteAvatarCommand,
-  ): Promise<NotificationObject<null | string>> {
+  ): Promise<AppNotificationResultType<null>> {
     const { userId } = command;
-    const notification = new NotificationObject<string>(
-      DeleteAvatarCodes.Success,
+
+    const user: User | null = await this.usersQueryRepository.findUserById(
+      command.userId,
     );
-    const user = await this.usersQueryRepository.findUserById(command.userId);
-    if (!user) {
-      notification.setCode(DeleteAvatarCodes.UserNotFound);
-      return notification;
-    }
+    if (!user) return this.appNotification.notFound();
+
     try {
-      const result = await this.photoServiceAdapter.deleteAvatar(userId);
-      console.log('54', result);
+      await this.photoServiceAdapter.deleteAvatar(userId);
+      return this.appNotification.success(null);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
-      notification.setCode(DeleteAvatarCodes.TransactionError);
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
   }
 }

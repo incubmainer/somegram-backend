@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AuthConfig } from '../config/configs/auth.config';
+import { ConfigurationType } from '../../settings/configuration/configuration';
 
 @Injectable()
 export class RecapchaService {
   private readonly recapchaSecretKey: string;
-  constructor(private readonly configService: ConfigService) {
-    const authConfig = this.configService.get<AuthConfig>('auth');
-    this.recapchaSecretKey = authConfig.recaptchaSecretKey;
+  constructor(
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {
+    const envSettings = this.configService.get('envSettings', { infer: true });
+    this.recapchaSecretKey = envSettings.RECAPTCHA_SECRET_KEY;
   }
   async verifyRecaptchaToken(token: string): Promise<boolean> {
     try {

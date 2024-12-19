@@ -1,27 +1,16 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
-  ApiResponse,
   ApiOperation,
-  ApiTags,
-  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 
 export function DeleteAvatarSwagger() {
   return applyDecorators(
-    ApiTags('Users'),
-    ApiBearerAuth('access-token'),
     ApiOperation({ summary: 'Delete user avatar' }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+    ApiNoContentResponse({
       description: 'Success deleted avatar',
     }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorized',
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
+    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }

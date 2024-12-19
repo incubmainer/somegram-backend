@@ -4,16 +4,10 @@ import {
   UpdateOrCreateCatalogCommandHandler,
   UpdateOrCreateOrCreateCatalogCommand,
 } from './application/use-cases/update-or-create-catalog';
-import { ConfigModule } from '@nestjs/config';
-import { loadEnvFileNames } from '../../common/config/load-env-file-names';
-import { finalConfig } from '../../common/config/config';
-import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import {
-  ApplicationNotificationModule,
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { CountryCatalogModule } from './country-catalog.module';
 import {
   GetCountriesQueryCommand,
   GetCountriesQueryCommandHandler,
@@ -33,6 +27,7 @@ import { NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { CommandExecutorService } from '../../common/services/command-executor-service';
 import { CountryCityRepository } from './infrastructure/country-city.repository';
 import { PullCountryWithCityResponseType } from './domain/type/type';
+import { GatewayModule } from '../../gateway.module';
 
 class CommandExecutorServiceMock implements OnApplicationBootstrap {
   constructor(private readonly commandBus: CommandBus) {}
@@ -83,22 +78,8 @@ describe('CountryCityCatalog', () => {
   let updateOrCreateCatalogHandler: UpdateOrCreateCatalogCommandHandler;
   let countryCityRepository: CountryCityRepository;
   beforeAll(async () => {
-    /*
-    Просто зарегестрировать GatewayModule не получается, сыпяться ошибки
-    из-за notification (НЕ Application-Notification)
-    */
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
-      imports: [
-        ApplicationNotificationModule,
-        CountryCatalogModule,
-        ConfigModule.forRoot({
-          isGlobal: true,
-          ignoreEnvFile: false,
-          envFilePath: loadEnvFileNames(),
-          load: [finalConfig],
-        }),
-        ClsTransactionalModule,
-      ],
+      imports: [GatewayModule],
     });
 
     moduleBuilder

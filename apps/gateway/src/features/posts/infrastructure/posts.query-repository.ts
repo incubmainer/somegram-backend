@@ -3,8 +3,8 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { Injectable } from '@nestjs/common';
 
 import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
-import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
+import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
 
 @Injectable()
 export class PostsQueryRepository {

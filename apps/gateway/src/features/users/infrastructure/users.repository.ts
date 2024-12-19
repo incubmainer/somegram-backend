@@ -9,30 +9,25 @@ import {
   UserResetPasswordCode,
 } from '@prisma/gateway';
 import { UserFromGithub } from '../../auth/api/dto/input-dto/user-from-github';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
 export class UsersRepository {
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+
+    private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersRepository.name);
   }
 
-  public getUserById(userId: string): Promise<User | null> {
-    return this.txHost.tx.user.findUnique({ where: { id: userId } });
+  async getUserById(id?: string): Promise<User | null> {
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
+    return user ? user : null;
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
@@ -325,33 +320,11 @@ export class UsersRepository {
     return user.id;
   }
 
-  async findUserById(currentUserId: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { id: currentUserId },
-    });
-    if (!user) {
-      return null;
-    }
-    return user;
-  }
-
-  async updateUserProfileInfo(
-    userId: User['id'],
-    dto: {
-      userName: User['username'];
-      firstName: User['firstName'];
-      lastName: User['lastName'];
-      dateOfBirth: User['dateOfBirth'];
-      about: User['about'];
-      updatedAt: User['updatedAt'];
-      city: User['city'];
-      country: User['country'];
-    },
-  ): Promise<User> {
+  async updateUserProfileInfo(userId: User['id'], dto: User): Promise<User> {
     return await this.txHost.tx.user.update({
       where: { id: userId },
       data: {
-        username: dto.userName,
+        username: dto.username,
         firstName: dto.firstName,
         lastName: dto.lastName,
         dateOfBirth: dto.dateOfBirth,
@@ -359,6 +332,8 @@ export class UsersRepository {
         updatedAt: dto.updatedAt,
         city: dto.city,
         country: dto.country,
+        subscriptionExpireAt: dto.subscriptionExpireAt,
+        accountType: dto.accountType,
       },
     });
   }

@@ -1,84 +1,53 @@
-import { CommandHandler } from '@nestjs/cqrs';
-import { IsString, validateSync, ValidationError } from 'class-validator';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-
-import { IsValidFile } from '../../../../common/decorators/is-valid-file';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
+import { User } from '@prisma/gateway';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-
-export const UploadAvatarCodes = {
-  Success: Symbol('success'),
-  UserNotFound: Symbol('userNotFound'),
-  ValidationCommandError: Symbol('validationCommandError'),
-  TransactionError: Symbol('transactionError'),
-};
-
-export const MAX_AVATAR_SIZE = 10;
+import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 export class UploadAvatarCommand {
-  @IsString()
-  public readonly userId: string;
-  @IsValidFile(MAX_AVATAR_SIZE)
-  public readonly file: Express.Multer.File;
-  constructor(userId: string, file: Express.Multer.File) {
-    this.userId = userId;
-    this.file = file;
-  }
+  constructor(
+    public userId: string,
+    public file: Express.Multer.File,
+  ) {}
 }
 
 @CommandHandler(UploadAvatarCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
-export class UploadAvatarUseCase {
+export class UploadAvatarUseCase
+  implements
+    ICommandHandler<UploadAvatarCommand, AppNotificationResultType<null>>
+{
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
   ) {
-    logger.setContext(UploadAvatarUseCase.name);
+    this.logger.setContext(UploadAvatarUseCase.name);
   }
 
   public async execute(
     command: UploadAvatarCommand,
-  ): Promise<
-    | NotificationObject<null, ValidationError>
-    | NotificationObject<null | string>
-  > {
-    const errors = validateSync(command);
-    if (errors.length) {
-      const notification = new NotificationObject<null, ValidationError>(
-        UploadAvatarCodes.ValidationCommandError,
-      );
-      notification.addErrors(errors);
-      return notification;
-    }
+  ): Promise<AppNotificationResultType<null>> {
     const { userId, file } = command;
-    const notification = new NotificationObject<string>(
-      UploadAvatarCodes.Success,
+
+    const user: User | null = await this.usersQueryRepository.findUserById(
+      command.userId,
     );
-    const user = await this.usersQueryRepository.findUserById(command.userId);
-    if (!user) {
-      notification.setCode(UploadAvatarCodes.UserNotFound);
-      return notification;
-    }
+    if (!user) return this.appNotification.notFound();
 
     try {
       await this.photoServiceAdapter.uploadAvatar({
         ownerId: userId,
         file,
       });
+      return this.appNotification.success(null);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
-      notification.setCode(UploadAvatarCodes.TransactionError);
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
   }
 }

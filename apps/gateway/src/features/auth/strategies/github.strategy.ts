@@ -6,24 +6,38 @@ import {
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-github2';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
+    // super({
+    //   clientID: process.env.GITHUB_CLIENT_ID,
+    //   clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    //   callbackURL: process.env.GITHUB_CALLBACK_URL,
+    //   scope: ['user:email'],
+    // });
     super({
-      clientID: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: process.env.GITHUB_CALLBACK_URL,
+      clientID: configService.get('envSettings', { infer: true })
+        .GITHUB_CLIENT_ID,
+      clientSecret: configService.get('envSettings', { infer: true })
+        .GITHUB_CLIENT_SECRET,
+      callbackURL: configService.get('envSettings', { infer: true })
+        .GITHUB_CALLBACK_URL,
       scope: ['user:email'],
     });
-    logger.setContext(GithubStrategy.name);
+    this.logger.setContext(GithubStrategy.name);
   }
 
   async validate(accessToken: string, refreshToken: string, profile: Profile) {

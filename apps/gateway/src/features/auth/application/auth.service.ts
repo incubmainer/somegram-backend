@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { JwtService } from '@nestjs/jwt';
 import { CryptoService } from '../../../common/utils/crypto.service';
-import { jwtConstants } from '../../../common/config/constants/jwt-basic-constants';
+import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 
 @Injectable()

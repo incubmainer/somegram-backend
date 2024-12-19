@@ -11,11 +11,12 @@ import {
   PostOutputDto,
   postToOutputMapper,
 } from '../../../api/dto/output-dto/post.output-dto';
-import { Paginator } from 'apps/gateway/src/common/domain/paginator';
-import { getSanitizationQuery } from 'apps/gateway/src/common/utils/query-params.sanitizator';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { PostsQueryRepository } from '../../../infrastructure/posts.query-repository';
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { LoggerService } from '@app/logger';
+import { SearchQueryParametersType } from '../../../../../common/domain/query.types';
+import { Paginator } from '../../../../../common/domain/paginator';
+import { getSanitizationQuery } from '../../../../../common/utils/query-params.sanitizator';
 
 export const GetPublicPostsCodes = {
   Success: Symbol('success'),
@@ -30,21 +31,22 @@ export class GetPublicPostsByUserQuery {
 }
 
 @QueryHandler(GetPublicPostsByUserQuery)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GetPublicPostsByUserUseCase
   implements IQueryHandler<GetPublicPostsByUserQuery>
 {
   constructor(
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
-    logger.setContext(GetPublicPostsByUserUseCase.name);
+    this.logger.setContext(GetPublicPostsByUserUseCase.name);
   }
   async execute(command: GetPublicPostsByUserQuery) {
     const { queryString, endCursorPostId } = command;
@@ -82,7 +84,7 @@ export class GetPublicPostsByUserUseCase
 
       notification.setData(result);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(GetPublicPostsCodes.TransactionError);
     }
     return notification;

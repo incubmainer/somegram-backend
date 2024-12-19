@@ -2,15 +2,12 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-
 import { AuthController } from './api/auth.controller';
 import { RegistrationUseCase } from './application/use-cases/registration.use-case';
 import { UsersRepository } from '../users/infrastructure/users.repository';
-import { ClsTransactionalModule } from '../../common/modules/cls-transactional.module';
 import { CryptoAuthService } from './infrastructure/crypto-auth.service';
 import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
-import { EmailModule } from '../../common/modules/email.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthService } from './application/auth.service';
 import { LoginUserUseCase } from './application/use-cases/login-use-case';
@@ -67,7 +64,7 @@ const repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, ClsTransactionalModule, EmailModule, PassportModule],
+  imports: [CqrsModule, PassportModule],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
     ...services,

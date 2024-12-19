@@ -10,7 +10,7 @@ import {
   GET_USER_AVATAR,
   UPLOAD_AVATAR,
   UPLOAD_POST_PHOTO,
-} from '../../../../../gateway/src/common/config/constants/service.constants';
+} from '../../../../../gateway/src/common/constants/service.constants';
 import { FileDto } from '../../../../../gateway/src/features/posts/api/dto/input-dto/add-post.dto';
 import { UploadAvatarCommand } from './applications/use-cases/upload-avatar.useCase';
 import { SavePostPhotoCommand } from './applications/use-cases/save-post-photo.useCase';

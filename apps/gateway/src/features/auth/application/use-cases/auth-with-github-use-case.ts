@@ -11,6 +11,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { LoggerService } from '@app/logger';
 
 export const LoginWithGithubCodes = {
   Success: Symbol('success'),
@@ -24,11 +25,11 @@ export class AuthWithGithubCommand {
 }
 
 @CommandHandler(AuthWithGithubCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class AuthWithGithubUseCase
   implements ICommandHandler<AuthWithGithubCommand>
 {
@@ -38,10 +39,11 @@ export class AuthWithGithubUseCase
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    // @InjectCustomLoggerService()
+    // private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(AuthWithGithubUseCase.name);
+    this.logger.setContext(AuthWithGithubUseCase.name);
   }
   async execute(
     command: AuthWithGithubCommand,
@@ -85,7 +87,7 @@ export class AuthWithGithubUseCase
         }
       });
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(LoginWithGithubCodes.TransactionError);
     }
     return notification;

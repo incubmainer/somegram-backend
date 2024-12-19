@@ -8,6 +8,7 @@ import {
 import { MeOutputDto } from '../../api/dto/output-dto/me-output-dto';
 import { NotificationObject } from '../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
+import { LoggerService } from '@app/logger';
 
 export const MeCodes = {
   Success: Symbol('success'),
@@ -18,26 +19,26 @@ export class GetInfoAboutMeCommand {
 }
 
 @CommandHandler(GetInfoAboutMeCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GetInfoAboutMeUseCase
   implements ICommandHandler<GetInfoAboutMeCommand>
 {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    // @InjectCustomLoggerService()
+    // private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(GetInfoAboutMeUseCase.name);
+    this.logger.setContext(GetInfoAboutMeUseCase.name);
   }
   async execute(
     command: GetInfoAboutMeCommand,
   ): Promise<NotificationObject<MeOutputDto>> {
     const notification = new NotificationObject<MeOutputDto>(MeCodes.Success);
-    console.log(command.userId);
     try {
       const user = await this.usersQueryRepository.getInfoAboutMe(
         command.userId,
@@ -45,7 +46,7 @@ export class GetInfoAboutMeUseCase
 
       notification.setData(user);
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(MeCodes.TransactionError);
     }
     return notification;
