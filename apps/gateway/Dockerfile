@@ -1,5 +1,6 @@
 FROM node:20-alpine AS development
 WORKDIR /usr/src/app
+RUN apk add --no-cache openssl
 RUN chown node:node /usr/src/app
 USER node
 COPY --chown=node:node package.json yarn.lock /usr/src/app/

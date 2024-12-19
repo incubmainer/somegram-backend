@@ -64,6 +64,15 @@
         "tsConfigPath": "apps/files/tsconfig.app.json"
       }
     },
+    "payments": {
+      "type": "application",
+      "root": "apps/payments",
+      "entryFile": "main",
+      "sourceRoot": "apps/payments/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/payments/tsconfig.app.json"
+      }
+    },
     "application-notification": {
       "type": "library",
       "root": "libs/application-notification",
@@ -116,15 +125,6 @@
       "sourceRoot": "libs/base-types-enum/src",
       "compilerOptions": {
         "tsConfigPath": "libs/base-types-enum/tsconfig.lib.json"
-      }
-    },
-    "payments": {
-      "type": "application",
-      "root": "apps/payments",
-      "entryFile": "main",
-      "sourceRoot": "apps/payments/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/payments/tsconfig.app.json"
       }
     }
   }
