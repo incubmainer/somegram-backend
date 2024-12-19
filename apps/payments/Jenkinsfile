@@ -4,12 +4,12 @@ pipeline {
     agent any
     environment {
         ENV_TYPE = "production"
-        PORT = 3678
+        PORT = 3696
         NAMESPACE = "somegram-online"
         REGISTRY_HOSTNAME = "incubmainer"
-        PROJECT = "some-payments-service"
+        PROJECT = "somegram-payments"
         REGISTRY = "registry.hub.docker.com"
-        DEPLOYMENT_NAME = "some-payments-service-deployment"
+        DEPLOYMENT_NAME = "somegram-payments-deployment"
         IMAGE_NAME = "${env.BUILD_ID}_${env.ENV_TYPE}_${env.GIT_COMMIT}"
         DOCKER_BUILD_NAME = "${env.REGISTRY_HOSTNAME}/${env.PROJECT}:${env.IMAGE_NAME}"
     }

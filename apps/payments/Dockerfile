@@ -17,7 +17,7 @@ COPY --chown=node package*.json ./
 
 RUN npm install
 
-ENV PORT=3678
+ENV PORT=3696
 # Bundle app source code
 COPY --chown=node . .
 
