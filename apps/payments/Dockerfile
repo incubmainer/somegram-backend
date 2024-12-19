@@ -19,7 +19,10 @@ WORKDIR /home/node/dist/${SERVICE}
 
 COPY --chown=node package*.json ./
 
-RUN yarn install
+RUN yarn build:payments && \
+  yarn install --production --frozen-lockfile && \
+  yarn prisma:gen:payments && \
+  yarn cache clean
 
 # Bundle app source code
 COPY --chown=node . .
