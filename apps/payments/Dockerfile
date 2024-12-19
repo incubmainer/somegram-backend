@@ -17,9 +17,9 @@ COPY --chown=node package*.json ./
 # Bundle app source code
 COPY --chown=node . .
 
-RUN yarn build:{SERVICE} && \
+RUN yarn build:${SERVICE} && \
   yarn install --production --frozen-lockfile && \
-  yarn prisma:gen:{SERVICE} && \
+  yarn prisma:gen:${SERVICE} && \
   yarn cache clean
 
 # Bind to all network interfaces so that it can be mapped to the host OS
