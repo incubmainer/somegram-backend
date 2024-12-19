@@ -52,6 +52,11 @@ spec:
                  secretKeyRef:
                    name: somegram-payments-production-config-secret
                    key: FRONTEND_CANCEL_PAYMENT_URL
+             - name: RMQ_CONNECTION_STRING
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-payments-production-config-secret
+                   key: RMQ_CONNECTION_STRING
              - name: PAYMENTS_SERVICE_PORT
                valueFrom:
                  secretKeyRef:
