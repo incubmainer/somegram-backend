@@ -17,11 +17,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 import {
   RegistrationCodes,
@@ -555,7 +551,7 @@ export class AuthController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.debug('start me request', this.getInfoAboutMe.name);
     const notification: NotificationObject<MeOutputDto> =
