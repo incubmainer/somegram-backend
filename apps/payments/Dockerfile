@@ -19,15 +19,14 @@ WORKDIR /home/node/dist/${SERVICE}
 
 COPY --chown=node package*.json ./
 
-RUN yarn build:payments && \
-  yarn install --production --frozen-lockfile && \
-  yarn prisma:gen:payments && \
-  yarn cache clean
-
 # Bundle app source code
 COPY --chown=node . .
 
-RUN yarn build:${SERVICE}
+RUN yarn build:{SERVICE} && \
+  yarn install --production --frozen-lockfile && \
+  yarn prisma:gen:payments && \
+  yarn prisma:gen:gateway && \
+  yarn cache clean
 
 # Bind to all network interfaces so that it can be mapped to the host OS
 
