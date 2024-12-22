@@ -10,6 +10,7 @@ import {
   NotFoundException,
   Post,
   Put,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -78,7 +79,7 @@ export class UsersController {
         return result.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.gerProfileInfo.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -109,7 +110,7 @@ export class UsersController {
         return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.uploadAvatar.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -141,7 +142,7 @@ export class UsersController {
         return userProfile.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.fillProfile.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug(`Bad request`, this.fillProfile.name);
         throw new BadRequestException(result.errorField);
@@ -169,7 +170,7 @@ export class UsersController {
         return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.deleteUserAvatar.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }

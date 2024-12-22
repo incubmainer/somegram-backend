@@ -5,7 +5,6 @@ import {
   ApiBody,
   ApiNoContentResponse,
   ApiUnprocessableEntityResponse,
-  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { UnprocessableExceptionDto } from '@app/base-types-enum';
 
@@ -34,6 +33,5 @@ export function UploadAvatarSwagger() {
       description: 'Validation failed',
       type: UnprocessableExceptionDto,
     }),
-    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }
