@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsNotEmpty, Max, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNotEmpty,
+  Max,
+  MaxLength,
+  IsOptional,
+} from 'class-validator';
+import { Trim } from '@app/decorators';
 
 export enum MimeTypes {
   JPEG = 'image/jpeg',
@@ -22,9 +30,14 @@ export class AddPostDto {
     required: false,
   })
   @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
-  description: string;
+  @IsOptional()
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  description?: string;
 }
 
+// TODO: Переделать?
 export class FileDto {
   @IsString()
   @IsNotEmpty()

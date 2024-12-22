@@ -14,6 +14,7 @@ import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-c
 import { PublicUsersController } from './api/public-users.controller';
 import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
 import { GetPublicProfileInfoUseCase } from './application/use-cases/queryBus/get-public-profile-info.use-case';
+import { PostFileFactory } from '../posts/domain/files.factory';
 
 const useCases = [
   UploadAvatarUseCase,

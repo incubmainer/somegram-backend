@@ -1,7 +1,6 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
-
 import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
@@ -85,7 +84,7 @@ export class PostsQueryRepository {
   public async getAllPosts(
     queryString?: SearchQueryParametersType,
     endCursorPostId?: string,
-  ) {
+  ): Promise<{ posts: UserPost[]; count: number }> {
     const sanitizationQuery = getSanitizationQuery(queryString);
 
     let endCursorCreatedAt: Date | undefined = undefined;

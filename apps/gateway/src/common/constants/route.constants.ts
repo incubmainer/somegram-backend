@@ -21,3 +21,12 @@ export const USER_PUBLIC_ROUTE = {
   MAIN: 'public-users',
   PROFILE: 'profile',
 };
+
+export const POST_PUBLIC_ROUTE = {
+  MAIN: 'public-posts',
+  ALL: 'all',
+};
+
+export const POST_ROUTE = {
+  MAIN: 'posts',
+};

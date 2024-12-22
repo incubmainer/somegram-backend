@@ -1,55 +1,51 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-
-import { NotificationObject } from '../../../../common/domain/notification';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-
-export const DeletePostCodes = {
-  Success: Symbol('success'),
-  TransactionError: Symbol('transactionError'),
-  UserNotOwner: Symbol('userNotOwner'),
-  PostNotFound: Symbol('postNotFound'),
-};
+import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { UserPost } from '@prisma/gateway';
 
 export class DeletePostCommand {
-  public readonly postId: string;
-  public readonly userId: string;
-
-  constructor(postId: string, userId: string) {
-    this.postId = postId;
-    this.userId = userId;
-  }
+  constructor(
+    public postId: string,
+    public userId: string,
+  ) {}
 }
+
 @CommandHandler(DeletePostCommand)
-export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
+export class DeletePostUseCase
+  implements
+    ICommandHandler<DeletePostCommand, AppNotificationResultType<null>>
+{
   constructor(
     private readonly postsRepository: PostsRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
-  ) {}
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
+  ) {
+    this.logger.setContext(DeletePostUseCase.name);
+  }
   async execute(
     command: DeletePostCommand,
-  ): Promise<NotificationObject<string[]>> {
+  ): Promise<AppNotificationResultType<null>> {
     const { postId, userId } = command;
-    const notification = new NotificationObject<string[]>(
-      DeletePostCodes.Success,
-    );
-    const post = await this.postsRepository.getPostById(postId);
-    if (!post) {
-      notification.setCode(DeletePostCodes.PostNotFound);
-      return notification;
-    }
-    if (post.userId !== userId) {
-      notification.setCode(DeletePostCodes.UserNotOwner);
-      return notification;
-    }
     try {
+      const post: UserPost | null =
+        await this.postsRepository.getPostById(postId);
+      if (!post) return this.appNotification.notFound();
+      if (post.userId !== userId) return this.appNotification.forbidden();
+
       await this.photoServiceAdapter.deletePostPhotos(postId);
-      await await this.postsRepository.deletePost({
+      await this.postsRepository.deletePost({
         postId,
       });
-    } catch {
-      notification.setCode(DeletePostCodes.TransactionError);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
   }
 }

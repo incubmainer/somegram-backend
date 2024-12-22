@@ -12,6 +12,7 @@ import { SecurityDevicesModule } from './features/security-devices/security-devi
 import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
+import { PaginatorModule } from '@app/paginator';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CommonModule } from './common/common.module';
     CountryCatalogModule,
     CommonModule,
     LoggerModule.forRoot('Gateway'),
+    PaginatorModule,
   ],
   controllers: [],
   providers: [AsyncLocalStorageService],

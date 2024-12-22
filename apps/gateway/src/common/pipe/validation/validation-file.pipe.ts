@@ -43,3 +43,62 @@ export const fileValidationPipe = (
       },
     });
 };
+
+export const filesValidationPipe = (
+  allowedMimeTypes: string[],
+  maxSize: number,
+  minCount: number,
+  maxCount: number,
+) => {
+  const allowedMimeRegex = new RegExp(allowedMimeTypes.join('|'));
+
+  return {
+    transform: (files: Express.Multer.File[]) => {
+      const errors = [];
+
+      if (!files || files.length < minCount || files.length > maxCount)
+        throw new UnprocessableEntityException({
+          property: `files`,
+          constraints: {
+            isFileType: `Photos are required. Minimum quantity: ${minCount}, Maximum quantity: ${maxCount}`,
+          },
+        });
+
+      files.forEach((file: Express.Multer.File, index: number): void => {
+        try {
+          if (!allowedMimeRegex.test(file.mimetype)) {
+            errors.push({
+              // TODO: Мб с индексмо поинтерестнее отдавать ? property: `${propertyName}[${index}]`,
+              property: file.originalname,
+              constraints: {
+                isFileType: `Invalid file type. Allowed only: ${allowedMimeRegex}`,
+              },
+            });
+          }
+
+          if (file.size > maxSize * 1024 * 1024) {
+            errors.push({
+              property: file.originalname,
+              constraints: {
+                isFileSize: `The file is too large. Maximum size: ${maxSize} MB`,
+              },
+            });
+          }
+        } catch (error) {
+          errors.push({
+            property: file.originalname,
+            constraints: {
+              unexpected: `Unexpected error during file validation: ${error.message}`,
+            },
+          });
+        }
+      });
+
+      if (errors.length > 0) {
+        throw new UnprocessableEntityException(errors);
+      }
+
+      return files;
+    },
+  };
+};
