@@ -1,11 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
 
 import {
   PostOutputDto,
@@ -31,16 +26,10 @@ export class GetPublicPostsByUserQuery {
 }
 
 @QueryHandler(GetPublicPostsByUserQuery)
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class GetPublicPostsByUserUseCase
   implements IQueryHandler<GetPublicPostsByUserQuery>
 {
   constructor(
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,

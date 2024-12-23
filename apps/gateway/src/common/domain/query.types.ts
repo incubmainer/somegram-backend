@@ -3,4 +3,5 @@ export type SearchQueryParametersType = {
   pageSize: number;
   sortBy: string;
   sortDirection: SortDirection;
+  pageNumber: number;
 };

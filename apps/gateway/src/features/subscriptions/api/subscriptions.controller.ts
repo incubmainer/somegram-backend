@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Post,
+  Query,
   RawBodyRequest,
   Req,
   UseGuards,
@@ -43,6 +44,8 @@ import {
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
+import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { Paginator } from '../../../common/domain/paginator';
 
 @ApiTags('Subscriptions')
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
@@ -84,10 +87,12 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   async geyPayments(
     @CurrentUserId() userId: string,
-  ): Promise<MyPaymentsOutputDto[]> {
-    const result: AppNotificationResultType<MyPaymentsOutputDto[]> =
+    @Query() queryString?: SearchQueryParametersType,
+  ): Promise<Paginator<MyPaymentsOutputDto[]>> {
+    const result: AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>> =
       await this.paymentsServiceAdapter.getPayments({
         userId,
+        queryString,
       });
 
     switch (result.appResult) {

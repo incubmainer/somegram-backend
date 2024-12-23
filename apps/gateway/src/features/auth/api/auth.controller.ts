@@ -88,24 +88,14 @@ import { LoggerService } from '@app/logger';
 
 @ApiTags('Auth')
 @Controller('auth')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class AuthController {
   private readonly frontendProvider: string;
   constructor(
     private readonly commandBus: CommandBus,
-    //private readonly configService: ConfigService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    // @InjectCustomLoggerService()
-    // private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(AuthController.name);
-    //const config = this.configService.get<AuthConfig>('auth');
-    //this.frontendProvider = config.frontendProvider;
     this.frontendProvider = this.configService.get('envSettings', {
       infer: true,
     }).FRONTED_PROVIDER;
