@@ -9,9 +9,15 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
+import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
+import { Paginator } from '../../../../../../../gateway/src/common/domain/paginator';
 
 export class GetPaymentsQuery {
-  constructor(public userId: string) {}
+  constructor(
+    public userId: string,
+    public queryString?: SearchQueryParametersType,
+  ) {}
 }
 
 @QueryHandler(GetPaymentsQuery)
@@ -25,14 +31,23 @@ export class GetPaymentsQueryUseCase
 
   async execute(
     command: GetPaymentsQuery,
-  ): Promise<AppNotificationResultType<MyPaymentsOutputDto[]>> {
+  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+    const sanitizationQuery = getSanitizationQuery(command.queryString);
     try {
-      const payments = await this.paymentsRepository.getPaymentsByUserId(
-        command.userId,
-      );
-      const mapPayments: MyPaymentsOutputDto[] = myPaymentsMapper(payments);
+      const { payments, count } =
+        await this.paymentsRepository.getPaymentsByUserId(
+          command.userId,
+          sanitizationQuery,
+        );
 
-      return this.appNotification.success(mapPayments);
+      const mapPayments: MyPaymentsOutputDto[] = myPaymentsMapper(payments);
+      const result = new Paginator<MyPaymentsOutputDto[]>(
+        sanitizationQuery.pageSize,
+        count,
+        mapPayments,
+      );
+
+      return this.appNotification.success(result);
     } catch (e) {
       console.error(e);
       return this.appNotification.internalServerError();

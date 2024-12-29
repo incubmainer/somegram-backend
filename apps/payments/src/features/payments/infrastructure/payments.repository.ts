@@ -7,6 +7,7 @@ import {
   PaymentTransaction,
 } from '@prisma/payments';
 import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
+import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
 
 @Injectable()
 export class PaymentsRepository {
@@ -64,20 +65,35 @@ export class PaymentsRepository {
     });
   }
 
-  public async getPaymentsByUserId(userId: string) {
-    const subscriptionsWithPayments =
-      await this.txHost.tx.subscription.findMany({
-        where: { userId },
-        include: {
-          payments: true,
+  public async getPaymentsByUserId(
+    userId: string,
+    queryString: SearchQueryParametersType,
+  ) {
+    const { pageSize, pageNumber } = queryString;
+
+    const skip = (pageNumber - 1) * pageSize;
+    const payments = await this.txHost.tx.paymentTransaction.findMany({
+      where: {
+        subscription: {
+          userId,
         },
-      });
+      },
+      orderBy: {
+        dateOfPayment: 'desc',
+      },
+      take: pageSize,
+      skip: skip,
+    });
 
-    const payments = subscriptionsWithPayments.flatMap(
-      (subscription) => subscription.payments,
-    );
+    const count = await this.txHost.tx.paymentTransaction.count({
+      where: {
+        subscription: {
+          userId,
+        },
+      },
+    });
 
-    return payments.length > 0 ? payments : [];
+    return { payments, count };
   }
 
   public async getActiveSubscriptionByUserId(userId: string): Promise<

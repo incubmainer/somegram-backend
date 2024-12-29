@@ -17,11 +17,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 import {
   RegistrationCodes,
@@ -92,24 +88,14 @@ import { LoggerService } from '@app/logger';
 
 @ApiTags('Auth')
 @Controller('auth')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class AuthController {
   private readonly frontendProvider: string;
   constructor(
     private readonly commandBus: CommandBus,
-    //private readonly configService: ConfigService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    // @InjectCustomLoggerService()
-    // private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(AuthController.name);
-    //const config = this.configService.get<AuthConfig>('auth');
-    //this.frontendProvider = config.frontendProvider;
     this.frontendProvider = this.configService.get('envSettings', {
       infer: true,
     }).FRONTED_PROVIDER;
@@ -555,7 +541,7 @@ export class AuthController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.debug('start me request', this.getInfoAboutMe.name);
     const notification: NotificationObject<MeOutputDto> =

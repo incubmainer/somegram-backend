@@ -16,6 +16,7 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { SearchQueryParametersType } from '../domain/query.types';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -102,7 +103,10 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async getPayments(payload: { userId: string }) {
+  async getPayments(payload: {
+    userId: string;
+    queryString?: SearchQueryParametersType;
+  }) {
     try {
       const responseOfService = this.paymentsServiceClient
         .send({ cmd: GET_PAYMENTS }, { payload })

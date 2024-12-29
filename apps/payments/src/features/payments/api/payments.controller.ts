@@ -68,7 +68,9 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments({ payload }) {
-    return this.queryBus.execute(new GetPaymentsQuery(payload.userId));
+    return this.queryBus.execute(
+      new GetPaymentsQuery(payload.userId, payload.queryString),
+    );
   }
 
   @MessagePattern({ cmd: GET_SUBSCRIPTION_INFO })
