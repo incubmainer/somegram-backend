@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PayPalEventsEnum } from './types/paypal/enum';
 import { CommandBus } from '@nestjs/cqrs';
-import { PayPalPaymentSucceededHandler } from '../../features/payments/application/handlers/paypal-payment-succeeded.handler';
+import { PayPalPaymentSucceededHandler } from '../../features/payments/application/handlers/paypal/paypal-payment-succeeded.handler';
 import { IPayPalEventHandler } from '../interfaces/paypal-event-handler.interface';
 import {
   ApplicationNotification,
@@ -9,7 +9,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { PayPalWebHookEventType } from './types/paypal/types';
-import { PaypalSubscriptionActiveHandler } from '../../features/payments/application/handlers/paypal-subscription-active.handler';
+import { PaypalSubscriptionActiveHandler } from '../../features/payments/application/handlers/paypal/paypal-subscription-active.handler';
 
 @Injectable()
 export class PaypalEventAdapter {
@@ -23,8 +23,8 @@ export class PaypalEventAdapter {
   ) {
     this.handlers[PayPalEventsEnum.PAYMENT_COMPLETED] =
       this.payPalPaymentSucceededHandler;
-    this.handlers[PayPalEventsEnum.SUBSCRIPTION_ACTIVATED] =
-      this.paypalSubscriptionActiveHandler;
+    // this.handlers[PayPalEventsEnum.SUBSCRIPTION_ACTIVATED] =
+    //   this.paypalSubscriptionActiveHandler;
   }
 
   async handleEvent<T>(data: any): Promise<AppNotificationResultType<null>> {
@@ -33,13 +33,8 @@ export class PaypalEventAdapter {
       buffer.toString('utf-8'),
     );
 
-    console.log('BODY', body);
-
     const event: PayPalEventsEnum = body.event_type;
     const handler: IPayPalEventHandler<T> = this.handlers[event];
-
-    console.log('event', event);
-    console.log('handler', handler);
 
     if (!handler) return this.appNotification.success(null);
 

@@ -1,4 +1,4 @@
-import { Controller, InternalServerErrorException } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
@@ -19,10 +19,6 @@ import { StripeWebhookCommand } from '../application/use-cases/command/stripe-we
 import { EnableAutoRenewalCommand } from '../application/use-cases/command/enable-autorenewal.use-case';
 import { GetPaymentsQuery } from '../application/use-cases/query/get-payments.use-case';
 import { DisableAutoRenewalCommand } from '../application/use-cases/command/disable-autorenewal.use-case';
-import {
-  AppNotificationResultEnum,
-  AppNotificationResultType,
-} from '@app/application-notification';
 
 @Controller('payments')
 export class PaymentsController {

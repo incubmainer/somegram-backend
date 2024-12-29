@@ -7,6 +7,7 @@ import {
   PaymentTransaction,
 } from '@prisma/payments';
 import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
+import { TransactionEntity } from '../domain/transaction.entity';
 import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
 
 @Injectable()
@@ -139,5 +140,22 @@ export class PaymentsRepository {
         id: subscription.id,
       },
     });
+  }
+
+  public async saveTransaction(
+    transaction: TransactionEntity,
+  ): Promise<string> {
+    const result: PaymentTransaction =
+      await this.txHost.tx.paymentTransaction.create({
+        data: transaction,
+      });
+    return result.id;
+  }
+  public async updateSub(subscription: Subscription): Promise<string> {
+    const result: Subscription = await this.txHost.tx.subscription.update({
+      data: subscription,
+      where: { id: subscription.id },
+    });
+    return result.id;
   }
 }

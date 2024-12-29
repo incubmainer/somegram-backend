@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { IPayPalEventHandler } from '../../../../common/interfaces/paypal-event-handler.interface';
+import { IPayPalEventHandler } from '../../../../../common/interfaces/paypal-event-handler.interface';
 import {
   PayPalWebHookEventType,
-  WHPaymentSaleType,
-} from '../../../../common/adapters/types/paypal/types';
+  WHSubscriptionActiveType,
+} from '../../../../../common/adapters/types/paypal/types';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { PaymentsRepository } from '../../infrastructure/payments.repository';
+import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
-import { SubscriptionStatuses } from '../../../../common/enum/transaction-statuses.enum';
 
 @Injectable()
-export class PayPalPaymentSucceededHandler
-  implements IPayPalEventHandler<PayPalWebHookEventType<WHPaymentSaleType>>
+export class PaypalSubscriptionActiveHandler
+  implements
+    IPayPalEventHandler<PayPalWebHookEventType<WHSubscriptionActiveType>>
 {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
@@ -22,21 +22,19 @@ export class PayPalPaymentSucceededHandler
   ) {}
 
   async handle(
-    event: PayPalWebHookEventType<WHPaymentSaleType>,
+    event: PayPalWebHookEventType<WHSubscriptionActiveType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
-      const { billing_agreement_id, custom, create_time } = event.resource;
+      const { id, billing_info, subscriber } = event.resource;
 
       const subscription: Subscription | null =
-        await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
-          billing_agreement_id,
-        );
+        await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(id);
 
       if (!subscription) return this.appNotification.notFound();
 
-      subscription.dateOfPayment = create_time;
+      subscription.endDateOfSubscription = billing_info.next_billing_time;
+      subscription.paymentSystemCustomerId = subscriber.payer_id;
       subscription.updatedAt = new Date();
-      subscription.status = SubscriptionStatuses.Active;
 
       await this.paymentsRepository.updateSubscription(subscription);
 

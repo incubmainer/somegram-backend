@@ -6,7 +6,10 @@ import { PayPalAdapter } from '../adapters/paypal.adapter';
 
 @Injectable()
 export class PaymentManager {
-  constructor(private readonly stripeAdapter: StripeAdapter, private readonly payPalAdapter: PayPalAdapter) {}
+  constructor(
+    private readonly stripeAdapter: StripeAdapter,
+    private readonly payPalAdapter: PayPalAdapter,
+  ) {}
 
   async createAutoPayment(payment: PaymentData): Promise<string> {
     if (payment.paymentSystem === PaymentSystem.PAYPAL) {
@@ -32,6 +35,9 @@ export class PaymentManager {
     paymentSubscriptionSubId: string,
   ) {
     if (paymentSystem === PaymentSystem.PAYPAL) {
+      return await this.payPalAdapter.disableAutoRenewal(
+        paymentSubscriptionSubId,
+      );
     }
 
     if (paymentSystem === PaymentSystem.STRIPE) {
@@ -46,6 +52,9 @@ export class PaymentManager {
     paymentSubscriptionSubId: string,
   ) {
     if (paymentSystem === PaymentSystem.PAYPAL) {
+      return await this.payPalAdapter.enableAutoRenewal(
+        paymentSubscriptionSubId,
+      );
     }
 
     if (paymentSystem === PaymentSystem.STRIPE) {

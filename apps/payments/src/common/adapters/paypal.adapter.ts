@@ -11,13 +11,21 @@ import {
 import { SdkRequestBuilderFactory } from '@paypal/paypal-server-sdk/dist/types/clientInterface';
 import {
   CreateSubscriptionDataType,
+  ManageSubscriptionBodyType,
   PayPalPlansResponseType,
   PayPalPlansType,
   SubscriptionCreatedType,
+  SubscriptionDetailsType,
   SubscriptionLinksType,
 } from './types/paypal/types';
 import { HttpMethod } from '@paypal/paypal-server-sdk/dist/types/core';
-import { PAYPAL_PLANS, SUBSCRIPTIONS } from '../constants/paypal-path.constant';
+import {
+  ACTIVATE_SUBSCRIPTIONS,
+  CANCEL_SUBSCRIPTIONS,
+  PAYPAL_PLANS,
+  SUBSCRIPTIONS,
+  SUSPEND_SUBSCRIPTIONS,
+} from '../constants/paypal-path.constant';
 import {
   ApplicationNotification,
   AppNotificationResultEnum,
@@ -44,13 +52,13 @@ export class PayPalAdapter {
 
   private async handleResult<T = null>(response: ApiResponse<any>): Promise<T> {
     if (typeof response.body === 'string') {
-      return JSON.parse(response.body);
+      return response?.body ? JSON.parse(response.body) : null;
     } else if (response.body instanceof Blob) {
       const text = await response.body.text();
-      return JSON.parse(text);
+      return text ? JSON.parse(text) : null;
     } else if (response.body instanceof ReadableStream) {
       const text = await new Response(response.body).text();
-      return JSON.parse(text);
+      return text ? JSON.parse(text) : null;
     } else {
       return null;
     }
@@ -110,11 +118,7 @@ export class PayPalAdapter {
           subscriptionType as keyof typeof PayPalProductIdEnum
         ];
 
-      const plans: PayPalPlansResponseType = await this.fetch(
-        LinkHttpMethod.Get,
-        PAYPAL_PLANS,
-        accessToken,
-      );
+      const plans: PayPalPlansResponseType = await this.getPlans(accessToken);
 
       const plan: PayPalPlansType = plans.plans.find(
         (p: PayPalPlansType) =>
@@ -166,5 +170,78 @@ export class PayPalAdapter {
       this.handleError(e);
       return null;
     }
+  }
+
+  public async getPlans(
+    accessToken: string = null,
+  ): Promise<PayPalPlansResponseType> {
+    if (!accessToken) accessToken = await this.login();
+    return await this.fetch(LinkHttpMethod.Get, PAYPAL_PLANS, accessToken);
+  }
+
+  public async getSubscriptionDetails(
+    id: string,
+    accessToken: string = null,
+  ): Promise<SubscriptionDetailsType> {
+    if (!accessToken) accessToken = await this.login();
+    return await this.fetch(
+      LinkHttpMethod.Get,
+      `${SUBSCRIPTIONS}/${id}`,
+      accessToken,
+    );
+  }
+
+  public async disableAutoRenewal(
+    subscriptionId: string,
+    accessToken: string = null,
+  ): Promise<void> {
+    if (!accessToken) accessToken = await this.login();
+
+    const body: ManageSubscriptionBodyType = {
+      reason: 'The user wants to cancel the subscription',
+    };
+
+    await this.fetch(
+      LinkHttpMethod.Post,
+      `${SUBSCRIPTIONS}/${subscriptionId}/${SUSPEND_SUBSCRIPTIONS}`,
+      accessToken,
+      body,
+    );
+  }
+
+  public async enableAutoRenewal(
+    subscriptionId: string,
+    accessToken: string = null,
+  ): Promise<void> {
+    if (!accessToken) accessToken = await this.login();
+
+    const body: ManageSubscriptionBodyType = {
+      reason: 'Continue the subscription',
+    };
+
+    await this.fetch(
+      LinkHttpMethod.Post,
+      `${SUBSCRIPTIONS}/${subscriptionId}/${ACTIVATE_SUBSCRIPTIONS}`,
+      accessToken,
+      body,
+    );
+  }
+
+  public async cancelSubscription(
+    subscriptionId: string,
+    accessToken: string = null,
+  ): Promise<void> {
+    if (!accessToken) accessToken = await this.login();
+
+    const body: ManageSubscriptionBodyType = {
+      reason: 'User cancels subscription',
+    };
+
+    await this.fetch(
+      LinkHttpMethod.Post,
+      `${SUBSCRIPTIONS}/${subscriptionId}/${CANCEL_SUBSCRIPTIONS}`,
+      accessToken,
+      body,
+    );
   }
 }

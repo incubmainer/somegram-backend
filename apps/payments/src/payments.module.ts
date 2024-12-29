@@ -35,9 +35,12 @@ import {
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { PayPalSignatureGuard } from './common/guards/paypal/paypal.guard';
 import { PaypalEventAdapter } from './common/adapters/paypal-event.adapter';
-import { PayPalPaymentSucceededHandler } from './features/payments/application/handlers/paypal-payment-succeeded.handler';
-import { PaypalSubscriptionActiveHandler } from './features/payments/application/handlers/paypal-subscription-active.handler';
+import { PayPalPaymentSucceededHandler } from './features/payments/application/handlers/paypal/paypal-payment-succeeded.handler';
+import { PaypalSubscriptionActiveHandler } from './features/payments/application/handlers/paypal/paypal-subscription-active.handler';
 import { PayPalSubscriptionCreateUseCaseHandler } from './features/payments/application/use-cases/command/paypal-subscription-create.use-case';
+import { TransactionEntity } from './features/payments/domain/transaction.entity';
+import { CountryCatalogEntity } from '../../gateway/src/features/country-catalog/domain/country-catalog.entity';
+import { SubscriptionEntity } from './features/payments/domain/subscription.entity';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -74,21 +77,31 @@ const paypalClient = {
   inject: [ConfigService],
 };
 
-const paypalOrdersController = {
-  provide: PAYPAL_ORDERS_CONTROLLER,
-  useFactory: (client: Client) => {
-    return new OrdersController(client);
-  },
-  inject: [PAYPAL_CLIENT],
+const transactionEntityProvider = {
+  provide: 'TransactionEntity',
+  useValue: TransactionEntity,
 };
 
-const paypalPaymentsController = {
-  provide: PAYPAL_PAYMENTS_CONTROLLER,
-  useFactory: (client: Client) => {
-    return new PayPalPaymentsController(client);
-  },
-  inject: [PAYPAL_CLIENT],
+const subscriptionEntityProvider = {
+  provide: 'SubscriptionEntity',
+  useValue: SubscriptionEntity,
 };
+
+// const paypalOrdersController = {
+//   provide: PAYPAL_ORDERS_CONTROLLER,
+//   useFactory: (client: Client) => {
+//     return new OrdersController(client);
+//   },
+//   inject: [PAYPAL_CLIENT],
+// };
+//
+// const paypalPaymentsController = {
+//   provide: PAYPAL_PAYMENTS_CONTROLLER,
+//   useFactory: (client: Client) => {
+//     return new PayPalPaymentsController(client);
+//   },
+//   inject: [PAYPAL_CLIENT],
+// };
 
 const services = [
   PaymentsService,
@@ -98,8 +111,6 @@ const services = [
   GatewayServiceClientAdapter,
   PayPalAdapter,
   paypalClient,
-  paypalOrdersController,
-  paypalPaymentsController,
   PayPalSignatureGuard,
   PaypalEventAdapter,
   PayPalPaymentSucceededHandler,
@@ -142,6 +153,12 @@ const services = [
     }),
   ],
   controllers: [PaymentsController],
-  providers: [...useCases, ...repositories, ...services],
+  providers: [
+    ...useCases,
+    ...repositories,
+    ...services,
+    transactionEntityProvider,
+    subscriptionEntityProvider,
+  ],
 })
 export class PaymentsModule {}

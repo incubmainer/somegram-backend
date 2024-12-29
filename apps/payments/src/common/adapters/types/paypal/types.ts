@@ -245,3 +245,24 @@ export type WHPaymentSaleAmountType = {
 export type WHPaymentSaleDetailsType = {
   subtotal: string;
 };
+
+export type SubscriptionDetailsType = {
+  status: SubscriptionStatusEnum;
+  status_update_time: Date;
+  id: string;
+  plan_id: string;
+  start_time: Date;
+  quantity: string;
+  shipping_amount: { currency_code: 'USD'; value: '0.0' };
+  subscriber: WHSubscriptionActiveSubscriberType;
+  billing_info: WHSubscriptionActiveBillingInfoType;
+  create_time: Date;
+  update_time: Date;
+  custom_id: string;
+  plan_overridden: boolean;
+  links: Omit<PayPalLinksType, 'encType'>[];
+};
+
+export type ManageSubscriptionBodyType = {
+  reason: string;
+};
