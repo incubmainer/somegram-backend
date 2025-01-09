@@ -195,16 +195,43 @@ export class SubscriptionsController {
       `Execute: cancel subscription (Testing)`,
       this.testingCancelSubscription.name,
     );
-    const result: AppNotificationResultType<any> =
+    const result: AppNotificationResultType<null> =
       await this.paymentsServiceAdapter.testingCancelSubscription(userId);
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.testingCancelSubscription.name);
-        return result.data;
+        return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.testingCancelSubscription.name);
         throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Get(`${SUBSCRIPTIONS_ROUTE.TESTING}/${SUBSCRIPTIONS_ROUTE.MY_PAYMENTS}`)
+  @MyPaymentsSwagger()
+  @UseGuards(JwtAuthGuard)
+  async testingGetPayments(
+    @CurrentUserId() userId: string,
+    @Query() queryString?: SearchQueryParametersType,
+  ): Promise<Paginator<MyPaymentsOutputDto[]>> {
+    this.logger.debug(
+      `Execute: get payments (Testing)`,
+      this.testingGetPayments.name,
+    );
+
+    const result: AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>> =
+      await this.paymentsServiceAdapter.testingGetPayments({
+        userId,
+        queryString,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.testingGetPayments.name);
+        return result.data;
       default:
         throw new InternalServerErrorException();
     }

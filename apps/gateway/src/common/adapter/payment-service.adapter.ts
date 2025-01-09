@@ -16,8 +16,11 @@ import {
   GET_SUBSCRIPTION_INFO,
   STRIPE_WEBHOOK_HANDLER,
   TESTING_CANCEL_SUBSCRIPTION,
+  TESTING_GET_PAYMENTS,
 } from '../constants/service.constants';
 import { SearchQueryParametersType } from '../domain/query.types';
+import { Paginator } from '../domain/paginator';
+import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -124,6 +127,23 @@ export class PaymentsServiceAdapter {
         this.paymentsServiceClient
           .send({ cmd: TESTING_CANCEL_SUBSCRIPTION }, payload)
           .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async testingGetPayments(payload: {
+    userId: string;
+    queryString?: SearchQueryParametersType;
+  }): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>
+      > = this.paymentsServiceClient
+        .send({ cmd: TESTING_GET_PAYMENTS }, payload)
+        .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
     } catch (e) {

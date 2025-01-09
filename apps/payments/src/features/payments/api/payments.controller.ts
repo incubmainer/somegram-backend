@@ -15,10 +15,15 @@ import {
   GET_PAYMENTS,
   GET_SUBSCRIPTION_INFO,
   TESTING_CANCEL_SUBSCRIPTION,
+  TESTING_GET_PAYMENTS,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { AppNotificationResultType } from '@app/application-notification';
 import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
+import {
+  TestingGetPaymentsQuery,
+  TestingGetPaymentsQueryUseCase,
+} from '../application/use-cases/query/testing-get-payments.use-case';
 
 @Controller('payments')
 export class PaymentsController {
@@ -73,6 +78,15 @@ export class PaymentsController {
   ): Promise<AppNotificationResultType<null>> {
     return await this.commandBus.execute(
       new TestingCancelSubscriptionUseCase(payload),
+    );
+  }
+
+  @MessagePattern({ cmd: TESTING_GET_PAYMENTS })
+  async testingGetPayments(
+    payload: any,
+  ): Promise<AppNotificationResultType<null>> {
+    return await this.queryBus.execute(
+      new TestingGetPaymentsQuery(payload.userId, payload.queryString),
     );
   }
 }

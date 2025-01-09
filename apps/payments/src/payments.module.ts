@@ -21,6 +21,7 @@ import { ApplicationNotificationModule } from '@app/application-notification';
 import { StripeEventAdapter } from './common/adapters/stripe-event.adaper';
 import { GetSubscriptionInfoQueryUseCase } from './features/payments/application/use-cases/query/get-subscription-info.use-case';
 import { TestingCancelSubscriptionUseCaseHandler } from './features/payments/application/use-cases/command/testing-cancel-subscription';
+import { TestingGetPaymentsQueryUseCase } from './features/payments/application/use-cases/query/testing-get-payments.use-case';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -29,6 +30,7 @@ const useCases = [
   EnableAutoRenewalUseCase,
   GetPaymentsQueryUseCase,
   GetSubscriptionInfoQueryUseCase,
+  TestingGetPaymentsQueryUseCase,
   TestingCancelSubscriptionUseCaseHandler,
 ];
 
