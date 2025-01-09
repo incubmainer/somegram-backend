@@ -181,7 +181,7 @@ export type WHSubscriptionActiveType = {
   update_time: Date;
   custom_id: string; // User id
   links: PayPalLinksType[];
-  id: string; // Sub id
+  id: string; // Sub id +
   plan_overridden: boolean;
   plan_id: string;
   status: SubscriptionStatusEnum;
@@ -265,4 +265,19 @@ export type SubscriptionDetailsType = {
 
 export type ManageSubscriptionBodyType = {
   reason: string;
+};
+
+export type WHSubscriptionSuspendedType = WHSubscriptionActiveType & {
+  status_change_note: string; // Reason for suspend
+};
+
+export type WHSubscriptionCancelledType = WHSubscriptionActiveType;
+
+export type SubscriptionReviseType = SubscriptionCreatedType;
+
+export type SubscriptionReviseDataType = {
+  plan_id: string;
+  quantity?: number;
+  shipping_amount?: ShippingAmountType;
+  application_context?: ApplicationContext;
 };

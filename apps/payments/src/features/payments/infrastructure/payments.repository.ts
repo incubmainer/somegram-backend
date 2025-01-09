@@ -151,11 +151,36 @@ export class PaymentsRepository {
       });
     return result.id;
   }
+
+  public async createSub(subscription: Subscription): Promise<string> {
+    const newSubscription: Subscription =
+      await this.txHost.tx.subscription.create({
+        data: subscription,
+      });
+    return newSubscription.id;
+  }
+
   public async updateSub(subscription: Subscription): Promise<string> {
     const result: Subscription = await this.txHost.tx.subscription.update({
       data: subscription,
       where: { id: subscription.id },
     });
     return result.id;
+  }
+
+  public async getActiveOrPendingPaymentSystemSubscriptionByUserId(
+    userId: string,
+  ): Promise<Subscription | null> {
+    const subscriptions = await this.txHost.tx.subscription.findFirst({
+      where: {
+        userId,
+        OR: [
+          { status: SubscriptionStatuses.Active },
+          { status: SubscriptionStatuses.Pending },
+        ],
+        isActive: true,
+      },
+    });
+    return subscriptions ? subscriptions : null;
   }
 }

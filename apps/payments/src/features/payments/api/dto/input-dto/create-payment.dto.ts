@@ -2,6 +2,7 @@ import {
   SubscriptionType,
   PaymentSystem,
 } from '../../../../../../../../libs/common/enums/payments';
+import { UserInfo } from '../../../application/types/payment-data.type';
 
 export class CreatePaymentDto {
   subscriptionType: SubscriptionType;
@@ -9,3 +10,13 @@ export class CreatePaymentDto {
   // paymentCount: number;
   // autoRenewal: boolean;
 }
+
+export class CreatePaymentInputDto {
+  userInfo: UserInfo;
+  createSubscriptionDto: CreatePaymentDto;
+}
+
+export type PayPalRawBodyPayloadType = {
+  rawBody: Buffer;
+  headers: Headers;
+};

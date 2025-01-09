@@ -5,9 +5,13 @@ import { UsersQueryRepository } from '../../../users/infrastructure/users.query-
 import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
 import {
   ApplicationNotification,
+  AppNotificationResultEnum,
   AppNotificationResultType,
 } from '../../../../../../../libs/application-notification/src';
 import { LoggerService } from '@app/logger';
+import { User } from '@prisma/gateway';
+import { CreatePaymentDto, UserInfoModel } from '../../domain/types';
+import { PaymentCreatedOutputDto } from '../../api/dto/output-dto/subscriptions.output-dto';
 
 export class CreatePaymentCommand {
   constructor(
@@ -31,27 +35,38 @@ export class CreatePaymentUseCase
 
   async execute(
     command: CreatePaymentCommand,
-  ): Promise<AppNotificationResultType<{ url: string }, null>> {
+  ): Promise<AppNotificationResultType<PaymentCreatedOutputDto>> {
     try {
-      const user = await this.usersQueryRepository.findUserById(command.userId);
+      const user: User | null = await this.usersQueryRepository.findUserById(
+        command.userId,
+      );
       if (!user) {
         return this.appNotification.internalServerError();
       }
-      const result = await this.paymentsServiceAdapter.createSubscription({
-        userInfo: {
-          userId: command.userId,
-          email: user.email,
-          userName: user.username,
-        },
+
+      const payload: CreatePaymentDto = {
+        userInfo: this.generateUserInfoData(user),
         createSubscriptionDto: command.createSubscriptionDto,
-      });
-      if (!result.data) {
-        return this.appNotification.success(null);
+      };
+      const result: AppNotificationResultType<string> =
+        await this.paymentsServiceAdapter.createSubscription(payload);
+
+      if (result.appResult !== AppNotificationResultEnum.Success) {
+        return this.appNotification.success(null); // TODO Error
       }
+
       return this.appNotification.success({ url: result.data });
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
+  }
+
+  private generateUserInfoData(user: User): UserInfoModel {
+    return {
+      userId: user.id,
+      email: user.email,
+      userName: user.username,
+    };
   }
 }

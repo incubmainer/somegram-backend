@@ -7,6 +7,13 @@ import { PaymentsRepository } from '../../../infrastructure/payments.repository'
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
+import {
+  SubscriptionEntity,
+  SubscriptionInputDto,
+} from '../../../domain/subscription.entity';
+import { Subscription } from '@prisma/payments';
+import { Inject } from '@nestjs/common';
+import { LoggerService } from '@app/logger';
 
 export class PayPalSubscriptionCreateUseCase {
   constructor(public inputModel: SubscriptionCreatedType) {}
@@ -23,30 +30,41 @@ export class PayPalSubscriptionCreateUseCaseHandler
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly appNotification: ApplicationNotification,
-  ) {}
+    @Inject(SubscriptionEntity.name)
+    private readonly subscriptionEntity: typeof SubscriptionEntity,
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PayPalSubscriptionCreateUseCaseHandler.name);
+  }
 
   async execute(
     command: PayPalSubscriptionCreateUseCase,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: create subscription', this.execute.name);
     const { id, custom_id } = command.inputModel;
-
     try {
-      const data = this.createData(custom_id, id);
-      await this.paymentsRepository.createSubscription(data);
+      const data = this.generateCreateData(custom_id, id);
+      const subscription: Subscription = this.subscriptionEntity.create(data);
+      await this.paymentsRepository.createSub(subscription);
       return this.appNotification.success(null);
     } catch (e) {
-      // TODO Logger
+      this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
   }
 
-  private createData(userId: string, subId: string) {
+  private generateCreateData(
+    userId: string,
+    subId: string,
+  ): SubscriptionInputDto {
     return {
       userId: userId,
       autoRenewal: true,
-      status: SubscriptionStatuses.Canceled,
+      status: SubscriptionStatuses.Pending,
       paymentSystem: PaymentSystem.PAYPAL,
       paymentSystemSubId: subId,
+      isActive: false,
+      createdAt: new Date(),
     };
   }
 }

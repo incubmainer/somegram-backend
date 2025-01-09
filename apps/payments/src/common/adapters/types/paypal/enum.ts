@@ -78,7 +78,6 @@ export enum PayPalEventsEnum {
    * Example: When a payment attempt for a subscription is declined.
    */
   'SUBSCRIPTION_FAILED' = 'BILLING.SUBSCRIPTION.PAYMENT.FAILED',
-
   /**
    * A payment is made on a subscription.
    * Example: When a user completes a payment for an active subscription.

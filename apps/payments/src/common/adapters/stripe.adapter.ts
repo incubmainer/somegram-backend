@@ -1,22 +1,34 @@
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-
 import { PaymentData } from '../../features/payments/application/types/payment-data.type';
 import { SubscriptionType } from '../../../../../libs/common/enums/payments';
+import { LoggerService } from '@app/logger';
+import { ConfigurationType } from '../../settings/configuration/configuration';
+import { EnvSettings } from '../../settings/env/env.settings';
+
 @Injectable()
 export class StripeAdapter {
   private stripe: Stripe;
-  constructor(private readonly configService: ConfigService) {
-    this.stripe = new Stripe(
-      this.configService.get<string>('STRIPE_API_SECRET_KEY'),
-    );
+  private readonly envSettings: EnvSettings;
+  constructor(
+    private readonly configService: ConfigService<ConfigurationType, true>,
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(StripeAdapter.name);
+    this.envSettings = this.configService.get('envSettings', { infer: true });
+    this.stripe = new Stripe(this.envSettings.STRIPE_API_SECRET_KEY);
   }
 
-  public async createAutoPayment(payload: PaymentData): Promise<string> {
-    const interval = await this.getIntervalBySubType(payload.subscriptionType);
-
+  public async createAutoPayment(payload: PaymentData): Promise<string | null> {
+    this.logger.debug(
+      'Execute: create stripe payment',
+      this.createAutoPayment.name,
+    );
     try {
+      const interval = await this.getIntervalBySubType(
+        payload.subscriptionType,
+      );
       let customer;
 
       const existingCustomers = await this.stripe.customers.list({
@@ -70,54 +82,50 @@ export class StripeAdapter {
 
       return result.url;
     } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException();
+      this.logger.error(e, this.createAutoPayment.name);
+      return null;
     }
   }
 
-  public async disableAutoRenewal(paymentSystemSubId: string) {
+  public async disableAutoRenewal(
+    paymentSystemSubId: string,
+  ): Promise<boolean> {
+    this.logger.debug(
+      'Execute: disable stripe auto renewal',
+      this.disableAutoRenewal.name,
+    );
     try {
-      const canceledSubscription = await this.stripe.subscriptions.update(
-        paymentSystemSubId,
-        {
-          cancel_at_period_end: true,
-        },
-      );
-
-      return {
-        status: canceledSubscription.status,
-        subscriptionId: canceledSubscription.id,
-      };
+      await this.stripe.subscriptions.update(paymentSystemSubId, {
+        cancel_at_period_end: true,
+      });
+      return true;
     } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException(
-        `Error disable autorenewal : ${e.message}`,
-      );
+      this.logger.error(e, this.disableAutoRenewal.name);
+      return false;
     }
   }
 
-  public async enableAutoRenewal(paymentSystemSubId: string) {
+  public async enableAutoRenewal(paymentSystemSubId: string): Promise<boolean> {
+    this.logger.debug(
+      'Execute: enable stripe auto renewal',
+      this.enableAutoRenewal.name,
+    );
     try {
-      const canceledSubscription = await this.stripe.subscriptions.update(
-        paymentSystemSubId,
-        {
-          cancel_at_period_end: false,
-        },
-      );
-
-      return {
-        status: canceledSubscription.status,
-        subscriptionId: canceledSubscription.id,
-      };
+      await this.stripe.subscriptions.update(paymentSystemSubId, {
+        cancel_at_period_end: false,
+      });
+      return true;
     } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException(
-        `Error enable autorenewal : ${e.message}`,
-      );
+      this.logger.error(e, this.enableAutoRenewal.name);
+      return false;
     }
   }
 
   private async createPricePlan(payload: PaymentData) {
+    this.logger.debug(
+      'Execute: create stripe price plan',
+      this.createPricePlan.name,
+    );
     const interval = await this.getIntervalBySubType(payload.subscriptionType);
     const pricePlan = await this.stripe.prices.create({
       product: await this.stripe.products
@@ -137,7 +145,11 @@ export class StripeAdapter {
     return pricePlan.id;
   }
 
-  public async updateAutoPayment(payload: PaymentData) {
+  public async updateAutoPayment(payload: PaymentData): Promise<string | null> {
+    this.logger.debug(
+      'Execute: update stripe payment',
+      this.updateAutoPayment.name,
+    );
     try {
       const subscriptions = await this.stripe.subscriptions.list({
         customer: payload.customerId,
@@ -149,27 +161,24 @@ export class StripeAdapter {
 
       const existingSubscriptionItem = activeSubscription.items.data[0];
 
-      const updatedSubscription = await this.stripe.subscriptions.update(
-        activeSubscription.id,
-        {
-          trial_end: activeSubscription.current_period_end,
-          proration_behavior: 'none',
-          items: [
-            {
-              id: existingSubscriptionItem.id,
-              price: await this.createPricePlan(payload),
-            },
-          ],
-          metadata: {
-            userId: payload.userInfo.userId,
+      await this.stripe.subscriptions.update(activeSubscription.id, {
+        trial_end: activeSubscription.current_period_end,
+        proration_behavior: 'none',
+        items: [
+          {
+            id: existingSubscriptionItem.id,
+            price: await this.createPricePlan(payload),
           },
+        ],
+        metadata: {
+          userId: payload.userInfo.userId,
         },
-      );
+      });
 
-      return updatedSubscription;
+      return 'Success'; // TODO Поговорить и решить можно ли сделать как с paypal
     } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException();
+      this.logger.error(e, this.updateAutoPayment.name);
+      return null;
     }
   }
 

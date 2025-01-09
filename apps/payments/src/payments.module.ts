@@ -1,15 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { loadEnvFileNames } from './common/config/load-env-file-names';
-import { paymentsConfig } from './common/config/config';
 import { PaymentsController } from './features/payments/api/payments.controller';
-import { CqrsModule } from '@nestjs/cqrs';
 import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
 import { CreatePaymentUseCase } from './features/payments/application/use-cases/command/create-payment.use-case';
-import { PaymentManager } from './common/managers/payment.manager';
 import { PaymentsRepository } from './features/payments/infrastructure/payments.repository';
-import { StripeAdapter } from './common/adapters/stripe.adapter';
 import { StripeWebhookUseCase } from './features/payments/application/use-cases/command/stripe-webhook.use-case';
 import { DisableAutoRenewalUseCase } from './features/payments/application/use-cases/command/disable-autorenewal.use-case';
 import { EnableAutoRenewalUseCase } from './features/payments/application/use-cases/command/enable-autorenewal.use-case';
@@ -19,28 +13,18 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-client.adapter';
 import { StripeEventAdapter } from './common/adapters/stripe-event.adaper';
 import { GetSubscriptionInfoQueryUseCase } from './features/payments/application/use-cases/query/get-subscription-info.use-case';
-import { PayPalAdapter } from './common/adapters/paypal.adapter';
-import {
-  Client,
-  Environment,
-  LogLevel,
-  OrdersController,
-  PaymentsController as PayPalPaymentsController,
-} from '@paypal/paypal-server-sdk';
-import {
-  PAYPAL_CLIENT,
-  PAYPAL_ORDERS_CONTROLLER,
-  PAYPAL_PAYMENTS_CONTROLLER,
-} from './common/constants/adapters-name.constant';
-import { ApplicationNotificationModule } from '@app/application-notification';
-import { PayPalSignatureGuard } from './common/guards/paypal/paypal.guard';
 import { PaypalEventAdapter } from './common/adapters/paypal-event.adapter';
 import { PayPalPaymentSucceededHandler } from './features/payments/application/handlers/paypal/paypal-payment-succeeded.handler';
 import { PaypalSubscriptionActiveHandler } from './features/payments/application/handlers/paypal/paypal-subscription-active.handler';
 import { PayPalSubscriptionCreateUseCaseHandler } from './features/payments/application/use-cases/command/paypal-subscription-create.use-case';
 import { TransactionEntity } from './features/payments/domain/transaction.entity';
-import { CountryCatalogEntity } from '../../gateway/src/features/country-catalog/domain/country-catalog.entity';
 import { SubscriptionEntity } from './features/payments/domain/subscription.entity';
+import { PayPalPaymentFailedHandler } from './features/payments/application/handlers/paypal/paypal-payment-failed.handler';
+import { PaypalSubscriptionSuspendedHandler } from './features/payments/application/handlers/paypal/paypal-subscription-suspended.handler';
+import { PaypalSubscriptionCancelHandler } from './features/payments/application/handlers/paypal/paypal-subscription-cancel.handler';
+import { AsyncLocalStorageService, LoggerModule } from '@app/logger';
+import { configModule } from './settings/configuration/config.module';
+import { CommonModule } from './common/common.module';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -54,29 +38,6 @@ const useCases = [
 
 const repositories = [PaymentsRepository];
 
-const paypalClient = {
-  provide: PAYPAL_CLIENT,
-  useFactory: (configService: ConfigService) => {
-    const clientId = configService.get<string>('PAYPAL_CLIENT_ID');
-    const clientSecret = configService.get<string>('PAYPAL_CLIENT_SECRET');
-
-    return new Client({
-      clientCredentialsAuthCredentials: {
-        oAuthClientId: clientId,
-        oAuthClientSecret: clientSecret,
-      },
-      timeout: 0,
-      environment: Environment.Sandbox,
-      logging: {
-        logLevel: LogLevel.Info,
-        logRequest: { logBody: true },
-        logResponse: { logHeaders: true },
-      },
-    });
-  },
-  inject: [ConfigService],
-};
-
 const transactionEntityProvider = {
   provide: 'TransactionEntity',
   useValue: TransactionEntity,
@@ -87,78 +48,54 @@ const subscriptionEntityProvider = {
   useValue: SubscriptionEntity,
 };
 
-// const paypalOrdersController = {
-//   provide: PAYPAL_ORDERS_CONTROLLER,
-//   useFactory: (client: Client) => {
-//     return new OrdersController(client);
-//   },
-//   inject: [PAYPAL_CLIENT],
-// };
-//
-// const paypalPaymentsController = {
-//   provide: PAYPAL_PAYMENTS_CONTROLLER,
-//   useFactory: (client: Client) => {
-//     return new PayPalPaymentsController(client);
-//   },
-//   inject: [PAYPAL_CLIENT],
-// };
-
 const services = [
   PaymentsService,
-  PaymentManager,
-  StripeAdapter,
   StripeEventAdapter,
-  GatewayServiceClientAdapter,
-  PayPalAdapter,
-  paypalClient,
-  PayPalSignatureGuard,
+  //GatewayServiceClientAdapter,
   PaypalEventAdapter,
+  transactionEntityProvider,
+  subscriptionEntityProvider,
+];
+
+const payPalHandlers = [
   PayPalPaymentSucceededHandler,
   PaypalSubscriptionActiveHandler,
+  PayPalPaymentFailedHandler,
+  PaypalSubscriptionSuspendedHandler,
+  PaypalSubscriptionCancelHandler,
 ];
 
 @Module({
   imports: [
-    CqrsModule,
-    ClsTransactionalModule,
-    ApplicationNotificationModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      ignoreEnvFile: false,
-      envFilePath: loadEnvFileNames(),
-      load: [paymentsConfig],
-    }),
-    ClientsModule.registerAsync([
-      {
-        name: 'PAYMENTS_SERVICE_RMQ',
-        imports: [ConfigModule],
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
-            queue: 'payments_queue',
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      ignoreEnvFile: false,
-      envFilePath: loadEnvFileNames(),
-      load: [paymentsConfig],
-    }),
+    //ClsTransactionalModule,
+    //   ClientsModule.registerAsync([
+    //     {
+    //       name: 'PAYMENTS_SERVICE_RMQ',
+    //       imports: [ConfigModule],
+    //       useFactory: async (configService: ConfigService) => ({
+    //         transport: Transport.RMQ,
+    //         options: {
+    //           urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
+    //           queue: 'payments_queue',
+    //           queueOptions: {
+    //             durable: false,
+    //           },
+    //         },
+    //       }),
+    //       inject: [ConfigService],
+    //     },
+    //   ]),
+    configModule,
+    LoggerModule.forRoot('Payments'),
+    CommonModule,
   ],
   controllers: [PaymentsController],
   providers: [
     ...useCases,
     ...repositories,
     ...services,
-    transactionEntityProvider,
-    subscriptionEntityProvider,
+    ...payPalHandlers,
+    AsyncLocalStorageService,
   ],
 })
 export class PaymentsModule {}

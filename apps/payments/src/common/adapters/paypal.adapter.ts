@@ -27,7 +27,6 @@ import {
   SUSPEND_SUBSCRIPTIONS,
 } from '../constants/paypal-path.constant';
 import {
-  ApplicationNotification,
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
@@ -40,15 +39,17 @@ import {
 } from './types/paypal/enum';
 import { CommandBus } from '@nestjs/cqrs';
 import { PayPalSubscriptionCreateUseCase } from '../../features/payments/application/use-cases/command/paypal-subscription-create.use-case';
+import { LoggerService } from '@app/logger';
 
-// TODO Logger, App notification
 @Injectable()
 export class PayPalAdapter {
   constructor(
     @Inject(PAYPAL_CLIENT) private readonly paypalClient: Client,
-    private readonly appNotification: ApplicationNotification,
     private readonly commandBus: CommandBus,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PayPalAdapter.name);
+  }
 
   private async handleResult<T = null>(response: ApiResponse<any>): Promise<T> {
     if (typeof response.body === 'string') {
@@ -66,13 +67,14 @@ export class PayPalAdapter {
 
   private async handleError(error: any): Promise<void> {
     if (error instanceof ApiError) {
-      console.log(error.body);
+      this.logger.error(error.body, this.handleError.name);
     } else {
-      console.log(error);
+      this.logger.error(error, this.handleError.name);
     }
   }
 
   private async login(): Promise<string | null> {
+    this.logger.debug('Execute: login paypal', this.login.name);
     const oAuth: OAuthToken =
       await this.paypalClient.clientCredentialsAuthManager.fetchToken();
     return oAuth.accessToken;
@@ -85,6 +87,7 @@ export class PayPalAdapter {
     body?: D,
     prefer: PreferEnum = PreferEnum.minimal,
   ): Promise<T> {
+    this.logger.debug('Execute: fetch to paypal', this.fetch.name);
     const factory: SdkRequestBuilderFactory =
       this.paypalClient.getRequestBuilderFactory();
 
@@ -102,9 +105,17 @@ export class PayPalAdapter {
     return await this.handleResult(response);
   }
 
-  public async createAutoPayment(payload: PaymentData): Promise<string | null> {
+  public async createAutoPayment(
+    payload: PaymentData,
+    accessToken: string = null,
+    startDate: Date = null,
+  ): Promise<string | null> {
     try {
-      const accessToken: string = await this.login();
+      this.logger.debug(
+        'Execute: create paypal payment',
+        this.createAutoPayment.name,
+      );
+      if (!accessToken) accessToken = await this.login();
 
       const {
         subscriptionType,
@@ -146,6 +157,8 @@ export class PayPalAdapter {
         },
       };
 
+      if (startDate) body.start_time = startDate.toISOString();
+
       const createSubscription: SubscriptionCreatedType = await this.fetch(
         LinkHttpMethod.Post,
         SUBSCRIPTIONS,
@@ -172,9 +185,28 @@ export class PayPalAdapter {
     }
   }
 
+  public async updateAutoPayment(
+    payload: PaymentData,
+    accessToken: string = null,
+  ): Promise<string | null> {
+    this.logger.debug(
+      'Execute: update paypal payment',
+      this.updateAutoPayment.name,
+    );
+    if (!accessToken) accessToken = await this.login();
+    const { currentSubDateEnd } = payload;
+
+    return await this.createAutoPayment(
+      payload,
+      accessToken,
+      currentSubDateEnd,
+    );
+  }
+
   public async getPlans(
     accessToken: string = null,
   ): Promise<PayPalPlansResponseType> {
+    this.logger.debug('Execute: get paypal plans', this.getPlans.name);
     if (!accessToken) accessToken = await this.login();
     return await this.fetch(LinkHttpMethod.Get, PAYPAL_PLANS, accessToken);
   }
@@ -183,6 +215,10 @@ export class PayPalAdapter {
     id: string,
     accessToken: string = null,
   ): Promise<SubscriptionDetailsType> {
+    this.logger.debug(
+      'Execute: get paypal subscription details',
+      this.getSubscriptionDetails.name,
+    );
     if (!accessToken) accessToken = await this.login();
     return await this.fetch(
       LinkHttpMethod.Get,
@@ -194,43 +230,67 @@ export class PayPalAdapter {
   public async disableAutoRenewal(
     subscriptionId: string,
     accessToken: string = null,
-  ): Promise<void> {
-    if (!accessToken) accessToken = await this.login();
-
-    const body: ManageSubscriptionBodyType = {
-      reason: 'The user wants to cancel the subscription',
-    };
-
-    await this.fetch(
-      LinkHttpMethod.Post,
-      `${SUBSCRIPTIONS}/${subscriptionId}/${SUSPEND_SUBSCRIPTIONS}`,
-      accessToken,
-      body,
+  ): Promise<boolean> {
+    this.logger.debug(
+      'Execute: disable paypal auto renewal',
+      this.disableAutoRenewal.name,
     );
+    try {
+      if (!accessToken) accessToken = await this.login();
+
+      const body: ManageSubscriptionBodyType = {
+        reason: 'The user wants to cancel the subscription',
+      };
+
+      await this.fetch(
+        LinkHttpMethod.Post,
+        `${SUBSCRIPTIONS}/${subscriptionId}/${SUSPEND_SUBSCRIPTIONS}`,
+        accessToken,
+        body,
+      );
+      return true;
+    } catch (e) {
+      this.logger.error(e, this.disableAutoRenewal.name);
+      return false;
+    }
   }
 
   public async enableAutoRenewal(
     subscriptionId: string,
     accessToken: string = null,
-  ): Promise<void> {
-    if (!accessToken) accessToken = await this.login();
-
-    const body: ManageSubscriptionBodyType = {
-      reason: 'Continue the subscription',
-    };
-
-    await this.fetch(
-      LinkHttpMethod.Post,
-      `${SUBSCRIPTIONS}/${subscriptionId}/${ACTIVATE_SUBSCRIPTIONS}`,
-      accessToken,
-      body,
+  ): Promise<boolean> {
+    this.logger.debug(
+      'Execute: enable paypal auto renewal',
+      this.enableAutoRenewal.name,
     );
+    try {
+      if (!accessToken) accessToken = await this.login();
+
+      const body: ManageSubscriptionBodyType = {
+        reason: 'Continue the subscription',
+      };
+
+      await this.fetch(
+        LinkHttpMethod.Post,
+        `${SUBSCRIPTIONS}/${subscriptionId}/${ACTIVATE_SUBSCRIPTIONS}`,
+        accessToken,
+        body,
+      );
+      return true;
+    } catch (e) {
+      this.logger.error(e, this.enableAutoRenewal.name);
+      return false;
+    }
   }
 
   public async cancelSubscription(
     subscriptionId: string,
     accessToken: string = null,
   ): Promise<void> {
+    this.logger.debug(
+      'Execute: cancel paypal subscription',
+      this.cancelSubscription.name,
+    );
     if (!accessToken) accessToken = await this.login();
 
     const body: ManageSubscriptionBodyType = {

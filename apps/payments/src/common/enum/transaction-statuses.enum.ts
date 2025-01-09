@@ -6,4 +6,6 @@ export enum TransactionStatuses {
 export enum SubscriptionStatuses {
   Active = 'Active',
   Canceled = 'Canceled',
+  Suspended = 'Suspended',
+  Pending = 'Pending',
 }

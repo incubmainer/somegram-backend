@@ -38,6 +38,7 @@ import { DisableAutoRenewalSwagger } from './swagger/disable-autorenewal.swagger
 import { MyPaymentsSwagger } from './swagger/my-payments.swagger';
 import {
   MyPaymentsOutputDto,
+  PaymentCreatedOutputDto,
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
@@ -49,6 +50,8 @@ import {
 } from '@app/application-notification';
 
 @ApiTags('Subscriptions')
+@ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
 export class SubscriptionsController {
   constructor(
@@ -60,19 +63,23 @@ export class SubscriptionsController {
   }
 
   @Post(SUBSCRIPTIONS_ROUTE.CREATE_PAYMENT)
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiBearerAuth('access-token')
   @CreateSubscriptionSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async createSubscription(
     @CurrentUserId() userId: string,
     @Body() createSubscriptionDto: CreateSubscriptionDto,
-  ) {
-    const result: AppNotificationResultType<{ url: string } | null> =
+  ): Promise<PaymentCreatedOutputDto> {
+    this.logger.debug(
+      'Execute: create subscription',
+      this.createSubscription.name,
+    );
+
+    const result: AppNotificationResultType<PaymentCreatedOutputDto> =
       await this.commandBus.execute(
         new CreatePaymentCommand(userId, createSubscriptionDto),
       );
+
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.createSubscription.name);
@@ -141,8 +148,8 @@ export class SubscriptionsController {
   @DisableAutoRenewalSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async disableAutoRenewal(@CurrentUserId() userId: string) {
-    const result: AppNotificationResultType<any> =
+  async disableAutoRenewal(@CurrentUserId() userId: string): Promise<void> {
+    const result: AppNotificationResultType<null> =
       await this.paymentsServiceAdapter.disableAutoRenewal({
         userId,
       });
@@ -150,7 +157,7 @@ export class SubscriptionsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.disableAutoRenewal.name);
-        return result.data;
+        return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.disableAutoRenewal.name);
         throw new NotFoundException();
@@ -163,8 +170,8 @@ export class SubscriptionsController {
   @EnableAutoRenewalSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async enableAutoRenewal(@CurrentUserId() userId: string) {
-    const result: AppNotificationResultType<any> =
+  async enableAutoRenewal(@CurrentUserId() userId: string): Promise<void> {
+    const result: AppNotificationResultType<null> =
       await this.paymentsServiceAdapter.enableAutoRenewal({
         userId,
       });
@@ -172,7 +179,7 @@ export class SubscriptionsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.enableAutoRenewal.name);
-        return result.data;
+        return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.enableAutoRenewal.name);
         throw new NotFoundException();
@@ -189,9 +196,7 @@ export class SubscriptionsController {
     );
   }
 
-  // TODO Не приходят хуки возможно проблема с paypal проверить завтра
   @Post(SUBSCRIPTIONS_ROUTE.PAYPAL_WEBHOOK)
-  @HttpCode(200)
   @ApiExcludeEndpoint()
   async paypalWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
     this.logger.debug('Execute: paypal webhook', this.paypalWebhook.name);

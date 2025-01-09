@@ -82,3 +82,12 @@ export class SubscriptionInfoOutputDto {
   })
   autoRenewal: boolean;
 }
+
+export class PaymentCreatedOutputDto {
+  @ApiProperty({
+    description: 'Payment link',
+    example: 'https://payment-system.com/',
+    required: true,
+  })
+  url: string;
+}

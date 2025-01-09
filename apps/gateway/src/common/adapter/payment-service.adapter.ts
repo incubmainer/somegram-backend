@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout } from 'rxjs';
+import { firstValueFrom, Observable, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/subscriptions.dto';
 import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,
@@ -16,7 +15,12 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../domain/query.types';
+import {
+  CreatePaymentDto,
+  PayPalRawBodyPayloadType,
+} from '../../features/subscriptions/domain/types';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -25,24 +29,21 @@ export class PaymentsServiceAdapter {
     private readonly paymentsServiceClient: ClientProxy,
     private readonly configService: ConfigService,
     private readonly appNotification: ApplicationNotification,
+    private readonly logger: LoggerService,
   ) {}
 
-  async createSubscription(payload: {
-    userInfo: {
-      userId: string;
-      email: string;
-      userName: string;
-    };
-    createSubscriptionDto: CreateSubscriptionDto;
-  }) {
+  async createSubscription(
+    payload: CreatePaymentDto,
+  ): Promise<AppNotificationResultType<string>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: CREATE_AUTO_PAYMENT }, { payload })
-        .pipe(timeout(10000));
-
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      const responseOfService: Observable<AppNotificationResultType<string>> =
+        this.paymentsServiceClient
+          .send({ cmd: CREATE_AUTO_PAYMENT }, payload)
+          .pipe(timeout(10000));
+      // TODO: При ошибке возврашается success
+      return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.createSubscription.name);
       return this.appNotification.internalServerError();
     }
   }
@@ -60,45 +61,49 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async paypalWebhook(payload: {
-    rawBody: Buffer;
-    headers: Headers;
+  async paypalWebhook(
+    payload: PayPalRawBodyPayloadType,
+  ): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: PAYPAL_WEBHOOK_HANDLER }, payload)
+          .pipe(timeout(10000));
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.paypalWebhook.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async disableAutoRenewal(payload: {
+    userId: string;
   }): Promise<AppNotificationResultType<null>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: PAYPAL_WEBHOOK_HANDLER }, { payload })
-        .pipe(timeout(10000));
-      await firstValueFrom(responseOfService);
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: DISABLE_AUTO_RENEWAL }, { payload })
+          .pipe(timeout(10000));
 
-      return this.appNotification.success(null);
+      return await firstValueFrom(responseOfService);
     } catch (e) {
-      console.log(e);
+      this.logger.error(e, this.disableAutoRenewal.name);
       return this.appNotification.internalServerError();
     }
   }
 
-  async disableAutoRenewal(payload: { userId: string }) {
+  async enableAutoRenewal(payload: {
+    userId: string;
+  }): Promise<AppNotificationResultType<null>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: DISABLE_AUTO_RENEWAL }, { payload })
-        .pipe(timeout(10000));
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: ENABLE_AUTO_RENEWAL }, { payload })
+          .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
-      return this.appNotification.internalServerError();
-    }
-  }
-
-  async enableAutoRenewal(payload: { userId: string }) {
-    try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: ENABLE_AUTO_RENEWAL }, { payload })
-        .pipe(timeout(10000));
-
-      const result = await firstValueFrom(responseOfService);
-      return result;
-    } catch (e) {
+      this.logger.error(e, this.enableAutoRenewal.name);
       return this.appNotification.internalServerError();
     }
   }

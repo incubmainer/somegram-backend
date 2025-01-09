@@ -8,6 +8,7 @@ import { InvoicePaymentFailedHandler } from '../../features/payments/application
 import { SubscriptionUpdatedHandler } from '../../features/payments/application/handlers/subscription-updated.handler';
 import { SubscriptionDeletedHandler } from '../../features/payments/application/handlers/subscription-deleted.handler';
 import { IStripeEventHandler } from '../interfaces/stripe-event-handler.interface';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class StripeEventAdapter {
@@ -16,7 +17,9 @@ export class StripeEventAdapter {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
+    private readonly logger: LoggerService,
   ) {
+    this.logger.setContext(StripeEventAdapter.name);
     this.handlers['invoice.payment_succeeded'] =
       new InvoicePaymentSucceededHandler(
         this.paymentsRepository,
@@ -36,6 +39,10 @@ export class StripeEventAdapter {
 
   async handleEvent(event: Stripe.Event): Promise<void> {
     const handler = this.handlers[event.type];
+    this.logger.debug(
+      `Stripe handler: ${handler ? handler.constructor.name : 'unknown handler'}`,
+      this.handleEvent.name,
+    );
     if (handler) {
       await handler.handle(event);
     }

@@ -1,19 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiOkResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
-  ApiBearerAuth,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 
 export function DisableAutoRenewalSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Disable auto renewal' }),
-    ApiUnauthorizedResponse({ description: 'Unauthorized' }),
-    ApiBearerAuth('access-token'),
     ApiNotFoundResponse({ description: 'Subscription not found' }),
-    ApiOkResponse({
+    ApiNoContentResponse({
       description: 'Disable auto renewal',
     }),
   );
