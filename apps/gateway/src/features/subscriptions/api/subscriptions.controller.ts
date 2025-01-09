@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -46,6 +47,7 @@ import {
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { Paginator } from '../../../common/domain/paginator';
+import { TestingCancelSubscriptionSwagger } from './swagger/testing-cancel-subscription.swagger';
 
 @ApiTags('Subscriptions')
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
@@ -174,6 +176,34 @@ export class SubscriptionsController {
         return result.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.enableAutoRenewal.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Delete(
+    `${SUBSCRIPTIONS_ROUTE.TESTING}/${SUBSCRIPTIONS_ROUTE.CANCEL_SUBSCRIPTION}`,
+  )
+  @TestingCancelSubscriptionSwagger()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async testingCancelSubscription(
+    @CurrentUserId() userId: string,
+  ): Promise<null> {
+    this.logger.debug(
+      `Execute: cancel subscription (Testing)`,
+      this.testingCancelSubscription.name,
+    );
+    const result: AppNotificationResultType<any> =
+      await this.paymentsServiceAdapter.testingCancelSubscription(userId);
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.testingCancelSubscription.name);
+        return result.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.testingCancelSubscription.name);
         throw new NotFoundException();
       default:
         throw new InternalServerErrorException();

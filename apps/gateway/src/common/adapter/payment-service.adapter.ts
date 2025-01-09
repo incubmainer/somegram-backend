@@ -1,9 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout } from 'rxjs';
+import { firstValueFrom, Observable, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 
-import { ApplicationNotification } from '@app/application-notification';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 import { CreateSubscriptionDto } from '../../features/subscriptions/api/dto/input-dto/subscriptions.dto';
 import {
   CREATE_AUTO_PAYMENT,
@@ -12,6 +15,7 @@ import {
   GET_PAYMENTS,
   GET_SUBSCRIPTION_INFO,
   STRIPE_WEBHOOK_HANDLER,
+  TESTING_CANCEL_SUBSCRIPTION,
 } from '../constants/service.constants';
 import { SearchQueryParametersType } from '../domain/query.types';
 
@@ -107,6 +111,21 @@ export class PaymentsServiceAdapter {
 
       const result = await firstValueFrom(responseOfService);
       return result;
+    } catch (e) {
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async testingCancelSubscription(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: TESTING_CANCEL_SUBSCRIPTION }, payload)
+          .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
     } catch (e) {
       return this.appNotification.internalServerError();
     }
