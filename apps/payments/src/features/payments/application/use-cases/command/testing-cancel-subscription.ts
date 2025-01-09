@@ -7,6 +7,7 @@ import { PaymentsRepository } from '../../../infrastructure/payments.repository'
 import { PaymentsService } from '../../../api/payments.service';
 import { Subscription } from '@prisma/payments';
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
+import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
 export class TestingCancelSubscriptionUseCase {
   constructor(public userId: string) {}
 }
@@ -23,6 +24,7 @@ export class TestingCancelSubscriptionUseCaseHandler
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentsService: PaymentsService,
     private readonly appNotification: ApplicationNotification,
+    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
   ) {}
   async execute(
     command: TestingCancelSubscriptionUseCase,
@@ -34,11 +36,16 @@ export class TestingCancelSubscriptionUseCaseHandler
 
       if (!subscription) return this.appNotification.notFound();
 
+      const date: Date = new Date();
       subscription.status = SubscriptionStatuses.Canceled;
       subscription.updatedAt = new Date();
-      subscription.endDateOfSubscription = new Date();
+      subscription.endDateOfSubscription = date;
 
       await this.paymentsRepository.updateSubscription(subscription);
+      this.gatewayServiceClientAdapter.sendSubscriptionInfo({
+        userId: userId,
+        endDateOfSubscription: date,
+      });
 
       return this.appNotification.success(null);
     } catch (e) {
