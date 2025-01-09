@@ -53,8 +53,6 @@ const data = [];
   }
 })();
 
-console.log(data[0].price / 100);
-
 export class TestingGetPaymentsQuery {
   constructor(
     public userId: string,
