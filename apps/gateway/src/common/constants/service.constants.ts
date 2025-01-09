@@ -14,3 +14,5 @@ export const GET_PAYMENTS = 'get_payments';
 
 export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';
 export const GET_SUBSCRIPTION_INFO = 'get_subscription_info';
+
+export const TESTING_CANCEL_SUBSCRIPTION = 'testing_cancel_subscription';

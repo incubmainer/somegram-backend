@@ -14,8 +14,11 @@ import {
   ENABLE_AUTO_RENEWAL,
   GET_PAYMENTS,
   GET_SUBSCRIPTION_INFO,
+  TESTING_CANCEL_SUBSCRIPTION,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
+import { AppNotificationResultType } from '@app/application-notification';
+import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
 
 @Controller('payments')
 export class PaymentsController {
@@ -62,5 +65,14 @@ export class PaymentsController {
   @MessagePattern({ cmd: GET_SUBSCRIPTION_INFO })
   async getSubscriptionInfo({ payload }) {
     return this.queryBus.execute(new GetSubscriptionInfoQuery(payload.userId));
+  }
+
+  @MessagePattern({ cmd: TESTING_CANCEL_SUBSCRIPTION })
+  async testingCancelSubscription(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
+    return await this.commandBus.execute(
+      new TestingCancelSubscriptionUseCase(payload),
+    );
   }
 }

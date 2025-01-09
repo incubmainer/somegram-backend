@@ -20,6 +20,7 @@ import { GatewayServiceClientAdapter } from './common/adapters/gateway-service-c
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { StripeEventAdapter } from './common/adapters/stripe-event.adaper';
 import { GetSubscriptionInfoQueryUseCase } from './features/payments/application/use-cases/query/get-subscription-info.use-case';
+import { TestingCancelSubscriptionUseCaseHandler } from './features/payments/application/use-cases/command/testing-cancel-subscription';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -28,6 +29,7 @@ const useCases = [
   EnableAutoRenewalUseCase,
   GetPaymentsQueryUseCase,
   GetSubscriptionInfoQueryUseCase,
+  TestingCancelSubscriptionUseCaseHandler,
 ];
 
 const repositories = [PaymentsRepository];
