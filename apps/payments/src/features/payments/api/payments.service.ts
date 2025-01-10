@@ -34,4 +34,14 @@ export class PaymentsService {
       paymentSubscriptionSubId,
     );
   }
+
+  async testingCancelSubscription(
+    paymentSystem: PaymentSystem,
+    paymentSubscriptionSubId: string,
+  ) {
+    return await this.paymentManager.testingCancelSubscription(
+      paymentSystem,
+      paymentSubscriptionSubId,
+    );
+  }
 }

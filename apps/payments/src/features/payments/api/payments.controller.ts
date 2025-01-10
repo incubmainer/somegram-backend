@@ -20,10 +20,7 @@ import {
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { AppNotificationResultType } from '@app/application-notification';
 import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
-import {
-  TestingGetPaymentsQuery,
-  TestingGetPaymentsQueryUseCase,
-} from '../application/use-cases/query/testing-get-payments.use-case';
+import { TestingGetPaymentsQuery } from '../application/use-cases/query/testing-get-payments.use-case';
 
 @Controller('payments')
 export class PaymentsController {

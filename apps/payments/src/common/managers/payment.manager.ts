@@ -52,4 +52,18 @@ export class PaymentManager {
       );
     }
   }
+
+  async testingCancelSubscription(
+    paymentSystem: PaymentSystem,
+    paymentSubscriptionSubId: string,
+  ) {
+    if (paymentSystem === PaymentSystem.PAYPAL) {
+    }
+
+    if (paymentSystem === PaymentSystem.STRIPE) {
+      return await this.stripeAdapter.testingCancelSubscription(
+        paymentSubscriptionSubId,
+      );
+    }
+  }
 }
