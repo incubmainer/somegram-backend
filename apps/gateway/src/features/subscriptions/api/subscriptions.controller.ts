@@ -138,10 +138,20 @@ export class SubscriptionsController {
   async stripeWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
     const rawBody = req.rawBody;
     const signatureHeader = req.headers['stripe-signature'] as string;
-    return await this.paymentsServiceAdapter.stripeWebhook({
-      rawBody,
-      signatureHeader,
-    });
+    const result: AppNotificationResultType<null> =
+      await this.paymentsServiceAdapter.stripeWebhook({
+        rawBody,
+        signatureHeader,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        throw new ForbiddenException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Post(SUBSCRIPTIONS_ROUTE.DISABLE_AUTO_RENEWAL)

@@ -20,6 +20,7 @@ import { SearchQueryParametersType } from '../domain/query.types';
 import {
   CreatePaymentDto,
   PayPalRawBodyPayloadType,
+  StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
 
 @Injectable()
@@ -40,7 +41,6 @@ export class PaymentsServiceAdapter {
         this.paymentsServiceClient
           .send({ cmd: CREATE_AUTO_PAYMENT }, payload)
           .pipe(timeout(10000));
-      // TODO: При ошибке возврашается success
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.createSubscription.name);
@@ -48,15 +48,18 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async stripeWebhook(payload: { rawBody: Buffer; signatureHeader: string }) {
+  async stripeWebhook(
+    payload: StripeRawBodyPayloadType,
+  ): Promise<AppNotificationResultType<null>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: STRIPE_WEBHOOK_HANDLER }, { payload })
-        .pipe(timeout(10000));
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: STRIPE_WEBHOOK_HANDLER }, payload)
+          .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.stripeWebhook.name);
       return this.appNotification.internalServerError();
     }
   }

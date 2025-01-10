@@ -26,6 +26,7 @@ import {
   SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
 
+// TODO Не доделан нормально, сделать праивльно
 @Injectable()
 export class PayPalPaymentFailedHandler
   implements IPayPalEventHandler<PayPalWebHookEventType<WHPaymentSaleType>>

@@ -15,8 +15,3 @@ export class CreatePaymentInputDto {
   userInfo: UserInfo;
   createSubscriptionDto: CreatePaymentDto;
 }
-
-export type PayPalRawBodyPayloadType = {
-  rawBody: Buffer;
-  headers: Headers;
-};

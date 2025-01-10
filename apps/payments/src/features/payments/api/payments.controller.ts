@@ -18,12 +18,13 @@ import { EnableAutoRenewalCommand } from '../application/use-cases/command/enabl
 import { GetPaymentsQuery } from '../application/use-cases/query/get-payments.use-case';
 import { DisableAutoRenewalCommand } from '../application/use-cases/command/disable-autorenewal.use-case';
 import { AppNotificationResultType } from '@app/application-notification';
-import {
-  CreatePaymentInputDto,
-  PayPalRawBodyPayloadType,
-} from './dto/input-dto/create-payment.dto';
+import { CreatePaymentInputDto } from './dto/input-dto/create-payment.dto';
 import { LoggerService } from '@app/logger';
 import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
+import {
+  PayPalRawBodyPayloadType,
+  StripeRawBodyPayloadType,
+} from '../../../../../gateway/src/features/subscriptions/domain/types';
 
 @Controller('payments')
 export class PaymentsController {
@@ -47,7 +48,9 @@ export class PaymentsController {
   }
 
   @MessagePattern({ cmd: STRIPE_WEBHOOK_HANDLER })
-  async stripeWebhookHandler({ payload }) {
+  async stripeWebhookHandler(
+    payload: StripeRawBodyPayloadType,
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: stripe webhook',
       this.stripeWebhookHandler.name,
@@ -70,8 +73,8 @@ export class PaymentsController {
   }
 
   @MessagePattern({ cmd: DISABLE_AUTO_RENEWAL })
-  async disableAutoRenewal({
-    payload,
+  async disableAutoRenewal(payload: {
+    userId: string;
   }): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: disable auto renewal',
@@ -83,7 +86,9 @@ export class PaymentsController {
   }
 
   @MessagePattern({ cmd: ENABLE_AUTO_RENEWAL })
-  async enableAutoRenewal({ payload }) {
+  async enableAutoRenewal(payload: {
+    userId: string;
+  }): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: enable auto renewal',
       this.enableAutoRenewal.name,

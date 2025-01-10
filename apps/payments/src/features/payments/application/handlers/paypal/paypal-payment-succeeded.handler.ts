@@ -94,8 +94,6 @@ export class PayPalPaymentSucceededHandler
         subscriptionDetails.plan_id,
       );
 
-      console.log('subscription', subscription);
-
       const transactionData: TransactionInputDto = this.generateDataTransaction(
         Number(event.resource.amount.total),
         subscription.id,
@@ -137,21 +135,6 @@ export class PayPalPaymentSucceededHandler
   }
 
   private generateDataUpdateSubscription(
-    customerId: string,
-    dateOfPayment: Date,
-    endDateOfSubscription: Date,
-  ): SubscriptionUpdateDto {
-    return {
-      updatedAt: new Date(),
-      dateOfPayment: dateOfPayment,
-      endDateOfSubscription: endDateOfSubscription,
-      paymentSystemCustomerId: customerId,
-      status: SubscriptionStatuses.Active,
-      isActive: true,
-    };
-  }
-
-  private generateDataUpdateCancelSubscription(
     customerId: string,
     dateOfPayment: Date,
     endDateOfSubscription: Date,

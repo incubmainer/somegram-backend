@@ -13,7 +13,9 @@ export class DisableAutoRenewalCommand {
   constructor(public userId: string) {}
 }
 
-//TODO Нужно делать с блокировкой
+// TODO Нужно делать с блокировкой
+// TODO Установка статуса Suspend для Paypal принудительно независимо от платежной системы
+// TODO Suspend для Stripe?
 @CommandHandler(DisableAutoRenewalCommand)
 export class DisableAutoRenewalUseCase
   implements

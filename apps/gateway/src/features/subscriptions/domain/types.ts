@@ -15,3 +15,8 @@ export type PayPalRawBodyPayloadType = {
   rawBody: Buffer;
   headers: Headers;
 };
+
+export type StripeRawBodyPayloadType = {
+  rawBody: Buffer;
+  signatureHeader: string;
+};
