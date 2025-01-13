@@ -117,6 +117,23 @@ export class StripeAdapter {
     }
   }
 
+  public async testingCancelSubscription(paymentSystemSubId: string) {
+    try {
+      const canceledSubscription =
+        await this.stripe.subscriptions.cancel(paymentSystemSubId);
+
+      return {
+        status: canceledSubscription.status,
+        subscriptionId: canceledSubscription.id,
+      };
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException(
+        `Error cancel subscription : ${e.message}`,
+      );
+    }
+  }
+
   private async createPricePlan(payload: PaymentData) {
     const interval = await this.getIntervalBySubType(payload.subscriptionType);
     const pricePlan = await this.stripe.prices.create({

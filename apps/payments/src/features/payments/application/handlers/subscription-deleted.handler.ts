@@ -16,7 +16,10 @@ export class SubscriptionDeletedHandler implements IStripeEventHandler {
     const subId = subscription.id;
     const subscriptionInfo =
       await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(subId);
-    if (subscriptionInfo) {
+    if (
+      subscriptionInfo &&
+      subscriptionInfo.status !== SubscriptionStatuses.Canceled
+    ) {
       const remainingEndDate = subscriptionInfo.endDateOfSubscription;
       subscriptionInfo.updatedAt = new Date();
       subscriptionInfo.status = SubscriptionStatuses.Canceled;

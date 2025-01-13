@@ -8,6 +8,7 @@ import { PaymentsService } from '../../../api/payments.service';
 import { Subscription } from '@prisma/payments';
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
+import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
 export class TestingCancelSubscriptionUseCase {
   constructor(public userId: string) {}
 }
@@ -47,6 +48,10 @@ export class TestingCancelSubscriptionUseCaseHandler
         endDateOfSubscription: date,
       });
 
+      await this.paymentsService.testingCancelSubscription(
+        subscription.paymentSystem as PaymentSystem,
+        subscription.paymentSystemSubId,
+      );
       return this.appNotification.success(null);
     } catch (e) {
       console.log(e);
