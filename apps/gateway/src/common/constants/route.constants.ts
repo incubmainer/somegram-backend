@@ -30,3 +30,12 @@ export const POST_PUBLIC_ROUTE = {
 export const POST_ROUTE = {
   MAIN: 'posts',
 };
+
+export const AUTH_ROUTE = {
+  MAIN: 'auth',
+  REGISTRATION: 'registration',
+  REGISTRATION_CONFIRMATION: 'registration-confirmation',
+  REGISTRATION_EMAIL_RESENDING: 'registration-email-resending',
+  GOOGLE: 'google',
+  CALLBACK: 'callback',
+};

@@ -17,16 +17,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-
-import {
-  RegistrationCodes,
-  RegistrationCommand,
-} from '../application/use-cases/registration.use-case';
+import { RegistrationCommand } from '../application/use-cases/registration.use-case';
 import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
@@ -89,82 +80,50 @@ import { CreateTokensCommand } from '../application/use-cases/create-token.use-c
 import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
+import { AUTH_ROUTE } from '../../../common/constants/route.constants';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 @ApiTags('Auth')
-@Controller('auth')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
+@Controller(AUTH_ROUTE.MAIN)
 export class AuthController {
   private readonly frontendProvider: string;
   constructor(
     private readonly commandBus: CommandBus,
-    //private readonly configService: ConfigService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    // @InjectCustomLoggerService()
-    // private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(AuthController.name);
-    //const config = this.configService.get<AuthConfig>('auth');
-    //this.frontendProvider = config.frontendProvider;
     this.frontendProvider = this.configService.get('envSettings', {
       infer: true,
     }).FRONTED_PROVIDER;
   }
 
-  @Post('registration')
+  @Post(AUTH_ROUTE.REGISTRATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationSwagger()
-  public async registration(@Body() body: RegistrationBodyInputDto) {
-    this.logger.debug('start registration', this.registration.name);
-    const notification: NotificationObject<null> =
-      await this.commandBus.execute(
-        new RegistrationCommand(
-          body.username,
-          body.email,
-          body.password,
-          body.html,
-        ),
-      );
-    const code = notification.getCode();
-    if (code === RegistrationCodes.Success) {
-      this.logger.debug('registration success', this.registration.name);
-      return;
-    }
-    if (code === RegistrationCodes.EmailAlreadyExists) {
-      this.logger.debug('email already exists', this.registration.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'registration_failed',
-        message:
-          'Registration failed due to conflict with existing email or username.',
-        details: {
-          email: 'Email address is already in use.',
-        },
-      });
-    }
-    if (code === RegistrationCodes.UsernameAlreadyExists) {
-      this.logger.debug('username already exists', this.registration.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'registration_failed',
-        message:
-          'Registration failed due to conflict with existing email or username.',
-        details: {
-          username: 'Username is already taken.',
-        },
-      });
-    }
-    if (code === RegistrationCodes.TransactionError) {
-      this.logger.error('transaction error', this.registration.name);
-      throw new InternalServerErrorException();
+  public async registration(
+    @Body() body: RegistrationBodyInputDto,
+  ): Promise<void> {
+    this.logger.debug('Execute: start registration', this.registration.name);
+    const result: AppNotificationResultType<null, string> =
+      await this.commandBus.execute(new RegistrationCommand(body));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.registration.name);
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad request', this.registration.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
     }
   }
 
-  @Post('registration-confirmation')
+  @Post(AUTH_ROUTE.REGISTRATION_CONFIRMATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationConfirmationSwagger()
   public async registrationConfirmation(
@@ -211,7 +170,7 @@ export class AuthController {
     }
   }
 
-  @Post('registration-email-resending')
+  @Post(AUTH_ROUTE.REGISTRATION_EMAIL_RESENDING)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationEmailResendingSwagger()
   public async registrationEmailResending(
@@ -264,11 +223,11 @@ export class AuthController {
     }
   }
 
-  @Get('google')
+  @Get(AUTH_ROUTE.GOOGLE)
   @UseGuards(AuthGuard('google'))
   async googleAuth() {}
 
-  @Get('google/callback')
+  @Get(`${AUTH_ROUTE.GOOGLE}/${AUTH_ROUTE.CALLBACK}`)
   @UseGuards(AuthGuard('google'))
   @GoogleAuthCallbackSwagger()
   async googleAuthCallback(
