@@ -3,19 +3,27 @@ import { ConfigService } from '@nestjs/config';
 
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { CreatePaymentDto } from '../../../api/dto/input-dto/create-payment.dto';
-import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
+import {
+  PaymentSystem,
+  SubscriptionType,
+} from '../../../../../../../../libs/common/enums/payments';
 import { PaymentData, UserInfo } from '../../types/payment-data.type';
 import { PaymentsService } from '../../../api/payments.service';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { Subscription } from '@prisma/payments';
+import { LoggerService } from '@app/logger';
+import { EnvSettings } from '../../../../../settings/env/env.settings';
+import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 
-const SUBSCRIPTION_PRICE = {
-  day: 10,
-  weekly: 50,
-  monthly: 100,
-}; //USD per day
+// const SUBSCRIPTION_PRICE = {
+//   day: 10,
+//   weekly: 50,
+//   monthly: 100,
+// }; // USD per day
+
 export class CreatePaymentCommand {
   constructor(
     public userInfo: UserInfo,
@@ -27,37 +35,140 @@ export class CreatePaymentCommand {
 export class CreatePaymentUseCase
   implements ICommandHandler<CreatePaymentCommand>
 {
-  configService = new ConfigService();
-  successFrontendUrl = this.configService.get<string>(
-    'FRONTEND_SUCCESS_PAYMENT_URL',
-  );
-  cancelFrontendUrl = this.configService.get<string>(
-    'FRONTEND_CANCEL_PAYMENT_URL',
-  );
+  //configService = new ConfigService();
+  // private readonly successFrontendUrl = this.configService.get<string>(
+  //   'FRONTEND_SUCCESS_PAYMENT_URL',
+  // );
+  // private readonly cancelFrontendUrl = this.configService.get<string>(
+  //   'FRONTEND_CANCEL_PAYMENT_URL',
+  // );
+
+  private readonly SUBSCRIPTION_PRICE = {
+    day: 10,
+    weekly: 50,
+    monthly: 100,
+  }; // USD per day
+  private readonly successFrontendUrl: string;
+  private readonly cancelFrontendUrl: string;
+  private readonly envSettings: EnvSettings;
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentsService: PaymentsService,
     private readonly appNotification: ApplicationNotification,
-  ) {}
+    private readonly logger: LoggerService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {
+    this.logger.setContext(CreatePaymentUseCase.name);
+    this.envSettings = this.configService.get('envSettings', { infer: true });
+    this.successFrontendUrl = this.envSettings.FRONTEND_SUCCESS_PAYMENT_URL;
+    this.cancelFrontendUrl = this.envSettings.FRONTEND_CANCEL_PAYMENT_URL;
+  }
 
   async execute(
     command: CreatePaymentCommand,
-  ): Promise<AppNotificationResultType<string | null>> {
+  ): Promise<AppNotificationResultType<string>> {
+    this.logger.debug('Execute: create payment', this.execute.name);
     const { subscriptionType, paymentSystem } = command.createSubscriptionDto;
 
-    let price: number;
+    // if (subscriptionType === SubscriptionType.DAY) {
+    //   price = SUBSCRIPTION_PRICE.day * 100;
+    // }
+    // if (subscriptionType === SubscriptionType.WEEKLY) {
+    //   price = SUBSCRIPTION_PRICE.weekly * 100;
+    // }
+    // if (subscriptionType === SubscriptionType.MONTHLY) {
+    //   price = SUBSCRIPTION_PRICE.monthly * 100;
+    // }
 
-    if (subscriptionType === SubscriptionType.DAY) {
-      price = SUBSCRIPTION_PRICE.day * 100;
-    }
-    if (subscriptionType === SubscriptionType.WEEKLY) {
-      price = SUBSCRIPTION_PRICE.weekly * 100;
-    }
-    if (subscriptionType === SubscriptionType.MONTHLY) {
-      price = SUBSCRIPTION_PRICE.monthly * 100;
-    }
+    // const paymentData: PaymentData = {
+    //   successFrontendUrl: this.successFrontendUrl,
+    //   cancelFrontendUrl: this.cancelFrontendUrl,
+    //   productData: {
+    //     name: 'Бизнесс аккаунт',
+    //     description: 'c автопродлением',
+    //   },
+    //   price,
+    //   paymentCount: 1,
+    //   paymentSystem,
+    //   subscriptionType,
+    //   userInfo: command.userInfo,
+    // };
 
-    const paymentData: PaymentData = {
+    // try {
+    //   const price: number = this.handlePrice(subscriptionType);
+    //   const paymentData: PaymentData = this.generatePaymentData(
+    //     price,
+    //     command.userInfo,
+    //     paymentSystem,
+    //     subscriptionType,
+    //   );
+    //
+    //   const subscriptionInfo: Subscription | null =
+    //     await this.paymentsRepository.getActiveSubscriptionByUserId(
+    //       command.userInfo.userId,
+    //     );
+    //
+    //   if (
+    //     subscriptionInfo &&
+    //     (subscriptionInfo.autoRenewal === true ||
+    //       subscriptionInfo.endDateOfSubscription > new Date())
+    //   ) {
+    //     paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
+    //     paymentData.subId = subscriptionInfo.paymentSystemSubId;
+    //     paymentData.currentSubDateEnd = subscriptionInfo.endDateOfSubscription;
+    //
+    //     const url: string | null =
+    //       await this.paymentsService.updateCurrentSub(paymentData);
+    //
+    //     if (url) return this.appNotification.success(url);
+    //     return this.appNotification.internalServerError();
+    //   } else {
+    //     const url: string | null =
+    //       await this.paymentsService.createAutoPayment(paymentData);
+    //
+    //     if (url) return this.appNotification.success(url);
+    //     return this.appNotification.internalServerError();
+    //   }
+    // } catch (e) {
+    //   this.logger.error(e, this.execute.name);
+    //   return this.appNotification.internalServerError();
+    // }
+
+    try {
+      const price = this.handlePrice(subscriptionType);
+      const paymentData = this.generatePaymentData(
+        price,
+        command.userInfo,
+        paymentSystem,
+        subscriptionType,
+      );
+
+      const subscriptionInfo =
+        await this.paymentsRepository.getActiveSubscriptionByUserId(
+          command.userInfo.userId,
+        );
+
+      if (this.isValidActiveSubscription(subscriptionInfo)) {
+        return await this.handleSubscriptionUpdate(
+          paymentData,
+          subscriptionInfo,
+        );
+      }
+
+      return await this.handleNewSubscription(paymentData);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  private generatePaymentData(
+    price: number,
+    userInfo: UserInfo,
+    system: PaymentSystem,
+    subType: SubscriptionType,
+  ): PaymentData {
+    return {
       successFrontendUrl: this.successFrontendUrl,
       cancelFrontendUrl: this.cancelFrontendUrl,
       productData: {
@@ -66,32 +177,62 @@ export class CreatePaymentUseCase
       },
       price,
       paymentCount: 1,
-      paymentSystem,
-      subscriptionType,
-      userInfo: command.userInfo,
+      paymentSystem: system,
+      subscriptionType: subType,
+      userInfo: userInfo,
     };
+  }
 
-    try {
-      const subscriptionInfo =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(
-          command.userInfo.userId,
-        );
-
-      if (
-        subscriptionInfo &&
-        (subscriptionInfo.autoRenewal === true ||
-          subscriptionInfo.endDateOfSubscription > new Date())
-      ) {
-        paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
-        await this.paymentsService.updateCurrentSub(paymentData);
-        return this.appNotification.success(null);
-      } else {
-        const url = await this.paymentsService.createAutoPayment(paymentData);
-        return this.appNotification.success(url);
-      }
-    } catch (e) {
-      console.error(e);
-      return this.appNotification.internalServerError();
+  private handlePrice(subscriptionType: SubscriptionType): number {
+    let price: number;
+    switch (subscriptionType) {
+      case SubscriptionType.DAY:
+        price = this.SUBSCRIPTION_PRICE.day * 100;
+        break;
+      case SubscriptionType.WEEKLY:
+        price = this.SUBSCRIPTION_PRICE.weekly * 100;
+        break;
+      case SubscriptionType.MONTHLY:
+        price = this.SUBSCRIPTION_PRICE.monthly * 100;
+        break;
     }
+    return price;
+  }
+
+  private isValidActiveSubscription(
+    subscriptionInfo: Subscription | null,
+  ): boolean {
+    return (
+      !!subscriptionInfo &&
+      (subscriptionInfo.autoRenewal === true ||
+        subscriptionInfo.endDateOfSubscription > new Date())
+    );
+  }
+
+  private async handleSubscriptionUpdate(
+    paymentData: PaymentData,
+    subscriptionInfo: Subscription,
+  ): Promise<AppNotificationResultType<string>> {
+    paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
+    paymentData.subId = subscriptionInfo.paymentSystemSubId;
+    paymentData.currentSubDateEnd = subscriptionInfo.endDateOfSubscription;
+
+    const url: string | null =
+      await this.paymentsService.updateCurrentSub(paymentData);
+
+    if (url) return this.appNotification.success(url);
+
+    return this.appNotification.internalServerError();
+  }
+
+  private async handleNewSubscription(
+    paymentData: PaymentData,
+  ): Promise<AppNotificationResultType<string>> {
+    const url: string | null =
+      await this.paymentsService.createAutoPayment(paymentData);
+
+    if (url) return this.appNotification.success(url);
+
+    return this.appNotification.internalServerError();
   }
 }

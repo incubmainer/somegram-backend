@@ -1,9 +1,14 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException } from '@nestjs/common';
-
 import { StripeEventAdapter } from '../../../../../common/adapters/stripe-event.adaper';
+import { ConfigurationType } from '../../../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
+import { EnvSettings } from '../../../../../settings/env/env.settings';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 export class StripeWebhookCommand {
   constructor(
@@ -12,18 +17,30 @@ export class StripeWebhookCommand {
   ) {}
 }
 
+// TODO Forbidden?
 @CommandHandler(StripeWebhookCommand)
 export class StripeWebhookUseCase
-  implements ICommandHandler<StripeWebhookCommand>
+  implements
+    ICommandHandler<StripeWebhookCommand, AppNotificationResultType<null>>
 {
-  signatureSecret = this.configService.get<string>('STRIPE_SIGNATURE_SECRET');
+  private readonly envSettings: EnvSettings;
+  private readonly signatureSecret: string;
   constructor(
     private readonly stripeEventAdapter: StripeEventAdapter,
-    private readonly configService: ConfigService,
-  ) {}
+    private readonly configService: ConfigService<ConfigurationType, true>,
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
+  ) {
+    this.logger.setContext(StripeWebhookUseCase.name);
+    this.envSettings = this.configService.get('envSettings', { infer: true });
+    this.signatureSecret = this.envSettings.STRIPE_SIGNATURE_SECRET;
+  }
 
-  async execute(command: StripeWebhookCommand) {
-    const extractedRawBody = Buffer.from(command.rawBody);
+  async execute(
+    command: StripeWebhookCommand,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: stripe webhook', this.execute.name);
+    const extractedRawBody: Buffer = Buffer.from(command.rawBody);
     let event;
 
     try {
@@ -33,11 +50,10 @@ export class StripeWebhookUseCase
         this.signatureSecret,
       );
       await this.stripeEventAdapter.handleEvent(event);
-
-      return true;
+      return this.appNotification.success(null);
     } catch (e) {
-      console.error(e);
-      throw new BadRequestException(`Webhook Error: ${e.message}`);
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
   }
 }

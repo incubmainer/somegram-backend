@@ -22,4 +22,6 @@ export type PaymentData = {
   subscriptionType: SubscriptionType;
   userInfo: UserInfo;
   customerId?: string;
+  subId?: string;
+  currentSubDateEnd?: Date;
 };

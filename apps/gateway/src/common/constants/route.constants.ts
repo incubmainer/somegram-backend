@@ -30,6 +30,7 @@ export const SUBSCRIPTIONS_ROUTE = {
   STRIPE_WEBHOOK: 'stripe-webhook',
   DISABLE_AUTO_RENEWAL: 'disable-auto-renewal',
   ENABLE_AUTO_RENEWAL: 'enable-auto-renewal',
+  PAYPAL_WEBHOOK: 'paypal-webhook',
   TESTING: 'testing',
   CANCEL_SUBSCRIPTION: 'cancel-subscription',
 };

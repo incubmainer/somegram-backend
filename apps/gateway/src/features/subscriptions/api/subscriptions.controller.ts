@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Delete,
   Get,
   HttpCode,
@@ -33,23 +34,26 @@ import { UpdateSubscriptionInfoCommand } from '../application/use-cases/update-s
 import { SEND_SUBSCRIPTION_INFO } from '../../../common/constants/service.constants';
 import { LoggerService } from '@app/logger';
 import { SUBSCRIPTIONS_ROUTE } from '../../../common/constants/route.constants';
-import {
-  AppNotificationResultEnum,
-  AppNotificationResultType,
-} from '@app/application-notification';
 import { EnableAutoRenewalSwagger } from './swagger/enable-autorenewal.swagger';
 import { DisableAutoRenewalSwagger } from './swagger/disable-autorenewal.swagger';
 import { MyPaymentsSwagger } from './swagger/my-payments.swagger';
 import {
   MyPaymentsOutputDto,
+  PaymentCreatedOutputDto,
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { Paginator } from '../../../common/domain/paginator';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 import { TestingCancelSubscriptionSwagger } from './swagger/testing-cancel-subscription.swagger';
 
 @ApiTags('Subscriptions')
+@ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @Controller(SUBSCRIPTIONS_ROUTE.MAIN)
 export class SubscriptionsController {
   constructor(
@@ -61,19 +65,23 @@ export class SubscriptionsController {
   }
 
   @Post(SUBSCRIPTIONS_ROUTE.CREATE_PAYMENT)
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiBearerAuth('access-token')
   @CreateSubscriptionSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async createSubscription(
     @CurrentUserId() userId: string,
     @Body() createSubscriptionDto: CreateSubscriptionDto,
-  ) {
-    const result: AppNotificationResultType<{ url: string } | null> =
+  ): Promise<PaymentCreatedOutputDto> {
+    this.logger.debug(
+      'Execute: create subscription',
+      this.createSubscription.name,
+    );
+
+    const result: AppNotificationResultType<PaymentCreatedOutputDto> =
       await this.commandBus.execute(
         new CreatePaymentCommand(userId, createSubscriptionDto),
       );
+
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.createSubscription.name);
@@ -132,18 +140,28 @@ export class SubscriptionsController {
   async stripeWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
     const rawBody = req.rawBody;
     const signatureHeader = req.headers['stripe-signature'] as string;
-    return await this.paymentsServiceAdapter.stripeWebhook({
-      rawBody,
-      signatureHeader,
-    });
+    const result: AppNotificationResultType<null> =
+      await this.paymentsServiceAdapter.stripeWebhook({
+        rawBody,
+        signatureHeader,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        throw new ForbiddenException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Post(SUBSCRIPTIONS_ROUTE.DISABLE_AUTO_RENEWAL)
   @DisableAutoRenewalSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async disableAutoRenewal(@CurrentUserId() userId: string) {
-    const result: AppNotificationResultType<any> =
+  async disableAutoRenewal(@CurrentUserId() userId: string): Promise<void> {
+    const result: AppNotificationResultType<null> =
       await this.paymentsServiceAdapter.disableAutoRenewal({
         userId,
       });
@@ -151,7 +169,7 @@ export class SubscriptionsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.disableAutoRenewal.name);
-        return result.data;
+        return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.disableAutoRenewal.name);
         throw new NotFoundException();
@@ -164,8 +182,8 @@ export class SubscriptionsController {
   @EnableAutoRenewalSwagger()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async enableAutoRenewal(@CurrentUserId() userId: string) {
-    const result: AppNotificationResultType<any> =
+  async enableAutoRenewal(@CurrentUserId() userId: string): Promise<void> {
+    const result: AppNotificationResultType<null> =
       await this.paymentsServiceAdapter.enableAutoRenewal({
         userId,
       });
@@ -173,7 +191,7 @@ export class SubscriptionsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.enableAutoRenewal.name);
-        return result.data;
+        return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.enableAutoRenewal.name);
         throw new NotFoundException();
@@ -239,8 +257,34 @@ export class SubscriptionsController {
 
   @MessagePattern({ cmd: SEND_SUBSCRIPTION_INFO })
   async sendSubscriptionInfo(@Payload() { payload }) {
+    console.log(payload);
     return await this.commandBus.execute(
       new UpdateSubscriptionInfoCommand(payload),
     );
+  }
+
+  @Post(SUBSCRIPTIONS_ROUTE.PAYPAL_WEBHOOK)
+  @ApiExcludeEndpoint()
+  async paypalWebhook(@Req() req: RawBodyRequest<Request>): Promise<void> {
+    this.logger.debug('Execute: paypal webhook', this.paypalWebhook.name);
+    const rawBody: Buffer = req.rawBody;
+    const headers: Headers = req.headers;
+
+    const result: AppNotificationResultType<null> =
+      await this.paymentsServiceAdapter.paypalWebhook({
+        rawBody,
+        headers,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.paypalWebhook.name);
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        this.logger.debug('Forbidden', this.paypalWebhook.name);
+        throw new ForbiddenException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 }

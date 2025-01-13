@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-
 import { SEND_SUBSCRIPTION_INFO } from '../../../../gateway/src/common/constants/service.constants';
+import { PAYMENTS_SERVICE_RMQ } from '../constants/adapters-name.constant';
 
 @Injectable()
 export class GatewayServiceClientAdapter {
   constructor(
-    @Inject('PAYMENTS_SERVICE_RMQ')
+    @Inject(PAYMENTS_SERVICE_RMQ)
     private readonly gatewayServiceClient: ClientProxy,
   ) {}
 

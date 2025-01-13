@@ -2,22 +2,54 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { PaymentsModule } from './payments.module';
+import { LoggerService } from '@app/logger';
+import { ConfigurationType } from './settings/configuration/configuration';
 
 async function bootstrap() {
-  const configService = new ConfigService();
+  //const configService = new ConfigService();
 
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    PaymentsModule,
-    {
+  // const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+  //   PaymentsModule,
+  //   {
+  //     transport: Transport.TCP,
+  //     options: {
+  //       host: configService.get<string>('PAYMENTS_SERVICE_HOST') || '0.0.0.0',
+  //       port:
+  //         Number(configService.get<string>('PAYMENTS_SERVICE_PORT')) || 3006,
+  //     },
+  //   },
+  // );
+
+  const app = await NestFactory.create(PaymentsModule);
+  const appConfigService = app.get(ConfigService<ConfigurationType, true>);
+  const appEnvSettings = appConfigService.get('envSettings', {
+    infer: true,
+  });
+  const port = appEnvSettings.PAYMENTS_SERVICE_PORT;
+  const host = appEnvSettings.PAYMENTS_SERVICE_HOST;
+  await app.close();
+
+  const microserviceApp =
+    await NestFactory.createMicroservice<MicroserviceOptions>(PaymentsModule, {
       transport: Transport.TCP,
       options: {
-        host: configService.get<string>('PAYMENTS_SERVICE_HOST') || '0.0.0.0',
-        port:
-          Number(configService.get<string>('PAYMENTS_SERVICE_PORT')) || 3006,
+        host: host,
+        port: port,
       },
-    },
-  );
+    });
 
-  await app.listen();
+  const configService = microserviceApp.get(
+    ConfigService<ConfigurationType, true>,
+  );
+  const envSettings = configService.get('envSettings', { infer: true });
+
+  const logger: LoggerService = await microserviceApp.resolve(LoggerService);
+
+  await microserviceApp.listen();
+  logger.setContext('Payments');
+  logger.log(
+    `Payments started on port ${envSettings.PAYMENTS_SERVICE_PORT}`,
+    bootstrap.name,
+  );
 }
 bootstrap();

@@ -15,5 +15,7 @@ export const GET_PAYMENTS = 'get_payments';
 export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';
 export const GET_SUBSCRIPTION_INFO = 'get_subscription_info';
 
+export const PAYPAL_WEBHOOK_HANDLER = 'PAYPAL_WEBHOOK_HANDLER';
+
 export const TESTING_CANCEL_SUBSCRIPTION = 'testing_cancel_subscription';
 export const TESTING_GET_PAYMENTS = 'testing_get_payments';
