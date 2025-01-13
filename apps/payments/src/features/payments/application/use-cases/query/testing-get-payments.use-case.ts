@@ -14,11 +14,17 @@ import { Paginator } from '../../../../../../../gateway/src/common/domain/pagina
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
 import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 
+const SUBSCRIPTION_TYPE = {
+  day: 'day',
+  week: 'week',
+  month: 'month',
+};
+
 const data = [];
 (() => {
   for (let i = 0; i < 200; i++) {
     const randomSubscriptionType =
-      Object.values(SubscriptionType)[
+      Object.values(SUBSCRIPTION_TYPE)[
         Math.floor(Math.random() * Object.values(SubscriptionType).length)
       ];
     let price = 0;
