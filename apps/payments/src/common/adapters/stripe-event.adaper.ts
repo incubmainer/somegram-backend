@@ -1,40 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
-
-import { PaymentsRepository } from '../../features/payments/infrastructure/payments.repository';
-import { GatewayServiceClientAdapter } from './gateway-service-client.adapter';
-import { InvoicePaymentSucceededHandler } from '../../features/payments/application/handlers/invoice-payment-succeeded.handler';
-import { InvoicePaymentFailedHandler } from '../../features/payments/application/handlers/invoice-payment-failed.handler';
-import { SubscriptionUpdatedHandler } from '../../features/payments/application/handlers/subscription-updated.handler';
-import { SubscriptionDeletedHandler } from '../../features/payments/application/handlers/subscription-deleted.handler';
-import { IStripeEventHandler } from '../interfaces/stripe-event-handler.interface';
 import { LoggerService } from '@app/logger';
+
+import { StripeInvoicePaymentSucceededHandler } from '../../features/payments/application/handlers/stripe/stripe-invoice-payment-succeeded.handler';
+import { StripeInvoicePaymentFailedHandler } from '../../features/payments/application/handlers/stripe/stripe-invoice-payment-failed.handler';
+import { StripeSubscriptionDeletedHandler } from '../../features/payments/application/handlers/stripe/stripe-subscription-deleted.handler';
+import { IStripeEventHandler } from '../interfaces/stripe-event-handler.interface';
+import { StripeCheckouSessionCompletedHandler } from '../../features/payments/application/handlers/stripe/stripe-checkout-session-completed.handler';
+import { StripeEventsEnum } from './types/stripe/enum';
 
 @Injectable()
 export class StripeEventAdapter {
   private handlers: { [key: string]: IStripeEventHandler } = {};
 
   constructor(
-    private readonly paymentsRepository: PaymentsRepository,
-    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
     private readonly logger: LoggerService,
+    private readonly invoicePaymentFailedHandler: StripeInvoicePaymentFailedHandler,
+    private readonly invoicePaymentSucceededHandler: StripeInvoicePaymentSucceededHandler,
+    private readonly checkouSessionCompletedHandler: StripeCheckouSessionCompletedHandler,
+    private readonly subscriptionDeletedHandler: StripeSubscriptionDeletedHandler,
   ) {
     this.logger.setContext(StripeEventAdapter.name);
-    this.handlers['invoice.payment_succeeded'] =
-      new InvoicePaymentSucceededHandler(
-        this.paymentsRepository,
-        this.gatewayServiceClientAdapter,
-      );
-    this.handlers['invoice.payment_failed'] = new InvoicePaymentFailedHandler(
-      this.paymentsRepository,
-    );
-    this.handlers['customer.subscription.updated'] =
-      new SubscriptionUpdatedHandler(this.paymentsRepository);
-    this.handlers['customer.subscription.deleted'] =
-      new SubscriptionDeletedHandler(
-        this.paymentsRepository,
-        this.gatewayServiceClientAdapter,
-      );
+    this.handlers[StripeEventsEnum.PAYMENT_SUCCEEDED] =
+      this.invoicePaymentSucceededHandler;
+    this.handlers[StripeEventsEnum.PAYMENT_FAILED] =
+      this.invoicePaymentFailedHandler;
+    this.handlers[StripeEventsEnum.SUB_DELETED] =
+      this.subscriptionDeletedHandler;
+    this.handlers[StripeEventsEnum.SESSION_COMPLETED] =
+      this.checkouSessionCompletedHandler;
   }
 
   async handleEvent(event: Stripe.Event): Promise<void> {

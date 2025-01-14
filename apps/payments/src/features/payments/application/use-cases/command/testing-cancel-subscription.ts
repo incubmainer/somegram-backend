@@ -42,7 +42,7 @@ export class TestingCancelSubscriptionUseCaseHandler
       subscription.updatedAt = new Date();
       subscription.endDateOfSubscription = date;
 
-      await this.paymentsRepository.updateSubscription(subscription);
+      await this.paymentsRepository.updateSub(subscription);
       this.gatewayServiceClientAdapter.sendSubscriptionInfo({
         userId: userId,
         endDateOfSubscription: date,

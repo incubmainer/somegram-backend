@@ -1,0 +1,73 @@
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import Stripe from 'stripe';
+import { LoggerService } from '@app/logger';
+
+import {
+  PaymentSystem,
+  SubscriptionType,
+} from '../../../../../../../../libs/common/enums/payments';
+import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
+import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
+import { PaymentsRepository } from '../../../infrastructure/payments.repository';
+import {
+  TransactionEntity,
+  TransactionInputDto,
+} from '../../../domain/transaction.entity';
+//TODO app notification
+@Injectable()
+export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
+  constructor(
+    private readonly paymentsRepository: PaymentsRepository,
+    @Inject(TransactionEntity.name)
+    private readonly transactionEntity: typeof TransactionEntity,
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(StripeInvoicePaymentFailedHandler.name);
+  }
+
+  async handle(event: Stripe.Event): Promise<void> {
+    const invoce = event.data.object as Stripe.Invoice;
+    const subscriptionId = invoce.subscription as string;
+    const subscription =
+      await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
+        subscriptionId,
+      );
+    if (!subscription) {
+      throw new BadRequestException('Webhook Error: Subscription not found');
+    }
+    subscription.dateOfPayment = new Date(invoce.period_start * 1000);
+    subscription.endDateOfSubscription = new Date(invoce.period_end * 1000);
+    await this.paymentsRepository.updateSub(subscription);
+
+    const subscriptionData = invoce.lines.data[0];
+
+    const transactionData: TransactionInputDto = this.generateDataTransaction(
+      subscriptionData.amount,
+      subscription.id,
+      subscriptionData.plan.interval as SubscriptionType,
+      subscription.dateOfPayment,
+      subscription.endDateOfSubscription,
+    );
+    const transaction: TransactionEntity =
+      this.transactionEntity.create(transactionData);
+    await this.paymentsRepository.saveTransaction(transaction);
+  }
+
+  private generateDataTransaction(
+    price: number,
+    subId: string,
+    subscriptionType: SubscriptionType,
+    dateOfPayment: Date,
+    endDateOfSubscription: Date,
+  ): TransactionInputDto {
+    return {
+      price: price,
+      system: PaymentSystem.STRIPE,
+      subscriptionType,
+      status: TransactionStatuses.PaymentFailed,
+      subId,
+      dateOfPayment,
+      endDateOfSubscription,
+    };
+  }
+}

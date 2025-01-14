@@ -24,6 +24,8 @@ import {
   PayPalRawBodyPayloadType,
   StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
+import { Paginator } from '../domain/paginator';
+import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -42,7 +44,7 @@ export class PaymentsServiceAdapter {
       const responseOfService: Observable<AppNotificationResultType<string>> =
         this.paymentsServiceClient
           .send({ cmd: CREATE_AUTO_PAYMENT }, payload)
-          .pipe(timeout(10000));
+          .pipe(timeout(20000));
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.createSubscription.name);

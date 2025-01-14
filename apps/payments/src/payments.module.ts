@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { PaymentsController } from './features/payments/api/payments.controller';
-import { ClsTransactionalModule } from './common/modules/cls-transactional.module';
 import { CreatePaymentUseCase } from './features/payments/application/use-cases/command/create-payment.use-case';
 import { PaymentsRepository } from './features/payments/infrastructure/payments.repository';
 import { StripeWebhookUseCase } from './features/payments/application/use-cases/command/stripe-webhook.use-case';
@@ -25,6 +24,11 @@ import { configModule } from './settings/configuration/config.module';
 import { CommonModule } from './common/common.module';
 import { TestingCancelSubscriptionUseCaseHandler } from './features/payments/application/use-cases/command/testing-cancel-subscription';
 import { TestingGetPaymentsQueryUseCase } from './features/payments/application/use-cases/query/testing-get-payments.use-case';
+import { StripeSubscriptionCreateUseCase } from './features/payments/application/use-cases/command/stripe-subscription-create.use-case';
+import { StripeInvoicePaymentFailedHandler } from './features/payments/application/handlers/stripe/stripe-invoice-payment-failed.handler';
+import { StripeInvoicePaymentSucceededHandler } from './features/payments/application/handlers/stripe/stripe-invoice-payment-succeeded.handler';
+import { StripeSubscriptionDeletedHandler } from './features/payments/application/handlers/stripe/stripe-subscription-deleted.handler';
+import { StripeCheckouSessionCompletedHandler } from './features/payments/application/handlers/stripe/stripe-checkout-session-completed.handler';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -36,6 +40,7 @@ const useCases = [
   PayPalSubscriptionCreateUseCaseHandler,
   TestingGetPaymentsQueryUseCase,
   TestingCancelSubscriptionUseCaseHandler,
+  StripeSubscriptionCreateUseCase,
 ];
 
 const repositories = [PaymentsRepository];
@@ -67,36 +72,22 @@ const payPalHandlers = [
   PaypalSubscriptionCancelHandler,
 ];
 
+const stripeHandlers = [
+  StripeInvoicePaymentFailedHandler,
+  StripeInvoicePaymentSucceededHandler,
+  StripeSubscriptionDeletedHandler,
+  StripeCheckouSessionCompletedHandler,
+];
+
 @Module({
-  imports: [
-    //ClsTransactionalModule,
-    //   ClientsModule.registerAsync([
-    //     {
-    //       name: 'PAYMENTS_SERVICE_RMQ',
-    //       imports: [ConfigModule],
-    //       useFactory: async (configService: ConfigService) => ({
-    //         transport: Transport.RMQ,
-    //         options: {
-    //           urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
-    //           queue: 'payments_queue',
-    //           queueOptions: {
-    //             durable: false,
-    //           },
-    //         },
-    //       }),
-    //       inject: [ConfigService],
-    //     },
-    //   ]),
-    configModule,
-    LoggerModule.forRoot('Payments'),
-    CommonModule,
-  ],
+  imports: [configModule, LoggerModule.forRoot('Payments'), CommonModule],
   controllers: [PaymentsController],
   providers: [
     ...useCases,
     ...repositories,
     ...services,
     ...payPalHandlers,
+    ...stripeHandlers,
     AsyncLocalStorageService,
   ],
 })

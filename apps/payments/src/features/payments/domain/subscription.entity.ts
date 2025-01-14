@@ -88,10 +88,10 @@ export type SubscriptionInputDto = {
   userId: string;
   createdAt: Date;
   paymentSystem: string;
-  paymentSystemSubId: string;
   status: string;
   autoRenewal: boolean;
   isActive: boolean;
+  paymentSystemSubId?: string;
 };
 
 export type SubscriptionUpdateDto = {

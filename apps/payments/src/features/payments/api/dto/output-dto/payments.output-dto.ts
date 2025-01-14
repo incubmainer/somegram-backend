@@ -1,6 +1,5 @@
 import { PaymentTransaction, Subscription } from '@prisma/payments';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
-import { ApiProperty } from '@nestjs/swagger';
 
 const SUBSCRIPTION_TYPE = {
   day: SubscriptionType.DAY,

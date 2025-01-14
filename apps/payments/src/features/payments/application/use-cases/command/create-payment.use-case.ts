@@ -18,12 +18,6 @@ import { LoggerService } from '@app/logger';
 import { EnvSettings } from '../../../../../settings/env/env.settings';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 
-// const SUBSCRIPTION_PRICE = {
-//   day: 10,
-//   weekly: 50,
-//   monthly: 100,
-// }; // USD per day
-
 export class CreatePaymentCommand {
   constructor(
     public userInfo: UserInfo,
@@ -35,14 +29,6 @@ export class CreatePaymentCommand {
 export class CreatePaymentUseCase
   implements ICommandHandler<CreatePaymentCommand>
 {
-  //configService = new ConfigService();
-  // private readonly successFrontendUrl = this.configService.get<string>(
-  //   'FRONTEND_SUCCESS_PAYMENT_URL',
-  // );
-  // private readonly cancelFrontendUrl = this.configService.get<string>(
-  //   'FRONTEND_CANCEL_PAYMENT_URL',
-  // );
-
   private readonly SUBSCRIPTION_PRICE = {
     day: 10,
     weekly: 50,
@@ -69,70 +55,6 @@ export class CreatePaymentUseCase
   ): Promise<AppNotificationResultType<string>> {
     this.logger.debug('Execute: create payment', this.execute.name);
     const { subscriptionType, paymentSystem } = command.createSubscriptionDto;
-
-    // if (subscriptionType === SubscriptionType.DAY) {
-    //   price = SUBSCRIPTION_PRICE.day * 100;
-    // }
-    // if (subscriptionType === SubscriptionType.WEEKLY) {
-    //   price = SUBSCRIPTION_PRICE.weekly * 100;
-    // }
-    // if (subscriptionType === SubscriptionType.MONTHLY) {
-    //   price = SUBSCRIPTION_PRICE.monthly * 100;
-    // }
-
-    // const paymentData: PaymentData = {
-    //   successFrontendUrl: this.successFrontendUrl,
-    //   cancelFrontendUrl: this.cancelFrontendUrl,
-    //   productData: {
-    //     name: 'Бизнесс аккаунт',
-    //     description: 'c автопродлением',
-    //   },
-    //   price,
-    //   paymentCount: 1,
-    //   paymentSystem,
-    //   subscriptionType,
-    //   userInfo: command.userInfo,
-    // };
-
-    // try {
-    //   const price: number = this.handlePrice(subscriptionType);
-    //   const paymentData: PaymentData = this.generatePaymentData(
-    //     price,
-    //     command.userInfo,
-    //     paymentSystem,
-    //     subscriptionType,
-    //   );
-    //
-    //   const subscriptionInfo: Subscription | null =
-    //     await this.paymentsRepository.getActiveSubscriptionByUserId(
-    //       command.userInfo.userId,
-    //     );
-    //
-    //   if (
-    //     subscriptionInfo &&
-    //     (subscriptionInfo.autoRenewal === true ||
-    //       subscriptionInfo.endDateOfSubscription > new Date())
-    //   ) {
-    //     paymentData.customerId = subscriptionInfo.paymentSystemCustomerId;
-    //     paymentData.subId = subscriptionInfo.paymentSystemSubId;
-    //     paymentData.currentSubDateEnd = subscriptionInfo.endDateOfSubscription;
-    //
-    //     const url: string | null =
-    //       await this.paymentsService.updateCurrentSub(paymentData);
-    //
-    //     if (url) return this.appNotification.success(url);
-    //     return this.appNotification.internalServerError();
-    //   } else {
-    //     const url: string | null =
-    //       await this.paymentsService.createAutoPayment(paymentData);
-    //
-    //     if (url) return this.appNotification.success(url);
-    //     return this.appNotification.internalServerError();
-    //   }
-    // } catch (e) {
-    //   this.logger.error(e, this.execute.name);
-    //   return this.appNotification.internalServerError();
-    // }
 
     try {
       const price = this.handlePrice(subscriptionType);
@@ -217,7 +139,7 @@ export class CreatePaymentUseCase
     paymentData.subId = subscriptionInfo.paymentSystemSubId;
     paymentData.currentSubDateEnd = subscriptionInfo.endDateOfSubscription;
 
-    const url: string | null =
+    const url: string =
       await this.paymentsService.updateCurrentSub(paymentData);
 
     if (url) return this.appNotification.success(url);

@@ -1,11 +1,18 @@
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { LoggerService } from '@app/logger';
+import { CommandBus } from '@nestjs/cqrs';
+
 import { PaymentData } from '../../features/payments/application/types/payment-data.type';
 import { SubscriptionType } from '../../../../../libs/common/enums/payments';
-import { LoggerService } from '@app/logger';
 import { ConfigurationType } from '../../settings/configuration/configuration';
 import { EnvSettings } from '../../settings/env/env.settings';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { StripeSubscriptionCreateCommand } from '../../features/payments/application/use-cases/command/stripe-subscription-create.use-case';
 
 @Injectable()
 export class StripeAdapter {
@@ -14,6 +21,7 @@ export class StripeAdapter {
   constructor(
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly logger: LoggerService,
+    private readonly commandBus: CommandBus,
   ) {
     this.logger.setContext(StripeAdapter.name);
     this.envSettings = this.configService.get('envSettings', { infer: true });
@@ -47,8 +55,16 @@ export class StripeAdapter {
           },
         });
       }
+      const result: AppNotificationResultType<string> =
+        await this.commandBus.execute(
+          new StripeSubscriptionCreateCommand({
+            userId: payload.userInfo.userId,
+          }),
+        );
 
-      const result = await this.stripe.checkout.sessions.create({
+      if (result.appResult !== AppNotificationResultEnum.Success) return null;
+
+      const session = await this.stripe.checkout.sessions.create({
         success_url: payload.successFrontendUrl,
         cancel_url: payload.cancelFrontendUrl,
         line_items: [
@@ -74,13 +90,14 @@ export class StripeAdapter {
             userId: payload.userInfo.userId,
           },
         },
+        client_reference_id: result.data,
         customer: customer.id,
         metadata: {
           userId: payload.userInfo.userId,
         },
       });
 
-      return result.url;
+      return session.url;
     } catch (e) {
       this.logger.error(e, this.createAutoPayment.name);
       return null;
@@ -138,81 +155,100 @@ export class StripeAdapter {
     }
   }
 
-  private async createPricePlan(payload: PaymentData) {
-    this.logger.debug(
-      'Execute: create stripe price plan',
-      this.createPricePlan.name,
-    );
-    const interval = await this.getIntervalBySubType(payload.subscriptionType);
-    const pricePlan = await this.stripe.prices.create({
-      product: await this.stripe.products
-        .create({
-          name: payload.productData.name,
-          description: payload.productData.description,
-        })
-        .then((product) => product.id),
-      currency: 'USD',
-      unit_amount: payload.price,
-      recurring: {
-        interval: interval,
-        interval_count: payload.paymentCount,
-      },
-    });
-
-    return pricePlan.id;
-  }
-
-  public async updateAutoPayment(payload: PaymentData): Promise<string | null> {
+  public async updateAutoPayment(payload: PaymentData): Promise<string> {
     this.logger.debug(
       'Execute: update stripe payment',
       this.updateAutoPayment.name,
     );
     try {
-      const subscriptions = await this.stripe.subscriptions.list({
-        customer: payload.customerId,
-      });
-      const activeSubscription = subscriptions.data.find(
-        (subscription) =>
-          subscription.metadata.userId === payload.userInfo.userId,
+      const interval = await this.getIntervalBySubType(
+        payload.subscriptionType,
       );
+      const result: AppNotificationResultType<string> =
+        await this.commandBus.execute(
+          new StripeSubscriptionCreateCommand({
+            userId: payload.userInfo.userId,
+          }),
+        );
 
-      const existingSubscriptionItem = activeSubscription.items.data[0];
+      if (result.appResult !== AppNotificationResultEnum.Success) return null;
 
-      await this.stripe.subscriptions.update(activeSubscription.id, {
-        trial_end: activeSubscription.current_period_end,
-        proration_behavior: 'none',
-        items: [
+      const trialDays = this.getTrialDays(payload.currentSubDateEnd);
+
+      const sessionPharams: Stripe.Checkout.SessionCreateParams = {
+        success_url: payload.successFrontendUrl,
+        cancel_url: payload.cancelFrontendUrl,
+        line_items: [
           {
-            id: existingSubscriptionItem.id,
-            price: await this.createPricePlan(payload),
+            price_data: {
+              product_data: {
+                name: payload.productData.name,
+                description: payload.productData.description,
+              },
+              recurring: {
+                interval: interval,
+                interval_count: payload.paymentCount,
+              },
+              unit_amount: payload.price,
+              currency: 'USD',
+            },
+            quantity: payload.paymentCount,
           },
         ],
+        mode: 'subscription',
+        subscription_data: {
+          metadata: {
+            userId: payload.userInfo.userId,
+          },
+        },
+        client_reference_id: result.data,
+        customer: payload.customerId,
         metadata: {
           userId: payload.userInfo.userId,
         },
-      });
+      };
+      if (trialDays >= 1) {
+        sessionPharams.subscription_data.trial_period_days = trialDays;
+      }
 
-      return 'Success'; // TODO Поговорить и решить можно ли сделать как с paypal
+      const session =
+        await this.stripe.checkout.sessions.create(sessionPharams);
+
+      return session.url;
     } catch (e) {
       this.logger.error(e, this.updateAutoPayment.name);
       return null;
     }
   }
 
-  private async getIntervalBySubType(typeSubscription: SubscriptionType) {
+  private getIntervalBySubType(typeSubscription: SubscriptionType) {
     let interval: Stripe.PriceCreateParams.Recurring.Interval;
 
     switch (typeSubscription) {
-      case 'MONTHLY':
+      case SubscriptionType.MONTHLY:
         interval = 'month';
         break;
-      case 'WEEKLY':
+      case SubscriptionType.WEEKLY:
         interval = 'week';
         break;
-      case 'DAY':
+      case SubscriptionType.DAY:
         interval = 'day';
         break;
     }
     return interval;
+  }
+
+  private getTrialDays(currentSubDateEnd: Date): number {
+    const future = new Date(currentSubDateEnd);
+    future.setHours(0, 0, 0, 0);
+    const current = new Date();
+    current.setHours(0, 0, 0, 0);
+
+    const differenceInMilliseconds = future.getTime() - current.getTime();
+    const differenceInDays = Math.floor(
+      differenceInMilliseconds / (1000 * 60 * 60 * 24),
+    );
+
+    return differenceInDays;
   }
 }

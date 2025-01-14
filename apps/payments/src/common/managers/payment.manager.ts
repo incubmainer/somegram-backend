@@ -33,7 +33,7 @@ export class PaymentManager {
     }
   }
 
-  async updateCurrentSub(payment: PaymentData): Promise<string | null> {
+  async updateCurrentSub(payment: PaymentData): Promise<string> {
     this.logger.debug(
       'Execute: update subscription',
       this.updateCurrentSub.name,

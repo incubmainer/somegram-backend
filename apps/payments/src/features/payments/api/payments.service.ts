@@ -11,7 +11,7 @@ export class PaymentsService {
     return await this.paymentManager.createAutoPayment(payload);
   }
 
-  async updateCurrentSub(payload: PaymentData): Promise<string | null> {
+  async updateCurrentSub(payload: PaymentData): Promise<string> {
     return await this.paymentManager.updateCurrentSub(payload);
   }
 
