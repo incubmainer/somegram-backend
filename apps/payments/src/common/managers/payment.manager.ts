@@ -106,13 +106,23 @@ export class PaymentManager {
     paymentSystem: PaymentSystem,
     paymentSubscriptionSubId: string,
   ) {
-    if (paymentSystem === PaymentSystem.PAYPAL) {
-    }
-
-    if (paymentSystem === PaymentSystem.STRIPE) {
-      return await this.stripeAdapter.testingCancelSubscription(
-        paymentSubscriptionSubId,
-      );
+    switch (paymentSystem) {
+      case PaymentSystem.PAYPAL:
+        this.logger.debug('PayPal system', this.testingCancelSubscription.name);
+        return await this.payPalAdapter.cancelSubscription(
+          paymentSubscriptionSubId,
+        );
+      case PaymentSystem.STRIPE:
+        this.logger.debug('Stripe system', this.testingCancelSubscription.name);
+        return await this.stripeAdapter.testingCancelSubscription(
+          paymentSubscriptionSubId,
+        );
+      default:
+        this.logger.debug(
+          'Unknown system',
+          this.testingCancelSubscription.name,
+        );
+        return false;
     }
   }
 }
