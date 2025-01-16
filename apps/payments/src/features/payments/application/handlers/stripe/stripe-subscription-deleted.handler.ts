@@ -6,7 +6,7 @@ import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gate
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
-
+//TODO app notification
 @Injectable()
 export class StripeSubscriptionDeletedHandler implements IStripeEventHandler {
   constructor(

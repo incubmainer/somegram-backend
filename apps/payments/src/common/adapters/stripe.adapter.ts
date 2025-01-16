@@ -175,6 +175,25 @@ export class StripeAdapter {
 
       const trialDays = this.getTrialDays(payload.currentSubDateEnd);
 
+      let customer;
+
+      const existingCustomers = await this.stripe.customers.list({
+        email: payload.userInfo.email,
+      });
+
+      if (existingCustomers.data.length > 0) {
+        customer = existingCustomers.data[0];
+      } else {
+        customer = await this.stripe.customers.create({
+          name: payload.userInfo.userName,
+          email: payload.userInfo.email,
+          description: payload.userInfo.email,
+          metadata: {
+            userId: payload.userInfo.userId,
+          },
+        });
+      }
+
       const sessionPharams: Stripe.Checkout.SessionCreateParams = {
         success_url: payload.successFrontendUrl,
         cancel_url: payload.cancelFrontendUrl,
@@ -202,7 +221,7 @@ export class StripeAdapter {
           },
         },
         client_reference_id: result.data,
-        customer: payload.customerId,
+        customer: customer.id,
         metadata: {
           userId: payload.userInfo.userId,
         },

@@ -5,7 +5,9 @@ import { LoggerService } from '@app/logger';
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
-
+import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
+import { PaymentManager } from '../../../../../common/managers/payment.manager';
+//TODO app notification
 @Injectable()
 export class StripeCheckouSessionCompletedHandler
   implements IStripeEventHandler
@@ -13,6 +15,7 @@ export class StripeCheckouSessionCompletedHandler
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly logger: LoggerService,
+    private readonly paymentManager: PaymentManager,
   ) {
     this.logger.setContext(StripeCheckouSessionCompletedHandler.name);
   }
@@ -22,6 +25,17 @@ export class StripeCheckouSessionCompletedHandler
     const subId = session.client_reference_id;
     const existingSubscription =
       await this.paymentsRepository.getSubscriptionById(subId);
+
+    const oldSubscription =
+      await this.paymentsRepository.getActiveSubscriptionByUserId(
+        existingSubscription.userId,
+      );
+    if (oldSubscription && oldSubscription.id !== existingSubscription.id) {
+      await this.paymentManager.testingCancelSubscription(
+        oldSubscription.paymentSystem as PaymentSystem,
+        oldSubscription.paymentSystemSubId,
+      );
+    }
 
     if (existingSubscription) {
       existingSubscription.status = SubscriptionStatuses.Active;

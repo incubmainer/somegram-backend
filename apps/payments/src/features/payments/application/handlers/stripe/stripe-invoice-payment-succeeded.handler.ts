@@ -10,12 +10,12 @@ import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gate
 import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
-import { PaymentManager } from '../../../../../common/managers/payment.manager';
+
 import {
   TransactionEntity,
   TransactionInputDto,
 } from '../../../domain/transaction.entity';
-
+//TODO app notification
 @Injectable()
 export class StripeInvoicePaymentSucceededHandler
   implements IStripeEventHandler
@@ -23,7 +23,6 @@ export class StripeInvoicePaymentSucceededHandler
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
-    private readonly paymentManager: PaymentManager,
     @Inject(TransactionEntity.name)
     private readonly transactionEntity: typeof TransactionEntity,
     private readonly logger: LoggerService,
@@ -42,25 +41,12 @@ export class StripeInvoicePaymentSucceededHandler
     if (!subscription) {
       throw new BadRequestException('Webhook Error: Subscription not found');
     }
-    const oldSubscription =
-      await this.paymentsRepository.getActiveSubscriptionByUserId(
-        subscription.userId,
-      );
-
     const subscriptionData = invoice.lines.data[0];
-
-    if (oldSubscription && oldSubscription.id !== subscription.id) {
-      await this.paymentManager.testingCancelSubscription(
-        oldSubscription.paymentSystem as PaymentSystem,
-        oldSubscription.paymentSystemSubId,
-      );
-    }
 
     subscription.dateOfPayment = new Date(subscriptionData.period.start * 1000);
     subscription.endDateOfSubscription = new Date(
       subscriptionData.period.end * 1000,
     );
-    subscription.paymentSystemCustomerId = invoice.customer as string;
 
     await this.paymentsRepository.updateSub(subscription);
 
