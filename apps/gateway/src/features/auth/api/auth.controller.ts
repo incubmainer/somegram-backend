@@ -25,10 +25,7 @@ import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
 import { LoginUserCommand } from '../application/use-cases/login-use-case';
 import { LoginSwagger } from './swagger/login.swagger';
 import { RegistrationConfirmationBodyInputDto } from './dto/input-dto/registration-confirmation.body.input-dto';
-import {
-  RegistrationConfirmationCodes,
-  RegistrationConfirmationCommand,
-} from '../application/use-cases/registration-confirmation.use-case';
+import { RegistrationConfirmationCommand } from '../application/use-cases/registration-confirmation.use-case';
 import { RegistrationConfirmationSwagger } from './swagger/registration-confirmation.swagger';
 import { RestorePasswordBodyInputDto } from './dto/input-dto/restore-password.body.input-dto';
 import {
@@ -128,45 +125,29 @@ export class AuthController {
   @RegistrationConfirmationSwagger()
   public async registrationConfirmation(
     @Body() body: RegistrationConfirmationBodyInputDto,
-  ) {
+  ): Promise<void> {
     this.logger.debug(
-      'start registration confirmation',
+      'Execute: start registration confirmation',
       this.registrationConfirmation.name,
     );
-    const notification: NotificationObject<null> =
+
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(
         new RegistrationConfirmationCommand(body.token),
       );
-    const code = notification.getCode();
-    if (code === RegistrationConfirmationCodes.Success) {
-      this.logger.debug(
-        'registration confirmation success',
-        this.registrationConfirmation.name,
-      );
-      return;
-    }
-    if (code === RegistrationConfirmationCodes.TokenExpired) {
-      this.logger.debug('token expired', this.registrationConfirmation.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'registration_confirmation_failed',
-        message: 'Registration confirmation failed due to token expiration.',
-      });
-    }
-    if (code === RegistrationConfirmationCodes.UserNotFound) {
-      this.logger.debug('user not found', this.registrationConfirmation.name);
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        error: 'User not found',
-        message: 'User with confirmation token not found',
-      });
-    }
-    if (code === RegistrationConfirmationCodes.TransactionError) {
-      this.logger.error(
-        'transaction error',
-        this.registrationConfirmation.name,
-      );
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.registrationConfirmation.name);
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad request', this.registrationConfirmation.name);
+        throw new BadRequestException(result.errorField);
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not found', this.registrationConfirmation.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
   }
 
