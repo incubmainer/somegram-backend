@@ -10,6 +10,7 @@ export class GatewayServiceClientAdapter {
     private readonly gatewayServiceClient: ClientProxy,
   ) {}
 
+  // TODO Type
   async sendSubscriptionInfo(payload: any) {
     return this.gatewayServiceClient.emit(
       { cmd: SEND_SUBSCRIPTION_INFO },

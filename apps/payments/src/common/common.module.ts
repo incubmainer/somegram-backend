@@ -18,6 +18,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { configModule } from '../settings/configuration/config.module';
 import { LoggerModule } from '@app/logger';
 import { EnvSettings } from '../settings/env/env.settings';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const paypalClient = {
   provide: PAYPAL_CLIENT,
@@ -85,6 +86,7 @@ const paypalClient = {
     configModule,
     LoggerModule.forRoot('Payments'),
     CommonModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [

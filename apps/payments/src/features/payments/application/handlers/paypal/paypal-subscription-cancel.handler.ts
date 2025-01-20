@@ -50,6 +50,7 @@ export class PaypalSubscriptionCancelHandler
           custom_id,
           subscription.endDateOfSubscription,
           subscription.status as SubscriptionStatuses,
+          subscription.autoRenewal,
         );
 
       this.subscriptionEntity.update(subscription, subscriptionUpdateData);
@@ -66,6 +67,7 @@ export class PaypalSubscriptionCancelHandler
     customerId: string,
     dateEnd: Date,
     status: SubscriptionStatuses,
+    autoRenewal: boolean,
   ): SubscriptionUpdateDto {
     let updateStatus: SubscriptionStatuses = null;
     if (status === SubscriptionStatuses.Pending) {
@@ -80,6 +82,7 @@ export class PaypalSubscriptionCancelHandler
       paymentSystemCustomerId: customerId,
       status: updateStatus,
       isActive: false,
+      autoRenewal: autoRenewal,
     };
   }
 }

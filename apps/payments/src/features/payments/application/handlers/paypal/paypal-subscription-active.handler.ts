@@ -15,8 +15,8 @@ import {
   SubscriptionEntity,
   SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
-import { PayPalAdapter } from '../../../../../common/adapters/paypal.adapter';
 import { LoggerService } from '@app/logger';
+import { PaymentService } from '../../payments.service';
 
 @Injectable()
 export class PaypalSubscriptionActiveHandler
@@ -28,8 +28,8 @@ export class PaypalSubscriptionActiveHandler
     private readonly appNotification: ApplicationNotification,
     @Inject(SubscriptionEntity.name)
     private readonly subscriptionEntity: typeof SubscriptionEntity,
-    private readonly payPalAdapter: PayPalAdapter,
     private readonly logger: LoggerService,
+    private readonly paymentService: PaymentService,
   ) {
     this.logger.setContext(PaypalSubscriptionActiveHandler.name);
   }
@@ -56,12 +56,8 @@ export class PaypalSubscriptionActiveHandler
       if (subscription.status !== SubscriptionStatuses.Suspended)
         return this.appNotification.success(null);
 
-      const subscriptionUpdateData: SubscriptionUpdateDto =
-        this.generateDataUpdateSubscription(custom_id);
+      await this.handleSuspend(subscription, custom_id);
 
-      this.subscriptionEntity.update(subscription, subscriptionUpdateData);
-
-      await this.paymentsRepository.updateSub(subscription);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.handle.name);
@@ -70,20 +66,18 @@ export class PaypalSubscriptionActiveHandler
   }
 
   private async handlePending(subscription: Subscription): Promise<void> {
-    const activeSubscription: Subscription | null =
-      await this.paymentsRepository.getActiveOrPendingPaymentSystemSubscriptionByUserId(
-        subscription.userId,
-      );
-
-    if (activeSubscription && activeSubscription.isActive) {
-      await this.payPalAdapter.cancelSubscription(
-        activeSubscription.paymentSystemSubId,
-      );
-      this.subscriptionEntity.unActiveSubscription(activeSubscription);
-      await this.paymentsRepository.updateSub(activeSubscription);
-    }
-
+    await this.paymentService.handleActiveSubscription(subscription.userId);
     this.subscriptionEntity.activateSubscription(subscription);
+    await this.paymentsRepository.updateSub(subscription);
+  }
+
+  private async handleSuspend(
+    subscription: Subscription,
+    userId: string,
+  ): Promise<void> {
+    await this.paymentService.handleActiveSubscription(userId);
+    const subscriptionUpdateData = this.generateDataUpdateSubscription(userId);
+    this.subscriptionEntity.update(subscription, subscriptionUpdateData);
     await this.paymentsRepository.updateSub(subscription);
   }
 

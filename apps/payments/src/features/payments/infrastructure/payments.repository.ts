@@ -10,14 +10,19 @@ import {
 import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
 import { TransactionEntity } from '../domain/transaction.entity';
 import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class PaymentsRepository {
+  private readonly TRANSACTION_TIMEOUT: number = 50000;
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<PaymentsPrismaClient>
     >,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PaymentsRepository.name);
+  }
 
   public async getPaymentsByUserId(
     userId: string,
@@ -56,7 +61,14 @@ export class PaymentsRepository {
     } & Subscription
   > {
     const subscription = await this.txHost.tx.subscription.findFirst({
-      where: { userId, status: SubscriptionStatuses.Active },
+      where: {
+        OR: [
+          { status: SubscriptionStatuses.Active },
+          { status: SubscriptionStatuses.Suspended },
+        ],
+        userId,
+        isActive: true,
+      },
       include: {
         payments: {
           orderBy: {
@@ -68,14 +80,6 @@ export class PaymentsRepository {
     });
     return subscription ? subscription : null;
   }
-
-  public async getSubscriptionByPaymentSystemSubId(paymentSystemSubId: string) {
-    const subscription = await this.txHost.tx.subscription.findFirst({
-      where: { paymentSystemSubId: paymentSystemSubId },
-    });
-    return subscription ? subscription : null;
-  }
-
   public async saveTransaction(
     transaction: TransactionEntity,
   ): Promise<string> {
@@ -102,7 +106,40 @@ export class PaymentsRepository {
     return result.id;
   }
 
-  public async getActiveOrPendingPaymentSystemSubscriptionByUserId(
+  public async updateManySub(subscriptions: Subscription[]): Promise<void> {
+    this.logger.debug(
+      'Execute: update many subscriptions',
+      this.updateManySub.name,
+    );
+    await this.txHost.withTransaction(
+      { timeout: this.TRANSACTION_TIMEOUT },
+      async (): Promise<void> => {
+        const promises = subscriptions.map((subscription: Subscription) => {
+          return this.txHost.tx.subscription.update({
+            where: { id: subscription.id },
+            data: subscription,
+          });
+        });
+
+        await Promise.all(promises);
+      },
+    );
+  }
+
+  public async getSubscriptionByPaymentSystemSubId(
+    paymentSystemSubId: string,
+  ): Promise<Subscription | null> {
+    this.logger.debug(
+      'Execute: get subscription by system subscription id',
+      this.getSubscriptionByPaymentSystemSubId.name,
+    );
+    const subscription = await this.txHost.tx.subscription.findFirst({
+      where: { paymentSystemSubId: paymentSystemSubId },
+    });
+    return subscription ? subscription : null;
+  }
+
+  public async getActiveOrPendingOrSuspendSubscriptionByUserId(
     userId: string,
   ): Promise<Subscription | null> {
     const subscriptions = await this.txHost.tx.subscription.findFirst({
@@ -111,6 +148,7 @@ export class PaymentsRepository {
         OR: [
           { status: SubscriptionStatuses.Active },
           { status: SubscriptionStatuses.Pending },
+          { status: SubscriptionStatuses.Suspended },
         ],
         isActive: true,
       },
@@ -118,9 +156,43 @@ export class PaymentsRepository {
     return subscriptions ? subscriptions : null;
   }
 
-  public async getSubscriptionById(id: string) {
+  public async getSubscriptionById(id: string): Promise<Subscription | null> {
     const subscription = await this.txHost.tx.subscription.findFirst({
       where: { id },
+    });
+    return subscription ? subscription : null;
+  }
+
+  public async getSubscriptionByStatusAndDate(
+    date: Date,
+  ): Promise<Subscription[] | null> {
+    const subscriptions = await this.txHost.tx.subscription.findMany({
+      where: {
+        OR: [
+          { status: SubscriptionStatuses.Active },
+          { status: SubscriptionStatuses.Pending },
+          { status: SubscriptionStatuses.Suspended },
+          { isActive: true },
+        ],
+        endDateOfSubscription: {
+          lt: date,
+        },
+      },
+    });
+    return subscriptions && subscriptions.length > 0 ? subscriptions : null;
+  }
+
+  public async activeSubscriptionByUserId(
+    userId: string,
+  ): Promise<Subscription> {
+    const subscription = await this.txHost.tx.subscription.findFirst({
+      where: {
+        OR: [
+          { status: SubscriptionStatuses.Active },
+          { status: SubscriptionStatuses.Suspended },
+        ],
+        userId,
+      },
     });
     return subscription ? subscription : null;
   }

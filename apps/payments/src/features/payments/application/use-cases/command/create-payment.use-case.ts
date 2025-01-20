@@ -65,10 +65,17 @@ export class CreatePaymentUseCase
         subscriptionType,
       );
 
+      // const subscriptionInfo =
+      //   await this.paymentsRepository.getActiveSubscriptionByUserId(
+      //     command.userInfo.userId,
+      //   );
+
       const subscriptionInfo =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(
+        await this.paymentsRepository.activeSubscriptionByUserId(
           command.userInfo.userId,
         );
+
+      console.log('Subinfo', subscriptionInfo);
 
       if (this.isValidActiveSubscription(subscriptionInfo)) {
         return await this.handleSubscriptionUpdate(

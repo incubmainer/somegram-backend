@@ -31,6 +31,7 @@ import {
   SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
 import { LoggerService } from '@app/logger';
+import { PaymentService } from '../../payments.service';
 
 @Injectable()
 export class PayPalPaymentSucceededHandler
@@ -45,6 +46,7 @@ export class PayPalPaymentSucceededHandler
     private readonly subscriptionEntity: typeof SubscriptionEntity,
     private readonly payPalAdapter: PayPalAdapter,
     private readonly logger: LoggerService,
+    private readonly paymentService: PaymentService,
   ) {
     this.logger.setContext(PayPalPaymentSucceededHandler.name);
   }
@@ -72,34 +74,28 @@ export class PayPalPaymentSucceededHandler
       if (!subscriptionDetails)
         return this.appNotification.internalServerError();
 
-      const currentSubscription: Subscription | null =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(custom);
-
-      if (currentSubscription && currentSubscription.isActive) {
-        await this.payPalAdapter.cancelSubscription(
-          currentSubscription.paymentSystemSubId,
-        );
-        this.subscriptionEntity.unActiveSubscription(currentSubscription);
-        await this.paymentsRepository.updateSub(currentSubscription);
-      }
-
-      const subscriptionUpdateData: SubscriptionUpdateDto =
-        this.generateDataUpdateSubscription(
-          custom,
-          create_time,
-          subscriptionDetails.billing_info.next_billing_time,
-        );
+      await this.paymentService.handleActiveSubscription(custom);
 
       const handleCurrentPlan: PayPalPlansType = await this.handlePlan(
         subscriptionDetails.plan_id,
       );
 
+      const planName = handleCurrentPlan.name.toUpperCase() as SubscriptionType;
+
+      const dateEnd: Date = this.paymentService.handleDateEnd(
+        subscriptionDetails.billing_info.last_payment.time,
+        planName,
+      );
+
+      const subscriptionUpdateData: SubscriptionUpdateDto =
+        this.generateDataUpdateSubscription(custom, create_time, dateEnd);
+
       const transactionData: TransactionInputDto = this.generateDataTransaction(
         Number(event.resource.amount.total),
         subscription.id,
-        handleCurrentPlan.name as SubscriptionType,
+        planName,
         create_time,
-        subscriptionDetails.billing_info.next_billing_time,
+        dateEnd,
       );
       const transaction: TransactionEntity =
         this.transactionEntity.create(transactionData);

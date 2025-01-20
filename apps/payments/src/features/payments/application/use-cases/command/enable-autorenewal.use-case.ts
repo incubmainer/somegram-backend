@@ -14,7 +14,7 @@ export class EnableAutoRenewalCommand {
 }
 
 // TODO Нужно делать с блокировкой
-// TODO Установка статуса Active принудительно независимо от платежной системы
+// TODO Установка статусов сразу не дожидаясь хука от платежной системы
 @CommandHandler(EnableAutoRenewalCommand)
 export class EnableAutoRenewalUseCase
   implements
@@ -33,15 +33,17 @@ export class EnableAutoRenewalUseCase
     command: EnableAutoRenewalCommand,
   ): Promise<AppNotificationResultType<null>> {
     this.logger.debug('Execute: enable auto renewal', this.execute.name);
-    const activeSubscription: Subscription | null =
-      await this.paymentsRepository.getActiveSubscriptionByUserId(
-        command.userId,
-      );
-
-    if (!activeSubscription) {
-      return this.appNotification.notFound();
-    }
     try {
+      const activeSubscription: Subscription | null =
+        await this.paymentsRepository.getActiveSubscriptionByUserId(
+          command.userId,
+        );
+
+      if (!activeSubscription) return this.appNotification.notFound();
+
+      if (activeSubscription.autoRenewal)
+        return this.appNotification.success(null);
+
       const result: boolean = await this.paymentsService.enableAutoRenewal(
         activeSubscription.paymentSystem as PaymentSystem,
         activeSubscription.paymentSystemSubId,

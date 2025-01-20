@@ -29,6 +29,7 @@ import { StripeInvoicePaymentFailedHandler } from './features/payments/applicati
 import { StripeInvoicePaymentSucceededHandler } from './features/payments/application/handlers/stripe/stripe-invoice-payment-succeeded.handler';
 import { StripeSubscriptionDeletedHandler } from './features/payments/application/handlers/stripe/stripe-subscription-deleted.handler';
 import { StripeCheckouSessionCompletedHandler } from './features/payments/application/handlers/stripe/stripe-checkout-session-completed.handler';
+import { PaymentService } from './features/payments/application/payments.service';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -62,6 +63,7 @@ const services = [
   PaypalEventAdapter,
   transactionEntityProvider,
   subscriptionEntityProvider,
+  PaymentService,
 ];
 
 const payPalHandlers = [
