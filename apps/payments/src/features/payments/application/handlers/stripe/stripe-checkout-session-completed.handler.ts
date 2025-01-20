@@ -39,7 +39,7 @@ export class StripeCheckouSessionCompletedHandler
           existingSubscription.userId,
         );
       if (oldSubscription && oldSubscription.id !== existingSubscription.id) {
-        await this.paymentManager.testingCancelSubscription(
+        await this.paymentManager.cancelSubscription(
           oldSubscription.paymentSystem as PaymentSystem,
           oldSubscription.paymentSystemSubId,
         );
