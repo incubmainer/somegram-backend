@@ -32,20 +32,18 @@ export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
 
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
-      const invoce = event.data.object as Stripe.Invoice;
-      const subscriptionId = invoce.subscription as string;
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionId = invoice.subscription_details.metadata.subId;
       const subscription =
-        await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
-          subscriptionId,
-        );
+        await this.paymentsRepository.getSubscriptionById(subscriptionId);
       if (!subscription) {
         return this.appNotification.notFound();
       }
-      subscription.dateOfPayment = new Date(invoce.period_start * 1000);
-      subscription.endDateOfSubscription = new Date(invoce.period_end * 1000);
+      subscription.dateOfPayment = new Date(invoice.period_start * 1000);
+      subscription.endDateOfSubscription = new Date(invoice.period_end * 1000);
       await this.paymentsRepository.updateSub(subscription);
 
-      const subscriptionData = invoce.lines.data[0];
+      const subscriptionData = invoice.lines.data[0];
 
       const transactionData: TransactionInputDto = this.generateDataTransaction(
         subscriptionData.amount,

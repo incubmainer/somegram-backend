@@ -50,10 +50,9 @@ export class StripeCheckouSessionCompletedHandler
         existingSubscription.isActive = true;
         existingSubscription.paymentSystemSubId =
           session.subscription as string;
-        existingSubscription.updatedAt = new Date();
         existingSubscription.paymentSystemCustomerId =
           session.customer as string;
-        await this.paymentsRepository.updateSub(existingSubscription);
+        await this.paymentsRepository.updateSubscription(existingSubscription);
       }
       return this.appNotification.success(null);
     } catch (e) {

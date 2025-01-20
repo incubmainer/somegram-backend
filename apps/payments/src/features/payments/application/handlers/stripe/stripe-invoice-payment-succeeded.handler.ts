@@ -38,12 +38,10 @@ export class StripeInvoicePaymentSucceededHandler
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
       const invoice = event.data.object as Stripe.Invoice;
-      const subscriptionId = invoice.subscription as string;
+      const subscriptionId = invoice.subscription_details.metadata.subId;
 
       const subscription =
-        await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
-          subscriptionId,
-        );
+        await this.paymentsRepository.getSubscriptionById(subscriptionId);
       if (!subscription) {
         return this.appNotification.notFound();
       }

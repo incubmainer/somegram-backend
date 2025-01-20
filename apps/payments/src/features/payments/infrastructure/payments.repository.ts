@@ -196,4 +196,21 @@ export class PaymentsRepository {
     });
     return subscription ? subscription : null;
   }
+
+  public async updateSubscription(subscription: Subscription): Promise<string> {
+    const result: Subscription = await this.txHost.tx.subscription.update({
+      data: {
+        updatedAt: new Date(),
+        paymentSystemSubId: subscription.paymentSystemSubId,
+        status: subscription.status,
+        isActive: subscription.isActive,
+        autoRenewal: subscription.autoRenewal,
+        paymentSystemCustomerId: subscription.paymentSystemCustomerId,
+      },
+      where: {
+        id: subscription.id,
+      },
+    });
+    return result.id;
+  }
 }
