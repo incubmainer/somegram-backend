@@ -138,20 +138,15 @@ export class StripeAdapter {
     }
   }
 
-  public async testingCancelSubscription(paymentSystemSubId: string) {
+  public async cancelSubscription(
+    paymentSystemSubId: string,
+  ): Promise<boolean> {
     try {
-      const canceledSubscription =
-        await this.stripe.subscriptions.cancel(paymentSystemSubId);
-
-      return {
-        status: canceledSubscription.status,
-        subscriptionId: canceledSubscription.id,
-      };
+      await this.stripe.subscriptions.cancel(paymentSystemSubId);
+      return true;
     } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException(
-        `Error cancel subscription : ${e.message}`,
-      );
+      this.logger.error(e, this.cancelSubscription.name);
+      return false;
     }
   }
 
@@ -161,9 +156,7 @@ export class StripeAdapter {
       this.updateAutoPayment.name,
     );
     try {
-      const interval = await this.getIntervalBySubType(
-        payload.subscriptionType,
-      );
+      const interval = this.getIntervalBySubType(payload.subscriptionType);
       const result: AppNotificationResultType<string> =
         await this.commandBus.execute(
           new StripeSubscriptionCreateCommand({

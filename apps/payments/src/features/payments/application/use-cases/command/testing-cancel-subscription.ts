@@ -4,11 +4,11 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
-import { PaymentsService } from '../../../api/payments.service';
 import { Subscription } from '@prisma/payments';
 import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
 import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
+import { PaymentManager } from '../../../../../common/managers/payment.manager';
 export class TestingCancelSubscriptionUseCase {
   constructor(public userId: string) {}
 }
@@ -23,7 +23,7 @@ export class TestingCancelSubscriptionUseCaseHandler
 {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentManager: PaymentManager,
     private readonly appNotification: ApplicationNotification,
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
   ) {}
@@ -48,7 +48,7 @@ export class TestingCancelSubscriptionUseCaseHandler
         endDateOfSubscription: date,
       });
 
-      await this.paymentsService.testingCancelSubscription(
+      await this.paymentManager.cancelSubscription(
         subscription.paymentSystem as PaymentSystem,
         subscription.paymentSystemSubId,
       );

@@ -1,13 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
-import { PaymentsService } from '../../../api/payments.service';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
 import { Subscription } from '@prisma/payments';
+import { PaymentManager } from '../../../../../common/managers/payment.manager';
 
 export class EnableAutoRenewalCommand {
   constructor(public userId: string) {}
@@ -22,7 +22,7 @@ export class EnableAutoRenewalUseCase
 {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentManager: PaymentManager,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
   ) {
@@ -44,7 +44,7 @@ export class EnableAutoRenewalUseCase
       if (activeSubscription.autoRenewal)
         return this.appNotification.success(null);
 
-      const result: boolean = await this.paymentsService.enableAutoRenewal(
+      const result: boolean = await this.paymentManager.enableAutoRenewal(
         activeSubscription.paymentSystem as PaymentSystem,
         activeSubscription.paymentSystemSubId,
       );

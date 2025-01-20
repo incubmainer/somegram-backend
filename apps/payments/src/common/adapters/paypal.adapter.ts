@@ -286,7 +286,7 @@ export class PayPalAdapter {
   public async cancelSubscription(
     subscriptionId: string,
     accessToken: string = null,
-  ): Promise<void> {
+  ): Promise<boolean> {
     this.logger.debug(
       'Execute: cancel paypal subscription',
       this.cancelSubscription.name,
@@ -303,5 +303,6 @@ export class PayPalAdapter {
       accessToken,
       body,
     );
+    return true;
   }
 }

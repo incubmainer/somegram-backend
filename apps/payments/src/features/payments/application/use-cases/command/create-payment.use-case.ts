@@ -8,7 +8,6 @@ import {
   SubscriptionType,
 } from '../../../../../../../../libs/common/enums/payments';
 import { PaymentData, UserInfo } from '../../types/payment-data.type';
-import { PaymentsService } from '../../../api/payments.service';
 import {
   ApplicationNotification,
   AppNotificationResultType,
@@ -17,6 +16,7 @@ import { Subscription } from '@prisma/payments';
 import { LoggerService } from '@app/logger';
 import { EnvSettings } from '../../../../../settings/env/env.settings';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
+import { PaymentManager } from '../../../../../common/managers/payment.manager';
 
 export class CreatePaymentCommand {
   constructor(
@@ -39,7 +39,7 @@ export class CreatePaymentUseCase
   private readonly envSettings: EnvSettings;
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentManager: PaymentManager,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
     private readonly configService: ConfigService<ConfigurationType, true>,
@@ -146,8 +146,7 @@ export class CreatePaymentUseCase
     paymentData.subId = subscriptionInfo.paymentSystemSubId;
     paymentData.currentSubDateEnd = subscriptionInfo.endDateOfSubscription;
 
-    const url: string =
-      await this.paymentsService.updateCurrentSub(paymentData);
+    const url: string = await this.paymentManager.updateCurrentSub(paymentData);
 
     if (url) return this.appNotification.success(url);
 
@@ -158,7 +157,7 @@ export class CreatePaymentUseCase
     paymentData: PaymentData,
   ): Promise<AppNotificationResultType<string>> {
     const url: string | null =
-      await this.paymentsService.createAutoPayment(paymentData);
+      await this.paymentManager.createAutoPayment(paymentData);
 
     if (url) return this.appNotification.success(url);
 
