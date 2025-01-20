@@ -49,7 +49,6 @@ export class PaypalSubscriptionActiveHandler
 
       if (subscription.status === SubscriptionStatuses.Pending) {
         await this.handlePending(subscription);
-        await this.paymentsRepository.updateSub(subscription);
         return this.appNotification.success(null);
       }
 

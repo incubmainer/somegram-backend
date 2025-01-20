@@ -6,7 +6,6 @@ import { PaymentsRepository } from './features/payments/infrastructure/payments.
 import { StripeWebhookUseCase } from './features/payments/application/use-cases/command/stripe-webhook.use-case';
 import { DisableAutoRenewalUseCase } from './features/payments/application/use-cases/command/disable-autorenewal.use-case';
 import { EnableAutoRenewalUseCase } from './features/payments/application/use-cases/command/enable-autorenewal.use-case';
-import { PaymentsService } from './features/payments/api/payments.service';
 import { GetPaymentsQueryUseCase } from './features/payments/application/use-cases/query/get-payments.use-case';
 import { StripeEventAdapter } from './common/adapters/stripe-event.adaper';
 import { GetSubscriptionInfoQueryUseCase } from './features/payments/application/use-cases/query/get-subscription-info.use-case';
@@ -57,7 +56,6 @@ const subscriptionEntityProvider = {
 };
 
 const services = [
-  PaymentsService,
   StripeEventAdapter,
   //GatewayServiceClientAdapter,
   PaypalEventAdapter,

@@ -26,12 +26,13 @@ export class StripeCheckouSessionCompletedHandler
     const existingSubscription =
       await this.paymentsRepository.getSubscriptionById(subId);
 
+    // TODO: В 3 кейсах может упасть найти где именно. [Nest] 12766  - 01/20/2025, 5:31:59 PM   ERROR [StripeWebhookUseCase] TypeError: Cannot read properties of null (reading 'userId')
     const oldSubscription =
       await this.paymentsRepository.getActiveSubscriptionByUserId(
         existingSubscription.userId,
       );
     if (oldSubscription && oldSubscription.id !== existingSubscription.id) {
-      await this.paymentManager.testingCancelSubscription(
+      await this.paymentManager.cancelSubscription(
         oldSubscription.paymentSystem as PaymentSystem,
         oldSubscription.paymentSystemSubId,
       );

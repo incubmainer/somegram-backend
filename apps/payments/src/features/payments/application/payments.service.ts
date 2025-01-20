@@ -9,7 +9,7 @@ import {
   PaymentSystem,
   SubscriptionType,
 } from '../../../../../../libs/common/enums/payments';
-import { PayPalAdapter } from '../../../common/adapters/paypal.adapter';
+import { PaymentManager } from '../../../common/managers/payment.manager';
 
 @Injectable()
 export class PaymentService {
@@ -19,7 +19,7 @@ export class PaymentService {
     @Inject(SubscriptionEntity.name)
     private readonly subscriptionEntity: typeof SubscriptionEntity,
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
-    private readonly payPalAdapter: PayPalAdapter,
+    private readonly paymentManager: PaymentManager,
   ) {
     this.logger.setContext(PaymentService.name);
   }
@@ -95,7 +95,7 @@ export class PaymentService {
     }
   }
 
-  // TODO выполнение в одной транзакции
+  // TODO выполнение в одной транзакции и в местах где вызывается делаем rollback
   public async handleActiveSubscription(userId: string): Promise<void> {
     this.logger.debug(
       'Execute: handle active subscription',
@@ -107,20 +107,12 @@ export class PaymentService {
       );
 
     if (activeSubscription && activeSubscription.isActive) {
-      switch (activeSubscription.paymentSystem) {
-        case PaymentSystem.PAYPAL:
-          await this.payPalAdapter.cancelSubscription(
-            activeSubscription.paymentSystemSubId,
-          );
-          break;
-        case PaymentSystem.STRIPE:
-          // TODO Stripe
-          break;
-        default:
-          throw new Error('Unexpected payment system');
-      }
-      this.subscriptionEntity.unActiveSubscription(activeSubscription);
-      await this.paymentsRepository.updateSub(activeSubscription);
+      await this.paymentManager.cancelSubscription(
+        activeSubscription.paymentSystem as PaymentSystem,
+        activeSubscription.paymentSystemSubId,
+      );
     }
+    this.subscriptionEntity.unActiveSubscription(activeSubscription);
+    await this.paymentsRepository.updateSub(activeSubscription);
   }
 }

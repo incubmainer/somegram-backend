@@ -102,26 +102,23 @@ export class PaymentManager {
     }
   }
 
-  async testingCancelSubscription(
+  async cancelSubscription(
     paymentSystem: PaymentSystem,
     paymentSubscriptionSubId: string,
-  ) {
+  ): Promise<boolean> {
     switch (paymentSystem) {
       case PaymentSystem.PAYPAL:
-        this.logger.debug('PayPal system', this.testingCancelSubscription.name);
+        this.logger.debug('PayPal system', this.cancelSubscription.name);
         return await this.payPalAdapter.cancelSubscription(
           paymentSubscriptionSubId,
         );
       case PaymentSystem.STRIPE:
-        this.logger.debug('Stripe system', this.testingCancelSubscription.name);
-        return await this.stripeAdapter.testingCancelSubscription(
+        this.logger.debug('Stripe system', this.cancelSubscription.name);
+        return await this.stripeAdapter.cancelSubscription(
           paymentSubscriptionSubId,
         );
       default:
-        this.logger.debug(
-          'Unknown system',
-          this.testingCancelSubscription.name,
-        );
+        this.logger.debug('Unknown system', this.cancelSubscription.name);
         return false;
     }
   }

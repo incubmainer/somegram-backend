@@ -50,6 +50,7 @@ export class StripeInvoicePaymentSucceededHandler
 
     await this.paymentsRepository.updateSub(subscription);
 
+    // TODO: В 3 кейсах может упасть найти где именно. [Nest] 12766  - 01/20/2025, 5:31:59 PM   ERROR [StripeWebhookUseCase] TypeError: Cannot read properties of null (reading 'userId')
     this.gatewayServiceClientAdapter.sendSubscriptionInfo({
       userId: subscription.userId,
       endDateOfSubscription: subscription.endDateOfSubscription,
