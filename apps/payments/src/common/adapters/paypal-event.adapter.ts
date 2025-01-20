@@ -42,8 +42,6 @@ export class PaypalEventAdapter {
       buffer.toString('utf-8'),
     );
 
-    console.log('body', body);
-
     const event: PayPalEventsEnum = body.event_type;
     const handler: IPayPalEventHandler<T> = this.handlers[event];
     this.logger.debug(

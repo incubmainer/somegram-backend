@@ -15,6 +15,7 @@ import {
   SubscriptionEntity,
   SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class PaypalSubscriptionSuspendedHandler
@@ -26,12 +27,16 @@ export class PaypalSubscriptionSuspendedHandler
     private readonly appNotification: ApplicationNotification,
     @Inject(SubscriptionEntity.name)
     private readonly subscriptionEntity: typeof SubscriptionEntity,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PaypalSubscriptionSuspendedHandler.name);
+  }
 
   async handle(
     event: PayPalWebHookEventType<WHSubscriptionSuspendedType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug('Execute: suspend command handler', this.handle.name);
       const { id, custom_id } = event.resource;
 
       const subscription: Subscription | null =
@@ -48,13 +53,11 @@ export class PaypalSubscriptionSuspendedHandler
 
       return this.appNotification.success(null);
     } catch (e) {
-      //TODO Logger
-      console.log(e);
+      this.logger.error(e, this.handle.name);
       return this.appNotification.internalServerError();
     }
   }
 
-  // TODO возможно вообще убрать этот хендлер
   private generateDataUpdateSubscription(
     customerId: string,
   ): SubscriptionUpdateDto {

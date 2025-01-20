@@ -49,6 +49,7 @@
     "@nestjs/mongoose": "^10.1.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.3.10",
+    "@nestjs/schedule": "^5.0.0",
     "@nestjs/swagger": "^7.4.0",
     "@paypal/paypal-server-sdk": "^0.6.1",
     "@prisma/client": "6.1.0",

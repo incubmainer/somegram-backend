@@ -14,8 +14,8 @@ export class DisableAutoRenewalCommand {
 }
 
 // TODO Нужно делать с блокировкой
-// TODO Установка статуса Suspend для Paypal принудительно независимо от платежной системы
-// TODO Suspend для Stripe?
+// TODO Установка статуса Suspend для PAYPAL и для STRIPE?
+//  TODO принудительно независимо от платежной системы тоесть сразу после того как успешно отключили автоплатежи в платежной системе ставить autorenewal false и status SUSPEND?
 @CommandHandler(DisableAutoRenewalCommand)
 export class DisableAutoRenewalUseCase
   implements
@@ -41,6 +41,9 @@ export class DisableAutoRenewalUseCase
         );
 
       if (!activeSubscription) return this.appNotification.notFound();
+
+      if (!activeSubscription.autoRenewal)
+        return this.appNotification.success(null);
 
       const result: boolean = await this.paymentsService.disableAutoRenewal(
         activeSubscription.paymentSystem as PaymentSystem,
