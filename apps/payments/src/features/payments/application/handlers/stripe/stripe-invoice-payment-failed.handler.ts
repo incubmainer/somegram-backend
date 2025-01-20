@@ -1,6 +1,10 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 import {
   PaymentSystem,
@@ -13,7 +17,7 @@ import {
   TransactionEntity,
   TransactionInputDto,
 } from '../../../domain/transaction.entity';
-//TODO app notification
+
 @Injectable()
 export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
   constructor(
@@ -21,36 +25,44 @@ export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
     @Inject(TransactionEntity.name)
     private readonly transactionEntity: typeof TransactionEntity,
     private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(StripeInvoicePaymentFailedHandler.name);
   }
 
-  async handle(event: Stripe.Event): Promise<void> {
-    const invoce = event.data.object as Stripe.Invoice;
-    const subscriptionId = invoce.subscription as string;
-    const subscription =
-      await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
-        subscriptionId,
+  async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
+    try {
+      const invoce = event.data.object as Stripe.Invoice;
+      const subscriptionId = invoce.subscription as string;
+      const subscription =
+        await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
+          subscriptionId,
+        );
+      if (!subscription) {
+        return this.appNotification.notFound();
+      }
+      subscription.dateOfPayment = new Date(invoce.period_start * 1000);
+      subscription.endDateOfSubscription = new Date(invoce.period_end * 1000);
+      await this.paymentsRepository.updateSub(subscription);
+
+      const subscriptionData = invoce.lines.data[0];
+
+      const transactionData: TransactionInputDto = this.generateDataTransaction(
+        subscriptionData.amount,
+        subscription.id,
+        subscriptionData.plan.interval as SubscriptionType,
+        subscription.dateOfPayment,
+        subscription.endDateOfSubscription,
       );
-    if (!subscription) {
-      throw new BadRequestException('Webhook Error: Subscription not found');
+      const transaction: TransactionEntity =
+        this.transactionEntity.create(transactionData);
+      await this.paymentsRepository.saveTransaction(transaction);
+
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.handle.name);
+      return this.appNotification.internalServerError();
     }
-    subscription.dateOfPayment = new Date(invoce.period_start * 1000);
-    subscription.endDateOfSubscription = new Date(invoce.period_end * 1000);
-    await this.paymentsRepository.updateSub(subscription);
-
-    const subscriptionData = invoce.lines.data[0];
-
-    const transactionData: TransactionInputDto = this.generateDataTransaction(
-      subscriptionData.amount,
-      subscription.id,
-      subscriptionData.plan.interval as SubscriptionType,
-      subscription.dateOfPayment,
-      subscription.endDateOfSubscription,
-    );
-    const transaction: TransactionEntity =
-      this.transactionEntity.create(transactionData);
-    await this.paymentsRepository.saveTransaction(transaction);
   }
 
   private generateDataTransaction(
