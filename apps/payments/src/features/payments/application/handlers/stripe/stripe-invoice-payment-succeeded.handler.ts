@@ -19,6 +19,7 @@ import {
   TransactionEntity,
   TransactionInputDto,
 } from '../../../domain/transaction.entity';
+import { SUBSCRIPTION_TYPE } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class StripeInvoicePaymentSucceededHandler
@@ -62,9 +63,9 @@ export class StripeInvoicePaymentSucceededHandler
       });
 
       const transactionData: TransactionInputDto = this.generateDataTransaction(
-        subscriptionData.amount,
+        subscriptionData.amount / 100,
         subscription.id,
-        subscriptionData.plan.interval as SubscriptionType,
+        SUBSCRIPTION_TYPE[subscriptionData.plan.interval] as SubscriptionType,
         subscription.dateOfPayment,
         subscription.endDateOfSubscription,
       );
