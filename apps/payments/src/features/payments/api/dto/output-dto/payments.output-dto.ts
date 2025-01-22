@@ -1,12 +1,6 @@
 import { PaymentTransaction, Subscription } from '@prisma/payments';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
 
-const SUBSCRIPTION_TYPE = {
-  day: SubscriptionType.DAY,
-  week: SubscriptionType.WEEKLY,
-  month: SubscriptionType.MONTHLY,
-};
-
 export class MyPaymentsOutputDto {
   subscriptionType: SubscriptionType;
   price: number;
@@ -27,8 +21,8 @@ export const myPaymentsMapper = (
   return payments.map(
     (payment) =>
       new MyPaymentsOutputDto({
-        subscriptionType: SUBSCRIPTION_TYPE[payment.subscriptionType],
-        price: payment.price / 100,
+        subscriptionType: payment.subscriptionType as SubscriptionType,
+        price: payment.price,
         paymentSystem: payment.paymentSystem,
         status: payment.status,
         dateOfPayment: payment.dateOfPayment
@@ -71,7 +65,6 @@ export const subscriptionInfoMapper = (
     endDateOfSubscription: subscription.endDateOfSubscription
       ? subscription.endDateOfSubscription.toISOString()
       : null,
-    subscriptionType:
-      SUBSCRIPTION_TYPE[subscription.payments[0].subscriptionType],
+    subscriptionType: subscription.payments[0].subscriptionType,
   });
 };

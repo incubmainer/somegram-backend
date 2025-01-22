@@ -111,8 +111,8 @@ export class PaymentService {
         activeSubscription.paymentSystem as PaymentSystem,
         activeSubscription.paymentSystemSubId,
       );
+      this.subscriptionEntity.unActiveSubscription(activeSubscription);
+      await this.paymentsRepository.updateSub(activeSubscription);
     }
-    this.subscriptionEntity.unActiveSubscription(activeSubscription);
-    await this.paymentsRepository.updateSub(activeSubscription);
   }
 }

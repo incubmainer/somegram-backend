@@ -17,7 +17,6 @@ export class StripeWebhookCommand {
   ) {}
 }
 
-// TODO Forbidden?
 @CommandHandler(StripeWebhookCommand)
 export class StripeWebhookUseCase
   implements

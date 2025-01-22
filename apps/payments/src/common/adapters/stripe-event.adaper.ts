@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { LoggerService } from '@app/logger';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 import { StripeInvoicePaymentSucceededHandler } from '../../features/payments/application/handlers/stripe/stripe-invoice-payment-succeeded.handler';
 import { StripeInvoicePaymentFailedHandler } from '../../features/payments/application/handlers/stripe/stripe-invoice-payment-failed.handler';
@@ -19,6 +23,7 @@ export class StripeEventAdapter {
     private readonly invoicePaymentSucceededHandler: StripeInvoicePaymentSucceededHandler,
     private readonly checkouSessionCompletedHandler: StripeCheckouSessionCompletedHandler,
     private readonly subscriptionDeletedHandler: StripeSubscriptionDeletedHandler,
+    private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(StripeEventAdapter.name);
     this.handlers[StripeEventsEnum.PAYMENT_SUCCEEDED] =
@@ -31,12 +36,15 @@ export class StripeEventAdapter {
       this.checkouSessionCompletedHandler;
   }
 
-  async handleEvent(event: Stripe.Event): Promise<void> {
+  async handleEvent(
+    event: Stripe.Event,
+  ): Promise<AppNotificationResultType<null>> {
     const handler = this.handlers[event.type];
     this.logger.debug(
       `Stripe handler: ${handler ? handler.constructor.name : 'unknown handler'}`,
       this.handleEvent.name,
     );
+    if (!handler) return this.appNotification.success(null);
     if (handler) {
       await handler.handle(event);
     }

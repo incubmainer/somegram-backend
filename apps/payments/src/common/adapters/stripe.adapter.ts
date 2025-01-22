@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import { CommandBus } from '@nestjs/cqrs';
 
@@ -88,6 +88,7 @@ export class StripeAdapter {
         subscription_data: {
           metadata: {
             userId: payload.userInfo.userId,
+            subId: result.data,
           },
         },
         client_reference_id: result.data,
@@ -211,6 +212,7 @@ export class StripeAdapter {
         subscription_data: {
           metadata: {
             userId: payload.userInfo.userId,
+            subId: result.data,
           },
         },
         client_reference_id: result.data,
