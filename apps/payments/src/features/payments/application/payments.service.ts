@@ -106,11 +106,13 @@ export class PaymentService {
         userId,
       );
 
-    if (activeSubscription && activeSubscription.isActive) {
-      await this.paymentManager.cancelSubscription(
-        activeSubscription.paymentSystem as PaymentSystem,
-        activeSubscription.paymentSystemSubId,
-      );
+    if (activeSubscription) {
+      if (activeSubscription.isActive) {
+        await this.paymentManager.cancelSubscription(
+          activeSubscription.paymentSystem as PaymentSystem,
+          activeSubscription.paymentSystemSubId,
+        );
+      }
       this.subscriptionEntity.unActiveSubscription(activeSubscription);
       await this.paymentsRepository.updateSub(activeSubscription);
     }
