@@ -33,12 +33,14 @@ export class TestingCancelSubscriptionUseCaseHandler
     try {
       const { userId } = command;
       const subscription: Subscription | null =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(userId);
+        await this.paymentsRepository.activeSubscriptionByUserId(userId);
 
       if (!subscription) return this.appNotification.notFound();
 
       const date: Date = new Date();
       subscription.status = SubscriptionStatuses.Canceled;
+      subscription.autoRenewal = false;
+      subscription.isActive = false;
       subscription.updatedAt = new Date();
       subscription.endDateOfSubscription = date;
 
