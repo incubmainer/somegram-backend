@@ -132,3 +132,43 @@ export enum TenureTypeEnum {
   'REGULAR' = ' REGULAR', // A regular billing cycle.
   'TRIAL' = 'TRIAL', //A trial billing cycle.
 }
+
+export enum PlanStatusEnum {
+  'CREATED' = 'CREATED',
+  'INACTIVE' = 'INACTIVE',
+  'ACTIVE' = 'ACTIVE',
+}
+
+export enum PlanIntervalEnum {
+  'DAY' = 'DAY',
+  'WEEK' = 'WEEK',
+  'MONTH' = 'MONTH',
+  'YEAR' = 'YEAR',
+}
+
+export enum PayPalCurrencyCodeEnum {
+  AUD = 'AUD', // Australian dollar
+  BRL = 'BRL', // Brazilian real
+  CAD = 'CAD', // Canadian dollar
+  CNY = 'CNY', // Chinese Renmenbi
+  CZK = 'CZK', // Czech koruna
+  DKK = 'DKK', // Danish krone
+  EUR = 'EUR', // Euro
+  HKD = 'HKD', // Hong Kong dollar
+  HUF = 'HUF', // Hungarian forint
+  ILS = 'ILS', // Israeli new shekel
+  JPY = 'JPY', // Japanese yen
+  MYR = 'MYR', // Malaysian ringgit
+  MXN = 'MXN', // Mexican peso
+  TWD = 'TWD', // New Taiwan dollar
+  NZD = 'NZD', // New Zealand dollar
+  NOK = 'NOK', // Norwegian krone
+  PHP = 'PHP', // Philippine peso
+  PLN = 'PLN', // Polish złoty
+  GBP = 'GBP', // Pound sterling
+  SGD = 'SGD', // Singapore dollar
+  SEK = 'SEK', // Swedish krona
+  CHF = 'CHF', // Swiss franc
+  THB = 'THB', // Thai baht
+  USD = 'USD', // United States dollar
+}

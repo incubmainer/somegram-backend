@@ -1,8 +1,11 @@
 import {
   PayeePreferred,
+  PayPalCurrencyCodeEnum,
   PayPalEventsEnum,
   PayPalLinksRelEnum,
   PayPalPaymentModeEnum,
+  PlanIntervalEnum,
+  PlanStatusEnum,
   ResourceTypeEnum,
   SubscriberPhoneTypeEnum,
   SubscriptionStatusEnum,
@@ -60,7 +63,7 @@ export type CreateSubscriptionDataType = {
 };
 
 type ShippingAmountType = {
-  currency_code: string;
+  currency_code: PayPalCurrencyCodeEnum;
   value: string;
 };
 
@@ -253,7 +256,7 @@ export type SubscriptionDetailsType = {
   plan_id: string;
   start_time: Date;
   quantity: string;
-  shipping_amount: { currency_code: 'USD'; value: '0.0' };
+  shipping_amount: { currency_code: PayPalCurrencyCodeEnum; value: string };
   subscriber: WHSubscriptionActiveSubscriberType;
   billing_info: WHSubscriptionActiveBillingInfoType;
   create_time: Date;
@@ -273,11 +276,35 @@ export type WHSubscriptionSuspendedType = WHSubscriptionActiveType & {
 
 export type WHSubscriptionCancelledType = WHSubscriptionActiveType;
 
-export type SubscriptionReviseType = SubscriptionCreatedType;
+export type CreatePlanDataType = {
+  name: string;
+  product_id: string; // Plan id
+  status: PlanStatusEnum;
+  billing_cycles: CreatePlanBillingCyclesDataType[];
+  description?: string;
+};
 
-export type SubscriptionReviseDataType = {
-  plan_id: string;
-  quantity?: number;
-  shipping_amount?: ShippingAmountType;
-  application_context?: ApplicationContext;
+export type CreatePlanBillingCyclesDataType = {
+  tenure_type: TenureTypeEnum;
+  total_cycles: number; // 0 = regular
+  pricing_scheme: CreatePlanPricingSchemaType;
+  frequency: FrequencyType;
+  /*
+   TODO Обязательно? The order in which this cycle is to run among other billing cycles.
+   For example, a trial billing cycle has a sequence of 1 while a regular billing cycle has a sequence of 2, so that trial cycle runs before the regular cycle.
+   */
+  sequence?: number;
+};
+
+export type FrequencyType = {
+  interval_unit: PlanIntervalEnum;
+};
+
+export type CreatePlanPricingSchemaType = {
+  fixed_price: FixedPriceType;
+};
+
+export type FixedPriceType = {
+  currency_code: PayPalCurrencyCodeEnum; // The three-character ISO-4217 currency code that identifies the currency.
+  value: number;
 };
