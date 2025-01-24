@@ -1,11 +1,10 @@
 import {
+  FailureActionEnum,
   PayeePreferred,
   PayPalCurrencyCodeEnum,
   PayPalEventsEnum,
   PayPalLinksRelEnum,
   PayPalPaymentModeEnum,
-  PlanIntervalEnum,
-  PlanStatusEnum,
   ResourceTypeEnum,
   SubscriberPhoneTypeEnum,
   SubscriptionStatusEnum,
@@ -60,6 +59,15 @@ export type CreateSubscriptionDataType = {
   shipping_amount?: ShippingAmountType;
   subscriber: SubscriberType;
   application_context: ApplicationContext;
+  plan: CreateSubscriptionPlanSettingsType;
+};
+
+type CreateSubscriptionPlanSettingsType = {
+  payment_preferences: CreateSubscriptionPaymentPreferencesType;
+};
+
+type CreateSubscriptionPaymentPreferencesType = {
+  setup_fee_failure_action: FailureActionEnum;
 };
 
 type ShippingAmountType = {
@@ -248,7 +256,15 @@ export type WHPaymentSaleAmountType = {
 export type WHPaymentSaleDetailsType = {
   subtotal: string;
 };
-
+/*
+*
+*
+*
+      Details about subscription
+*
+*
+*
+*/
 export type SubscriptionDetailsType = {
   status: SubscriptionStatusEnum;
   status_update_time: Date;
@@ -265,46 +281,37 @@ export type SubscriptionDetailsType = {
   plan_overridden: boolean;
   links: Omit<PayPalLinksType, 'encType'>[];
 };
-
+/*
+*
+*
+*
+      Subscription cancel body
+*
+*
+*
+*/
 export type ManageSubscriptionBodyType = {
   reason: string;
 };
-
+/*
+*
+*
+*
+      WebHook Event Sub suspended
+*
+*
+*
+*/
 export type WHSubscriptionSuspendedType = WHSubscriptionActiveType & {
   status_change_note: string; // Reason for suspend
 };
-
+/*
+*
+*
+*
+      WebHook Event Sub canceled
+*
+*
+*
+*/
 export type WHSubscriptionCancelledType = WHSubscriptionActiveType;
-
-export type CreatePlanDataType = {
-  name: string;
-  product_id: string; // Plan id
-  status: PlanStatusEnum;
-  billing_cycles: CreatePlanBillingCyclesDataType[];
-  description?: string;
-};
-
-export type CreatePlanBillingCyclesDataType = {
-  tenure_type: TenureTypeEnum;
-  total_cycles: number; // 0 = regular
-  pricing_scheme: CreatePlanPricingSchemaType;
-  frequency: FrequencyType;
-  /*
-   TODO Обязательно? The order in which this cycle is to run among other billing cycles.
-   For example, a trial billing cycle has a sequence of 1 while a regular billing cycle has a sequence of 2, so that trial cycle runs before the regular cycle.
-   */
-  sequence?: number;
-};
-
-export type FrequencyType = {
-  interval_unit: PlanIntervalEnum;
-};
-
-export type CreatePlanPricingSchemaType = {
-  fixed_price: FixedPriceType;
-};
-
-export type FixedPriceType = {
-  currency_code: PayPalCurrencyCodeEnum; // The three-character ISO-4217 currency code that identifies the currency.
-  value: number;
-};

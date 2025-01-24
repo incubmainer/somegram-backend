@@ -5,11 +5,10 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-
 import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
-import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class StripeSubscriptionDeletedHandler implements IStripeEventHandler {
@@ -24,6 +23,10 @@ export class StripeSubscriptionDeletedHandler implements IStripeEventHandler {
 
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug(
+        'Execute: stripe subscription deleted',
+        this.handle.name,
+      );
       const subscription = event.data.object as Stripe.Subscription;
       const subId = subscription.id;
       const subscriptionInfo =
@@ -42,7 +45,6 @@ export class StripeSubscriptionDeletedHandler implements IStripeEventHandler {
         subscriptionInfo.updatedAt = new Date();
         subscriptionInfo.status = SubscriptionStatuses.Canceled;
         subscriptionInfo.autoRenewal = false;
-        subscriptionInfo.isActive = false;
         subscriptionInfo.endDateOfSubscription = remainingEndDate;
         await this.paymentsRepository.updateSub(subscriptionInfo);
 

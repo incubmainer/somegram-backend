@@ -122,4 +122,23 @@ export class PaymentManager {
         return false;
     }
   }
+
+  async cancelManySubscriptions(
+    paymentSystem: PaymentSystem,
+    paymentSubscriptionSubId: string[],
+  ): Promise<boolean> {
+    switch (paymentSystem) {
+      case PaymentSystem.PAYPAL:
+        this.logger.debug('PayPal system', this.cancelSubscription.name);
+        return await this.payPalAdapter.cancelManySubscription(
+          paymentSubscriptionSubId,
+        );
+      case PaymentSystem.STRIPE:
+        this.logger.debug('Stripe system', this.cancelSubscription.name);
+        return true;
+      default:
+        this.logger.debug('Unknown system', this.cancelSubscription.name);
+        return false;
+    }
+  }
 }

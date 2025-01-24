@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Subscription } from '@prisma/payments';
-import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
+import { SubscriptionStatuses } from '../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class SubscriptionEntity implements Subscription {
@@ -15,7 +15,6 @@ export class SubscriptionEntity implements Subscription {
   paymentSystem: string;
   status: string;
   autoRenewal: boolean;
-  isActive: boolean;
 
   static create(inputDto: SubscriptionInputDto): SubscriptionEntity {
     const {
@@ -24,7 +23,6 @@ export class SubscriptionEntity implements Subscription {
       createdAt,
       autoRenewal,
       paymentSystem,
-      isActive,
       paymentSystemSubId,
     } = inputDto;
 
@@ -35,7 +33,6 @@ export class SubscriptionEntity implements Subscription {
     subscription.paymentSystemSubId = paymentSystemSubId;
     subscription.status = status;
     subscription.autoRenewal = autoRenewal;
-    subscription.isActive = isActive;
     return subscription;
   }
 
@@ -50,7 +47,6 @@ export class SubscriptionEntity implements Subscription {
       paymentSystemCustomerId,
       status,
       autoRenewal = true,
-      isActive,
     } = updateDto;
 
     subscription.updatedAt = updatedAt;
@@ -60,27 +56,41 @@ export class SubscriptionEntity implements Subscription {
     subscription.paymentSystemCustomerId = paymentSystemCustomerId;
     subscription.status = status;
     subscription.autoRenewal = autoRenewal;
-    subscription.isActive = isActive;
   }
 
-  static unActiveSubscription(subscription: Subscription): void {
-    subscription.isActive = false;
+  static activateSubscription(
+    subscription: Subscription,
+    paymentDate?: Date,
+    endSubscriptionDate?: Date,
+  ): void {
     subscription.updatedAt = new Date();
+    subscription.status = SubscriptionStatuses.Active;
+    subscription.autoRenewal = true;
+
+    if (paymentDate) subscription.dateOfPayment = paymentDate;
+    if (endSubscriptionDate)
+      subscription.endDateOfSubscription = endSubscriptionDate;
   }
 
-  static activateSubscription(subscription: Subscription): void {
-    subscription.isActive = true;
+  static suspendSubscription(subscription: Subscription): void {
     subscription.updatedAt = new Date();
+    subscription.status = SubscriptionStatuses.Suspended;
+    subscription.autoRenewal = false;
+  }
+
+  static disableAutoRenewal(subscription: Subscription): void {
+    subscription.updatedAt = new Date();
+    subscription.autoRenewal = false;
+  }
+
+  static enableAutoRenewal(subscription: Subscription): void {
+    subscription.updatedAt = new Date();
+    subscription.autoRenewal = true;
   }
 
   static cancelSubscription(subscription: Subscription): void {
-    subscription.isActive = false;
-    if (
-      subscription.endDateOfSubscription.toISOString() <=
-      new Date().toISOString()
-    ) {
-      subscription.status = SubscriptionStatuses.Canceled;
-    }
+    subscription.updatedAt = new Date();
+    subscription.status = SubscriptionStatuses.Canceled;
   }
 }
 
@@ -90,7 +100,6 @@ export type SubscriptionInputDto = {
   paymentSystem: string;
   status: string;
   autoRenewal: boolean;
-  isActive: boolean;
   paymentSystemSubId?: string;
 };
 
@@ -98,8 +107,12 @@ export type SubscriptionUpdateDto = {
   updatedAt: Date;
   paymentSystemCustomerId: string;
   status: SubscriptionStatuses;
-  isActive: boolean;
   endDateOfSubscription?: Date;
   dateOfPayment?: Date;
   autoRenewal?: boolean;
+};
+
+export type ActiveSubscriptionDateType = {
+  dateOfPayment: Date;
+  dateEndSubscription: Date;
 };

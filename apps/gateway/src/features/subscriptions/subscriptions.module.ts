@@ -10,8 +10,13 @@ import { ClientsModule } from '@nestjs/microservices';
 import { UpdateSubscriptionInfoUseCase } from './application/use-cases/update-subscription-info.use-case';
 import { UsersRepository } from '../users/infrastructure/users.repository';
 import { paymentsServiceOptions } from '../../settings/configuration/get-pyments-service.options';
+import { UpdateSubscriptionsInfoUseCase } from './application/use-cases/update-subscriptions-info.use-case';
 
-const useCases = [CreatePaymentUseCase, UpdateSubscriptionInfoUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  UpdateSubscriptionInfoUseCase,
+  UpdateSubscriptionsInfoUseCase,
+];
 
 const repositories = [UsersQueryRepository, UsersRepository];
 

@@ -13,10 +13,7 @@ import {
 } from '@app/application-notification';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
-import {
-  SubscriptionStatuses,
-  TransactionStatuses,
-} from '../../../../../common/enum/transaction-statuses.enum';
+import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import {
   PaymentSystem,
   SubscriptionType,
@@ -32,6 +29,8 @@ import {
 } from '../../../domain/subscription.entity';
 import { LoggerService } from '@app/logger';
 import { PaymentService } from '../../payments.service';
+import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class PayPalPaymentSucceededHandler
@@ -47,17 +46,19 @@ export class PayPalPaymentSucceededHandler
     private readonly payPalAdapter: PayPalAdapter,
     private readonly logger: LoggerService,
     private readonly paymentService: PaymentService,
+    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
   ) {
     this.logger.setContext(PayPalPaymentSucceededHandler.name);
   }
 
-  // TODO С блокировкой сделать чтобы небыло расхожденией по различным ивентам которые приходят
+  // TODO Блокировка
   async handle(
     event: PayPalWebHookEventType<WHPaymentSaleType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
-      this.logger.debug('Execute: payment succeeded', this.handle.name);
+      this.logger.debug('Execute: payment paypal succeeded', this.handle.name);
       const { billing_agreement_id, custom, create_time } = event.resource;
+      const currentDate: Date = new Date();
 
       const subscription: Subscription | null =
         await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
@@ -74,16 +75,18 @@ export class PayPalPaymentSucceededHandler
       if (!subscriptionDetails)
         return this.appNotification.internalServerError();
 
-      await this.paymentService.handleActiveSubscription(custom);
+      await this.paymentService.handleActiveSubscription(
+        custom,
+        subscription.id,
+      );
 
       const handleCurrentPlan: PayPalPlansType = await this.handlePlan(
         subscriptionDetails.plan_id,
       );
-
       const planName = handleCurrentPlan.name.toUpperCase() as SubscriptionType;
 
       const dateEnd: Date = this.paymentService.handleDateEnd(
-        subscriptionDetails.billing_info.last_payment.time,
+        currentDate,
         planName,
       );
 
@@ -94,7 +97,7 @@ export class PayPalPaymentSucceededHandler
         Number(event.resource.amount.total),
         subscription.id,
         planName,
-        create_time,
+        currentDate,
         dateEnd,
       );
       const transaction: TransactionEntity =
@@ -105,6 +108,10 @@ export class PayPalPaymentSucceededHandler
       await this.paymentsRepository.updateSub(subscription);
       await this.paymentsRepository.saveTransaction(transaction);
 
+      this.gatewayServiceClientAdapter.sendSubscriptionInfo({
+        userId: subscription.userId,
+        endDateOfSubscription: dateEnd,
+      });
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.handle.name);
@@ -141,7 +148,6 @@ export class PayPalPaymentSucceededHandler
       endDateOfSubscription: endDateOfSubscription,
       paymentSystemCustomerId: customerId,
       status: SubscriptionStatuses.Active,
-      isActive: true,
     };
   }
 

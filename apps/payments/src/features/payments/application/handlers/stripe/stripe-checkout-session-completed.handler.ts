@@ -5,12 +5,10 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-
-import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { IStripeEventHandler } from '../../../../../common/interfaces/stripe-event-handler.interface';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
-import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
-import { PaymentManager } from '../../../../../common/managers/payment.manager';
+import { PaymentService } from '../../payments.service';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class StripeCheckouSessionCompletedHandler
@@ -19,14 +17,15 @@ export class StripeCheckouSessionCompletedHandler
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly logger: LoggerService,
-    private readonly paymentManager: PaymentManager,
     private readonly appNotification: ApplicationNotification,
+    private readonly paymentService: PaymentService,
   ) {
     this.logger.setContext(StripeCheckouSessionCompletedHandler.name);
   }
 
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug('Execute: checkout stripe session', this.handle.name);
       const session = event.data.object as Stripe.Checkout.Session;
       const subId = session.client_reference_id;
       const existingSubscription =
@@ -34,20 +33,13 @@ export class StripeCheckouSessionCompletedHandler
 
       if (!existingSubscription) return this.appNotification.notFound();
 
-      const oldSubscription =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(
-          existingSubscription.userId,
-        );
-      if (oldSubscription && oldSubscription.id !== existingSubscription.id) {
-        await this.paymentManager.cancelSubscription(
-          oldSubscription.paymentSystem as PaymentSystem,
-          oldSubscription.paymentSystemSubId,
-        );
-      }
+      await this.paymentService.handleActiveSubscription(
+        existingSubscription.userId,
+        existingSubscription.id,
+      );
 
       if (existingSubscription) {
         existingSubscription.status = SubscriptionStatuses.Active;
-        existingSubscription.isActive = true;
         existingSubscription.paymentSystemSubId =
           session.subscription as string;
         existingSubscription.paymentSystemCustomerId =

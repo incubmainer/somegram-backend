@@ -18,6 +18,7 @@ import {
   TransactionInputDto,
 } from '../../../domain/transaction.entity';
 import { SUBSCRIPTION_TYPE } from '../../../../../common/enum/subscription-types.enum';
+import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
 
 @Injectable()
 export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
@@ -27,12 +28,17 @@ export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
     private readonly transactionEntity: typeof TransactionEntity,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
   ) {
     this.logger.setContext(StripeInvoicePaymentFailedHandler.name);
   }
 
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug(
+        'Execute: processing stripe invoice failed',
+        this.handle.name,
+      );
       const invoice = event.data.object as Stripe.Invoice;
       const subscriptionId = invoice.subscription_details.metadata.subId;
       const subscription =
@@ -56,6 +62,11 @@ export class StripeInvoicePaymentFailedHandler implements IStripeEventHandler {
       const transaction: TransactionEntity =
         this.transactionEntity.create(transactionData);
       await this.paymentsRepository.saveTransaction(transaction);
+
+      this.gatewayServiceClientAdapter.sendSubscriptionInfo({
+        userId: subscription.userId,
+        endDateOfSubscription: subscription.endDateOfSubscription,
+      });
 
       return this.appNotification.success(null);
     } catch (e) {

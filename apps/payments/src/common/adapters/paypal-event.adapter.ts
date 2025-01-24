@@ -11,6 +11,7 @@ import { PaypalSubscriptionActiveHandler } from '../../features/payments/applica
 import { PaypalSubscriptionSuspendedHandler } from '../../features/payments/application/handlers/paypal/paypal-subscription-suspended.handler';
 import { PaypalSubscriptionCancelHandler } from '../../features/payments/application/handlers/paypal/paypal-subscription-cancel.handler';
 import { LoggerService } from '@app/logger';
+import { PayPalPaymentFailedHandler } from '../../features/payments/application/handlers/paypal/paypal-payment-failed.handler';
 
 @Injectable()
 export class PaypalEventAdapter {
@@ -21,9 +22,11 @@ export class PaypalEventAdapter {
     private readonly paypalSubscriptionActiveHandler: PaypalSubscriptionActiveHandler,
     private readonly paypalSubscriptionSuspendedHandler: PaypalSubscriptionSuspendedHandler,
     private readonly paypalSubscriptionCancelHandler: PaypalSubscriptionCancelHandler,
+    private readonly payPalPaymentFailedHandler: PayPalPaymentFailedHandler,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
   ) {
+    this.logger.setContext(PaypalEventAdapter.name);
     this.handlers[PayPalEventsEnum.PAYMENT_COMPLETED] =
       this.payPalPaymentSucceededHandler;
     this.handlers[PayPalEventsEnum.SUBSCRIPTION_SUSPENDED] =
@@ -32,7 +35,8 @@ export class PaypalEventAdapter {
       this.paypalSubscriptionActiveHandler;
     this.handlers[PayPalEventsEnum.SUBSCRIPTION_CANCELLED] =
       this.paypalSubscriptionCancelHandler;
-    this.logger.setContext(PaypalEventAdapter.name);
+    this.handlers[PayPalEventsEnum.SUBSCRIPTION_FAILED] =
+      this.payPalPaymentFailedHandler;
   }
 
   async handleEvent<T>(data: any): Promise<AppNotificationResultType<null>> {

@@ -21,11 +21,13 @@ import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../domain/query.types';
 import {
   CreatePaymentDto,
+  GetUserPaymentPayloadType,
   PayPalRawBodyPayloadType,
   StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
 import { Paginator } from '../domain/paginator';
 import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
+import { SubscriptionInfoOutputDto } from '../../../../payments/src/features/payments/api/dto/output-dto/payments.output-dto';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -83,13 +85,13 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async disableAutoRenewal(payload: {
-    userId: string;
-  }): Promise<AppNotificationResultType<null>> {
+  async disableAutoRenewal(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
     try {
       const responseOfService: Observable<AppNotificationResultType<null>> =
         this.paymentsServiceClient
-          .send({ cmd: DISABLE_AUTO_RENEWAL }, { payload })
+          .send({ cmd: DISABLE_AUTO_RENEWAL }, payload)
           .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
@@ -99,13 +101,13 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async enableAutoRenewal(payload: {
-    userId: string;
-  }): Promise<AppNotificationResultType<null>> {
+  async enableAutoRenewal(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
     try {
       const responseOfService: Observable<AppNotificationResultType<null>> =
         this.paymentsServiceClient
-          .send({ cmd: ENABLE_AUTO_RENEWAL }, { payload })
+          .send({ cmd: ENABLE_AUTO_RENEWAL }, payload)
           .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
@@ -115,31 +117,36 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  async getPayments(payload: {
-    userId: string;
-    queryString?: SearchQueryParametersType;
-  }) {
+  async getPayments(
+    payload: GetUserPaymentPayloadType,
+  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: GET_PAYMENTS }, { payload })
+      const responseOfService: Observable<
+        AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_PAYMENTS }, payload)
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.getPayments.name);
       return this.appNotification.internalServerError();
     }
   }
 
-  async getSubscriptionInfo(payload: { userId: string }) {
+  async getSubscriptionInfo(
+    payload: string,
+  ): Promise<AppNotificationResultType<SubscriptionInfoOutputDto>> {
     try {
-      const responseOfService = this.paymentsServiceClient
-        .send({ cmd: GET_SUBSCRIPTION_INFO }, { payload })
+      const responseOfService: Observable<
+        AppNotificationResultType<SubscriptionInfoOutputDto>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_SUBSCRIPTION_INFO }, payload)
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.getSubscriptionInfo.name);
       return this.appNotification.internalServerError();
     }
   }
@@ -155,6 +162,7 @@ export class PaymentsServiceAdapter {
 
       return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.testingCancelSubscription.name);
       return this.appNotification.internalServerError();
     }
   }
@@ -172,6 +180,7 @@ export class PaymentsServiceAdapter {
 
       return await firstValueFrom(responseOfService);
     } catch (e) {
+      this.logger.error(e, this.testingGetPayments.name);
       return this.appNotification.internalServerError();
     }
   }

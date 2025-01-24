@@ -10,13 +10,13 @@ import {
 } from '@app/application-notification';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
-import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import {
+  ActiveSubscriptionDateType,
   SubscriptionEntity,
-  SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
 import { LoggerService } from '@app/logger';
 import { PaymentService } from '../../payments.service';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class PaypalSubscriptionActiveHandler
@@ -34,13 +34,13 @@ export class PaypalSubscriptionActiveHandler
     this.logger.setContext(PaypalSubscriptionActiveHandler.name);
   }
 
-  // TODO С блокировкой сделать чтобы небыло расхожденией по различным ивентам которые приходят
+  // TODO Блокировка
   async handle(
     event: PayPalWebHookEventType<WHSubscriptionActiveType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
       this.logger.debug('Execute: activate subscription', this.handle.name);
-      const { id, custom_id } = event.resource;
+      const { id } = event.resource;
 
       const subscription: Subscription | null =
         await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(id);
@@ -55,7 +55,7 @@ export class PaypalSubscriptionActiveHandler
       if (subscription.status !== SubscriptionStatuses.Suspended)
         return this.appNotification.success(null);
 
-      await this.handleSuspend(subscription, custom_id);
+      await this.handleSuspend(subscription);
 
       return this.appNotification.success(null);
     } catch (e) {
@@ -65,30 +65,27 @@ export class PaypalSubscriptionActiveHandler
   }
 
   private async handlePending(subscription: Subscription): Promise<void> {
-    await this.paymentService.handleActiveSubscription(subscription.userId);
+    const result: ActiveSubscriptionDateType | null =
+      await this.paymentService.handleActiveSubscription(
+        subscription.userId,
+        subscription.id,
+      );
+
+    if (result) {
+      this.subscriptionEntity.activateSubscription(
+        subscription,
+        result.dateOfPayment,
+        result.dateEndSubscription,
+      );
+    } else {
+      this.subscriptionEntity.activateSubscription(subscription);
+    }
+
+    await this.paymentsRepository.updateSub(subscription);
+  }
+
+  private async handleSuspend(subscription: Subscription): Promise<void> {
     this.subscriptionEntity.activateSubscription(subscription);
     await this.paymentsRepository.updateSub(subscription);
-  }
-
-  private async handleSuspend(
-    subscription: Subscription,
-    userId: string,
-  ): Promise<void> {
-    await this.paymentService.handleActiveSubscription(userId);
-    const subscriptionUpdateData = this.generateDataUpdateSubscription(userId);
-    this.subscriptionEntity.update(subscription, subscriptionUpdateData);
-    await this.paymentsRepository.updateSub(subscription);
-  }
-
-  private generateDataUpdateSubscription(
-    customerId: string,
-  ): SubscriptionUpdateDto {
-    return {
-      updatedAt: new Date(),
-      paymentSystemCustomerId: customerId,
-      status: SubscriptionStatuses.Active,
-      autoRenewal: true,
-      isActive: true,
-    };
   }
 }

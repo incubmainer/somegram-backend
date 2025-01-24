@@ -17,7 +17,6 @@ import { GatewayServiceClientAdapter } from './adapters/gateway-service-client.a
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { configModule } from '../settings/configuration/config.module';
 import { LoggerModule } from '@app/logger';
-import { EnvSettings } from '../settings/env/env.settings';
 import { ScheduleModule } from '@nestjs/schedule';
 
 const paypalClient = {
@@ -43,22 +42,6 @@ const paypalClient = {
   },
   inject: [ConfigService],
 };
-
-// const paypalOrdersController = {
-//   provide: PAYPAL_ORDERS_CONTROLLER,
-//   useFactory: (client: Client) => {
-//     return new OrdersController(client);
-//   },
-//   inject: [PAYPAL_CLIENT],
-// };
-//
-// const paypalPaymentsController = {
-//   provide: PAYPAL_PAYMENTS_CONTROLLER,
-//   useFactory: (client: Client) => {
-//     return new PayPalPaymentsController(client);
-//   },
-//   inject: [PAYPAL_CLIENT],
-// };
 
 @Global()
 @Module({

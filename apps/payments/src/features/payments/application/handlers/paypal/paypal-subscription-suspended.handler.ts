@@ -10,12 +10,9 @@ import {
 } from '@app/application-notification';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
-import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
-import {
-  SubscriptionEntity,
-  SubscriptionUpdateDto,
-} from '../../../domain/subscription.entity';
+import { SubscriptionEntity } from '../../../domain/subscription.entity';
 import { LoggerService } from '@app/logger';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class PaypalSubscriptionSuspendedHandler
@@ -32,23 +29,25 @@ export class PaypalSubscriptionSuspendedHandler
     this.logger.setContext(PaypalSubscriptionSuspendedHandler.name);
   }
 
+  // TODO Блокировка
   async handle(
     event: PayPalWebHookEventType<WHSubscriptionSuspendedType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
       this.logger.debug('Execute: suspend command handler', this.handle.name);
-      const { id, custom_id } = event.resource;
+      const { id } = event.resource;
 
       const subscription: Subscription | null =
         await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(id);
 
       if (!subscription) return this.appNotification.notFound();
+      if (
+        subscription.status === SubscriptionStatuses.Suspended &&
+        !subscription.autoRenewal
+      )
+        return this.appNotification.success(null);
 
-      const subscriptionUpdateData: SubscriptionUpdateDto =
-        this.generateDataUpdateSubscription(custom_id);
-
-      this.subscriptionEntity.update(subscription, subscriptionUpdateData);
-
+      this.subscriptionEntity.suspendSubscription(subscription);
       await this.paymentsRepository.updateSub(subscription);
 
       return this.appNotification.success(null);
@@ -56,17 +55,5 @@ export class PaypalSubscriptionSuspendedHandler
       this.logger.error(e, this.handle.name);
       return this.appNotification.internalServerError();
     }
-  }
-
-  private generateDataUpdateSubscription(
-    customerId: string,
-  ): SubscriptionUpdateDto {
-    return {
-      updatedAt: new Date(),
-      paymentSystemCustomerId: customerId,
-      status: SubscriptionStatuses.Suspended,
-      autoRenewal: false,
-      isActive: true,
-    };
   }
 }

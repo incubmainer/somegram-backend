@@ -6,11 +6,10 @@ import {
   Subscription,
   PaymentTransaction,
 } from '@prisma/payments';
-
-import { SubscriptionStatuses } from '../../../common/enum/transaction-statuses.enum';
 import { TransactionEntity } from '../domain/transaction.entity';
 import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
 import { LoggerService } from '@app/logger';
+import { SubscriptionStatuses } from '../../../common/enum/subscription-types.enum';
 
 @Injectable()
 export class PaymentsRepository {
@@ -55,7 +54,9 @@ export class PaymentsRepository {
     return { payments, count };
   }
 
-  public async getActiveSubscriptionByUserId(userId: string): Promise<
+  public async getActiveSubscriptionByUserIdWithPayments(
+    userId: string,
+  ): Promise<
     {
       payments: PaymentTransaction[];
     } & Subscription
@@ -67,7 +68,6 @@ export class PaymentsRepository {
           { status: SubscriptionStatuses.Suspended },
         ],
         userId,
-        isActive: true,
       },
       include: {
         payments: {
@@ -83,6 +83,7 @@ export class PaymentsRepository {
   public async saveTransaction(
     transaction: TransactionEntity,
   ): Promise<string> {
+    this.logger.debug('Execute: create transaction', this.saveTransaction.name);
     const result: PaymentTransaction =
       await this.txHost.tx.paymentTransaction.create({
         data: transaction,
@@ -91,6 +92,7 @@ export class PaymentsRepository {
   }
 
   public async createSub(subscription: Subscription): Promise<string> {
+    this.logger.debug('Execute: create subscription', this.createSub.name);
     const newSubscription: Subscription =
       await this.txHost.tx.subscription.create({
         data: subscription,
@@ -99,6 +101,7 @@ export class PaymentsRepository {
   }
 
   public async updateSub(subscription: Subscription): Promise<string> {
+    this.logger.debug('Execute: update subscription', this.updateSub.name);
     const result: Subscription = await this.txHost.tx.subscription.update({
       data: subscription,
       where: { id: subscription.id },
@@ -139,40 +142,29 @@ export class PaymentsRepository {
     return subscription ? subscription : null;
   }
 
-  public async getActiveOrPendingOrSuspendSubscriptionByUserId(
-    userId: string,
-  ): Promise<Subscription | null> {
-    const subscriptions = await this.txHost.tx.subscription.findFirst({
-      where: {
-        userId,
-        OR: [
-          { status: SubscriptionStatuses.Active },
-          { status: SubscriptionStatuses.Pending },
-          { status: SubscriptionStatuses.Suspended },
-        ],
-        isActive: true,
-      },
-    });
-    return subscriptions ? subscriptions : null;
-  }
-
   public async getSubscriptionById(id: string): Promise<Subscription | null> {
+    this.logger.debug(
+      'Execute: get subscription by id',
+      this.getSubscriptionById.name,
+    );
     const subscription = await this.txHost.tx.subscription.findFirst({
       where: { id },
     });
     return subscription ? subscription : null;
   }
 
-  public async getSubscriptionByStatusAndDate(
+  public async getActiveSubscriptionsByDate(
     date: Date,
   ): Promise<Subscription[] | null> {
+    this.logger.debug(
+      'Execute: get active subscription by date',
+      this.getActiveSubscriptionsByDate.name,
+    );
     const subscriptions = await this.txHost.tx.subscription.findMany({
       where: {
         OR: [
           { status: SubscriptionStatuses.Active },
-          { status: SubscriptionStatuses.Pending },
           { status: SubscriptionStatuses.Suspended },
-          { isActive: true },
         ],
         endDateOfSubscription: {
           lt: date,
@@ -182,9 +174,13 @@ export class PaymentsRepository {
     return subscriptions && subscriptions.length > 0 ? subscriptions : null;
   }
 
-  public async activeSubscriptionByUserId(
+  public async getActiveSubscriptionByUserId(
     userId: string,
-  ): Promise<Subscription> {
+  ): Promise<Subscription | null> {
+    this.logger.debug(
+      'Execute: get active subscription by user id',
+      this.getActiveSubscriptionByUserId.name,
+    );
     const subscription = await this.txHost.tx.subscription.findFirst({
       where: {
         OR: [
@@ -203,7 +199,6 @@ export class PaymentsRepository {
         updatedAt: new Date(),
         paymentSystemSubId: subscription.paymentSystemSubId,
         status: subscription.status,
-        isActive: subscription.isActive,
         autoRenewal: subscription.autoRenewal,
         paymentSystemCustomerId: subscription.paymentSystemCustomerId,
       },

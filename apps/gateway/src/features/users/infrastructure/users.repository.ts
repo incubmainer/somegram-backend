@@ -13,6 +13,7 @@ import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class UsersRepository {
+  private readonly TRANSACTION_TIMEOUT: number = 50000;
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
@@ -28,6 +29,13 @@ export class UsersRepository {
       where: { id },
     });
     return user ? user : null;
+  }
+
+  async getUsersById(id: string[]): Promise<User[] | null> {
+    const user = await this.txHost.tx.user.findMany({
+      where: { id: { in: id } },
+    });
+    return user && user.length > 0 ? user : null;
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
@@ -336,5 +344,21 @@ export class UsersRepository {
         accountType: dto.accountType,
       },
     });
+  }
+
+  async updateManyUsers(users: User[]): Promise<void> {
+    await this.txHost.withTransaction(
+      { timeout: this.TRANSACTION_TIMEOUT },
+      async (): Promise<void> => {
+        const promises = users.map((user: User) => {
+          return this.txHost.tx.user.update({
+            where: { id: user.id },
+            data: user,
+          });
+        });
+
+        await Promise.all(promises);
+      },
+    );
   }
 }

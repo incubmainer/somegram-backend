@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-
 import { CreateSubscriptionDto } from '../../api/dto/input-dto/subscriptions.dto';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
@@ -51,9 +50,8 @@ export class CreatePaymentUseCase
       const result: AppNotificationResultType<string> =
         await this.paymentsServiceAdapter.createSubscription(payload);
 
-      if (result.appResult !== AppNotificationResultEnum.Success) {
-        return this.appNotification.success(null); // TODO Error
-      }
+      if (result.appResult !== AppNotificationResultEnum.Success)
+        return this.appNotification.internalServerError();
 
       return this.appNotification.success({ url: result.data });
     } catch (e) {

@@ -5,7 +5,6 @@ import {
 import { SubscriptionCreatedType } from '../../../../../common/adapters/types/paypal/types';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SubscriptionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
 import {
   SubscriptionEntity,
@@ -14,6 +13,7 @@ import {
 import { Subscription } from '@prisma/payments';
 import { Inject } from '@nestjs/common';
 import { LoggerService } from '@app/logger';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 export class PayPalSubscriptionCreateUseCase {
   constructor(public inputModel: SubscriptionCreatedType) {}
@@ -63,7 +63,6 @@ export class PayPalSubscriptionCreateUseCaseHandler
       status: SubscriptionStatuses.Pending,
       paymentSystem: PaymentSystem.PAYPAL,
       paymentSystemSubId: subId,
-      isActive: false,
       createdAt: new Date(),
     };
   }

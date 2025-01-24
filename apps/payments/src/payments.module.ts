@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-
 import { PaymentsController } from './features/payments/api/payments.controller';
 import { CreatePaymentUseCase } from './features/payments/application/use-cases/command/create-payment.use-case';
 import { PaymentsRepository } from './features/payments/infrastructure/payments.repository';

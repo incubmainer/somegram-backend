@@ -8,14 +8,14 @@ import {
 import { LoggerService } from '@app/logger';
 import { Subscription } from '@prisma/payments';
 import { PaymentManager } from '../../../../../common/managers/payment.manager';
+import { SubscriptionEntity } from '../../../domain/subscription.entity';
+import { Inject } from '@nestjs/common';
 
 export class DisableAutoRenewalCommand {
   constructor(public userId: string) {}
 }
 
-// TODO Нужно делать с блокировкой
-// TODO Установка статуса Suspend для PAYPAL и для STRIPE?
-//  TODO принудительно независимо от платежной системы тоесть сразу после того как успешно отключили автоплатежи в платежной системе ставить autorenewal false и status SUSPEND?
+// TODO Блокировка
 @CommandHandler(DisableAutoRenewalCommand)
 export class DisableAutoRenewalUseCase
   implements
@@ -25,6 +25,8 @@ export class DisableAutoRenewalUseCase
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentManager: PaymentManager,
     private readonly appNotification: ApplicationNotification,
+    @Inject(SubscriptionEntity.name)
+    private readonly subscriptionEntity: typeof SubscriptionEntity,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(DisableAutoRenewalUseCase.name);
@@ -36,7 +38,7 @@ export class DisableAutoRenewalUseCase
     this.logger.debug('Execute: disable auto renewal', this.execute.name);
     try {
       const activeSubscription: Subscription | null =
-        await this.paymentsRepository.getActiveSubscriptionByUserId(
+        await this.paymentsRepository.getActiveSubscriptionByUserIdWithPayments(
           command.userId,
         );
 
@@ -52,10 +54,24 @@ export class DisableAutoRenewalUseCase
 
       if (!result) return this.appNotification.internalServerError();
 
+      await this.handleDisable(activeSubscription);
+
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
+  }
+
+  private async handleDisable(subscription: Subscription): Promise<void> {
+    switch (subscription.paymentSystem) {
+      case PaymentSystem.PAYPAL:
+        this.subscriptionEntity.suspendSubscription(subscription);
+        break;
+      case PaymentSystem.STRIPE:
+        this.subscriptionEntity.disableAutoRenewal(subscription);
+        break;
+    }
+    await this.paymentsRepository.updateSub(subscription);
   }
 }

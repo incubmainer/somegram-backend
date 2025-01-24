@@ -12,6 +12,7 @@ import {
 import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
 import { Paginator } from '../../../../../../../gateway/src/common/domain/paginator';
+import { LoggerService } from '@app/logger';
 
 export class GetPaymentsQuery {
   constructor(
@@ -27,11 +28,16 @@ export class GetPaymentsQueryUseCase
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly appNotification: ApplicationNotification,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(GetPaymentsQueryUseCase.name);
+  }
 
   async execute(
     command: GetPaymentsQuery,
   ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+    this.logger.debug('Execute: get payments by user id', this.execute.name);
+
     const sanitizationQuery = getSanitizationQuery(command.queryString);
     try {
       const { payments, count } =
@@ -49,7 +55,7 @@ export class GetPaymentsQueryUseCase
 
       return this.appNotification.success(result);
     } catch (e) {
-      console.error(e);
+      this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
   }

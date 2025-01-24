@@ -31,6 +31,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import {
+  FailureActionEnum,
   PayeePreferred,
   PayPalLinksRelEnum,
   PayPalProductIdEnum,
@@ -40,6 +41,7 @@ import {
 import { CommandBus } from '@nestjs/cqrs';
 import { PayPalSubscriptionCreateUseCase } from '../../features/payments/application/use-cases/command/paypal-subscription-create.use-case';
 import { LoggerService } from '@app/logger';
+import * as Bluebird from 'bluebird';
 
 @Injectable()
 export class PayPalAdapter {
@@ -154,6 +156,11 @@ export class PayPalAdapter {
           },
           return_url: successFrontendUrl,
           cancel_url: cancelFrontendUrl,
+        },
+        plan: {
+          payment_preferences: {
+            setup_fee_failure_action: FailureActionEnum.CANCEL,
+          },
         },
       };
 
@@ -303,6 +310,37 @@ export class PayPalAdapter {
       accessToken,
       body,
     );
+    return true;
+  }
+
+  public async cancelManySubscription(
+    subscriptionIds: string[],
+    accessToken: string = null,
+  ): Promise<boolean> {
+    this.logger.debug(
+      'Execute: cancel paypal many subscriptions',
+      this.cancelManySubscription.name,
+    );
+
+    if (!accessToken) accessToken = await this.login();
+
+    const body: ManageSubscriptionBodyType = {
+      reason: 'User cancels subscription',
+    };
+
+    await Bluebird.map(
+      subscriptionIds,
+      async (subscriptionId: string): Promise<void> => {
+        await this.fetch(
+          LinkHttpMethod.Post,
+          `${SUBSCRIPTIONS}/${subscriptionId}/${CANCEL_SUBSCRIPTIONS}`,
+          accessToken,
+          body,
+        );
+      },
+      { concurrency: 8 },
+    );
+
     return true;
   }
 }

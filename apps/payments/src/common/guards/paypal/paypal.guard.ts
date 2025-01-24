@@ -9,6 +9,7 @@ import fetch from 'node-fetch';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { EnvSettings } from '../../../settings/env/env.settings';
 import { LoggerService } from '@app/logger';
+import { RpcForbiddenException } from '../../exception-filters/custom-exception/rpc-forbidden.exception';
 
 @Injectable()
 export class PayPalSignatureGuard implements CanActivate {
@@ -39,7 +40,7 @@ export class PayPalSignatureGuard implements CanActivate {
       return await this.verifySignature(event, headers);
     } catch (e) {
       this.logger.error(e, this.canActivate.name);
-      return false;
+      throw new RpcForbiddenException('Forbidden');
     }
   }
 
@@ -52,7 +53,8 @@ export class PayPalSignatureGuard implements CanActivate {
     const certUrl: string = headers['paypal-cert-url'];
     const signature: string = headers['paypal-transmission-sig'];
 
-    if (!transmissionId || !timeStamp || !certUrl || !signature) return false;
+    if (!transmissionId || !timeStamp || !certUrl || !signature)
+      throw new RpcForbiddenException('Forbidden');
 
     const crc: number = parseInt('0x' + crc32(event).toString('hex'));
 

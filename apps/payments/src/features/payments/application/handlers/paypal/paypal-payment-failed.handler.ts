@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IPayPalEventHandler } from '../../../../../common/interfaces/paypal-event-handler.interface';
 import {
+  PayPalPlansResponseType,
+  PayPalPlansType,
   PayPalWebHookEventType,
   SubscriptionDetailsType,
   WHPaymentSaleType,
@@ -11,11 +13,11 @@ import {
 } from '@app/application-notification';
 import { PaymentsRepository } from '../../../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
+import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 import {
-  SubscriptionStatuses,
-  TransactionStatuses,
-} from '../../../../../common/enum/transaction-statuses.enum';
-import { PaymentSystem } from '../../../../../../../../libs/common/enums/payments';
+  PaymentSystem,
+  SubscriptionType,
+} from '../../../../../../../../libs/common/enums/payments';
 import {
   TransactionEntity,
   TransactionInputDto,
@@ -25,8 +27,10 @@ import {
   SubscriptionEntity,
   SubscriptionUpdateDto,
 } from '../../../domain/subscription.entity';
+import { LoggerService } from '@app/logger';
+import { GatewayServiceClientAdapter } from '../../../../../common/adapters/gateway-service-client.adapter';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
-// TODO Не доделан нормально, сделать праивльно
 @Injectable()
 export class PayPalPaymentFailedHandler
   implements IPayPalEventHandler<PayPalWebHookEventType<WHPaymentSaleType>>
@@ -39,13 +43,20 @@ export class PayPalPaymentFailedHandler
     @Inject(SubscriptionEntity.name)
     private readonly subscriptionEntity: typeof SubscriptionEntity,
     private readonly payPalAdapter: PayPalAdapter,
-  ) {}
+    private readonly logger: LoggerService,
+    private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
+  ) {
+    this.logger.setContext(PayPalPaymentFailedHandler.name);
+  }
 
+  // TODO Блокировка
   async handle(
     event: PayPalWebHookEventType<WHPaymentSaleType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug('Execute: payment paypal failed', this.handle.name);
       const { billing_agreement_id, custom, create_time } = event.resource;
+      const currentDate: Date = new Date();
 
       const subscription: Subscription | null =
         await this.paymentsRepository.getSubscriptionByPaymentSystemSubId(
@@ -66,13 +77,20 @@ export class PayPalPaymentFailedHandler
         this.generateDataUpdateSubscription(
           custom,
           create_time,
-          // TODO? Посомтреть в тз когда должна прерываться подписка
-          subscriptionDetails.billing_info.next_billing_time,
+          subscription.endDateOfSubscription,
         );
+
+      const handleCurrentPlan: PayPalPlansType = await this.handlePlan(
+        subscriptionDetails.plan_id,
+      );
+      const planName = handleCurrentPlan.name.toUpperCase() as SubscriptionType;
 
       const transactionData: TransactionInputDto = this.generateDataTransaction(
         Number(event.resource.amount.total),
         subscription.id,
+        planName,
+        currentDate,
+        subscription.endDateOfSubscription,
       );
       const transaction: TransactionEntity =
         this.transactionEntity.create(transactionData);
@@ -82,10 +100,13 @@ export class PayPalPaymentFailedHandler
       await this.paymentsRepository.updateSub(subscription);
       await this.paymentsRepository.saveTransaction(transaction);
 
+      this.gatewayServiceClientAdapter.sendSubscriptionInfo({
+        userId: subscription.userId,
+        endDateOfSubscription: subscription.endDateOfSubscription,
+      });
       return this.appNotification.success(null);
     } catch (e) {
-      //TODO Logger
-      console.log(e);
+      this.logger.error(e, this.handle.name);
       return this.appNotification.internalServerError();
     }
   }
@@ -93,18 +114,18 @@ export class PayPalPaymentFailedHandler
   private generateDataTransaction(
     price: number,
     subId: string,
+    subType: SubscriptionType,
+    dateOfPayment: Date,
+    endDateOfSubscription: Date = null,
   ): TransactionInputDto {
     return {
       price: price,
       system: PaymentSystem.PAYPAL,
-      // @ts-ignore // TODO
-      subscriptionType: 'MONTHLY',
+      subscriptionType: subType,
       status: TransactionStatuses.PaymentFailed,
       subId: subId,
-      // TODO
-      dateOfPayment: new Date(),
-      // TODO
-      endDateOfSubscription: new Date(),
+      dateOfPayment: dateOfPayment,
+      endDateOfSubscription: endDateOfSubscription,
     };
   }
 
@@ -119,7 +140,11 @@ export class PayPalPaymentFailedHandler
       endDateOfSubscription: endDateOfSubscription,
       paymentSystemCustomerId: customerId,
       status: SubscriptionStatuses.Canceled,
-      isActive: false,
     };
+  }
+
+  private async handlePlan(planId: string): Promise<PayPalPlansType> {
+    const plans: PayPalPlansResponseType = await this.payPalAdapter.getPlans();
+    return plans.plans.find((p: PayPalPlansType): boolean => p.id === planId);
   }
 }

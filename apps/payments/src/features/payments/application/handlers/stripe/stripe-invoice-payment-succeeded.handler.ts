@@ -5,7 +5,6 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-
 import {
   PaymentSystem,
   SubscriptionType,
@@ -38,6 +37,10 @@ export class StripeInvoicePaymentSucceededHandler
 
   async handle(event: Stripe.Event): Promise<AppNotificationResultType<null>> {
     try {
+      this.logger.debug(
+        'Execute: processing stripe invoice succeeded',
+        this.handle.name,
+      );
       const invoice = event.data.object as Stripe.Invoice;
       const subscriptionId = invoice.subscription_details.metadata.subId;
 

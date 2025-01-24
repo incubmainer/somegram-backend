@@ -4,22 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { PaymentsModule } from './payments.module';
 import { LoggerService } from '@app/logger';
 import { ConfigurationType } from './settings/configuration/configuration';
+import { applySettings } from './settings/apply-settings';
 
 async function bootstrap() {
-  //const configService = new ConfigService();
-
-  // const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-  //   PaymentsModule,
-  //   {
-  //     transport: Transport.TCP,
-  //     options: {
-  //       host: configService.get<string>('PAYMENTS_SERVICE_HOST') || '0.0.0.0',
-  //       port:
-  //         Number(configService.get<string>('PAYMENTS_SERVICE_PORT')) || 3006,
-  //     },
-  //   },
-  // );
-
   const app = await NestFactory.create(PaymentsModule);
   const appConfigService = app.get(ConfigService<ConfigurationType, true>);
   const appEnvSettings = appConfigService.get('envSettings', {
@@ -38,6 +25,7 @@ async function bootstrap() {
       },
     });
 
+  applySettings(microserviceApp);
   const configService = microserviceApp.get(
     ConfigService<ConfigurationType, true>,
   );

@@ -3,10 +3,8 @@ import {
   PaymentSystem,
   SubscriptionType,
 } from '../../../../../../../../libs/common/enums/payments';
-import {
-  SubscriptionStatuses,
-  TransactionStatuses,
-} from '../../../../../../../payments/src/common/enum/transaction-statuses.enum';
+import { TransactionStatuses } from '../../../../../../../payments/src/common/enum/transaction-statuses.enum';
+import { SubscriptionStatuses } from '../../../../../../../payments/src/common/enum/subscription-types.enum';
 
 export class MyPaymentsOutputDto {
   @ApiProperty({

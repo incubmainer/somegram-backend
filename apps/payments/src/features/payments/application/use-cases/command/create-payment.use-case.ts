@@ -50,6 +50,7 @@ export class CreatePaymentUseCase
     this.cancelFrontendUrl = this.envSettings.FRONTEND_CANCEL_PAYMENT_URL;
   }
 
+  // TODO Блокировка
   async execute(
     command: CreatePaymentCommand,
   ): Promise<AppNotificationResultType<string>> {
@@ -65,17 +66,10 @@ export class CreatePaymentUseCase
         subscriptionType,
       );
 
-      // const subscriptionInfo =
-      //   await this.paymentsRepository.getActiveSubscriptionByUserId(
-      //     command.userInfo.userId,
-      //   );
-
       const subscriptionInfo =
-        await this.paymentsRepository.activeSubscriptionByUserId(
+        await this.paymentsRepository.getActiveSubscriptionByUserId(
           command.userInfo.userId,
         );
-
-      console.log('Subinfo', subscriptionInfo);
 
       if (this.isValidActiveSubscription(subscriptionInfo)) {
         return await this.handleSubscriptionUpdate(

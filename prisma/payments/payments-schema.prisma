@@ -21,7 +21,6 @@ model Subscription {
   status                  String
   autoRenewal             Boolean              @default(false)
   payments                PaymentTransaction[] @relation("OrderPayments")
-  isActive                Boolean              @default(true)
 
   @@index([userId])
 }

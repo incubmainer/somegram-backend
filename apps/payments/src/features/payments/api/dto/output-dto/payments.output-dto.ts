@@ -1,5 +1,6 @@
 import { PaymentTransaction, Subscription } from '@prisma/payments';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
+import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 export class MyPaymentsOutputDto {
   subscriptionType: SubscriptionType;
@@ -57,7 +58,10 @@ export const subscriptionInfoMapper = (
   return new SubscriptionInfoOutputDto({
     userId: subscription.userId,
     subscriptionId: subscription.id,
-    status: subscription.status,
+    status:
+      subscription.status === SubscriptionStatuses.Suspended
+        ? SubscriptionStatuses.Active
+        : subscription.status,
     autoRenewal: subscription.autoRenewal,
     dateOfPayment: subscription.dateOfPayment
       ? subscription.dateOfPayment.toISOString()

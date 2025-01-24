@@ -24,11 +24,17 @@ import { CreatePaymentInputDto } from './dto/input-dto/create-payment.dto';
 import { LoggerService } from '@app/logger';
 import { PayPalSignatureGuard } from '../../../common/guards/paypal/paypal.guard';
 import {
+  GetUserPaymentPayloadType,
   PayPalRawBodyPayloadType,
   StripeRawBodyPayloadType,
 } from '../../../../../gateway/src/features/subscriptions/domain/types';
 import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
 import { TestingGetPaymentsQuery } from '../application/use-cases/query/testing-get-payments.use-case';
+import { Paginator } from '../../../../../gateway/src/common/domain/paginator';
+import {
+  MyPaymentsOutputDto,
+  SubscriptionInfoOutputDto,
+} from './dto/output-dto/payments.output-dto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -77,33 +83,31 @@ export class PaymentsController {
   }
 
   @MessagePattern({ cmd: DISABLE_AUTO_RENEWAL })
-  async disableAutoRenewal(payload: {
-    userId: string;
-  }): Promise<AppNotificationResultType<null>> {
+  async disableAutoRenewal(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: disable auto renewal',
       this.disableAutoRenewal.name,
     );
-    return this.commandBus.execute(
-      new DisableAutoRenewalCommand(payload.userId),
-    );
+    return this.commandBus.execute(new DisableAutoRenewalCommand(payload));
   }
 
   @MessagePattern({ cmd: ENABLE_AUTO_RENEWAL })
-  async enableAutoRenewal(payload: {
-    userId: string;
-  }): Promise<AppNotificationResultType<null>> {
+  async enableAutoRenewal(
+    payload: string,
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: enable auto renewal',
       this.enableAutoRenewal.name,
     );
-    return this.commandBus.execute(
-      new EnableAutoRenewalCommand(payload.userId),
-    );
+    return this.commandBus.execute(new EnableAutoRenewalCommand(payload));
   }
 
   @MessagePattern({ cmd: GET_PAYMENTS })
-  async getPayments({ payload }) {
+  async getPayments(
+    payload: GetUserPaymentPayloadType,
+  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
     this.logger.debug('Execute: get payments', this.getPayments.name);
     return this.queryBus.execute(
       new GetPaymentsQuery(payload.userId, payload.queryString),
@@ -111,12 +115,14 @@ export class PaymentsController {
   }
 
   @MessagePattern({ cmd: GET_SUBSCRIPTION_INFO })
-  async getSubscriptionInfo({ payload }) {
+  async getSubscriptionInfo(
+    payload: string,
+  ): Promise<AppNotificationResultType<SubscriptionInfoOutputDto>> {
     this.logger.debug(
       'Execute: get subscription info',
       this.getSubscriptionInfo.name,
     );
-    return this.queryBus.execute(new GetSubscriptionInfoQuery(payload.userId));
+    return this.queryBus.execute(new GetSubscriptionInfoQuery(payload));
   }
 
   @MessagePattern({ cmd: TESTING_CANCEL_SUBSCRIPTION })

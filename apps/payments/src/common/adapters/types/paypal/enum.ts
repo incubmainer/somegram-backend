@@ -83,13 +83,11 @@ export enum PayPalEventsEnum {
    * Example: When a user completes a payment for an active subscription.
    */
   'PAYMENT_COMPLETED' = 'PAYMENT.SALE.COMPLETED',
-
   /**
    * A merchant refunds a sale.
    * Example: When a merchant processes a refund for a subscription payment.
    */
   'PAYMENT_REFUNDED' = 'PAYMENT.SALE.REFUNDED',
-
   /**
    * A payment is reversed on a subscription.
    * Example: When a payment is disputed and reversed by the system or bank.
@@ -133,19 +131,6 @@ export enum TenureTypeEnum {
   'TRIAL' = 'TRIAL', //A trial billing cycle.
 }
 
-export enum PlanStatusEnum {
-  'CREATED' = 'CREATED',
-  'INACTIVE' = 'INACTIVE',
-  'ACTIVE' = 'ACTIVE',
-}
-
-export enum PlanIntervalEnum {
-  'DAY' = 'DAY',
-  'WEEK' = 'WEEK',
-  'MONTH' = 'MONTH',
-  'YEAR' = 'YEAR',
-}
-
 export enum PayPalCurrencyCodeEnum {
   AUD = 'AUD', // Australian dollar
   BRL = 'BRL', // Brazilian real
@@ -171,4 +156,9 @@ export enum PayPalCurrencyCodeEnum {
   CHF = 'CHF', // Swiss franc
   THB = 'THB', // Thai baht
   USD = 'USD', // United States dollar
+}
+
+export enum FailureActionEnum {
+  'CONTINUE' = 'CONTINUE',
+  'CANCEL' = 'CANCEL',
 }
