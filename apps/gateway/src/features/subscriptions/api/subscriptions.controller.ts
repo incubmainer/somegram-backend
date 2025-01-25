@@ -15,14 +15,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-
 import {
   ApiBearerAuth,
   ApiExcludeEndpoint,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { CreatePaymentCommand } from '../application/use-cases/create-payments.use-case';
@@ -164,8 +162,10 @@ export class SubscriptionsController {
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.stripeWebhook.name);
         return;
       case AppNotificationResultEnum.Forbidden:
+        this.logger.debug(`Forbidden`, this.stripeWebhook.name);
         throw new ForbiddenException();
       default:
         throw new InternalServerErrorException();

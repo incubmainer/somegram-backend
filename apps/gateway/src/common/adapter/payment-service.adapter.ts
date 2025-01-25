@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, Observable, timeout } from 'rxjs';
-import { ConfigService } from '@nestjs/config';
 import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,
@@ -34,7 +33,6 @@ export class PaymentsServiceAdapter {
   constructor(
     @Inject('PAYMENTS_SERVICE')
     private readonly paymentsServiceClient: ClientProxy,
-    private readonly configService: ConfigService,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
   ) {}

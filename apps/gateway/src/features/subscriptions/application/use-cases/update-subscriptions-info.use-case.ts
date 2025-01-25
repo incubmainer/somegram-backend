@@ -32,7 +32,6 @@ export class UpdateSubscriptionsInfoUseCase
     command: UpdateSubscriptionsInfoCommand,
   ): Promise<AppNotificationResultType<null>> {
     this.logger.debug('Execute: Update accounts type', this.execute.name);
-    // const { userId, endDateOfSubscription } = command.payload;
     try {
       const ids: string[] = command.payload.map(
         (u: SubscriptionInfoGatewayType) => u.userId,
