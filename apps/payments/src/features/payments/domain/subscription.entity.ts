@@ -91,6 +91,7 @@ export class SubscriptionEntity implements Subscription {
   static cancelSubscription(subscription: Subscription): void {
     subscription.updatedAt = new Date();
     subscription.status = SubscriptionStatuses.Canceled;
+    subscription.autoRenewal = false;
   }
 }
 

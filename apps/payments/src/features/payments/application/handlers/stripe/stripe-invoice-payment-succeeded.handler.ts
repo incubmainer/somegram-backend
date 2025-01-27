@@ -64,18 +64,23 @@ export class StripeInvoicePaymentSucceededHandler
         userId: subscription.userId,
         endDateOfSubscription: subscription.endDateOfSubscription,
       });
+      if (subscriptionData.amount > 0) {
+        const transactionData: TransactionInputDto =
+          this.generateDataTransaction(
+            subscriptionData.amount / 100,
+            subscription.id,
+            SUBSCRIPTION_TYPE[
+              subscriptionData.plan.interval
+            ] as SubscriptionType,
+            subscription.dateOfPayment,
+            subscription.endDateOfSubscription,
+          );
+        const transaction: TransactionEntity =
+          this.transactionEntity.create(transactionData);
 
-      const transactionData: TransactionInputDto = this.generateDataTransaction(
-        subscriptionData.amount / 100,
-        subscription.id,
-        SUBSCRIPTION_TYPE[subscriptionData.plan.interval] as SubscriptionType,
-        subscription.dateOfPayment,
-        subscription.endDateOfSubscription,
-      );
-      const transaction: TransactionEntity =
-        this.transactionEntity.create(transactionData);
+        await this.paymentsRepository.saveTransaction(transaction);
+      }
 
-      await this.paymentsRepository.saveTransaction(transaction);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.handle.name);
