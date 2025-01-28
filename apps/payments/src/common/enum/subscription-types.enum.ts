@@ -5,10 +5,3 @@ export const SUBSCRIPTION_TYPE = {
   week: SubscriptionType.WEEKLY,
   month: SubscriptionType.MONTHLY,
 };
-
-export enum SubscriptionStatuses {
-  Active = 'Active',
-  Canceled = 'Canceled',
-  Suspended = 'Suspended',
-  Pending = 'Pending',
-}

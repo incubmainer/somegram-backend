@@ -1,6 +1,8 @@
 import { Subscription, PaymentTransaction } from '@prisma/payments';
-import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
-import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
+import {
+  SubscriptionStatuses,
+  SubscriptionType,
+} from '../../../../../../../../libs/common/enums/payments';
 
 export class MyPaymentsOutputDto {
   subscriptionType: SubscriptionType;

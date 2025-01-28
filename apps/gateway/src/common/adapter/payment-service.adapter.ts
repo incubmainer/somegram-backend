@@ -25,8 +25,10 @@ import {
   StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
 import { Paginator } from '../domain/paginator';
-import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
-import { SubscriptionInfoOutputDto } from '../../../../payments/src/features/payments/api/dto/output-dto/payments.output-dto';
+import {
+  MyPaymentsOutputDto,
+  SubscriptionInfoOutputDto,
+} from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 
 @Injectable()
 export class PaymentsServiceAdapter {

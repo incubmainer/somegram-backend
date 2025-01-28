@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   PaymentSystem,
+  SubscriptionStatuses,
   SubscriptionType,
+  TransactionStatuses,
 } from '../../../../../../../../libs/common/enums/payments';
-import { TransactionStatuses } from '../../../../../../../payments/src/common/enum/transaction-statuses.enum';
-import { SubscriptionStatuses } from '../../../../../../../payments/src/common/enum/subscription-types.enum';
 
 export class MyPaymentsOutputDto {
   @ApiProperty({
