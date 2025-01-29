@@ -38,7 +38,7 @@ export class DisableAutoRenewalUseCase
     this.logger.debug('Execute: disable auto renewal', this.execute.name);
     try {
       const activeSubscription: Subscription | null =
-        await this.paymentsRepository.getActiveSubscriptionByUserIdWithPayments(
+        await this.paymentsRepository.getActiveSubscriptionByUserId(
           command.userId,
         );
 
