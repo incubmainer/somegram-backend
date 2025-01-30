@@ -56,3 +56,9 @@ export default () => {
   // Create and return a Configuration object with these environment variables
   return Configuration.createConfig(envVariables);
 };
+
+export const corsWhiteList = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://somegram.online',
+];

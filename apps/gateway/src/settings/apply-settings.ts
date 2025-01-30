@@ -4,7 +4,10 @@ import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
 import * as cookieParser from 'cookie-parser';
 import { GatewayModule } from '../gateway.module';
-import { ConfigurationType } from './configuration/configuration';
+import {
+  ConfigurationType,
+  corsWhiteList,
+} from './configuration/configuration';
 import { EnvSettings } from './env/env.settings';
 import { ValidationPipeOption } from '../common/pipe/validation/validation-options.pipe';
 import { HttpExceptionFilter } from '../common/exception-filter/http/http.exception-filter';
@@ -32,11 +35,7 @@ export const applySettings = (app: INestApplication): void => {
 
 const enableCors = (app: INestApplication): void => {
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://somegram.online',
-    ],
+    origin: corsWhiteList,
     credentials: true,
     allowedHeaders: [
       'Content-Type',
