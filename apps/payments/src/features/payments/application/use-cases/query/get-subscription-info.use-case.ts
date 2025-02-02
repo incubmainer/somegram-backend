@@ -39,10 +39,9 @@ export class GetSubscriptionInfoQueryUseCase
       this.execute.name,
     );
     try {
-      const sub =
-        await this.paymentsRepository.getActiveSubscriptionByUserIdWithPayments(
-          command.userId,
-        );
+      const sub = await this.paymentsRepository.getActiveSubscriptionByUserId(
+        command.userId,
+      );
 
       if (!sub) return this.appNotification.notFound();
 

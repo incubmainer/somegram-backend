@@ -180,7 +180,10 @@ export class PayPalAdapter {
 
       const result: AppNotificationResultType<null> =
         await this.commandBus.execute(
-          new PayPalSubscriptionCreateUseCase(createSubscription),
+          new PayPalSubscriptionCreateUseCase(
+            createSubscription,
+            subscriptionType,
+          ),
         );
 
       if (result.appResult !== AppNotificationResultEnum.Success) return null;

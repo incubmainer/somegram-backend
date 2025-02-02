@@ -54,32 +54,6 @@ export class PaymentsRepository {
     return { payments, count };
   }
 
-  public async getActiveSubscriptionByUserIdWithPayments(
-    userId: string,
-  ): Promise<
-    {
-      payments: PaymentTransaction[];
-    } & Subscription
-  > {
-    const subscription = await this.txHost.tx.subscription.findFirst({
-      where: {
-        OR: [
-          { status: SubscriptionStatuses.Active },
-          { status: SubscriptionStatuses.Suspended },
-        ],
-        userId,
-      },
-      include: {
-        payments: {
-          orderBy: {
-            dateOfPayment: 'desc',
-          },
-          take: 1,
-        },
-      },
-    });
-    return subscription ? subscription : null;
-  }
   public async saveTransaction(
     transaction: TransactionEntity,
   ): Promise<string> {
