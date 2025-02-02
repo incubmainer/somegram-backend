@@ -13,6 +13,7 @@ import { CountryCatalogModule } from './features/country-catalog/country-catalog
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
 import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
+import { SocketGatewayModule } from './features/socket/socket.gateway.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SubscriptionsModule } from './features/subscriptions/subscriptions.modu
     ApplicationNotificationModule,
     CountryCatalogModule,
     SubscriptionsModule,
+    SocketGatewayModule,
     CommonModule,
     LoggerModule.forRoot('Gateway'),
   ],

@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { UsersQueryRepository } from '../users/infrastructure/users.query-repository';
 import { corsWhiteList } from '../../settings/configuration/configuration';
+import { jwtConstants } from '../../common/constants/jwt-basic-constants';
 
 @WebSocketGateway({
   cors: {
@@ -41,14 +42,13 @@ export class SocketGatewayService
           `Client ${client.id} tried to connect without a token.`,
         );
 
-        this.forceDisconnect(client, 'Missing token');
+        this.forceDisconnect(client, 'Missing token2');
         return;
       }
 
-      const decodedToken = this.jwtService.verify(token, {
-        secret: this.configService.get('ACCESS_TOKEN_SECRET'),
+      const decodedToken = await this.jwtService.verifyAsync(token, {
+        secret: jwtConstants.JWT_SECRET,
       });
-
       const user = await this.usersQueryRepo.findUserById(decodedToken.userId);
 
       if (!user) {
@@ -62,7 +62,7 @@ export class SocketGatewayService
       this.clients.set(client, user.id);
 
       client.join(user.id);
-      this.logger.log(`Client ${client.id} connected as user ${user.id}.`);
+      this.logger.log(`Client ${client.id} connected as user ${user.id}`);
     } catch (e) {
       this.forceDisconnect(client, 'Unauthorized');
       return;

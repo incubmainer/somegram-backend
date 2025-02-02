@@ -1670,6 +1670,14 @@
     multer "1.4.4-lts.1"
     tslib "2.6.3"
 
+"@nestjs/platform-socket.io@^11.0.6":
+  version "11.0.6"
+  resolved "https://registry.yarnpkg.com/@nestjs/platform-socket.io/-/platform-socket.io-11.0.6.tgz#65477d904c4620b73d0cb772fa52df0f6e0ee7ac"
+  integrity sha512-80r6hp0p+YK/+D5srjPTE/fc1w0aTM6ecqprJr8bFlzTPJbtYtpfHqMbEg0UfRKTsZ0krEgpv8fb0K4dSYzW0w==
+  dependencies:
+    socket.io "4.8.1"
+    tslib "2.8.1"
+
 "@nestjs/schedule@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@nestjs/schedule/-/schedule-5.0.0.tgz#061842f4aafbd29ef488adf00d43ec8ba9a1ff37"
@@ -6831,7 +6839,7 @@ socket.io-parser@~4.2.4:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"
 
-socket.io@^4.8.1:
+socket.io@4.8.1, socket.io@^4.8.1:
   version "4.8.1"
   resolved "https://registry.yarnpkg.com/socket.io/-/socket.io-4.8.1.tgz#fa0eaff965cc97fdf4245e8d4794618459f7558a"
   integrity sha512-oZ7iUCxph8WYRHHcjBEc9unw3adt5CmSNlppj/5Q4k2RIrhl8Z5yY2Xr4j9zj0+wzVZ0bxmYoGSzKJnRl6A4yg==
