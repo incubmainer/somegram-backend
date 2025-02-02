@@ -182,4 +182,18 @@ export class PaymentsRepository {
     });
     return result.id;
   }
+
+  public async testingDeletePayments(userId: string) {
+    this.logger.debug(
+      'Execute: update subscription',
+      this.testingDeletePayments.name,
+    );
+    return await this.txHost.tx.paymentTransaction.deleteMany({
+      where: {
+        subscription: {
+          userId: userId,
+        },
+      },
+    });
+  }
 }
