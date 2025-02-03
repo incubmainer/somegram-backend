@@ -34,3 +34,5 @@ export const SUBSCRIPTIONS_ROUTE = {
   TESTING: 'testing',
   CANCEL_SUBSCRIPTION: 'cancel-subscription',
 };
+
+export const NOTIFICATION_NAME_SPACE = 'notification';

@@ -10,6 +10,7 @@ import { photoServiceOptions } from '../settings/configuration/photo-service.opt
 import { CommandExecutorService } from './services/command-executor-service';
 import { ClsTransactionalModule } from './modules/cls-transactional.module';
 import { EmailModule } from './modules/email.module';
+import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
 
 @Global()
 @Module({
@@ -27,6 +28,7 @@ import { EmailModule } from './modules/email.module';
     JwtRefreshTokenStrategyStrategy,
     RefreshJWTAccessGuard,
     CommandExecutorService,
+    WsJwtAuthGuard,
   ],
   exports: [
     CqrsModule,
@@ -36,6 +38,7 @@ import { EmailModule } from './modules/email.module';
     ClsTransactionalModule,
     CommandExecutorService,
     EmailModule,
+    WsJwtAuthGuard,
   ],
 })
 export class CommonModule {}

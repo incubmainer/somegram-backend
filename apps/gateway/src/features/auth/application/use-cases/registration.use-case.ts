@@ -79,7 +79,7 @@ export class RegistrationUseCase {
   public async execute(
     command: RegistrationCommand,
   ): Promise<NotificationObject<void>> {
-    this.logger.debug('registration command', this.execute.name);
+    this.logger.debug('registration use-cases', this.execute.name);
     const notification = new NotificationObject(RegistrationCodes.Success);
     const { username, email, password, html } = command;
     try {
