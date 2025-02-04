@@ -1,22 +1,33 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { WsUnauthorizedException } from '../../exception-filter/ws/exceptions/ws-unauthorized.exception';
+import { JWTAccessTokenPayloadType } from '../../domain/types/types';
 
 @Injectable()
-export class WsJwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
+export class WsJwtAuthGuard extends AuthGuard('ws-jwt') implements CanActivate {
   canActivate(context: ExecutionContext): any {
-    console.log('AUTH');
     const client: Socket = context.switchToWs().getClient();
     const authToken = client.handshake?.headers?.authorization;
 
-    throw new WsUnauthorizedException();
+    if (!authToken) throw new WsUnauthorizedException();
 
-    // if (!authToken) {
-    //   throw new WsException('Unauthorized');
-    // }
+    return super.canActivate(context);
+  }
 
-    //return super.canActivate(context) as boolean;
+  handleRequest<T extends JWTAccessTokenPayloadType>(
+    err: any,
+    user: T,
+    _: undefined,
+    context: ExecutionContext,
+  ): T {
+    if (err || !user) throw new WsUnauthorizedException();
+
+    const userId = user.userId;
+
+    const client: Socket = context.switchToWs().getClient<Socket>();
+
+    client.data.user = { userId };
+    return client.data.user;
   }
 }

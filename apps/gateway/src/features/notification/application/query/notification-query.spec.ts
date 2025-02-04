@@ -9,12 +9,16 @@ import { GatewayModule } from '../../../../gateway.module';
 import {
   GetNotificationsByUserIdQueryCommand,
   GetNotificationsByUserIdQueryCommandHandler,
-} from './get-notification.query.command';
+} from './get-notifications.query.command';
 import { NotificationOutputDto } from '../../api/dto/output-dto/notification.output.dto';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import {
+  GetNotificationByIdQueryCommand,
+  GetNotificationByIdQueryCommandHandler,
+} from './get-notification-by-id.query.command';
 
 const userId = 'user-1';
-
+const notificationId = 'notification-123';
 const generateDto = () => {
   const data: Notification[] = [];
   for (let i = 0; i < 10; i++) {
@@ -30,10 +34,27 @@ const generateDto = () => {
   return data;
 };
 const notificationData: Notification[] = generateDto();
+const notificationMockData = {
+  id: notificationId,
+  userId: userId,
+  message: 'Message message',
+  isRead: true,
+  createdAt: new Date(),
+  updateAt: new Date(),
+};
+
+interface ITxHost {
+  tx: {
+    notification: {
+      findMany: () => any;
+      findUnique: () => any;
+    };
+  };
+}
 
 describe('Notification query', () => {
   let queryBus: QueryBus;
-
+  let txHost: ITxHost;
   beforeAll(async () => {
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
       imports: [GatewayModule],
@@ -43,6 +64,7 @@ describe('Notification query', () => {
       tx: {
         notification: {
           findMany: jest.fn().mockResolvedValue(notificationData),
+          findUnique: jest.fn().mockResolvedValue(notificationMockData),
         },
       },
     });
@@ -50,7 +72,11 @@ describe('Notification query', () => {
     const module: TestingModule = await moduleBuilder.compile();
 
     queryBus = module.get<QueryBus>(QueryBus);
-    queryBus.register([GetNotificationsByUserIdQueryCommandHandler]);
+    queryBus.register([
+      GetNotificationsByUserIdQueryCommandHandler,
+      GetNotificationByIdQueryCommandHandler,
+    ]);
+    txHost = module.get<TransactionHost>(TransactionHost);
   });
 
   it('should get notifications by user id', async () => {
@@ -65,5 +91,36 @@ describe('Notification query', () => {
       isRead: expect.any(Boolean),
       createdAt: expect.any(Date),
     });
+  });
+
+  it('should get notifications by id', async () => {
+    const result: AppNotificationResultType<NotificationOutputDto> =
+      await queryBus.execute(
+        new GetNotificationByIdQueryCommand(notificationId),
+      );
+
+    expect(result.appResult).toEqual(AppNotificationResultEnum.Success);
+    expect(result.data).toEqual({
+      id: notificationId,
+      message: expect.any(String),
+      isRead: expect.any(Boolean),
+      createdAt: expect.any(Date),
+    });
+  });
+
+  it('should not get notifications by id, not found', async () => {
+    const getNotificationSpy = jest
+      .spyOn(txHost.tx.notification, 'findUnique')
+      .mockResolvedValueOnce(null);
+
+    const result: AppNotificationResultType<NotificationOutputDto> =
+      await queryBus.execute(
+        new GetNotificationByIdQueryCommand(notificationId),
+      );
+
+    expect(result.appResult).toEqual(AppNotificationResultEnum.NotFound);
+    expect(result.data).toBeNull();
+
+    getNotificationSpy.mockRestore();
   });
 });

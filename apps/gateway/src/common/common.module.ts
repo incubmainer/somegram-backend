@@ -11,6 +11,7 @@ import { CommandExecutorService } from './services/command-executor-service';
 import { ClsTransactionalModule } from './modules/cls-transactional.module';
 import { EmailModule } from './modules/email.module';
 import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
+import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 
 @Global()
 @Module({
@@ -29,6 +30,7 @@ import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
     RefreshJWTAccessGuard,
     CommandExecutorService,
     WsJwtAuthGuard,
+    WsJwtStrategy,
   ],
   exports: [
     CqrsModule,
@@ -39,6 +41,7 @@ import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
     CommandExecutorService,
     EmailModule,
     WsJwtAuthGuard,
+    WsJwtStrategy,
   ],
 })
 export class CommonModule {}

@@ -9,12 +9,14 @@ import {
   CreateNotificationUseCaseHandler,
   CreateNotificationUseCases,
 } from './create-notification.use-cases';
-import { Notification } from '@prisma/gateway';
+import { Notification, User } from '@prisma/gateway';
 import {
   MarkNotificationAsReadUseCaseHandler,
   MarkNotificationAsReadUseCases,
 } from './mark-as-read.use-cases';
 import { GatewayModule } from '../../../../gateway.module';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import { AccountType } from '../../../../../../../libs/common/enums/payments';
 
 const notification1Id = 'notification-1';
 const userId = 'user-1';
@@ -43,9 +45,28 @@ class NotificationRepoMock extends NotificationRepository {
   }
 }
 
+const userMockData = {
+  id: userId,
+  createdAt: new Date(),
+  username: 'string',
+  email: 'string',
+  hashPassword: 'string',
+  updatedAt: new Date(),
+  isConfirmed: true,
+  firstName: 'string',
+  lastName: 'string',
+  dateOfBirth: new Date(),
+  subscriptionExpireAt: null,
+  about: 'about',
+  accountType: AccountType.Personal,
+  city: 'City',
+  country: 'country',
+};
+
 describe('Notification', () => {
   let commandBus: CommandBus;
   let notificationRepository: NotificationRepository;
+  let userRepository: UsersRepository;
   beforeAll(async () => {
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
       imports: [GatewayModule],
@@ -54,6 +75,10 @@ describe('Notification', () => {
     moduleBuilder
       .overrideProvider(NotificationRepository)
       .useClass(NotificationRepoMock);
+
+    moduleBuilder.overrideProvider(UsersRepository).useValue({
+      getUserById: jest.fn().mockResolvedValue(userMockData),
+    });
 
     const module: TestingModule = await moduleBuilder.compile();
 
@@ -65,6 +90,7 @@ describe('Notification', () => {
     notificationRepository = module.get<NotificationRepository>(
       NotificationRepository,
     );
+    userRepository = module.get<UsersRepository>(UsersRepository);
   });
 
   it('should create notification', async () => {
@@ -85,12 +111,30 @@ describe('Notification', () => {
     createSpy.mockRestore();
   });
 
+  it('should not create notification, user not found', async () => {
+    jest.clearAllMocks();
+    const createSpy = jest.spyOn(notificationRepository, 'create');
+    const userRepoSpy = jest.spyOn(userRepository, 'getUserById');
+
+    userRepoSpy.mockResolvedValue(null);
+
+    const result: AppNotificationResultType<null> = await commandBus.execute(
+      new CreateNotificationUseCases(userId, message),
+    );
+
+    expect(createSpy).not.toHaveBeenCalled();
+
+    expect(result.appResult).toEqual(AppNotificationResultEnum.NotFound);
+    createSpy.mockRestore();
+    userRepoSpy.mockRestore();
+  });
+
   it('should mark notification as read', async () => {
     const updateSpy = jest.spyOn(notificationRepository, 'update');
     const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
-      new MarkNotificationAsReadUseCases(notification1Id, userId),
+      new MarkNotificationAsReadUseCases(userId, notification1Id),
     );
 
     expect(getSpy).toHaveBeenCalledWith(notification1Id);
@@ -115,7 +159,7 @@ describe('Notification', () => {
     getSpy.mockResolvedValueOnce(null);
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
-      new MarkNotificationAsReadUseCases(notification1Id, userId),
+      new MarkNotificationAsReadUseCases(userId, notification1Id),
     );
 
     expect(getSpy).toHaveBeenCalledWith(notification1Id);
@@ -131,7 +175,7 @@ describe('Notification', () => {
     const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
-      new MarkNotificationAsReadUseCases(notification1Id, 'userId-2'),
+      new MarkNotificationAsReadUseCases('userId-2', notification1Id),
     );
 
     expect(getSpy).toHaveBeenCalledWith(notification1Id);
@@ -155,7 +199,7 @@ describe('Notification', () => {
     });
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
-      new MarkNotificationAsReadUseCases(notification1Id, userId),
+      new MarkNotificationAsReadUseCases(userId, notification1Id),
     );
 
     expect(getSpy).toHaveBeenCalledWith(notification1Id);

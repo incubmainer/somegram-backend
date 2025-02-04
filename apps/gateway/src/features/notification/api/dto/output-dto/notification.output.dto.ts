@@ -21,7 +21,7 @@ export class NotificationOutputDto {
   message: string;
   @ApiProperty({
     type: Boolean,
-    example: true,
+    example: false,
     nullable: false,
     description: 'Notification is read or not',
     required: true,

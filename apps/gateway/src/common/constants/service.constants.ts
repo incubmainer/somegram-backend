@@ -20,3 +20,5 @@ export const PAYPAL_WEBHOOK_HANDLER = 'PAYPAL_WEBHOOK_HANDLER';
 
 export const TESTING_CANCEL_SUBSCRIPTION = 'testing_cancel_subscription';
 export const TESTING_GET_PAYMENTS = 'testing_get_payments';
+
+export const CREATE_NOTIFICATION = 'create_notification';

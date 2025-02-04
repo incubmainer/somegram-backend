@@ -10,8 +10,8 @@ import { NotificationRepository } from '../../infrastructure/notification.reposi
 
 export class MarkNotificationAsReadUseCases {
   constructor(
-    public notificationId: string,
     public userId: string,
+    public notificationId: string,
   ) {}
 }
 
