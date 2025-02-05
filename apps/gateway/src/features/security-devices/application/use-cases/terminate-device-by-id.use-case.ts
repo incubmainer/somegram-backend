@@ -32,7 +32,7 @@ export class TerminateDeviceByIdCommandHandler
     const { userId, deviceId } = command;
 
     const device: SecurityDevices | null =
-      await this.securityDevicesRepository.getDiviceById(deviceId);
+      await this.securityDevicesRepository.getDeviceById(deviceId);
 
     if (!device) return this.applicationNotification.notFound();
     if (device.userId !== userId)

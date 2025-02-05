@@ -5,6 +5,7 @@ import {
   PrismaClient as GatewayPrismaClient,
   SecurityDevices,
 } from '@prisma/gateway';
+import { LoggerService } from '@app/logger';
 
 // TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем девайс
 @Injectable()
@@ -13,7 +14,10 @@ export class SecurityDevicesRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(SecurityDevicesRepository.name);
+  }
 
   public async addDevice(
     userId: string,
@@ -59,7 +63,11 @@ export class SecurityDevicesRepository {
     return true;
   }
 
-  async getDiviceById(deviceId: string): Promise<SecurityDevices | null> {
+  async getDeviceById(deviceId: string): Promise<SecurityDevices | null> {
+    this.logger.debug(
+      `Execute: get device by deviceId ${deviceId}`,
+      this.getDeviceById.name,
+    );
     const device = await this.txHost.tx.securityDevices.findFirst({
       where: { deviceId },
     });

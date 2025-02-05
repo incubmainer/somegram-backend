@@ -6,7 +6,7 @@ import {
   jwtConstants,
   tokensLivesConstants,
 } from '../../../../common/constants/jwt-basic-constants';
-
+import { LoggerService } from '@app/logger';
 export class CreateTokensCommand {
   constructor(
     public userId: string,
@@ -18,9 +18,15 @@ export class CreateTokensCommand {
 export class CreateTokensUseCase
   implements ICommandHandler<CreateTokensCommand>
 {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(CreateTokensUseCase.name);
+  }
 
   async execute(command: CreateTokensCommand) {
+    this.logger.debug('Execute: create tokens', this.execute.name);
     const accessTokenPayload = { userId: command.userId };
 
     const refreshTokenPayload = {
