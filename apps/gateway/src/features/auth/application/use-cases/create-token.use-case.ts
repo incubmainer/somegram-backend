@@ -28,24 +28,30 @@ export class CreateTokensUseCase
   async execute(command: CreateTokensCommand) {
     this.logger.debug('Execute: create tokens', this.execute.name);
     const accessTokenPayload = { userId: command.userId };
+    try {
+      const refreshTokenPayload = {
+        userId: command.userId,
+        deviceId: command.deviceId,
+      };
 
-    const refreshTokenPayload = {
-      userId: command.userId,
-      deviceId: command.deviceId,
-    };
+      const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
+        secret: jwtConstants.JWT_SECRET,
+        expiresIn: tokensLivesConstants['1hour'],
+      });
+      const refreshToken = await this.jwtService.signAsync(
+        refreshTokenPayload,
+        {
+          secret: jwtConstants.REFRESH_TOKEN_SECRET,
+          expiresIn: tokensLivesConstants['2hours'],
+        },
+      );
 
-    const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
-      secret: jwtConstants.JWT_SECRET,
-      expiresIn: tokensLivesConstants['1hour'],
-    });
-    const refreshToken = await this.jwtService.signAsync(refreshTokenPayload, {
-      secret: jwtConstants.REFRESH_TOKEN_SECRET,
-      expiresIn: tokensLivesConstants['2hours'],
-    });
-
-    return {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    };
+      return {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+    }
   }
 }
