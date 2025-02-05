@@ -4,6 +4,7 @@ import { SubscriptionStatuses } from '../../../common/enum/subscription-types.en
 
 @Injectable()
 export class SubscriptionEntity implements Subscription {
+  subscriptionType: string;
   id: string;
   userId: string;
   createdAt: Date;
@@ -24,6 +25,7 @@ export class SubscriptionEntity implements Subscription {
       autoRenewal,
       paymentSystem,
       paymentSystemSubId,
+      subscriptionType,
     } = inputDto;
 
     const subscription = new this();
@@ -33,6 +35,7 @@ export class SubscriptionEntity implements Subscription {
     subscription.paymentSystemSubId = paymentSystemSubId;
     subscription.status = status;
     subscription.autoRenewal = autoRenewal;
+    subscription.subscriptionType = subscriptionType;
     return subscription;
   }
 
@@ -101,6 +104,7 @@ export type SubscriptionInputDto = {
   paymentSystem: string;
   status: string;
   autoRenewal: boolean;
+  subscriptionType: string;
   paymentSystemSubId?: string;
 };
 
@@ -108,6 +112,7 @@ export type SubscriptionUpdateDto = {
   updatedAt: Date;
   paymentSystemCustomerId: string;
   status: SubscriptionStatuses;
+  subscriptionType?: string;
   endDateOfSubscription?: Date;
   dateOfPayment?: Date;
   autoRenewal?: boolean;

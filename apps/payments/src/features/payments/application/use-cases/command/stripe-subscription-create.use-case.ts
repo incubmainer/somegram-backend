@@ -15,7 +15,9 @@ import {
 import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 export class StripeSubscriptionCreateCommand {
-  constructor(public inputModel: { userId: string }) {}
+  constructor(
+    public inputModel: { userId: string; subscriptionType: string },
+  ) {}
 }
 
 @CommandHandler(StripeSubscriptionCreateCommand)
@@ -40,9 +42,9 @@ export class StripeSubscriptionCreateUseCase
     command: StripeSubscriptionCreateCommand,
   ): Promise<AppNotificationResultType<string>> {
     this.logger.debug('Execute: create subscription', this.execute.name);
-    const { userId } = command.inputModel;
+    const { userId, subscriptionType } = command.inputModel;
     try {
-      const data = this.generateCreateData(userId);
+      const data = this.generateCreateData(userId, subscriptionType);
       const subscription: Subscription = this.subscriptionEntity.create(data);
       const newSubId = await this.paymentsRepository.createSub(subscription);
       return this.appNotification.success(newSubId);
@@ -52,13 +54,17 @@ export class StripeSubscriptionCreateUseCase
     }
   }
 
-  private generateCreateData(userId: string): SubscriptionInputDto {
+  private generateCreateData(
+    userId: string,
+    subscriptionType: string,
+  ): SubscriptionInputDto {
     return {
       userId: userId,
       autoRenewal: true,
       status: SubscriptionStatuses.Pending,
       paymentSystem: PaymentSystem.STRIPE,
       createdAt: new Date(),
+      subscriptionType,
     };
   }
 }

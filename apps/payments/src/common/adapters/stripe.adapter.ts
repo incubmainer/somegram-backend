@@ -59,6 +59,7 @@ export class StripeAdapter {
         await this.commandBus.execute(
           new StripeSubscriptionCreateCommand({
             userId: payload.userInfo.userId,
+            subscriptionType: payload.subscriptionType,
           }),
         );
 
@@ -162,6 +163,7 @@ export class StripeAdapter {
         await this.commandBus.execute(
           new StripeSubscriptionCreateCommand({
             userId: payload.userInfo.userId,
+            subscriptionType: payload.subscriptionType,
           }),
         );
 
@@ -188,7 +190,7 @@ export class StripeAdapter {
         });
       }
 
-      const sessionPharams: Stripe.Checkout.SessionCreateParams = {
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
         success_url: payload.successFrontendUrl,
         cancel_url: payload.cancelFrontendUrl,
         line_items: [
@@ -222,11 +224,10 @@ export class StripeAdapter {
         },
       };
       if (trialDays >= 1) {
-        sessionPharams.subscription_data.trial_period_days = trialDays;
+        sessionParams.subscription_data.trial_period_days = trialDays;
       }
 
-      const session =
-        await this.stripe.checkout.sessions.create(sessionPharams);
+      const session = await this.stripe.checkout.sessions.create(sessionParams);
 
       return session.url;
     } catch (e) {

@@ -53,9 +53,7 @@ export class SubscriptionInfoOutputDto {
 }
 
 export const subscriptionInfoMapper = (
-  subscription: {
-    payments: PaymentTransaction[];
-  } & Subscription,
+  subscription: Subscription,
 ): SubscriptionInfoOutputDto => {
   return new SubscriptionInfoOutputDto({
     userId: subscription.userId,
@@ -71,6 +69,6 @@ export const subscriptionInfoMapper = (
     endDateOfSubscription: subscription.endDateOfSubscription
       ? subscription.endDateOfSubscription.toISOString()
       : null,
-    subscriptionType: subscription.payments[0].subscriptionType,
+    subscriptionType: subscription.subscriptionType,
   });
 };

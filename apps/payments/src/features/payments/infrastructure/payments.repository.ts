@@ -54,32 +54,6 @@ export class PaymentsRepository {
     return { payments, count };
   }
 
-  public async getActiveSubscriptionByUserIdWithPayments(
-    userId: string,
-  ): Promise<
-    {
-      payments: PaymentTransaction[];
-    } & Subscription
-  > {
-    const subscription = await this.txHost.tx.subscription.findFirst({
-      where: {
-        OR: [
-          { status: SubscriptionStatuses.Active },
-          { status: SubscriptionStatuses.Suspended },
-        ],
-        userId,
-      },
-      include: {
-        payments: {
-          orderBy: {
-            dateOfPayment: 'desc',
-          },
-          take: 1,
-        },
-      },
-    });
-    return subscription ? subscription : null;
-  }
   public async saveTransaction(
     transaction: TransactionEntity,
   ): Promise<string> {
@@ -207,5 +181,19 @@ export class PaymentsRepository {
       },
     });
     return result.id;
+  }
+
+  public async testingDeletePayments(userId: string) {
+    this.logger.debug(
+      'Execute: update subscription',
+      this.testingDeletePayments.name,
+    );
+    return await this.txHost.tx.paymentTransaction.deleteMany({
+      where: {
+        subscription: {
+          userId: userId,
+        },
+      },
+    });
   }
 }

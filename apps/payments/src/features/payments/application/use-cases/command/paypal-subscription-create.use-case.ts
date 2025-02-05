@@ -16,7 +16,10 @@ import { LoggerService } from '@app/logger';
 import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
 
 export class PayPalSubscriptionCreateUseCase {
-  constructor(public inputModel: SubscriptionCreatedType) {}
+  constructor(
+    public inputModel: SubscriptionCreatedType,
+    public subscriptionType: string,
+  ) {}
 }
 
 @CommandHandler(PayPalSubscriptionCreateUseCase)
@@ -43,7 +46,11 @@ export class PayPalSubscriptionCreateUseCaseHandler
     this.logger.debug('Execute: create subscription', this.execute.name);
     const { id, custom_id } = command.inputModel;
     try {
-      const data = this.generateCreateData(custom_id, id);
+      const data = this.generateCreateData(
+        custom_id,
+        id,
+        command.subscriptionType,
+      );
       const subscription: Subscription = this.subscriptionEntity.create(data);
       await this.paymentsRepository.createSub(subscription);
       return this.appNotification.success(null);
@@ -56,6 +63,7 @@ export class PayPalSubscriptionCreateUseCaseHandler
   private generateCreateData(
     userId: string,
     subId: string,
+    subscriptionType: string,
   ): SubscriptionInputDto {
     return {
       userId: userId,
@@ -64,6 +72,7 @@ export class PayPalSubscriptionCreateUseCaseHandler
       paymentSystem: PaymentSystem.PAYPAL,
       paymentSystemSubId: subId,
       createdAt: new Date(),
+      subscriptionType,
     };
   }
 }
