@@ -11,6 +11,7 @@ import {
   Req,
   InternalServerErrorException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -85,6 +86,11 @@ import { CreateTokensCommand } from '../application/use-cases/create-token.use-c
 import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { JWTTokensType } from '../../../common/domain/types/types';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -467,17 +473,25 @@ export class AuthController {
     @Res() res: Response,
   ) {
     this.logger.debug('start refresh token', this.renewTokens.name);
-    const tokens = await this.commandBus.execute(
-      new RenewTokensCommand(refreshToken),
-    );
-    this.logger.debug('refresh token success', this.renewTokens.name);
-    return res
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .send({ accessToken: tokens.accessToken });
+    const result: AppNotificationResultType<JWTTokensType> =
+      await this.commandBus.execute(new RenewTokensCommand(refreshToken));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('refresh token success', this.renewTokens.name);
+        return res
+          .cookie('refreshToken', result.data.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+          })
+          .send({ accessToken: result.data.accessToken });
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug(`Unauthorized`, this.renewTokens.name);
+        throw new UnauthorizedException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get('github')

@@ -7,10 +7,11 @@ import {
   tokensLivesConstants,
 } from '../../../../common/constants/jwt-basic-constants';
 import { LoggerService } from '@app/logger';
+import { JWTTokensType } from '../../../../common/domain/types/types';
 export class CreateTokensCommand {
   constructor(
     public userId: string,
-    public deviceId = randomUUID(),
+    public deviceId?: string,
   ) {}
 }
 
@@ -25,15 +26,15 @@ export class CreateTokensUseCase
     this.logger.setContext(CreateTokensUseCase.name);
   }
 
-  async execute(command: CreateTokensCommand) {
+  async execute(command: CreateTokensCommand): Promise<JWTTokensType> {
     this.logger.debug('Execute: create tokens', this.execute.name);
     const accessTokenPayload = { userId: command.userId };
-    try {
-      const refreshTokenPayload = {
-        userId: command.userId,
-        deviceId: command.deviceId,
-      };
+    const refreshTokenPayload = {
+      userId: command.userId,
+      deviceId: command.deviceId ? command.deviceId : randomUUID(),
+    };
 
+    try {
       const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
         secret: jwtConstants.JWT_SECRET,
         expiresIn: tokensLivesConstants['1hour'],

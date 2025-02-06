@@ -5,7 +5,14 @@ import { SecurityDevicesRepository } from '../../../security-devices/infrastruct
 import { CreateTokensCommand } from './create-token.use-case';
 import { CheckRefreshTokenCommand } from './check-refresh-token';
 import { LoggerService } from '@app/logger';
-
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import {
+  JWTRefreshTokenPayloadType,
+  JWTTokensType,
+} from '../../../../common/domain/types/types';
 export class RenewTokensCommand {
   constructor(public refreshToken: string) {}
 }
@@ -16,30 +23,39 @@ export class RenewTokensUseCase implements ICommandHandler<RenewTokensCommand> {
     private securityDevicesRepository: SecurityDevicesRepository,
     private readonly commandBus: CommandBus,
     private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(RenewTokensUseCase.name);
   }
-  async execute(command: RenewTokensCommand): Promise<object> {
+  async execute(
+    command: RenewTokensCommand,
+  ): Promise<AppNotificationResultType<JWTTokensType>> {
     this.logger.debug('Execute: renew tokens', this.execute.name);
 
     try {
-      const deviceInfo = await this.commandBus.execute(
-        new CheckRefreshTokenCommand(command.refreshToken),
+      const refreshTokenPayload: JWTRefreshTokenPayloadType | null =
+        await this.commandBus.execute(
+          new CheckRefreshTokenCommand(command.refreshToken),
+        );
+      if (!refreshTokenPayload) return this.appNotification.unauthorized();
+
+      const tokens: JWTTokensType = await this.commandBus.execute(
+        new CreateTokensCommand(
+          refreshTokenPayload.userId,
+          refreshTokenPayload.deviceId,
+        ),
       );
-      const tokens = await this.commandBus.execute(
-        new CreateTokensCommand(deviceInfo.userId, deviceInfo.deviceId),
-      );
-      const result = await this.authService.verifyRefreshToken(
-        tokens.refreshToken,
-      );
-      const lastActiveDate = new Date(result.iat * 1000).toISOString();
+      const lastActiveDate = new Date(
+        refreshTokenPayload.iat * 1000,
+      ).toISOString();
       await this.securityDevicesRepository.updateLastActiveDate(
-        deviceInfo.deviceId,
+        refreshTokenPayload.deviceId,
         lastActiveDate,
       );
-      return tokens;
+      return this.appNotification.success(tokens);
     } catch (e) {
       this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
   }
 }

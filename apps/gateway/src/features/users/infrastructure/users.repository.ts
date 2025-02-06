@@ -40,6 +40,10 @@ export class UsersRepository {
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
+    this.logger.debug(
+      `Execute: get user by email ${email}`,
+      this.getUserByEmail.name,
+    );
     const user = await this.txHost.tx.user.findFirst({
       where: {
         email,
