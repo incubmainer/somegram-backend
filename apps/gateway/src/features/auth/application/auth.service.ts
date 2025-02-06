@@ -5,6 +5,7 @@ import { CryptoService } from '../../../common/utils/crypto.service';
 import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { LoggerService } from '@app/logger';
+import { JWTRefreshTokenPayloadType } from '../../../common/domain/types/types';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +37,9 @@ export class AuthService {
     }
   }
 
-  async verifyRefreshToken(refreshToken: string) {
+  async verifyRefreshToken(
+    refreshToken: string,
+  ): Promise<JWTRefreshTokenPayloadType> {
     this.logger.debug(
       'Execute: verify refresh token ',
       this.verifyRefreshToken.name,

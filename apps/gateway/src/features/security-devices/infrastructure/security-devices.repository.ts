@@ -55,12 +55,14 @@ export class SecurityDevicesRepository {
     }
   }
 
-  public async deleteDevice(deviceId: string): Promise<boolean> {
-    const result = await this.txHost.tx.securityDevices.delete({
+  public async deleteDevice(deviceId: string) {
+    this.logger.debug(
+      `Execute: delete device by deviceId ${deviceId}`,
+      this.deleteDevice.name,
+    );
+    return await this.txHost.tx.securityDevices.delete({
       where: { deviceId: deviceId },
     });
-    if (!result) return null;
-    return true;
   }
 
   async getDeviceById(deviceId: string): Promise<SecurityDevices | null> {

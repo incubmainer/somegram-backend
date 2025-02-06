@@ -45,13 +45,7 @@ export class CheckRefreshTokenUseCase
         return null;
       }
 
-      const userDeviceInfo: JWTRefreshTokenPayloadType = {
-        userId: payload.userId,
-        deviceId: payload.deviceId,
-        iat: payload.iat,
-        exp: payload.exp,
-      };
-      return userDeviceInfo;
+      return payload;
     } catch (e) {
       this.logger.error(e, this.execute.name);
     }
