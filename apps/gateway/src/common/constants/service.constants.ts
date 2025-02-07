@@ -22,3 +22,4 @@ export const TESTING_CANCEL_SUBSCRIPTION = 'testing_cancel_subscription';
 export const TESTING_GET_PAYMENTS = 'testing_get_payments';
 
 export const CREATE_NOTIFICATION = 'create_notification';
+export const CREATE_NOTIFICATIONS = 'create_notifications';

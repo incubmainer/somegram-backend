@@ -37,6 +37,10 @@ export class NotificationOutputDto {
   createdAt: Date;
 }
 
+export class NotificationWithUserIdOutputDto {
+  userId: string;
+  dto: NotificationOutputDto;
+}
 @Injectable()
 export class NotificationOutputDtoMapper {
   mapNotification(notification: Notification): NotificationOutputDto {
@@ -51,6 +55,19 @@ export class NotificationOutputDtoMapper {
   mapNotifications(notifications: Notification[]): NotificationOutputDto[] {
     return notifications.map((notification: Notification) =>
       this.mapNotification(notification),
+    );
+  }
+
+  mapNotificationsWithUserId(
+    notifications: Notification[],
+  ): NotificationWithUserIdOutputDto[] {
+    return notifications.map(
+      (notification: Notification): NotificationWithUserIdOutputDto => {
+        return {
+          userId: notification.userId,
+          dto: this.mapNotification(notification),
+        };
+      },
     );
   }
 }

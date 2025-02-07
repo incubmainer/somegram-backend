@@ -2,7 +2,10 @@ import { NotificationWsGateway } from '../api/notification.ws-gateway';
 import { Injectable } from '@nestjs/common';
 import { WS_NEW_NOTIFICATION_EVENT } from '../../../common/constants/ws-events.constants';
 import { LoggerService } from '@app/logger';
-import { NotificationOutputDto } from '../api/dto/output-dto/notification.output.dto';
+import {
+  NotificationOutputDto,
+  NotificationWithUserIdOutputDto,
+} from '../api/dto/output-dto/notification.output.dto';
 
 @Injectable()
 export class NotificationService {
@@ -21,6 +24,18 @@ export class NotificationService {
       userId,
       WS_NEW_NOTIFICATION_EVENT,
       notification,
+    );
+  }
+
+  sendManyNewNotificationMessage(
+    notifications: NotificationWithUserIdOutputDto[],
+  ): void {
+    notifications.forEach((notification) =>
+      this.notificationWsGateway.emitMessageByUserId(
+        notification.userId,
+        WS_NEW_NOTIFICATION_EVENT,
+        notification.dto,
+      ),
     );
   }
 }

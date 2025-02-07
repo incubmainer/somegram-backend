@@ -11,6 +11,7 @@ import {
 
 @Injectable()
 export class NotificationRepository {
+  private readonly TRANSACTION_TIMEOUT: number = 50000;
   constructor(
     private readonly logger: LoggerService,
     //private readonly prisma: PrismaService,
@@ -83,6 +84,26 @@ export class NotificationRepository {
       },
     );
     return notification.id;
+  }
+
+  async createMany(newNotifications: Notification[]): Promise<string[]> {
+    this.logger.debug(
+      'Execute: create many notifications into db',
+      this.createMany.name,
+    );
+    return await this.txHost.withTransaction(
+      { timeout: this.TRANSACTION_TIMEOUT },
+      async (): Promise<string[]> => {
+        const promises = newNotifications.map((notification: Notification) => {
+          return this.txHost.tx.notification.create({
+            data: notification,
+          });
+        });
+
+        const result = await Promise.all(promises);
+        return result.map((notification: Notification) => notification.id);
+      },
+    );
   }
 
   async update(notification: Notification): Promise<void> {

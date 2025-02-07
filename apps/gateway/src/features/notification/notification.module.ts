@@ -12,6 +12,8 @@ import { GetNotificationByIdQueryCommandHandler } from './application/query/get-
 import { JwtService } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { NotificationSwaggerController } from './api/swagger/notification-controller.swagger';
+import { CreateNotificationsUseCaseHandler } from './application/use-cases/create-notifications.use-cases';
+import { GetNotificationsByIdQueryCommandHandler } from './application/query/get-notifications-by-id.query.command';
 
 const notificationEntityProvider = {
   provide: 'NotificationEntity',
@@ -26,11 +28,13 @@ const notificationEntityProvider = {
     NotificationWsGateway,
     notificationEntityProvider,
     CreateNotificationUseCaseHandler,
+    CreateNotificationsUseCaseHandler,
     NotificationRepository,
     MarkNotificationAsReadUseCaseHandler,
     GetNotificationsByUserIdQueryCommandHandler,
     NotificationOutputDtoMapper,
     GetNotificationByIdQueryCommandHandler,
+    GetNotificationsByIdQueryCommandHandler,
     JwtService,
   ],
   exports: [],
