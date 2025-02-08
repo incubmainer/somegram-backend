@@ -48,10 +48,22 @@ import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { WsCurrentUserId } from '../../../common/decorators/ws-parse/ws-current-user-id';
 import { GetNotificationsByUserIdQueryCommand } from '../application/query/get-notifications.query.command';
 import { NotificationOutputDto } from './dto/output-dto/notification.output.dto';
+import {
+  WS_CORS_ALLOWED_HEADERS,
+  WS_CORS_METHODS,
+  WS_CORS_ORIGIN,
+} from '../../../common/constants/ws-cors.constants';
 
 @UseFilters(WsExceptionFilter)
 @UsePipes(new ValidationPipe(new WsValidationPipeOption()))
-@WebSocketGateway({ namespace: NOTIFICATION_NAME_SPACE })
+@WebSocketGateway({
+  namespace: NOTIFICATION_NAME_SPACE,
+  cors: {
+    origin: WS_CORS_ORIGIN,
+    methods: WS_CORS_METHODS,
+    allowedHeaders: WS_CORS_ALLOWED_HEADERS,
+  },
+})
 export class NotificationWsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {

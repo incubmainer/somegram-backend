@@ -103,7 +103,8 @@ class InternalErrorResponse extends WsResponseDto<null> {
 export class NotificationSwaggerController {
   @ApiOperation({
     summary: 'Connection',
-    description: `WebSocket server: \`ws://localhost/${NOTIFICATION_NAME_SPACE}\` or \`wss://localhost/${NOTIFICATION_NAME_SPACE}\``,
+    description: `WebSocket server: \`/localhost/${NOTIFICATION_NAME_SPACE}\` 
+    \n The access token must be passed in the \`'Authorization'\` header.`,
   })
   @Get()
   connection() {
