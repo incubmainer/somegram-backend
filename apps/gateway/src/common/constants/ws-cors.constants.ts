@@ -4,5 +4,9 @@ export const WS_CORS_ORIGIN = [
   'https://somegram.online',
 ];
 
-export const WS_CORS_ALLOWED_HEADERS = ['Authorization'];
+export const WS_CORS_ALLOWED_HEADERS = [
+  'Authorization',
+  'Content-Type',
+  'Accept',
+];
 export const WS_CORS_METHODS = ['GET', 'POST'];
