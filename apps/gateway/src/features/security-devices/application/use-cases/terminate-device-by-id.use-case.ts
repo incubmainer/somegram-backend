@@ -30,18 +30,19 @@ export class TerminateDeviceByIdCommandHandler
     command: TerminateDeviceByIdCommand,
   ): Promise<AppNotificationResultType<void>> {
     const { userId, deviceId } = command;
+    try {
+      const device: SecurityDevices | null =
+        await this.securityDevicesRepository.getDeviceById(deviceId);
 
-    const device: SecurityDevices | null =
-      await this.securityDevicesRepository.getDiviceById(deviceId);
+      if (!device) return this.applicationNotification.notFound();
+      if (device.userId !== userId)
+        return this.applicationNotification.forbidden();
 
-    if (!device) return this.applicationNotification.notFound();
-    if (device.userId !== userId)
-      return this.applicationNotification.forbidden();
-
-    const result: boolean =
       await this.securityDevicesRepository.deleteDevice(deviceId);
 
-    if (!result) return this.applicationNotification.internalServerError();
-    return this.applicationNotification.success(null);
+      return this.applicationNotification.success(null);
+    } catch (e) {
+      return this.applicationNotification.internalServerError();
+    }
   }
 }

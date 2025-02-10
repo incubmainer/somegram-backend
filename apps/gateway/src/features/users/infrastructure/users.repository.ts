@@ -24,7 +24,8 @@ export class UsersRepository {
     this.logger.setContext(UsersRepository.name);
   }
 
-  async getUserById(id?: string): Promise<User | null> {
+  async getUserById(id: string): Promise<User | null> {
+    this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
     const user = await this.txHost.tx.user.findUnique({
       where: { id },
     });
@@ -32,13 +33,17 @@ export class UsersRepository {
   }
 
   async getUsersById(id: string[]): Promise<User[] | null> {
-    const user = await this.txHost.tx.user.findMany({
+    const users = await this.txHost.tx.user.findMany({
       where: { id: { in: id } },
     });
-    return user && user.length > 0 ? user : null;
+    return users && users.length > 0 ? users : null;
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
+    this.logger.debug(
+      `Execute: get user by email ${email}`,
+      this.getUserByEmail.name,
+    );
     const user = await this.txHost.tx.user.findFirst({
       where: {
         email,
