@@ -1,43 +1,23 @@
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { NOTIFICATION_NAME_SPACE } from '../../../common/constants/route.constants';
 import { LoggerService } from '@app/logger';
-import {
-  UseFilters,
-  UseGuards,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import { WsJwtAuthGuard } from '../../../common/guards/ws-jwt/ws-jwt-auth.guard';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsExceptionFilter } from '../../../common/exception-filter/ws/ws.exception-filter';
-import {
-  WS_ERROR_EVENT,
-  WS_MARK_NOTIFICATION_EVENT,
-  WS_NOTIFICATION_READ_EVENT,
-  WS_NOTIFICATIONS_EVENT,
-} from '../../../common/constants/ws-events.constants';
+import { WS_ERROR_EVENT } from '../../../common/constants/ws-events.constants';
 import {
   ApplicationNotification,
   AppNotificationResultEnum,
   AppNotificationResultType,
   WsNotification,
 } from '@app/application-notification';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { MarkNotificationAsReadUseCases } from '../application/use-cases/mark-as-read.use-cases';
-import { MarkNotificationAsReadInputDto } from './dto/input-dto/notification.input-dto';
 import { WsResponseDto } from '@app/base-types-enum';
 import { WsValidationPipeOption } from '../../../common/pipe/validation/ws-validation-options.pipe';
-import { WsNotFoundException } from '../../../common/exception-filter/ws/exceptions/ws-not-found.exception';
-import { WsForbiddenException } from '../../../common/exception-filter/ws/exceptions/ws-forbidden.exception';
-import { WsInternalErrorException } from '../../../common/exception-filter/ws/exceptions/ws-internal-error.exception';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { ConfigService } from '@nestjs/config';
 import { EnvSettings } from '../../../settings/env/env.settings';
@@ -45,9 +25,6 @@ import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
 import { JWTAccessTokenPayloadType } from '../../../common/domain/types/types';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
-import { WsCurrentUserId } from '../../../common/decorators/ws-parse/ws-current-user-id';
-import { GetNotificationsByUserIdQueryCommand } from '../application/query/get-notifications.query.command';
-import { NotificationOutputDto } from './dto/output-dto/notification.output.dto';
 import {
   WS_CORS_ALLOWED_HEADERS,
   WS_CORS_METHODS,
@@ -75,8 +52,6 @@ export class NotificationWsGateway
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly jwtService: JwtService,
     private readonly usersRepository: UsersRepository,
@@ -137,22 +112,6 @@ export class NotificationWsGateway
     return userId;
   }
 
-  private async getNotificationAfterConnect(
-    userId: string,
-  ): Promise<NotificationOutputDto[] | []> {
-    const result: AppNotificationResultType<NotificationOutputDto[]> =
-      await this.queryBus.execute(
-        new GetNotificationsByUserIdQueryCommand(userId),
-      );
-
-    switch (result.appResult) {
-      case AppNotificationResultEnum.Success:
-        return result.data;
-      default:
-        return [];
-    }
-  }
-
   private forceDisconnect<T = null>(client: Socket, payload: T): void {
     this.logger.debug(
       `Client force disconnected: ${client.id}`,
@@ -168,21 +127,9 @@ export class NotificationWsGateway
       `Client connected: ${client.id}`,
       this.handleConnection.name,
     );
-
     const userId = await this.authConnection(client);
     if (!userId) return;
-
-    const notifications = await this.getNotificationAfterConnect(userId);
-
     this.clients.set(client, userId);
-    client.emit(
-      WS_NOTIFICATIONS_EVENT,
-      this.wsNotification.generate(
-        AppNotificationResultEnum.Success,
-        AppNotificationResultEnum.Success,
-        notifications,
-      ),
-    );
   }
 
   handleDisconnect(client: Socket): void {
@@ -215,42 +162,5 @@ export class NotificationWsGateway
     client.emit(event, payload);
 
     return this.appNotification.success(null);
-  }
-
-  @SubscribeMessage(WS_MARK_NOTIFICATION_EVENT)
-  @UseGuards(WsJwtAuthGuard)
-  async readNotification(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() body: MarkNotificationAsReadInputDto,
-    @WsCurrentUserId() userId: string,
-  ): Promise<void> {
-    this.logger.debug('Execute: read message', this.readNotification.name);
-
-    const result: AppNotificationResultType<null> =
-      await this.commandBus.execute(
-        new MarkNotificationAsReadUseCases(userId, body.notificationId),
-      );
-
-    switch (result.appResult) {
-      case AppNotificationResultEnum.Success:
-        this.logger.debug('Success', this.readNotification.name);
-        client.emit(
-          WS_NOTIFICATION_READ_EVENT,
-          this.wsNotification.generate(
-            result.appResult,
-            result.appResult,
-            null,
-          ),
-        );
-        return;
-      case AppNotificationResultEnum.NotFound:
-        this.logger.debug('Not Found', this.readNotification.name);
-        throw new WsNotFoundException();
-      case AppNotificationResultEnum.Forbidden:
-        this.logger.debug('Forbidden', this.readNotification.name);
-        throw new WsForbiddenException();
-      default:
-        throw new WsInternalErrorException();
-    }
   }
 }

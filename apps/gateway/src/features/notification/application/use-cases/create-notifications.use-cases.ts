@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import {
   ApplicationNotification,
   AppNotificationResultType,
@@ -9,6 +9,7 @@ import { Inject } from '@nestjs/common';
 import { NotificationRepository } from '../../infrastructure/notification.repository';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CreateNotificationInputDto } from '../../api/dto/input-dto/notification.input-dto';
+import { CreatedNotificationsEvent } from '../event/created-notifications.event';
 
 export class CreateNotificationsUseCases {
   constructor(public inputDto: CreateNotificationInputDto[]) {}
@@ -19,7 +20,7 @@ export class CreateNotificationsUseCaseHandler
   implements
     ICommandHandler<
       CreateNotificationsUseCases,
-      AppNotificationResultType<string[]>
+      AppNotificationResultType<null>
     >
 {
   constructor(
@@ -29,12 +30,13 @@ export class CreateNotificationsUseCaseHandler
     private readonly notificationEntity: typeof NotificationEntity,
     private readonly notificationRepository: NotificationRepository,
     private readonly userRepository: UsersRepository,
+    private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(CreateNotificationsUseCaseHandler.name);
   }
   async execute(
     command: CreateNotificationsUseCases,
-  ): Promise<AppNotificationResultType<string[]>> {
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
       'Execute: Create many notifications command',
       this.execute.name,
@@ -55,9 +57,11 @@ export class CreateNotificationsUseCaseHandler
         return this.notificationEntity.create(userId, message);
       });
 
-      const result =
+      const result: string[] =
         await this.notificationRepository.createMany(notifications);
-      return this.appNotification.success(result);
+
+      this.eventBus.publish(new CreatedNotificationsEvent(result));
+      return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

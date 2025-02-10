@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
+import { Controller, Delete, Get } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -14,10 +14,7 @@ import {
 import { NOTIFICATION_NAME_SPACE } from '../../../../common/constants/route.constants';
 import {
   WS_ERROR_EVENT,
-  WS_MARK_NOTIFICATION_EVENT,
   WS_NEW_NOTIFICATION_EVENT,
-  WS_NOTIFICATION_READ_EVENT,
-  WS_NOTIFICATIONS_EVENT,
 } from '../../../../common/constants/ws-events.constants';
 import {
   UnprocessableExceptionErrorDto,
@@ -25,15 +22,6 @@ import {
 } from '@app/base-types-enum';
 import { NotificationOutputDto } from '../dto/output-dto/notification.output.dto';
 import { AppNotificationResultEnum } from '@app/application-notification';
-import { MarkNotificationAsReadInputDto } from '../dto/input-dto/notification.input-dto';
-
-class WsNotificationsEventResponse extends WsResponseDto<NotificationOutputDto> {
-  @ApiProperty({
-    type: NotificationOutputDto,
-    isArray: true,
-  })
-  payload: NotificationOutputDto;
-}
 
 class WsNotificationEventResponse extends WsResponseDto<NotificationOutputDto> {
   @ApiProperty({
@@ -112,19 +100,6 @@ export class NotificationSwaggerController {
   }
 
   @ApiOperation({
-    summary: 'Obtaining the latest notifications (for 1 month)',
-    description: 'Sent when connected to WebSocket server',
-  })
-  @ApiOkResponse({
-    description: 'List of the latest notification of the current user',
-    type: WsNotificationsEventResponse,
-  })
-  @Get(WS_NOTIFICATIONS_EVENT)
-  connectEvent() {
-    return 'There is nothing here.';
-  }
-
-  @ApiOperation({
     summary: 'Receiving a new notification',
   })
   @ApiOkResponse({
@@ -133,31 +108,6 @@ export class NotificationSwaggerController {
   })
   @Get(WS_NEW_NOTIFICATION_EVENT)
   newNotification() {
-    return 'There is nothing here.';
-  }
-
-  @ApiOperation({
-    summary: 'Read a notification',
-    description: `The result of the operation is returned in the event: \`${WS_NOTIFICATION_READ_EVENT}\``,
-  })
-  @ApiOkResponse({
-    description: 'The result of the operation',
-    type: WsResponseDto<null>,
-  })
-  @ApiForbiddenResponse({
-    description: 'The notification does not belong to the current user',
-    type: ForbiddenResponse,
-  })
-  @ApiNotFoundResponse({
-    description: 'The notification not found',
-    type: NotFoundResponse,
-  })
-  @ApiUnprocessableEntityResponse({
-    description: 'Validation error',
-    type: UnprocessableEntityResponse,
-  })
-  @Post(WS_MARK_NOTIFICATION_EVENT)
-  readNotification(@Body() dto: MarkNotificationAsReadInputDto) {
     return 'There is nothing here.';
   }
 

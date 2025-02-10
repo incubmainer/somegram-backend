@@ -1,4 +1,15 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  HttpStatus,
+  InternalServerErrorException,
+  NotFoundException,
+  Param,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import {
   CREATE_NOTIFICATION,
@@ -12,26 +23,36 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { NotificationService } from '../application/notification.service';
-import {
-  NotificationOutputDto,
-  NotificationWithUserIdOutputDto,
-} from './dto/output-dto/notification.output.dto';
-import { GetNotificationByIdQueryCommand } from '../application/query/get-notification-by-id.query.command';
+import { NotificationOutputDto } from './dto/output-dto/notification.output.dto';
 import { CreateNotificationsUseCases } from '../application/use-cases/create-notifications.use-cases';
-import { GetNotificationsByIdQueryCommand } from '../application/query/get-notifications-by-id.query.command';
+import { GetNotificationsByUserIdQueryCommand } from '../application/query/get-notifications.query.command';
+import { NOTIFICATION_ROUTE } from '../../../common/constants/route.constants';
+import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiExcludeEndpoint,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { GetNotificationsSwagger } from './swagger/get-notifications.swagger';
+import { MarkNotificationAsReadUseCases } from '../application/use-cases/mark-as-read.use-cases';
+import { ReadNotificationByIdSwagger } from './swagger/read-notification-by-id.swagger';
 
-@Controller()
+@ApiTags('Notifications')
+@ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@Controller(NOTIFICATION_ROUTE.MAIN)
 export class NotificationController {
   constructor(
     private readonly logger: LoggerService,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly notificationService: NotificationService,
   ) {
     this.logger.setContext(NotificationController.name);
   }
 
+  @ApiExcludeEndpoint()
   @MessagePattern({ cmd: CREATE_NOTIFICATION })
   async createNotification(
     @Payload() payload: CreateNotificationInputDto,
@@ -40,7 +61,7 @@ export class NotificationController {
       'Execute: create notification',
       this.createNotification.name,
     );
-    const result: AppNotificationResultType<string> =
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(
         new CreateNotificationUseCases(payload.userId, payload.message),
       );
@@ -48,14 +69,6 @@ export class NotificationController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug('Success', this.createNotification.name);
-        const notification: AppNotificationResultType<NotificationOutputDto> =
-          await this.queryBus.execute(
-            new GetNotificationByIdQueryCommand(result.data),
-          );
-        await this.notificationService.sendNewNotificationMessage(
-          payload.userId,
-          notification.data,
-        );
         return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not found', this.createNotification.name);
@@ -63,32 +76,73 @@ export class NotificationController {
     }
   }
 
+  @ApiExcludeEndpoint()
   @MessagePattern({ cmd: CREATE_NOTIFICATIONS })
   async createNotifications(
     @Payload() payload: CreateNotificationInputDto[],
   ): Promise<void> {
     this.logger.debug(
-      'Execute: create notification',
-      this.createNotification.name,
+      'Execute: create many notifications',
+      this.createNotifications.name,
     );
-    const result: AppNotificationResultType<string[]> =
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(new CreateNotificationsUseCases(payload));
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
-        this.logger.debug('Success', this.createNotification.name);
-        const notifications: AppNotificationResultType<
-          NotificationWithUserIdOutputDto[]
-        > = await this.queryBus.execute(
-          new GetNotificationsByIdQueryCommand(result.data),
-        );
-        this.notificationService.sendManyNewNotificationMessage(
-          notifications.data,
-        );
+        this.logger.debug('Success', this.createNotifications.name);
         return;
       case AppNotificationResultEnum.NotFound:
-        this.logger.debug('Not found', this.createNotification.name);
+        this.logger.debug('Not found', this.createNotifications.name);
         return;
+    }
+  }
+
+  @GetNotificationsSwagger()
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  async getNotifications(
+    @CurrentUserId() userId: string,
+  ): Promise<NotificationOutputDto[]> {
+    const result: AppNotificationResultType<NotificationOutputDto[]> =
+      await this.queryBus.execute(
+        new GetNotificationsByUserIdQueryCommand(userId),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.getNotifications.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @ReadNotificationByIdSwagger()
+  @Put(`${NOTIFICATION_ROUTE.MARK_AS_READ}/:notificationId`)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  async readNotification(
+    @CurrentUserId() userId: string,
+    @Param('notificationId') notificationId: string,
+  ): Promise<void> {
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new MarkNotificationAsReadUseCases(userId, notificationId),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.readNotification.name);
+        return;
+      case AppNotificationResultEnum.Forbidden:
+        this.logger.debug('Forbidden', this.readNotification.name);
+        throw new ForbiddenException();
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not Found', this.readNotification.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
   }
 }
