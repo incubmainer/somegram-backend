@@ -196,4 +196,20 @@ export class PaymentsRepository {
       },
     });
   }
+
+  public async getActiveSubscriptions(): Promise<Subscription[] | null> {
+    this.logger.debug(
+      'Execute: get active subscriptions',
+      this.getActiveSubscriptions.name,
+    );
+    const subscriptions = await this.txHost.tx.subscription.findMany({
+      where: {
+        OR: [
+          { status: SubscriptionStatuses.Active },
+          { status: SubscriptionStatuses.Suspended },
+        ],
+      },
+    });
+    return subscriptions && subscriptions.length > 0 ? subscriptions : null;
+  }
 }

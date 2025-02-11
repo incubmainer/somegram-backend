@@ -34,7 +34,7 @@ export class PaypalSubscriptionSuspendedHandler
     event: PayPalWebHookEventType<WHSubscriptionSuspendedType>,
   ): Promise<AppNotificationResultType<null>> {
     try {
-      this.logger.debug('Execute: suspend command handler', this.handle.name);
+      this.logger.debug('Execute: suspend use-cases handler', this.handle.name);
       const { id } = event.resource;
 
       const subscription: Subscription | null =

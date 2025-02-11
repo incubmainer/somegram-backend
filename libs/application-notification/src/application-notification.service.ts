@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { AppNotificationResultEnum } from '@app/application-notification/enum';
 import { AppNotificationResultType } from '@app/application-notification/types';
 
-//
 @Injectable()
 export class ApplicationNotification {
   success<T>(data: T): AppNotificationResultType<T> {

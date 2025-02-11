@@ -112,6 +112,11 @@ export class PayPalPaymentSucceededHandler
         userId: subscription.userId,
         endDateOfSubscription: dateEnd,
       });
+
+      this.paymentService.sendNotificationAfterSuccessPayment(
+        subscription.userId,
+        dateEnd,
+      );
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.handle.name);

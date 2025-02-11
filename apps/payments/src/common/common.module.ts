@@ -2,6 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { PayPalSignatureGuard } from './guards/paypal/paypal.guard';
 import { PayPalAdapter } from './adapters/paypal.adapter';
 import {
+  NOTIFICATION_DELAY_SERVICE_RMQ,
+  NOTIFICATION_SERVICE_RMQ,
   PAYMENTS_SERVICE_RMQ,
   PAYPAL_CLIENT,
 } from './constants/adapters-name.constant';
@@ -18,6 +20,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { configModule } from '../settings/configuration/config.module';
 import { LoggerModule } from '@app/logger';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ConvertDateUtil } from './utils/convert-date.util';
 
 const paypalClient = {
   provide: PAYPAL_CLIENT,
@@ -65,6 +68,41 @@ const paypalClient = {
         }),
         inject: [ConfigService],
       },
+      {
+        name: NOTIFICATION_SERVICE_RMQ,
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
+            queue: 'notifications_queue',
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: NOTIFICATION_DELAY_SERVICE_RMQ,
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RMQ_CONNECTION_STRING')],
+            queue: 'notifications_delayed_queue',
+            queueOptions: {
+              durable: false,
+              arguments: {
+                'x-message-ttl': 30000,
+                'x-dead-letter-exchange': '',
+                'x-dead-letter-routing-key': 'notifications_queue',
+              },
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
     configModule,
     LoggerModule.forRoot('Payments'),
@@ -79,6 +117,7 @@ const paypalClient = {
     PaymentManager,
     StripeAdapter,
     GatewayServiceClientAdapter,
+    ConvertDateUtil,
   ],
   exports: [
     PayPalSignatureGuard,
@@ -86,6 +125,7 @@ const paypalClient = {
     CqrsModule,
     PaymentManager,
     GatewayServiceClientAdapter,
+    ConvertDateUtil,
   ],
 })
 export class CommonModule {}

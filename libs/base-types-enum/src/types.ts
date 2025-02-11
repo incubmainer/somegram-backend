@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AppNotificationResultEnum } from '@app/application-notification';
 
 type ConstraintErrorType = { [key: string]: string };
 
@@ -60,4 +61,20 @@ export class BadRequestExceptionDto {
     type: String,
   })
   message: string;
+}
+
+export class WsResponseDto<T = null> {
+  @ApiProperty({
+    description: 'Event message',
+    example: 'Some message',
+    type: String,
+  })
+  message: string;
+  @ApiProperty({
+    description: 'Status of request',
+    example: AppNotificationResultEnum.Success,
+    enum: AppNotificationResultEnum,
+  })
+  status: AppNotificationResultEnum;
+  payload: T;
 }

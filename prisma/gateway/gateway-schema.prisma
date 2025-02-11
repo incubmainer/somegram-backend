@@ -30,6 +30,7 @@ model User {
   UserPost             UserPost[]
   accountType          AccountType            @default(Personal)
   subscriptionExpireAt DateTime?
+  Notification         Notification[]
 
   @@index([username])
   @@index([email])
@@ -113,4 +114,14 @@ model CityCatalog {
   CountryCatalog CountryCatalog @relation(fields: [countryId], references: [id])
 
   @@unique([countryId, name])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean   @default(false)
+  createdAt DateTime
+  updateAt  DateTime?
+  User      User      @relation(fields: [userId], references: [id])
 }
