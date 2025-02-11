@@ -11,6 +11,7 @@ import {
   InjectCustomLoggerService,
   LogClass,
 } from '@app/custom-logger';
+import { LoggerService } from '@app/logger';
 
 export const LoginWithGithubCodes = {
   Success: Symbol('success'),
@@ -24,11 +25,6 @@ export class AuthWithGithubCommand {
 }
 
 @CommandHandler(AuthWithGithubCommand)
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
 export class AuthWithGithubUseCase
   implements ICommandHandler<AuthWithGithubCommand>
 {
@@ -38,14 +34,14 @@ export class AuthWithGithubUseCase
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(AuthWithGithubUseCase.name);
+    this.logger.setContext(AuthWithGithubUseCase.name);
   }
   async execute(
     command: AuthWithGithubCommand,
   ): Promise<NotificationObject<UserId>> {
+    this.logger.debug('Execute: auth with github ', this.execute.name);
     const notification = new NotificationObject<UserId>(
       LoginWithGithubCodes.Success,
     );
@@ -69,10 +65,9 @@ export class AuthWithGithubUseCase
           return notification.setData(createdUser.id);
         }
         if (isExistUser && isExistUser.userGithubInfo) {
-          if (isExistUser.userGithubInfo.email === user.email) {
-            return { username: isExistUser.username, id: isExistUser.id };
+          if (isExistUser.userGithubInfo.email !== user.email) {
+            await this.authRepository.changeGithubEmail(isExistUser.id, user);
           }
-          await this.authRepository.changeGithubEmail(isExistUser.id, user);
           return notification.setData(isExistUser.id);
         }
         if (isExistUser && !isExistUser.userGithubInfo) {
@@ -80,12 +75,11 @@ export class AuthWithGithubUseCase
           const userWithGithub = await this.authRepository.getUserByEmail(
             user.email,
           );
-          notification.setData(userWithGithub.id);
-          return notification;
+          return notification.setData(userWithGithub.id);
         }
       });
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(LoginWithGithubCodes.TransactionError);
     }
     return notification;

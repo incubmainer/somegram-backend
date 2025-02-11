@@ -10,3 +10,8 @@ export type JWTAccessTokenPayloadType = {
   iat: number;
   exp: number;
 };
+
+export type JWTTokensType = {
+  accessToken: string;
+  refreshToken: string;
+};

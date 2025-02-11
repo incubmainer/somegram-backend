@@ -6,8 +6,9 @@ import {
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { GoogleConfig } from 'apps/gateway/src/common/config/configs/google.config';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
 
 export class GoogleProfile {
   id: string;
@@ -19,23 +20,34 @@ export class GoogleProfile {
 }
 
 @Injectable()
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
-    private readonly configService: ConfigService,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //private readonly configService: ConfigService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
+    // super({
+    //   clientID: configService.get<GoogleConfig>('google').clientId,
+    //   clientSecret: configService.get<GoogleConfig>('google').clientSecret,
+    //   callbackURL: configService.get<GoogleConfig>('google').redirectUri,
+    //   scope: ['email', 'profile'],
+    // });
     super({
-      clientID: configService.get<GoogleConfig>('google').clientId,
-      clientSecret: configService.get<GoogleConfig>('google').clientSecret,
-      callbackURL: configService.get<GoogleConfig>('google').redirectUri,
+      clientID: configService.get('envSettings', { infer: true })
+        .GOOGLE_CLIENT_ID,
+      clientSecret: configService.get('envSettings', { infer: true })
+        .GOOGLE_CLIENT_SECRET,
+      callbackURL: configService.get('envSettings', { infer: true })
+        .GOOGLE_REDIRECT_URI,
       scope: ['email', 'profile'],
     });
-    logger.setContext(GoogleStrategy.name);
+    this.logger.setContext(GoogleStrategy.name);
   }
 
   async validate(

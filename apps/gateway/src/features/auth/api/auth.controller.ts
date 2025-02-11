@@ -11,17 +11,14 @@ import {
   Req,
   InternalServerErrorException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 import {
   RegistrationCodes,
@@ -72,7 +69,6 @@ import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagge
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
 import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
 import {
   GetInfoAboutMeCommand,
@@ -88,32 +84,34 @@ import {
 } from '../application/use-cases/registration-email-resending.use-case';
 import { CreateTokensCommand } from '../application/use-cases/create-token.use-case';
 import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { JWTTokensType } from '../../../common/domain/types/types';
 
 @ApiTags('Auth')
 @Controller('auth')
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class AuthController {
   private readonly frontendProvider: string;
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly configService: ConfigService,
-    @InjectCustomLoggerService()
-    private readonly logger: CustomLoggerService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+    private readonly logger: LoggerService,
   ) {
-    logger.setContext(AuthController.name);
-    const config = this.configService.get<AuthConfig>('auth');
-    this.frontendProvider = config.frontendProvider;
+    this.logger.setContext(AuthController.name);
+    this.frontendProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
   }
 
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationSwagger()
   public async registration(@Body() body: RegistrationBodyInputDto) {
-    this.logger.log('info', 'start registration', {});
+    this.logger.debug('start registration', this.registration.name);
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RegistrationCommand(
@@ -125,11 +123,11 @@ export class AuthController {
       );
     const code = notification.getCode();
     if (code === RegistrationCodes.Success) {
-      this.logger.log('info', 'registration success', {});
+      this.logger.debug('registration success', this.registration.name);
       return;
     }
     if (code === RegistrationCodes.EmailAlreadyExists) {
-      this.logger.log('warn', 'email already exists', {});
+      this.logger.debug('email already exists', this.registration.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
@@ -141,7 +139,7 @@ export class AuthController {
       });
     }
     if (code === RegistrationCodes.UsernameAlreadyExists) {
-      this.logger.log('warn', 'username already exists', {});
+      this.logger.debug('username already exists', this.registration.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_failed',
@@ -153,7 +151,7 @@ export class AuthController {
       });
     }
     if (code === RegistrationCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error('transaction error', this.registration.name);
       throw new InternalServerErrorException();
     }
   }
@@ -164,18 +162,24 @@ export class AuthController {
   public async registrationConfirmation(
     @Body() body: RegistrationConfirmationBodyInputDto,
   ) {
-    this.logger.log('info', 'start registration confirmation', {});
+    this.logger.debug(
+      'start registration confirmation',
+      this.registrationConfirmation.name,
+    );
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RegistrationConfirmationCommand(body.token),
       );
     const code = notification.getCode();
     if (code === RegistrationConfirmationCodes.Success) {
-      this.logger.log('info', 'registration confirmation success', {});
+      this.logger.debug(
+        'registration confirmation success',
+        this.registrationConfirmation.name,
+      );
       return;
     }
     if (code === RegistrationConfirmationCodes.TokenExpired) {
-      this.logger.log('warn', 'token expired', {});
+      this.logger.debug('token expired', this.registrationConfirmation.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'registration_confirmation_failed',
@@ -183,7 +187,7 @@ export class AuthController {
       });
     }
     if (code === RegistrationConfirmationCodes.UserNotFound) {
-      this.logger.log('warn', 'user not found', {});
+      this.logger.debug('user not found', this.registrationConfirmation.name);
       throw new NotFoundException({
         statusCode: HttpStatus.NOT_FOUND,
         error: 'User not found',
@@ -191,7 +195,10 @@ export class AuthController {
       });
     }
     if (code === RegistrationConfirmationCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error(
+        'transaction error',
+        this.registrationConfirmation.name,
+      );
       throw new InternalServerErrorException();
     }
   }
@@ -202,18 +209,27 @@ export class AuthController {
   public async registrationEmailResending(
     @Body() body: RegistrationEmailResendingBodyInputDto,
   ) {
-    this.logger.log('info', 'start registration-email-resending', {});
+    this.logger.debug(
+      'start registration-email-resending',
+      this.registrationEmailResending.name,
+    );
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RegistrationEmailResendingCommand(body.token, body.html),
       );
     const code = notification.getCode();
     if (code === RegistrationEmailResendingCodes.Success) {
-      this.logger.log('info', 'registration-email-resending success', {});
+      this.logger.debug(
+        'registration-email-resending success',
+        this.registrationEmailResending.name,
+      );
       return;
     }
     if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
-      this.logger.log('warn', 'email already confirmated', {});
+      this.logger.debug(
+        'email already confirmed',
+        this.registrationEmailResending.name,
+      );
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'email_already_confirmated',
@@ -221,7 +237,10 @@ export class AuthController {
       });
     }
     if (code === RegistrationEmailResendingCodes.UserNotFound) {
-      this.logger.log('warn', 'username not found', {});
+      this.logger.debug(
+        'username not found',
+        this.registrationEmailResending.name,
+      );
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'User not found',
@@ -229,7 +248,10 @@ export class AuthController {
       });
     }
     if (code === RegistrationEmailResendingCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error(
+        'transaction error',
+        this.registrationEmailResending.name,
+      );
       throw new InternalServerErrorException();
     }
   }
@@ -248,7 +270,10 @@ export class AuthController {
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ): Promise<any> {
-    this.logger.log('info', 'start google auth callback', {});
+    this.logger.debug(
+      'start google auth callback',
+      this.googleAuthCallback.name,
+    );
     const notification: NotificationObject<string> =
       await this.commandBus.execute(
         new LoginByGoogleCommand(
@@ -260,7 +285,7 @@ export class AuthController {
       );
     const code = notification.getCode();
     if (code === LoginByGoogleCodes.WrongEmail) {
-      this.logger.log('warn', 'wrong email', {});
+      this.logger.debug('wrong email', this.googleAuthCallback.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'login_by_google_failed',
@@ -268,11 +293,11 @@ export class AuthController {
       });
     }
     if (code === LoginByGoogleCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error('transaction error', this.googleAuthCallback.name);
       throw new InternalServerErrorException();
     }
     if (!ip) {
-      this.logger.log('warn', 'unknown ip address', {});
+      this.logger.debug('unknown ip address', this.googleAuthCallback.name);
       throw new NotFoundException({
         statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
@@ -291,7 +316,10 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    this.logger.log('info', 'google auth callback success', {});
+    this.logger.debug(
+      'google auth callback success',
+      this.googleAuthCallback.name,
+    );
     response
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
@@ -304,10 +332,16 @@ export class AuthController {
   @Get('recaptcha-site-key')
   @RecaptchaSiteKeySwagger()
   async recaptchaSiteKey() {
-    this.logger.log('info', 'get recaptcha site key', {});
-    const authConfig = this.configService.get<AuthConfig>('auth');
+    this.logger.debug('get recaptcha site key', this.recaptchaSiteKey.name);
+    //const authConfig = this.configService.get<AuthConfig>('auth');
+    //  return {
+    //    recaptchaSiteKey: authConfig.recaptchaSiteKey,
+    //  };
+
     return {
-      recaptchaSiteKey: authConfig.recaptchaSiteKey,
+      recaptchaSiteKey: this.configService.get('envSettings', {
+        infer: true,
+      }).RECAPTCHA_SITE_KEY,
     };
   }
 
@@ -315,18 +349,18 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
-    this.logger.log('info', 'start restore password', {});
+    this.logger.debug('start restore password', this.restorePassword.name);
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
       );
     const code = notification.getCode();
     if (code === RestorePasswordCodes.Success) {
-      this.logger.log('info', 'restore password success', {});
+      this.logger.debug('restore password success', this.restorePassword.name);
       return;
     }
     if (code === RestorePasswordCodes.InvalidRecaptcha) {
-      this.logger.log('warn', 'invalid recaptcha token', {});
+      this.logger.debug('invalid recaptcha token', this.restorePassword.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'invalid_recaptcha_token',
@@ -334,7 +368,7 @@ export class AuthController {
       });
     }
     if (code === RestorePasswordCodes.UserNotFound) {
-      this.logger.log('warn', 'user not found', {});
+      this.logger.debug('user not found', this.restorePassword.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'user_not_found',
@@ -342,7 +376,7 @@ export class AuthController {
       });
     }
     if (code === RestorePasswordCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error('transaction error', this.restorePassword.name);
       throw new InternalServerErrorException({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'Transaction error',
@@ -356,18 +390,24 @@ export class AuthController {
   public async restorePasswordConfirmation(
     @Body() body: RestorePasswordConfirmationBodyInputDto,
   ) {
-    this.logger.log('info', 'start restore password confirmation', {});
+    this.logger.debug(
+      'start restore password confirmation',
+      this.restorePasswordConfirmation.name,
+    );
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RestorePasswordConfirmationCommand(body.code, body.password),
       );
     const code = notification.getCode();
     if (code === RestorePasswordConfirmationCodes.Success) {
-      this.logger.log('info', 'restore password confirmation success', {});
+      this.logger.debug(
+        'restore password confirmation success',
+        this.restorePasswordConfirmation.name,
+      );
       return;
     }
     if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
-      this.logger.log('warn', 'expired code', {});
+      this.logger.debug('expired code', this.restorePasswordConfirmation.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
@@ -375,7 +415,7 @@ export class AuthController {
       });
     }
     if (code === RestorePasswordConfirmationCodes.InvalidCode) {
-      this.logger.log('warn', 'invalid code', {});
+      this.logger.debug('invalid code', this.restorePasswordConfirmation.name);
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         error: 'restore_password_confirmation_failed',
@@ -383,7 +423,10 @@ export class AuthController {
       });
     }
     if (code === RestorePasswordConfirmationCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error(
+        'transaction error',
+        this.restorePasswordConfirmation.name,
+      );
       throw new InternalServerErrorException();
     }
   }
@@ -398,11 +441,11 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Res() response: Response,
   ) {
-    this.logger.log('info', 'start login', {});
+    this.logger.debug('start login', this.login.name);
     const tokens = await this.commandBus.execute(
       new LoginUserCommand(loginDto, userAgent, ip),
     );
-    this.logger.log('info', 'login success', {});
+    this.logger.debug('login success', this.login.name);
     response
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
@@ -416,9 +459,9 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogOutSwagger()
   async logout(@RefreshToken() refreshToken: string): Promise<boolean> {
-    this.logger.log('info', 'start logout', {});
+    this.logger.debug('start logout', this.logout.name);
     await this.commandBus.execute(new LogoutCommand(refreshToken));
-    this.logger.log('info', 'logout success', {});
+    this.logger.debug('logout success', this.logout.name);
     return;
   }
 
@@ -429,18 +472,26 @@ export class AuthController {
     @RefreshToken() refreshToken: string,
     @Res() res: Response,
   ) {
-    this.logger.log('info', 'start refresh token', {});
-    const tokens = await this.commandBus.execute(
-      new RenewTokensCommand(refreshToken),
-    );
-    this.logger.log('info', 'refresh token success', {});
-    return res
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .send({ accessToken: tokens.accessToken });
+    this.logger.debug('start refresh token', this.renewTokens.name);
+    const result: AppNotificationResultType<JWTTokensType> =
+      await this.commandBus.execute(new RenewTokensCommand(refreshToken));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('refresh token success', this.renewTokens.name);
+        return res
+          .cookie('refreshToken', result.data.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+          })
+          .send({ accessToken: result.data.accessToken });
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug(`Unauthorized`, this.renewTokens.name);
+        throw new UnauthorizedException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get('github')
@@ -456,17 +507,20 @@ export class AuthController {
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
   ) {
-    this.logger.log('info', 'start github auth callback', {});
+    this.logger.debug(
+      'start github auth callback',
+      this.githubAuthCallback.name,
+    );
     const user: UserFromGithub = req.user;
     const notification: NotificationObject<string> =
       await this.commandBus.execute(new AuthWithGithubCommand(user));
     const code = notification.getCode();
     if (code === LoginWithGithubCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error('transaction error', this.githubAuthCallback.name);
       throw new InternalServerErrorException();
     }
     if (!ip) {
-      this.logger.log('warn', 'unknown ip address', {});
+      this.logger.debug('unknown ip address', this.githubAuthCallback.name);
       throw new NotFoundException({
         statusCode: HttpStatus.NOT_FOUND,
         error: 'login failed',
@@ -485,7 +539,10 @@ export class AuthController {
       new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
     );
 
-    this.logger.log('info', 'github auth callback success', {});
+    this.logger.debug(
+      'github auth callback success',
+      this.githubAuthCallback.name,
+    );
     res
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
@@ -498,14 +555,14 @@ export class AuthController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
-    this.logger.log('info', 'start me request', {});
+    this.logger.debug('start me request', this.getInfoAboutMe.name);
     const notification: NotificationObject<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
     const code = notification.getCode();
     if (code === MeCodes.TransactionError) {
-      this.logger.log('error', 'transaction error', {});
+      this.logger.error('transaction error', this.getInfoAboutMe.name);
       throw new InternalServerErrorException();
     }
     const outputUser = notification.getData();

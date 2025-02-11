@@ -1,10 +1,10 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { CommandHandler } from '@nestjs/cqrs';
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IsString, validateSync } from 'class-validator';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RegistrationConfirmationCodes = {
   Success: Symbol('success'),

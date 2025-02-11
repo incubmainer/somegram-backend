@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWTRefreshTokenPayloadType } from '../../domain/types/types';
-import { jwtConstants } from '../../config/constants/jwt-basic-constants';
+import { jwtConstants } from '../../constants/jwt-basic-constants';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
 import { User } from '@prisma/gateway';
 import { Request } from 'express';
@@ -44,7 +44,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
     if (!user) return null;
 
     const session: SecurityDevices | null =
-      await this.sessionRepositories.getDiviceById(deviceId);
+      await this.sessionRepositories.getDeviceById(deviceId);
     if (!session) return null;
     if (session.lastActiveDate !== new Date(iat * 1000).toISOString())
       return null;

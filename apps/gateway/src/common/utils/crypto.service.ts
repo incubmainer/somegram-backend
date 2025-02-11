@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
+import { LoggerService } from '@app/logger';
 
 const SALT_LEN = 32;
 const KEY_LEN = 64;
@@ -14,6 +15,9 @@ const SCRYPT_PARAMS = {
 
 @Injectable()
 export class CryptoService {
+  constructor(private readonly logger: LoggerService) {
+    this.logger.setContext(CryptoService.name);
+  }
   private serializeHash(hash: Buffer, salt: Buffer, params: any) {
     const paramString = Object.entries(params)
       .map(([key, value]) => `${key}=${value}`)
@@ -59,6 +63,10 @@ export class CryptoService {
   }
 
   public validatePassword(password: string, hash: string): Promise<boolean> {
+    this.logger.debug(
+      'Execute: validate password ',
+      this.validatePassword.name,
+    );
     return new Promise((resolve, reject) => {
       const parsedHash = this.deserializeHash(hash);
       const len = parsedHash.hash.length;

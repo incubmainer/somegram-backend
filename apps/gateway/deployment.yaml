@@ -132,6 +132,21 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: PHOTO_SERVICE_PORT
+             - name: PAYMENTS_SERVICE_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: PAYMENTS_SERVICE_HOST
+             - name: PAYMENTS_SERVICE_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: PAYMENTS_SERVICE_PORT
+             - name: RMQ_CONNECTION_STRING
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: RMQ_CONNECTION_STRING
              - name: PORT
                valueFrom:
                  secretKeyRef:

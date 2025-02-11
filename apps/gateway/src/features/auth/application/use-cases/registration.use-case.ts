@@ -10,14 +10,15 @@ import {
   LogClass,
 } from '@app/custom-logger';
 
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { IsUsername } from '../decorators/is-username';
 import { IsUserPassword } from '../decorators/is-user-password';
 import { ConfigService } from '@nestjs/config';
-import { AuthConfig } from 'apps/gateway/src/common/config/configs/auth.config';
+import { ConfigurationType } from '../../../../settings/configuration/configuration';
+import { LoggerService } from '@app/logger';
+import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RegistrationCodes = {
   Success: Symbol('success'),
@@ -45,11 +46,11 @@ export class RegistrationCommand {
   }
 }
 
-@LogClass({
-  level: 'trace',
-  loggerClassField: 'logger',
-  active: () => process.env.NODE_ENV !== 'production',
-})
+// @LogClass({
+//   level: 'trace',
+//   loggerClassField: 'logger',
+//   active: () => process.env.NODE_ENV !== 'production',
+// })
 @CommandHandler(RegistrationCommand)
 export class RegistrationUseCase {
   private readonly expireAfterMiliseconds: number;
@@ -59,20 +60,26 @@ export class RegistrationUseCase {
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly cryptoAuthService: CryptoAuthService,
-    private readonly configService: ConfigService,
+    //private readonly configService: ConfigService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly emailAuthService: EmailAuthService,
-    @InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
+    private readonly logger: LoggerService,
   ) {
-    const config = this.configService.get<AuthConfig>('auth');
-    this.expireAfterMiliseconds =
-      config.emailConfirmationTokenExpireAfterMiliseconds;
-    logger.setContext(RegistrationUseCase.name);
+    // const config = this.configService.get<AuthConfig>('auth');
+    // this.expireAfterMiliseconds =
+    //   config.emailConfirmationTokenExpireAfterMiliseconds;
+
+    this.expireAfterMiliseconds = this.configService.get('envSettings', {
+      infer: true,
+    }).EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS;
+    this.logger.setContext(RegistrationUseCase.name);
   }
 
   public async execute(
     command: RegistrationCommand,
   ): Promise<NotificationObject<void>> {
-    this.logger.log('info', 'registration command', {});
+    this.logger.debug('registration command', this.execute.name);
     const notification = new NotificationObject(RegistrationCodes.Success);
     const { username, email, password, html } = command;
     try {
@@ -81,17 +88,13 @@ export class RegistrationUseCase {
         const userByEmail = await this.userRepository.getUserByEmail(email);
         if (userByEmail && userByEmail.isConfirmed) {
           notification.setCode(RegistrationCodes.EmailAlreadyExists);
-          this.logger.log('warn', 'email already exists', {
-            payload: { email },
-          });
+          this.logger.debug('email already exists', this.execute.name);
           return notification;
         }
         const userByUsername =
           await this.userRepository.getUserByUsername(username);
         if (userByUsername && userByUsername.isConfirmed) {
-          this.logger.log('warn', 'username already exists', {
-            payload: { username },
-          });
+          this.logger.debug('username already exists', this.execute.name);
           notification.setCode(RegistrationCodes.UsernameAlreadyExists);
           return notification;
         }
@@ -131,10 +134,10 @@ export class RegistrationUseCase {
           confirmationToken,
           html,
         });
-        this.logger.log('info', 'registration success', {});
+        this.logger.debug('registration success', this.execute.name);
       });
     } catch (e) {
-      this.logger.log('error', 'transaction error', { e });
+      this.logger.error(e, this.execute.name);
       notification.setCode(RegistrationCodes.TransactionError);
     }
     return notification;
