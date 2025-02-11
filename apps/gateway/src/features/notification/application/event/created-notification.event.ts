@@ -57,7 +57,7 @@ export class CreatedNotificationEventHandler
     this.notificationWsGateway.emitMessageByUserId(
       userId,
       WS_NEW_NOTIFICATION_EVENT,
-      notification,
+      notification.data,
     );
   }
 }

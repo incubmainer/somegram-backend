@@ -38,6 +38,8 @@ import {
 import { GetNotificationsSwagger } from './swagger/get-notifications.swagger';
 import { MarkNotificationAsReadUseCases } from '../application/use-cases/mark-as-read.use-cases';
 import { ReadNotificationByIdSwagger } from './swagger/read-notification-by-id.swagger';
+import { PaymentsServiceAdapter } from '../../../common/adapter/payment-service.adapter';
+import { TestingSendNotificationSwagger } from './swagger/testing-send-notification.swagger';
 
 @ApiTags('Notifications')
 @ApiBearerAuth('access-token')
@@ -48,6 +50,7 @@ export class NotificationController {
     private readonly logger: LoggerService,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
   ) {
     this.logger.setContext(NotificationController.name);
   }
@@ -141,6 +144,30 @@ export class NotificationController {
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not Found', this.readNotification.name);
         throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Get(NOTIFICATION_ROUTE.TESTING)
+  @TestingSendNotificationSwagger()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  async testingSendNotification(
+    @CurrentUserId() userId: string,
+  ): Promise<null> {
+    this.logger.debug(
+      `Execute: send notification (Testing)`,
+      this.testingSendNotification.name,
+    );
+
+    const result: AppNotificationResultType<null> =
+      await this.paymentsServiceAdapter.testingSendNotification({ userId });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.testingSendNotification.name);
+        return result.data;
       default:
         throw new InternalServerErrorException();
     }

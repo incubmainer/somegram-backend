@@ -15,6 +15,9 @@ import { CreateNotificationsUseCaseHandler } from './application/use-cases/creat
 import { GetNotificationsByIdQueryCommandHandler } from './application/query/get-notifications-by-id.query.command';
 import { CreatedNotificationEventHandler } from './application/event/created-notification.event';
 import { CreatedNotificationsEventHandler } from './application/event/created-notifications.event';
+import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
+import { ClientsModule } from '@nestjs/microservices';
+import { paymentsServiceOptions } from '../../settings/configuration/get-pyments-service.options';
 
 const notificationEntityProvider = {
   provide: 'NotificationEntity',
@@ -22,7 +25,10 @@ const notificationEntityProvider = {
 };
 
 @Module({
-  imports: [UsersModule],
+  imports: [
+    UsersModule,
+    ClientsModule.registerAsync([paymentsServiceOptions()]),
+  ],
   controllers: [NotificationController, NotificationSwaggerController],
   providers: [
     NotificationWsGateway,
@@ -38,6 +44,7 @@ const notificationEntityProvider = {
     JwtService,
     CreatedNotificationEventHandler,
     CreatedNotificationsEventHandler,
+    PaymentsServiceAdapter,
   ],
   exports: [],
 })

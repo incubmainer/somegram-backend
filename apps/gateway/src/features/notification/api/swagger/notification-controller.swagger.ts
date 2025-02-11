@@ -87,27 +87,19 @@ class InternalErrorResponse extends WsResponseDto<null> {
   description: 'Unauthorized response',
   type: UnauthorizedResponse,
 })
-@Controller(`ws://localhost/${NOTIFICATION_NAME_SPACE}`)
+@Controller(`ws://somegram.online/${NOTIFICATION_NAME_SPACE}`)
 export class NotificationSwaggerController {
   @ApiOperation({
-    summary: 'Connection',
-    description: `WebSocket server: \`/localhost/${NOTIFICATION_NAME_SPACE}\` 
+    summary: `Connection and listen notifications by event "${WS_NEW_NOTIFICATION_EVENT}"`,
+    description: `WebSocket server: \`/somegram.online/${NOTIFICATION_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.`,
   })
   @Get()
-  connection() {
-    return 'There is nothing here.';
-  }
-
-  @ApiOperation({
-    summary: 'Receiving a new notification',
-  })
   @ApiOkResponse({
     description: 'New notification',
     type: WsNotificationEventResponse,
   })
-  @Get(WS_NEW_NOTIFICATION_EVENT)
-  newNotification() {
+  connection() {
     return 'There is nothing here.';
   }
 

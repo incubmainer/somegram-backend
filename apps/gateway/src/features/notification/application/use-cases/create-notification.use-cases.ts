@@ -50,7 +50,6 @@ export class CreateNotificationUseCaseHandler
       const notification = this.notificationEntity.create(userId, message);
       const result: string =
         await this.notificationRepository.create(notification);
-
       this.eventBus.publish(new CreatedNotificationEvent(result, userId));
       return this.appNotification.success(null);
     } catch (e) {

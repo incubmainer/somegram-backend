@@ -40,4 +40,5 @@ export const NOTIFICATION_NAME_SPACE = 'notification';
 export const NOTIFICATION_ROUTE = {
   MAIN: 'notifications',
   MARK_AS_READ: 'read',
+  TESTING: 'testing',
 };

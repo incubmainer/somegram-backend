@@ -11,6 +11,7 @@ import {
   PAYPAL_WEBHOOK_HANDLER,
   TESTING_CANCEL_SUBSCRIPTION,
   TESTING_GET_PAYMENTS,
+  TESTING_GET_NOTIFICATION,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PaypalEventAdapter } from '../../../common/adapters/paypal-event.adapter';
@@ -35,6 +36,7 @@ import {
   MyPaymentsOutputDto,
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/payments.output-dto';
+import { PaymentService } from '../application/payments.service';
 
 @Controller('payments')
 export class PaymentsController {
@@ -43,6 +45,7 @@ export class PaymentsController {
     private readonly queryBus: QueryBus,
     private readonly eventManager: PaypalEventAdapter,
     private readonly logger: LoggerService,
+    private readonly paymentService: PaymentService,
   ) {
     this.logger.setContext(PaymentsController.name);
   }
@@ -141,5 +144,12 @@ export class PaymentsController {
     return await this.queryBus.execute(
       new TestingGetPaymentsQuery(payload.userId, payload.queryString),
     );
+  }
+
+  @MessagePattern({ cmd: TESTING_GET_NOTIFICATION })
+  async testingGetNotification(
+    payload: any,
+  ): Promise<AppNotificationResultType<null>> {
+    return await this.paymentService.testSendNotification(payload.userId);
   }
 }

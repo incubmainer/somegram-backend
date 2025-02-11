@@ -17,6 +17,10 @@ import { SubscriptionStatuses } from '../../../common/enum/subscription-types.en
 import { SubscriptionInfoGatewayType } from '../../../../../gateway/src/features/subscriptions/domain/types';
 import { CreateNotificationInputDto } from '../../../../../gateway/src/features/notification/api/dto/input-dto/notification.input-dto';
 import { ConvertDateUtil } from '../../../common/utils/convert-date.util';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 @Injectable()
 export class PaymentService {
@@ -28,6 +32,7 @@ export class PaymentService {
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
     private readonly paymentManager: PaymentManager,
     private readonly convertDateUtil: ConvertDateUtil,
+    private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(PaymentService.name);
   }
@@ -42,6 +47,15 @@ export class PaymentService {
   private async execute12Am(): Promise<void> {
     this.logger.debug('Execute payment service crone', this.execute12Am.name);
     this.checkAndNotifySubscriptionEnd();
+  }
+
+  public async testSendNotification(
+    userId: string,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute test send notification', this.execute12Am.name);
+    this.checkAndNotifySubscriptionEnd();
+    this.sendNotificationAfterSuccessPayment(userId, new Date());
+    return this.appNotification.success(null);
   }
 
   private shouldCancelPayPalSubscription(
