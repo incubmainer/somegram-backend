@@ -14,6 +14,12 @@ import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
 import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
 import { NotificationModule } from './features/notification/notification.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GatewayResolver } from './gateway.resolver';
+import { AuthResolver } from './resolvers/auth/auth.resolver';
+
+const resolvers = [GatewayResolver, AuthResolver];
 
 @Module({
   imports: [
@@ -28,9 +34,14 @@ import { NotificationModule } from './features/notification/notification.module'
     CommonModule,
     LoggerModule.forRoot('Gateway'),
     NotificationModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      installSubscriptionHandlers: true,
+      autoSchemaFile: true,
+    }),
   ],
   controllers: [],
-  providers: [AsyncLocalStorageService],
+  providers: [AsyncLocalStorageService, ...resolvers],
 })
 export class GatewayModule {
   configure(consumer: MiddlewareConsumer) {
