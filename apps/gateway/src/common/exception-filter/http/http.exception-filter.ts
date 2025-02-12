@@ -7,10 +7,31 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UnprocessableExceptionErrorDto } from '@app/base-types-enum';
+import { GqlArgumentsHost, GqlContextType } from '@nestjs/graphql';
+import { GraphQLError } from 'graphql';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
+    const hostType = host.getType<GqlContextType>();
+
+    if (hostType === 'graphql') {
+      if (exception instanceof HttpException) {
+        const gqlHost = GqlArgumentsHost.create(host);
+        const response = exception.getResponse();
+        const status = exception.getStatus();
+        const messageResponse = exception.message;
+        throw new GraphQLError(messageResponse, {
+          extensions: {
+            statusCode: status,
+            message: response,
+            code: status,
+          },
+        });
+      }
+
+      throw new GraphQLError('Internal server error');
+    }
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
