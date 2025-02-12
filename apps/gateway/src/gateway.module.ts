@@ -18,8 +18,10 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GatewayResolver } from './gateway.resolver';
 import { AuthResolver } from './resolvers/auth/auth.resolver';
+import { UsersResolver } from './resolvers/users/users.resolver';
+import { PaginatorModule } from '@app/paginator';
 
-const resolvers = [GatewayResolver, AuthResolver];
+const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ const resolvers = [GatewayResolver, AuthResolver];
     ApplicationNotificationModule,
     CountryCatalogModule,
     SubscriptionsModule,
+    PaginatorModule,
     CommonModule,
     LoggerModule.forRoot('Gateway'),
     NotificationModule,

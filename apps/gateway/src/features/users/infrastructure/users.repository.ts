@@ -366,4 +366,15 @@ export class UsersRepository {
       },
     );
   }
+
+  async removeUser(userId: string): Promise<boolean> {
+    const res = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { isDeleted: true },
+    });
+    if (!res) {
+      return false;
+    }
+    return true;
+  }
 }

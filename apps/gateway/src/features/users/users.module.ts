@@ -14,6 +14,7 @@ import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-c
 import { PublicUsersController } from './api/public-users.controller';
 import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
 import { GetPublicProfileInfoUseCase } from './application/use-cases/queryBus/get-public-profile-info.use-case';
+import { UsersService } from './application/users.service';
 
 const useCases = [
   UploadAvatarUseCase,
@@ -25,7 +26,7 @@ const useCases = [
 
 const repositories = [UsersRepository, UsersQueryRepository];
 
-const services = [AuthService, CryptoService];
+const services = [AuthService, CryptoService, UsersService];
 
 @Module({
   imports: [
@@ -37,6 +38,6 @@ const services = [AuthService, CryptoService];
   ],
   controllers: [UsersController, PublicUsersController],
   providers: [JwtStrategy, ...services, ...useCases, ...repositories],
-  exports: [UsersRepository],
+  exports: [UsersRepository, UsersService],
 })
 export class UsersModule {}

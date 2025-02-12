@@ -7,6 +7,7 @@ import {
   userMapper,
 } from '../../auth/api/dto/output-dto/me-output-dto';
 import { LoggerService } from '@app/logger';
+import { SearchQueryParametersType } from '../../../common/domain/query.types';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -70,5 +71,41 @@ export class UsersQueryRepository {
     this.logger.debug(`Get total users count`, this.getTotalCountUsers.name);
 
     return this.txHost.tx.user.count();
+  }
+
+  public async getUsers(
+    sanitizationQuery: SearchQueryParametersType,
+  ): Promise<{ users: User[]; count: number }> {
+    const skip =
+      sanitizationQuery.pageSize * (sanitizationQuery.pageNumber - 1);
+    let where = {};
+    if (sanitizationQuery.search && sanitizationQuery.search.trim() !== '') {
+      where = {
+        username: {
+          contains: sanitizationQuery.search,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    where = {
+      isDeleted: false,
+    };
+
+    const users = await this.txHost.tx.user.findMany({
+      where,
+      orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
+      skip,
+      take: sanitizationQuery.pageSize,
+    });
+
+    const count = await this.txHost.tx.user.count({
+      where,
+    });
+
+    return {
+      users,
+      count,
+    };
   }
 }
