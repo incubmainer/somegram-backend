@@ -31,7 +31,7 @@ import {
 } from '../../../../../gateway/src/features/subscriptions/domain/types';
 import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
 import { TestingGetPaymentsQuery } from '../application/use-cases/query/testing-get-payments.use-case';
-import { Paginator } from '../../../../../gateway/src/common/domain/paginator';
+import { Pagination } from '@app/paginator';
 import {
   MyPaymentsOutputDto,
   SubscriptionInfoOutputDto,
@@ -110,7 +110,7 @@ export class PaymentsController {
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments(
     payload: GetUserPaymentPayloadType,
-  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     this.logger.debug('Execute: get payments', this.getPayments.name);
     return this.queryBus.execute(
       new GetPaymentsQuery(payload.userId, payload.queryString),

@@ -28,6 +28,7 @@ import { StripeInvoicePaymentSucceededHandler } from './features/payments/applic
 import { StripeSubscriptionDeletedHandler } from './features/payments/application/handlers/stripe/stripe-subscription-deleted.handler';
 import { StripeCheckouSessionCompletedHandler } from './features/payments/application/handlers/stripe/stripe-checkout-session-completed.handler';
 import { PaymentService } from './features/payments/application/payments.service';
+import { PaginatorService } from '@app/paginator';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -61,6 +62,7 @@ const services = [
   transactionEntityProvider,
   subscriptionEntityProvider,
   PaymentService,
+  PaginatorService,
 ];
 
 const payPalHandlers = [

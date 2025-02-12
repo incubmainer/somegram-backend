@@ -11,7 +11,7 @@ import {
 } from '@app/application-notification';
 import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
-import { Paginator } from '../../../../../../../gateway/src/common/domain/paginator';
+import { Pagination, PaginatorService } from '@app/paginator';
 import { LoggerService } from '@app/logger';
 
 export class GetPaymentsQuery {
@@ -29,13 +29,14 @@ export class GetPaymentsQueryUseCase
     private readonly paymentsRepository: PaymentsRepository,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
+    private readonly paginatorService: PaginatorService,
   ) {
     this.logger.setContext(GetPaymentsQueryUseCase.name);
   }
 
   async execute(
     command: GetPaymentsQuery,
-  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     this.logger.debug('Execute: get payments by user id', this.execute.name);
 
     const sanitizationQuery = getSanitizationQuery(command.queryString);
@@ -47,7 +48,8 @@ export class GetPaymentsQueryUseCase
         );
 
       const mapPayments: MyPaymentsOutputDto[] = myPaymentsMapper(payments);
-      const result = new Paginator<MyPaymentsOutputDto[]>(
+      const result = this.paginatorService.create<MyPaymentsOutputDto[]>(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mapPayments,

@@ -10,7 +10,7 @@ import {
 } from '@app/application-notification';
 import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
-import { Paginator } from '../../../../../../../gateway/src/common/domain/paginator';
+import { Pagination, PaginatorService } from '@app/paginator';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
 import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
 
@@ -71,14 +71,17 @@ export class TestingGetPaymentsQueryUseCase
   implements
     IQueryHandler<
       TestingGetPaymentsQuery,
-      AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>
+      AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>
     >
 {
-  constructor(private readonly appNotification: ApplicationNotification) {}
+  constructor(
+    private readonly appNotification: ApplicationNotification,
+    private readonly paginatorService: PaginatorService,
+  ) {}
 
   async execute(
     command: TestingGetPaymentsQuery,
-  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     const sanitizationQuery = getSanitizationQuery(command.queryString);
     try {
       const { pageNumber, pageSize } = sanitizationQuery;
@@ -98,7 +101,8 @@ export class TestingGetPaymentsQueryUseCase
 
       const mapPayments: MyPaymentsOutputDto[] =
         myPaymentsMapper(paginatedPayments);
-      const result = new Paginator<MyPaymentsOutputDto[]>(
+      const result = this.paginatorService.create<MyPaymentsOutputDto[]>(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mapPayments,
