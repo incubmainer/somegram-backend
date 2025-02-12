@@ -2,12 +2,6 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
-
-import {
   PostOutputDto,
   postToOutputMapper,
 } from '../../../api/dto/output-dto/post.output-dto';
@@ -15,7 +9,7 @@ import { PostsQueryRepository } from '../../../infrastructure/posts.query-reposi
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../../../../../common/domain/query.types';
-import { Paginator } from '../../../../../common/domain/paginator';
+import { Pagination, PaginatorService } from '@app/paginator';
 import { getSanitizationQuery } from '../../../../../common/utils/query-params.sanitizator';
 
 export const GetPostsCodes = {
@@ -33,26 +27,21 @@ export class GetPostsByUserQuery {
 }
 
 @QueryHandler(GetPostsByUserQuery)
-// @LogClass({
-//   level: 'trace',
-//   loggerClassField: 'logger',
-//   active: () => process.env.NODE_ENV !== 'production',
-// })
 export class GetPostsByUserUseCase
   implements IQueryHandler<GetPostsByUserQuery>
 {
   constructor(
     private readonly logger: LoggerService,
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
+    private readonly paginatorService: PaginatorService,
   ) {
     this.logger.setContext(GetPostsByUserUseCase.name);
   }
   async execute(command: GetPostsByUserQuery) {
     const { userId, queryString, endCursorPostId } = command;
-    const notification = new NotificationObject<Paginator<PostOutputDto[]>>(
+    const notification = new NotificationObject<Pagination<PostOutputDto[]>>(
       GetPostsCodes.Success,
     );
 
@@ -80,7 +69,8 @@ export class GetPostsByUserUseCase
           );
         }),
       );
-      const result = new Paginator<PostOutputDto[]>(
+      const result = this.paginatorService.create<PostOutputDto[]>(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

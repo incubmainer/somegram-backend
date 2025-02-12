@@ -45,7 +45,7 @@ import {
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
-import { Paginator } from '../../../common/domain/paginator';
+
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
@@ -53,6 +53,7 @@ import {
 import { TestingCancelSubscriptionSwagger } from './swagger/testing-cancel-subscription.swagger';
 import { SubscriptionInfoGatewayType } from '../domain/types';
 import { UpdateSubscriptionsInfoCommand } from '../application/use-cases/update-subscriptions-info.use-case';
+import { Pagination } from '@app/paginator';
 
 @ApiTags('Subscriptions')
 @ApiBearerAuth('access-token')
@@ -101,12 +102,12 @@ export class SubscriptionsController {
   async geyPayments(
     @CurrentUserId() userId: string,
     @Query() queryString?: SearchQueryParametersType,
-  ): Promise<Paginator<MyPaymentsOutputDto[]>> {
+  ): Promise<Pagination<MyPaymentsOutputDto[]>> {
     this.logger.debug(
       'Execute: Current user payments info',
       this.geyPayments.name,
     );
-    const result: AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>> =
+    const result: AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>> =
       await this.paymentsServiceAdapter.getPayments({
         userId,
         queryString,
@@ -254,13 +255,13 @@ export class SubscriptionsController {
   async testingGetPayments(
     @CurrentUserId() userId: string,
     @Query() queryString?: SearchQueryParametersType,
-  ): Promise<Paginator<MyPaymentsOutputDto[]>> {
+  ): Promise<Pagination<MyPaymentsOutputDto[]>> {
     this.logger.debug(
       `Execute: get payments (Testing)`,
       this.testingGetPayments.name,
     );
 
-    const result: AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>> =
+    const result: AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>> =
       await this.paymentsServiceAdapter.testingGetPayments({
         userId,
         queryString,

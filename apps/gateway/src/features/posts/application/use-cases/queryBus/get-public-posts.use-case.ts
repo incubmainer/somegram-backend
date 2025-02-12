@@ -10,8 +10,8 @@ import { PostsQueryRepository } from '../../../infrastructure/posts.query-reposi
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../../../../../common/domain/query.types';
-import { Paginator } from '../../../../../common/domain/paginator';
 import { getSanitizationQuery } from '../../../../../common/utils/query-params.sanitizator';
+import { Pagination, PaginatorService } from '@app/paginator';
 
 export const GetPublicPostsCodes = {
   Success: Symbol('success'),
@@ -34,12 +34,13 @@ export class GetPublicPostsByUserUseCase
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
+    private readonly paginatorService: PaginatorService,
   ) {
     this.logger.setContext(GetPublicPostsByUserUseCase.name);
   }
   async execute(command: GetPublicPostsByUserQuery) {
     const { queryString, endCursorPostId } = command;
-    const notification = new NotificationObject<Paginator<PostOutputDto[]>>(
+    const notification = new NotificationObject<Pagination<PostOutputDto[]>>(
       GetPublicPostsCodes.Success,
     );
 
@@ -65,7 +66,8 @@ export class GetPublicPostsByUserUseCase
         }),
       );
 
-      const result = new Paginator<PostOutputDto[]>(
+      const result = this.paginatorService.create<PostOutputDto[]>(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

@@ -26,7 +26,7 @@ export const getSanitizationQuery = (
     sortBy: query?.sortBy ? query.sortBy : defaultSearchQueryParameters.sortBy,
     sortDirection:
       query?.sortDirection && query.sortDirection.toLowerCase() === 'asc'
-        ? 'asc'
+        ? ('asc' as SortDirection)
         : defaultSearchQueryParameters.sortDirection,
   };
 };
