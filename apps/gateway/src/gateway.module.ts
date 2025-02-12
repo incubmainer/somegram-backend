@@ -40,7 +40,9 @@ const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       installSubscriptionHandlers: true,
-      autoSchemaFile: true,
+      //autoSchemaFile: true,
+      autoSchemaFile: 'schema.gql',
+      path: '/api/v1/graphql',
     }),
   ],
   controllers: [],
