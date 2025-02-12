@@ -8,6 +8,7 @@ import {
 } from '../../auth/api/dto/output-dto/me-output-dto';
 import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { UserWithBanInfo } from '../domain/user.interfaces';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -19,11 +20,12 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async findUserById(id?: string): Promise<User | null> {
+  async findUserById(id?: string): Promise<UserWithBanInfo | null> {
     this.logger.debug(`Find user by id: ${id}`, this.findUserById.name);
 
     const user = await this.txHost.tx.user.findFirst({
       where: { id },
+      include: { UserBanInfo: true },
     });
     return user ? user : null;
   }
@@ -75,7 +77,7 @@ export class UsersQueryRepository {
 
   public async getUsers(
     sanitizationQuery: SearchQueryParametersType,
-  ): Promise<{ users: User[]; count: number }> {
+  ): Promise<{ users: UserWithBanInfo[]; count: number }> {
     const skip =
       sanitizationQuery.pageSize * (sanitizationQuery.pageNumber - 1);
     let where = {};
@@ -94,6 +96,7 @@ export class UsersQueryRepository {
 
     const users = await this.txHost.tx.user.findMany({
       where,
+      include: { UserBanInfo: true },
       orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
       skip,
       take: sanitizationQuery.pageSize,

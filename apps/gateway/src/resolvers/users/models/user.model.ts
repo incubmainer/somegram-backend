@@ -1,6 +1,7 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 import { AccountType } from '../../../../../../libs/common/enums/payments';
+import { UserBanInfo } from './ban-info.user.model';
 
 registerEnumType(AccountType, { name: 'AccountType' });
 
@@ -47,4 +48,7 @@ export class UserModel {
 
   @Field()
   isDeleted: boolean;
+
+  @Field(() => UserBanInfo, { nullable: true })
+  banInfo?: UserBanInfo;
 }

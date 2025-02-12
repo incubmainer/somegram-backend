@@ -5,9 +5,10 @@ import { UserModel } from '../../../resolvers/users/models/user.model';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { PaginatedUserModel } from '../../../resolvers/users/models/paginated-user.model';
-import { User } from '@prisma/gateway';
 import { AccountType } from '../../../../../../libs/common/enums/payments';
 import { PaginatorService } from '@app/paginator';
+import { BanUserInput } from '../../../resolvers/users/models/ban-user-input';
+import { UserWithBanInfo } from '../domain/user.interfaces';
 
 @Injectable()
 export class UsersService {
@@ -41,12 +42,34 @@ export class UsersService {
   async removeUser(userId: string): Promise<boolean> {
     return this.usersRepository.removeUser(userId);
   }
-  private mapUsers(users: User[]): UserModel[] {
+
+  async banUser(banUserInput: BanUserInput): Promise<boolean> {
+    const user = await this.usersQueryRepository.findUserById(
+      banUserInput.userId,
+    );
+    if (!user) {
+      return false;
+    }
+    return this.usersRepository.banUser(
+      banUserInput.userId,
+      banUserInput.banReason,
+    );
+  }
+
+  async unbanUser(userId: string): Promise<boolean> {
+    const user = await this.usersQueryRepository.findUserById(userId);
+    if (!user) {
+      return false;
+    }
+    return this.usersRepository.unbanUser(userId);
+  }
+
+  private mapUsers(users: UserWithBanInfo[]): UserModel[] {
     return users.map((user) => {
       return this.mapUser(user);
     });
   }
-  private mapUser(user: User): UserModel {
+  private mapUser(user: UserWithBanInfo): UserModel {
     return {
       id: user.id,
       username: user.username,
@@ -62,6 +85,10 @@ export class UsersService {
       about: user.about,
       avatarURL: user.id,
       profileLink: `https://somegram.online/ru/public-user/profile/${user.id}`,
+      banInfo: {
+        banDate: user.UserBanInfo.banDate,
+        banReason: user.UserBanInfo.banReason,
+      },
     };
   }
 }

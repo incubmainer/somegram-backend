@@ -6,6 +6,7 @@ import { PaginatedUserModel } from './models/paginated-user.model';
 import { SortDirection } from '../../common/domain/query.types';
 import { UsersService } from '../../features/users/application/users.service';
 import { UserModel } from './models/user.model';
+import { BanUserInput } from './models/ban-user-input';
 
 @Resolver()
 export class UsersResolver {
@@ -51,6 +52,31 @@ export class UsersResolver {
     @Args('userId', { type: () => String }) userId: string,
   ): Promise<boolean> {
     const res = await this.usersService.removeUser(userId);
+    if (!res) {
+      throw new NotFoundException('User not found');
+    }
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(BasicGqlGuard)
+  async banUser(
+    @Args('banUserInput', { type: () => BanUserInput })
+    banUserInput: BanUserInput,
+  ): Promise<boolean> {
+    const res = await this.usersService.banUser(banUserInput);
+    if (!res) {
+      throw new NotFoundException('User not found');
+    }
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(BasicGqlGuard)
+  async unbanUser(
+    @Args('userId', { type: () => String }) userId: string,
+  ): Promise<boolean> {
+    const res = await this.usersService.unbanUser(userId);
     if (!res) {
       throw new NotFoundException('User not found');
     }

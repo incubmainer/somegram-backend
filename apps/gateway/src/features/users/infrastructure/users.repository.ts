@@ -377,4 +377,24 @@ export class UsersRepository {
     }
     return true;
   }
+
+  async banUser(userId: string, reason: string): Promise<boolean> {
+    await this.txHost.tx.userBanInfo.create({
+      data: {
+        userId: userId,
+        isBanned: true,
+        banReason: reason,
+        banDate: new Date(),
+      },
+    });
+
+    return true;
+  }
+
+  async unbanUser(userId: string): Promise<boolean> {
+    await this.txHost.tx.userBanInfo.delete({
+      where: { userId: userId },
+    });
+    return true;
+  }
 }
