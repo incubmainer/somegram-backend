@@ -7,6 +7,7 @@ import { SortDirection } from '../../common/domain/query.types';
 import { UsersService } from '../../features/users/application/users.service';
 import { UserModel } from './models/user.model';
 import { BanUserInput } from './models/ban-user-input';
+import { QueryStringInput } from './models/pagination-users-input';
 
 @Resolver()
 export class UsersResolver {
@@ -25,25 +26,10 @@ export class UsersResolver {
   @Query(() => PaginatedUserModel)
   @UseGuards(BasicGqlGuard)
   async getUsers(
-    @Args('pageNumber', { nullable: true, defaultValue: 1 })
-    pageNumber?: number,
-    @Args('pageSize', { nullable: true, defaultValue: 8 }) pageSize?: number,
-    @Args('sortBy', { nullable: true, defaultValue: 'username' })
-    sortBy?: string,
-    @Args('sortDirection', {
-      type: () => SortDirection,
-      defaultValue: 'desc' as SortDirection,
-    })
-    sortDirection?: SortDirection,
-    @Args('search', { nullable: true }) search?: string,
+    @Args('queryString', { type: () => QueryStringInput, nullable: true })
+    queryString: QueryStringInput,
   ): Promise<PaginatedUserModel> {
-    return await this.usersService.getUsers({
-      pageNumber,
-      pageSize,
-      sortBy,
-      sortDirection,
-      search,
-    });
+    return await this.usersService.getUsers(queryString);
   }
 
   @Mutation(() => Boolean)

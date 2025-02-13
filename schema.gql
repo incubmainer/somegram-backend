@@ -57,7 +57,15 @@ type Query {
   sayHello: String!
   loginSa: String!
   getUser(id: String!): UserModel
-  getUsers(pageNumber: Float = 1, pageSize: Float = 8, sortBy: String = "username", sortDirection: SortDirection! = DESC, search: String): PaginatedUserModel!
+  getUsers(queryString: QueryStringInput): PaginatedUserModel!
+}
+
+input QueryStringInput {
+  pageNumber: Int! = 1
+  pageSize: Int! = 8
+  sortBy: String! = "username"
+  sortDirection: SortDirection! = ASC
+  search: String
 }
 
 enum SortDirection {

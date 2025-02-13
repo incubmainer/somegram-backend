@@ -7,8 +7,8 @@ import {
   userMapper,
 } from '../../auth/api/dto/output-dto/me-output-dto';
 import { LoggerService } from '@app/logger';
-import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { UserWithBanInfo } from '../domain/user.interfaces';
+import { QueryStringInput } from '../../../resolvers/users/models/pagination-users-input';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -76,18 +76,17 @@ export class UsersQueryRepository {
   }
 
   public async getUsers(
-    sanitizationQuery: SearchQueryParametersType,
+    queryString: QueryStringInput,
   ): Promise<{ users: UserWithBanInfo[]; count: number }> {
     this.logger.debug(`Get all users`, this.getUsers.name);
 
-    const skip =
-      sanitizationQuery.pageSize * (sanitizationQuery.pageNumber - 1);
+    const skip = queryString.pageSize * (queryString.pageNumber - 1);
     let where = {};
-    if (sanitizationQuery.search && sanitizationQuery.search.trim() !== '') {
+    if (queryString.search && queryString.search.trim() !== '') {
       where = {
         isDeleted: false,
         username: {
-          contains: sanitizationQuery.search,
+          contains: queryString.search,
           mode: 'insensitive',
         },
       };
@@ -100,9 +99,9 @@ export class UsersQueryRepository {
     const users = await this.txHost.tx.user.findMany({
       where,
       include: { UserBanInfo: true },
-      orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
+      orderBy: { [queryString.sortBy]: queryString.sortDirection },
       skip,
-      take: sanitizationQuery.pageSize,
+      take: queryString.pageSize,
     });
 
     const count = await this.txHost.tx.user.count({

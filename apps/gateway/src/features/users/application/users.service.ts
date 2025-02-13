@@ -11,6 +11,7 @@ import { BanUserInput } from '../../../resolvers/users/models/ban-user-input';
 import { UserWithBanInfo } from '../domain/user.interfaces';
 import { PhotoServiceAdapter } from '../../../common/adapter/photo-service.adapter';
 import { FileModel } from '../../../resolvers/users/models/file-model';
+import { QueryStringInput } from '../../../resolvers/users/models/pagination-users-input';
 
 @Injectable()
 export class UsersService {
@@ -20,9 +21,7 @@ export class UsersService {
     private readonly paginatorService: PaginatorService,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {}
-  async getUsers(
-    queryString: SearchQueryParametersType,
-  ): Promise<PaginatedUserModel> {
+  async getUsers(queryString: QueryStringInput): Promise<PaginatedUserModel> {
     const { users, count } =
       await this.usersQueryRepository.getUsers(queryString);
 
