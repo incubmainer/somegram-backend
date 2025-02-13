@@ -2,6 +2,7 @@ import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 import { AccountType } from '../../../../../../libs/common/enums/payments';
 import { UserBanInfo } from './ban-info.user.model';
+import { FileModel } from './file-model';
 
 registerEnumType(AccountType, { name: 'AccountType' });
 
@@ -41,7 +42,7 @@ export class UserModel {
   accountType: AccountType;
 
   @Field({ nullable: true })
-  avatarURL: string;
+  avatar: FileModel;
 
   @Field({ nullable: true })
   profileLink: string;

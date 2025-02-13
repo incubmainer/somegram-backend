@@ -1,5 +1,6 @@
 import { User } from '@prisma/gateway';
 import { ApiProperty } from '@nestjs/swagger';
+import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 
 export class UserCountOutputDto {
   @ApiProperty({
@@ -132,7 +133,7 @@ export class ProfileInfoOutputDto {
 
 export const userProfileInfoMapper = (
   user: User,
-  avatarUrl?: string | null,
+  avatar?: FileType | null,
 ): ProfileInfoOutputDto => {
   return new ProfileInfoOutputDto({
     email: user.email,
@@ -143,20 +144,20 @@ export const userProfileInfoMapper = (
     about: user.about ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
-    avatar: { url: avatarUrl ? avatarUrl : null },
+    avatar: { url: avatar ? avatar.url : null },
   });
 };
 
 export const userPublicProfileInfoMapper = (
   user: User,
-  avatarUrl?: string | null,
+  avatar?: FileType | null,
 ): ProfilePublicInfoOutputDtoModel => {
   return new ProfilePublicInfoOutputDtoModel({
     id: user.id,
     userName: user.username,
     about: user.about ?? null,
     avatar: {
-      url: avatarUrl ? avatarUrl : null,
+      url: avatar ? avatar.url : null,
     },
   });
 };

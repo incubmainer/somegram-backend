@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { PaginatorService } from '@app/paginator';
+
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { UserModel } from '../../../resolvers/users/models/user.model';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { PaginatedUserModel } from '../../../resolvers/users/models/paginated-user.model';
 import { AccountType } from '../../../../../../libs/common/enums/payments';
-import { PaginatorService } from '@app/paginator';
 import { BanUserInput } from '../../../resolvers/users/models/ban-user-input';
 import { UserWithBanInfo } from '../domain/user.interfaces';
+import { PhotoServiceAdapter } from '../../../common/adapter/photo-service.adapter';
+import { FileModel } from '../../../resolvers/users/models/file-model';
 
 @Injectable()
 export class UsersService {
@@ -16,18 +18,21 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly paginatorService: PaginatorService,
-    private readonly configService: ConfigService,
+    private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {}
   async getUsers(
     queryString: SearchQueryParametersType,
   ): Promise<PaginatedUserModel> {
     const { users, count } =
       await this.usersQueryRepository.getUsers(queryString);
+
+    const userIds: string[] = users.map((user) => user.id);
+    const avatars = await this.photoServiceAdapter.getUsersAvatar(userIds);
     return this.paginatorService.create(
       queryString.pageNumber,
       queryString.pageSize,
       count,
-      this.mapUsers(users),
+      this.mapUsers(users, avatars),
     );
   }
 
@@ -36,7 +41,8 @@ export class UsersService {
     if (!user) {
       return null;
     }
-    return this.mapUser(user);
+    const avatar = await this.photoServiceAdapter.getAvatar(user.id);
+    return this.mapUser(user, avatar);
   }
 
   async removeUser(userId: string): Promise<boolean> {
@@ -64,12 +70,19 @@ export class UsersService {
     return this.usersRepository.unbanUser(userId);
   }
 
-  private mapUsers(users: UserWithBanInfo[]): UserModel[] {
+  private mapUsers(
+    users: UserWithBanInfo[],
+    avatars?: FileModel[],
+  ): UserModel[] {
     return users.map((user) => {
-      return this.mapUser(user);
+      const avatar = avatars
+        ? avatars.find((avatar) => avatar.ownerId === user.id)
+        : null;
+      return this.mapUser(user, avatar);
     });
   }
-  private mapUser(user: UserWithBanInfo): UserModel {
+
+  private mapUser(user: UserWithBanInfo, avatar?: FileModel): UserModel {
     return {
       id: user.id,
       username: user.username,
@@ -83,12 +96,22 @@ export class UsersService {
       city: user.city,
       country: user.country,
       about: user.about,
-      avatarURL: user.id,
+      avatar: avatar ? avatar : null,
+      //использовать env FRONTED_PROVIDER
       profileLink: `https://somegram.online/ru/public-user/profile/${user.id}`,
-      banInfo: {
-        banDate: user.UserBanInfo.banDate,
-        banReason: user.UserBanInfo.banReason,
-      },
+      banInfo: user.UserBanInfo
+        ? {
+            banDate: user.UserBanInfo.banDate,
+            banReason: user.UserBanInfo.banReason,
+          }
+        : null,
+      //uploaded photos tab - все загруженные фотографии в публикациях пользователя
+      //allPhotos: allPhotos ? [urls],
+      //- все совершенные платежи пользователем
+      //payments: payments
+      //endDateOfSubscription: user.endDateOfSubscription,
+      //autoRenewal: user.autoRenewal,
+      //followers and following будет позже
     };
   }
 }

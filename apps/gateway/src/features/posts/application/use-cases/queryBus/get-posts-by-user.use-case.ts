@@ -52,7 +52,7 @@ export class GetPostsByUserUseCase
     }
     const sanitizationQuery = getSanitizationQuery(queryString);
     try {
-      const avatarUrl = await this.photoServiceAdapter.getAvatar(userId);
+      const avatar = await this.photoServiceAdapter.getAvatar(userId);
 
       const { posts, count } = await this.postsQueryRepository.getPostsByUser(
         user.id,
@@ -64,7 +64,7 @@ export class GetPostsByUserUseCase
           return postToOutputMapper(
             post,
             user,
-            avatarUrl,
+            avatar,
             await this.photoServiceAdapter.getPostPhotos(post.id),
           );
         }),

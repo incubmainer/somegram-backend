@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { PhotosQueryRepository } from '../infrastructure/photos.query.repopository';
+import { PhotosQueryRepository } from '../infrastructure/photos.query.repository';
 import { S3Adapter } from '../../../common/application/adapters/s3.adapter';
+import { Avatar } from '../models/avatar.model';
+import { PostPhoto } from '../models/post-photo.model';
+import { FileType } from '../../../../../../libs/common/enums/file-type.enum';
 
 @Injectable()
 export class PhotosService {
@@ -13,13 +16,35 @@ export class PhotosService {
     return 'Files started!';
   }
 
-  async getUserAvatar(userId: string) {
+  async getUserAvatar(userId: string): Promise<FileType> {
     const avatar = await this.fileQueryRepository.findAvatar(userId);
-    return avatar ? this.s3Adapter.getFileUrl(avatar.key) : null;
+    return avatar ? this.photoMapper(avatar) : null;
   }
 
-  async getPostPhotos(postId: string) {
+  async getPostPhotos(postId: string): Promise<FileType[]> {
     const photos = await this.fileQueryRepository.findPostPhotos(postId);
-    return photos.map((photo) => this.s3Adapter.getFileUrl(photo.key));
+    return this.photosMapper(photos);
+  }
+
+  async getUsersAvatar(userIds: string[]): Promise<FileType[]> {
+    const avatars = await this.fileQueryRepository.getUsersAvatar(userIds);
+    return this.photosMapper(avatars);
+  }
+
+  photosMapper(photos: Avatar[] | PostPhoto[]): FileType[] {
+    return photos.map((photo) => {
+      return this.photoMapper(photo);
+    });
+  }
+
+  photoMapper(photo: Avatar | PostPhoto): FileType {
+    return {
+      ownerId: photo.ownerId,
+      createdAt: photo.createdAt,
+      originalname: photo.originalname,
+      size: photo.size,
+      url: this.s3Adapter.getFileUrl(photo.key),
+      key: photo.key,
+    };
   }
 }

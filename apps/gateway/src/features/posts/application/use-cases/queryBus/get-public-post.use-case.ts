@@ -44,15 +44,13 @@ export class GetPostUseCase implements IQueryHandler<GetPostQuery> {
       const postOwner = await this.usersQueryRepository.findUserById(
         post.userId,
       );
-      const ownerAvatarUrl = await this.photoServiceAdapter.getAvatar(
-        post.userId,
-      );
+      const ownerAvatar = await this.photoServiceAdapter.getAvatar(post.userId);
       const postPhotos = await this.photoServiceAdapter.getPostPhotos(post.id);
 
       const postInfo = postToOutputMapper(
         post,
         postOwner,
-        ownerAvatarUrl,
+        ownerAvatar,
         postPhotos,
       );
       notification.setData(postInfo);

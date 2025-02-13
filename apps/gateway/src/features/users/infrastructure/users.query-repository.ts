@@ -78,6 +78,7 @@ export class UsersQueryRepository {
   public async getUsers(
     sanitizationQuery: SearchQueryParametersType,
   ): Promise<{ users: UserWithBanInfo[]; count: number }> {
+    this.logger.debug(`Get all users `, this.getUsers.name);
     const skip =
       sanitizationQuery.pageSize * (sanitizationQuery.pageNumber - 1);
     let where = {};
@@ -110,5 +111,17 @@ export class UsersQueryRepository {
       users,
       count,
     };
+  }
+
+  async findUsersByIds(ids: string[]) {
+    this.logger.debug(`Get users by ids `, this.findUsersByIds.name);
+    return await this.txHost.tx.user.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      include: { UserBanInfo: true },
+    });
   }
 }

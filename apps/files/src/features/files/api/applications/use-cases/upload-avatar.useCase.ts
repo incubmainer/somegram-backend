@@ -5,7 +5,7 @@ import { FileDto } from '../../../../../../../gateway/src/features/posts/api/dto
 import { S3Adapter } from '../../../../../common/application/adapters/s3.adapter';
 import { PhotosRepository } from '../../../infrastructure/photos.repository';
 import { IAvatar } from '../../../../../common/ts/interfaces/avatar.interface';
-import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repopository';
+import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repository';
 
 export class UploadAvatarCommand {
   constructor(public payload: { ownerId: string; file: FileDto }) {}

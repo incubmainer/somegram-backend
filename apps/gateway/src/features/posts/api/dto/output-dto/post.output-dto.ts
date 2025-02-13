@@ -1,4 +1,5 @@
 import { User, UserPost } from '@prisma/gateway';
+import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 
 export class PostOutputDto {
   id: string;
@@ -26,19 +27,19 @@ export const postToOutputMapper = (
     description?: UserPost['description'] | null;
   },
   user: User,
-  avatarUrl: string,
-  images: string[],
+  avatar: FileType,
+  images: FileType[],
 ): PostOutputDto => {
   return new PostOutputDto({
     id: post.id,
     description: post.description ?? null,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt ? post.updatedAt.toISOString() : null,
-    images: images,
+    images: images.map((i) => i.url),
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
-      avatarUrl: avatarUrl,
+      avatarUrl: avatar.url,
     },
   });
 };

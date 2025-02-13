@@ -4,7 +4,7 @@ import * as sharp from 'sharp';
 import { FileDto } from '../../../../../../../gateway/src/features/posts/api/dto/input-dto/add-post.dto';
 import { S3Adapter } from '../../../../../common/application/adapters/s3.adapter';
 import { PhotosRepository } from '../../../infrastructure/photos.repository';
-import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repopository';
+import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repository';
 import { IPostPhoto } from '../../../../../common/ts/interfaces/post-photo.interface';
 
 export class SavePostPhotoCommand {

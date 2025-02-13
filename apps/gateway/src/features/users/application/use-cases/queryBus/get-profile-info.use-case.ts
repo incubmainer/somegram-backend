@@ -41,12 +41,9 @@ export class GetProfileInfoUseCase
       );
       if (!user) return this.appNotification.notFound();
 
-      const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
+      const avatar = await this.photoServiceAdapter.getAvatar(user.id);
 
-      const mapUser: ProfileInfoOutputDto = userProfileInfoMapper(
-        user,
-        avatarUrl,
-      );
+      const mapUser: ProfileInfoOutputDto = userProfileInfoMapper(user, avatar);
       return this.appNotification.success(mapUser);
     } catch (e) {
       this.logger.error(e, this.execute.name);

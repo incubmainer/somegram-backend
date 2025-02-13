@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { Avatar } from '../models/avatar.model';
-import { PostPhoto } from '../models/post-photomodel';
+import { PostPhoto } from '../models/post-photo.model';
 import { IAvatar } from '../../../common/ts/interfaces/avatar.interface';
 import { IPostPhoto } from '../../../common/ts/interfaces/post-photo.interface';
 

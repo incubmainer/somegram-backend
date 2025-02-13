@@ -20,8 +20,12 @@ import { GatewayResolver } from './gateway.resolver';
 import { AuthResolver } from './resolvers/auth/auth.resolver';
 import { UsersResolver } from './resolvers/users/users.resolver';
 import { PaginatorModule } from '@app/paginator';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
 
 const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
+
+const loaders = [];
 
 @Module({
   imports: [
@@ -46,7 +50,15 @@ const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
     }),
   ],
   controllers: [],
-  providers: [AsyncLocalStorageService, ...resolvers],
+  providers: [
+    AsyncLocalStorageService,
+    ...resolvers,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DataLoaderInterceptor,
+    },
+    ...loaders,
+  ],
 })
 export class GatewayModule {
   configure(consumer: MiddlewareConsumer) {

@@ -56,13 +56,11 @@ export class GetPublicPostsByUserUseCase
           const user = await this.usersQueryRepository.findUserById(
             post.userId,
           );
-          const avatarUrl = await this.photoServiceAdapter.getAvatar(
-            post.userId,
-          );
+          const avatar = await this.photoServiceAdapter.getAvatar(post.userId);
           const postPhotos = await this.photoServiceAdapter.getPostPhotos(
             post.id,
           );
-          return postToOutputMapper(post, user, avatarUrl, postPhotos);
+          return postToOutputMapper(post, user, avatar, postPhotos);
         }),
       );
 

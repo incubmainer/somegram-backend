@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { S3Adapter } from '../../../../../common/application/adapters/s3.adapter';
 import { PhotosRepository } from '../../../infrastructure/photos.repository';
-import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repopository';
+import { PhotosQueryRepository } from '../../../infrastructure/photos.query.repository';
 
 export class DeletePostPhotosCommand {
   constructor(public payload: { postId: string }) {}
