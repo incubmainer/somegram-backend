@@ -9,30 +9,29 @@ generator client {
 }
 
 model User {
-  id                   String                 @id @default(uuid())
-  username             String
-  email                String
-  hashPassword         String?
-  createdAt            DateTime
-  updatedAt            DateTime?
-  isConfirmed          Boolean
-  confirmationToken    UserConfirmationToken?
-  resetPasswordCode    UserResetPasswordCode?
-  securityDevices      SecurityDevices[]
-  userGithubInfo       UserGithubInfo?
-  googleInfo           UserGoogleInfo?
-  firstName            String?
-  lastName             String?
-  dateOfBirth          DateTime?
-  about                String?
-  city                 String?
-  country              String?
-  UserPost             UserPost[]
-  accountType          AccountType            @default(Personal)
-  subscriptionExpireAt DateTime?
-  Notification         Notification[]
-  isDeleted            Boolean                @default(false)
-  UserBanInfo          UserBanInfo?
+  id                String                 @id @default(uuid())
+  username          String
+  email             String
+  hashPassword      String?
+  createdAt         DateTime
+  updatedAt         DateTime?
+  isConfirmed       Boolean
+  confirmationToken UserConfirmationToken?
+  resetPasswordCode UserResetPasswordCode?
+  securityDevices   SecurityDevices[]
+  userGithubInfo    UserGithubInfo?
+  googleInfo        UserGoogleInfo?
+  firstName         String?
+  lastName          String?
+  dateOfBirth       DateTime?
+  about             String?
+  city              String?
+  country           String?
+  UserPost          UserPost[]
+  accountType       AccountType            @default(Personal)
+  Notification      Notification[]
+  isDeleted         Boolean                @default(false)
+  UserBanInfo       UserBanInfo?
 
   @@index([username])
   @@index([email])

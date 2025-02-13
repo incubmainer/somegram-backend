@@ -50,10 +50,8 @@ export class UpdateSubscriptionsInfoUseCase
         const subscriptionExpireAt = new Date(endDateOfSubscription);
 
         if (subscriptionExpireAt > new Date()) {
-          user.subscriptionExpireAt = subscriptionExpireAt;
           user.accountType = AccountType.Business;
         } else {
-          user.subscriptionExpireAt = null;
           user.accountType = AccountType.Personal;
         }
       }

@@ -345,7 +345,6 @@ export class UsersRepository {
         updatedAt: dto.updatedAt,
         city: dto.city,
         country: dto.country,
-        subscriptionExpireAt: dto.subscriptionExpireAt,
         accountType: dto.accountType,
       },
     });
