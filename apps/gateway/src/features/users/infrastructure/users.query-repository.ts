@@ -24,7 +24,7 @@ export class UsersQueryRepository {
     this.logger.debug(`Find user by id: ${id}`, this.findUserById.name);
 
     const user = await this.txHost.tx.user.findFirst({
-      where: { id },
+      where: { id, isDeleted: false },
       include: { UserBanInfo: true },
     });
     return user ? user : null;

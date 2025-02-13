@@ -131,7 +131,6 @@ model Notification {
 model UserBanInfo {
   userId    String   @unique()
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isBanned  Boolean  @default(false)
   banReason String
   banDate   DateTime
 }

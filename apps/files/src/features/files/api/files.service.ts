@@ -16,7 +16,7 @@ export class PhotosService {
     return 'Files started!';
   }
 
-  async getUserAvatar(userId: string): Promise<FileType> {
+  async getUserAvatar(userId: string): Promise<FileType | null> {
     const avatar = await this.fileQueryRepository.findAvatar(userId);
     return avatar ? this.photoMapper(avatar) : null;
   }
@@ -26,9 +26,9 @@ export class PhotosService {
     return this.photosMapper(photos);
   }
 
-  async getUsersAvatar(userIds: string[]): Promise<FileType[]> {
+  async getUsersAvatar(userIds: string[]): Promise<FileType[] | null> {
     const avatars = await this.fileQueryRepository.getUsersAvatar(userIds);
-    return this.photosMapper(avatars);
+    return avatars ? this.photosMapper(avatars) : null;
   }
 
   photosMapper(photos: Avatar[] | PostPhoto[]): FileType[] {
@@ -40,9 +40,9 @@ export class PhotosService {
   photoMapper(photo: Avatar | PostPhoto): FileType {
     return {
       ownerId: photo.ownerId,
-      createdAt: photo.createdAt,
+      createdAt: photo.createdAt.toISOString(),
       originalname: photo.originalname,
-      size: photo.size,
+      size: +photo.size,
       url: this.s3Adapter.getFileUrl(photo.key),
       key: photo.key,
     };

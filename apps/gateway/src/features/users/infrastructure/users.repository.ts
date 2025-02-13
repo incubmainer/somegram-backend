@@ -382,7 +382,6 @@ export class UsersRepository {
     await this.txHost.tx.userBanInfo.create({
       data: {
         userId: userId,
-        isBanned: true,
         banReason: reason,
         banDate: new Date(),
       },
