@@ -78,22 +78,24 @@ export class UsersQueryRepository {
   public async getUsers(
     sanitizationQuery: SearchQueryParametersType,
   ): Promise<{ users: UserWithBanInfo[]; count: number }> {
-    this.logger.debug(`Get all users `, this.getUsers.name);
+    this.logger.debug(`Get all users`, this.getUsers.name);
+
     const skip =
       sanitizationQuery.pageSize * (sanitizationQuery.pageNumber - 1);
     let where = {};
     if (sanitizationQuery.search && sanitizationQuery.search.trim() !== '') {
       where = {
+        isDeleted: false,
         username: {
           contains: sanitizationQuery.search,
           mode: 'insensitive',
         },
       };
+    } else {
+      where = {
+        isDeleted: false,
+      };
     }
-
-    where = {
-      isDeleted: false,
-    };
 
     const users = await this.txHost.tx.user.findMany({
       where,
