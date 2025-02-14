@@ -22,10 +22,11 @@ import { UsersResolver } from './resolvers/users/users.resolver';
 import { PaginatorModule } from '@app/paginator';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
+import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
 
 const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
 
-const loaders = [];
+const loaders = [UserAvatarsLoader];
 
 @Module({
   imports: [

@@ -12,16 +12,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type FileModel {
-  ownerId: String
-  createdAt: String
-  originalname: String
-  size: Float
-  url: String
-  key: String
-  postId: String
-}
-
 type UserModel {
   id: String!
   createdAt: DateTime!
@@ -34,10 +24,10 @@ type UserModel {
   city: String
   country: String
   accountType: AccountType!
-  avatar: FileModel
   profileLink: String
   isDeleted: Boolean!
   banInfo: UserBanInfo
+  getAvatar: FileModel
 }
 
 enum AccountType {
@@ -51,6 +41,16 @@ type PaginatedUserModel {
   pagesCount: Int!
   totalCount: Int!
   items: [UserModel!]!
+}
+
+type FileModel {
+  ownerId: String
+  createdAt: String
+  originalname: String
+  size: Float
+  url: String
+  key: String
+  postId: String
 }
 
 type Query {

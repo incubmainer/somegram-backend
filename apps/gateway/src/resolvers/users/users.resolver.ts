@@ -1,15 +1,25 @@
 import { NotFoundException, UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { Loader } from 'nestjs-dataloader';
+import * as DataLoader from 'dataloader';
 
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaginatedUserModel } from './models/paginated-user.model';
-import { SortDirection } from '../../common/domain/query.types';
 import { UsersService } from '../../features/users/application/users.service';
 import { UserModel } from './models/user.model';
 import { BanUserInput } from './models/ban-user-input';
 import { QueryStringInput } from './models/pagination-users-input';
+import { FileModel } from './models/file-model';
+import { UserAvatarsLoader } from '../../common/data-loaders/user-avatars-loader';
 
-@Resolver()
+@Resolver(() => UserModel)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
@@ -67,5 +77,14 @@ export class UsersResolver {
       throw new NotFoundException('User not found');
     }
     return true;
+  }
+
+  @ResolveField(() => FileModel, { nullable: true })
+  async getAvatar(
+    @Parent() user: UserModel,
+    @Loader(UserAvatarsLoader)
+    userImagesLoader: DataLoader<string, UserAvatarsLoader>,
+  ) {
+    return await userImagesLoader.load(user.id);
   }
 }
