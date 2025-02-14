@@ -47,4 +47,10 @@ export class PhotosService {
       key: photo.key,
     };
   }
+
+  async getPostsPhotosByOwnerIds(ownerIds: string[]): Promise<FileType[]> {
+    const photos =
+      await this.fileQueryRepository.getPostsPhotosByOwnerIds(ownerIds);
+    return this.photosMapper(photos);
+  }
 }

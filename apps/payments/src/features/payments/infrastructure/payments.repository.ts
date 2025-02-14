@@ -212,4 +212,19 @@ export class PaymentsRepository {
     });
     return subscriptions && subscriptions.length > 0 ? subscriptions : null;
   }
+
+  public async getSubscriptionsByUserIds(
+    userIds: string[],
+  ): Promise<Subscription[]> {
+    return await this.txHost.tx.subscription.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+      },
+      include: {
+        payments: true,
+      },
+    });
+  }
 }

@@ -28,6 +28,8 @@ type UserModel {
   isDeleted: Boolean!
   banInfo: UserBanInfo
   getAvatar: FileModel
+  getPostsPhotos: [FileModel!]
+  getPayments: [PaymentsModel!]
 }
 
 enum AccountType {

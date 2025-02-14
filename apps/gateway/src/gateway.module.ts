@@ -25,6 +25,8 @@ import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
 import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
 import { PaymentsResolver } from './resolvers/payments/payments.resolver';
 import { UserLoader } from './common/data-loaders/user-loader';
+import { PostsPhotosLoader } from './common/data-loaders/posts-photos-loader';
+import { PaymentsLoader } from './common/data-loaders/payments-loader';
 
 const resolvers = [
   GatewayResolver,
@@ -33,7 +35,12 @@ const resolvers = [
   PaymentsResolver,
 ];
 
-const loaders = [UserAvatarsLoader, UserLoader];
+const loaders = [
+  UserAvatarsLoader,
+  UserLoader,
+  PostsPhotosLoader,
+  PaymentsLoader,
+];
 
 @Module({
   imports: [

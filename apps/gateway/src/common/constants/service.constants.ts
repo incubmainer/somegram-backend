@@ -6,13 +6,14 @@ export const GET_USERS_AVATAR = 'get_avatars';
 
 export const GET_POST_PHOTOS = 'get_post_photos';
 export const DELETE_POST_PHOTOS = 'delete_post_photos';
-//export const GET_POSTS_PHOTOS = 'get_posts_photos';
+export const GET_POSTS_PHOTOS = 'get_posts_photos';
 
 export const CREATE_AUTO_PAYMENT = 'create_auto_payment';
 export const STRIPE_WEBHOOK_HANDLER = 'stripe_webhook_handler';
 export const DISABLE_AUTO_RENEWAL = 'disable_auto_renewal';
 export const ENABLE_AUTO_RENEWAL = 'enable_auto_renewal';
 export const GET_PAYMENTS = 'get_payments';
+export const GET_PAYMENTS_BY_USERS = 'get_payments_by_users';
 
 export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';
 export const SEND_SUBSCRIPTIONS_INFO = 'send_subscriptions_info';

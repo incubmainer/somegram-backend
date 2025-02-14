@@ -10,6 +10,7 @@ import {
   DELETE_AVATAR,
   DELETE_POST_PHOTOS,
   GET_POST_PHOTOS,
+  GET_POSTS_PHOTOS,
   GET_USER_AVATAR,
   GET_USERS_AVATAR,
   UPLOAD_AVATAR,
@@ -109,6 +110,19 @@ export class PhotoServiceAdapter {
     try {
       const responseOfService = this.fileServiceClient
         .send({ cmd: GET_USERS_AVATAR }, { userIds })
+        .pipe(timeout(10000));
+
+      const result = await firstValueFrom(responseOfService);
+      return result;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPostsPhotosByOwnerId(ownerIds: string[]): Promise<FileType[]> {
+    try {
+      const responseOfService = this.fileServiceClient
+        .send({ cmd: GET_POSTS_PHOTOS }, { ownerIds })
         .pipe(timeout(10000));
 
       const result = await firstValueFrom(responseOfService);

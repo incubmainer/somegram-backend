@@ -32,6 +32,6 @@ const repositories = [
   imports: [CqrsModule],
   controllers: [PostsController, PublicPostsController],
   providers: [...useCases, ...repositories],
-  exports: [],
+  exports: [PostsQueryRepository],
 })
 export class PostsModule {}

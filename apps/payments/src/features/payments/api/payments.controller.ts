@@ -12,6 +12,7 @@ import {
   TESTING_CANCEL_SUBSCRIPTION,
   TESTING_GET_PAYMENTS,
   TESTING_GET_NOTIFICATION,
+  GET_PAYMENTS_BY_USERS,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PaypalEventAdapter } from '../../../common/adapters/paypal-event.adapter';
@@ -37,6 +38,8 @@ import {
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/payments.output-dto';
 import { PaymentService } from '../application/payments.service';
+import { PaymentsRepository } from '../infrastructure/payments.repository';
+import { Subscription } from '@prisma/payments';
 
 @Controller('payments')
 export class PaymentsController {
@@ -46,6 +49,7 @@ export class PaymentsController {
     private readonly eventManager: PaypalEventAdapter,
     private readonly logger: LoggerService,
     private readonly paymentService: PaymentService,
+    private readonly paymentsRepository: PaymentsRepository,
   ) {
     this.logger.setContext(PaymentsController.name);
   }
@@ -132,6 +136,10 @@ export class PaymentsController {
   async testingCancelSubscription(
     payload: string,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug(
+      'Execute: testing cancel sub',
+      this.testingGetNotification.name,
+    );
     return await this.commandBus.execute(
       new TestingCancelSubscriptionUseCase(payload),
     );
@@ -141,6 +149,10 @@ export class PaymentsController {
   async testingGetPayments(
     payload: any,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug(
+      'Execute: testing get payments',
+      this.testingGetNotification.name,
+    );
     return await this.queryBus.execute(
       new TestingGetPaymentsQuery(payload.userId, payload.queryString),
     );
@@ -150,6 +162,23 @@ export class PaymentsController {
   async testingGetNotification(
     payload: any,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug(
+      'Execute: testing get notification',
+      this.testingGetNotification.name,
+    );
     return await this.paymentService.testSendNotification(payload.userId);
+  }
+
+  @MessagePattern({ cmd: GET_PAYMENTS_BY_USERS })
+  async getSubscriptionsByUserIds(payload: {
+    userIds: string[];
+  }): Promise<Subscription[]> {
+    this.logger.debug(
+      'Execute: get payments by users',
+      this.getSubscriptionsByUserIds.name,
+    );
+    return await this.paymentsRepository.getSubscriptionsByUserIds(
+      payload.userIds,
+    );
   }
 }

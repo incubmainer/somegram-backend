@@ -25,4 +25,10 @@ export class PhotosQueryRepository {
     const avatars = await this.avatarModel.find({ ownerId: { $in: ownerIds } });
     return avatars.length ? avatars : null;
   }
+
+  async getPostsPhotosByOwnerIds(
+    ownerIds: string[],
+  ): Promise<PostPhoto[] | null> {
+    return this.postPhotoModel.find({ ownerId: { $in: ownerIds } });
+  }
 }

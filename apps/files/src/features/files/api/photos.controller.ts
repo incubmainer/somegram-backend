@@ -7,6 +7,7 @@ import {
   DELETE_AVATAR,
   DELETE_POST_PHOTOS,
   GET_POST_PHOTOS,
+  GET_POSTS_PHOTOS,
   GET_USER_AVATAR,
   GET_USERS_AVATAR,
   UPLOAD_AVATAR,
@@ -63,5 +64,10 @@ export class PhotosController {
   @MessagePattern({ cmd: GET_USERS_AVATAR })
   async getUsersAvatar({ userIds }): Promise<FileType[]> {
     return this.filesService.getUsersAvatar(userIds);
+  }
+
+  @MessagePattern({ cmd: GET_POSTS_PHOTOS })
+  async getPostsPhotos({ ownerIds }): Promise<FileType[]> {
+    return this.filesService.getPostsPhotosByOwnerIds(ownerIds);
   }
 }

@@ -16,12 +16,17 @@ import { BanUserInput } from './models/ban-user-input';
 import { QueryStringInput } from './models/pagination-users-input';
 import { FileModel } from './models/file-model';
 import { UserAvatarsLoader } from '../../common/data-loaders/user-avatars-loader';
+import { PostsPhotosLoader } from '../../common/data-loaders/posts-photos-loader';
+import { PaymentsModel } from '../payments/models/subscription.payments.model';
+import { PaymentsLoader } from '../../common/data-loaders/payments-loader';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
     private readonly userImagesLoader: UserAvatarsLoader,
+    private readonly postsPhotosLoader: PostsPhotosLoader,
+    private readonly paymentsLoader: PaymentsLoader,
   ) {}
 
   @Query(() => UserModel, { nullable: true })
@@ -83,5 +88,15 @@ export class UsersResolver {
   @ResolveField(() => FileModel, { nullable: true })
   async getAvatar(@Parent() user: UserModel) {
     return await this.userImagesLoader.generateDataLoader().load(user.id);
+  }
+
+  @ResolveField(() => [FileModel], { nullable: true })
+  async getPostsPhotos(@Parent() user: UserModel) {
+    return await this.postsPhotosLoader.generateDataLoader().load(user.id);
+  }
+
+  @ResolveField(() => [PaymentsModel], { nullable: true })
+  async getPayments(@Parent() user: UserModel) {
+    return await this.paymentsLoader.generateDataLoader().load(user.id);
   }
 }
