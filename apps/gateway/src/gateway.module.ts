@@ -23,10 +23,17 @@ import { PaginatorModule } from '@app/paginator';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
 import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
+import { PaymentsResolver } from './resolvers/payments/payments.resolver';
+import { UserLoader } from './common/data-loaders/user-loader';
 
-const resolvers = [GatewayResolver, AuthResolver, UsersResolver];
+const resolvers = [
+  GatewayResolver,
+  AuthResolver,
+  UsersResolver,
+  PaymentsResolver,
+];
 
-const loaders = [UserAvatarsLoader];
+const loaders = [UserAvatarsLoader, UserLoader];
 
 @Module({
   imports: [

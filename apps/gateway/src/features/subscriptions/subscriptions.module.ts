@@ -29,6 +29,6 @@ const services = [PaymentsServiceAdapter];
   ],
   controllers: [SubscriptionsController],
   providers: [...services, ...useCases, ...repositories],
-  exports: [],
+  exports: [PaymentsServiceAdapter],
 })
 export class SubscriptionsModule {}

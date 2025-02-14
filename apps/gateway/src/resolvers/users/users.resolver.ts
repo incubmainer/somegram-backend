@@ -7,8 +7,6 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Loader } from 'nestjs-dataloader';
-import * as DataLoader from 'dataloader';
 
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaginatedUserModel } from './models/paginated-user.model';
@@ -21,7 +19,10 @@ import { UserAvatarsLoader } from '../../common/data-loaders/user-avatars-loader
 
 @Resolver(() => UserModel)
 export class UsersResolver {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userImagesLoader: UserAvatarsLoader,
+  ) {}
 
   @Query(() => UserModel, { nullable: true })
   @UseGuards(BasicGqlGuard)
@@ -80,11 +81,7 @@ export class UsersResolver {
   }
 
   @ResolveField(() => FileModel, { nullable: true })
-  async getAvatar(
-    @Parent() user: UserModel,
-    @Loader(UserAvatarsLoader)
-    userImagesLoader: DataLoader<string, UserAvatarsLoader>,
-  ) {
-    return await userImagesLoader.load(user.id);
+  async getAvatar(@Parent() user: UserModel) {
+    return await this.userImagesLoader.generateDataLoader().load(user.id);
   }
 }

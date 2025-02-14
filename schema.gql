@@ -53,11 +53,32 @@ type FileModel {
   postId: String
 }
 
+type PaymentsModel {
+  userId: String!
+  subscriptionId: String!
+  subscriptionType: String!
+  price: Float!
+  paymentSystem: String!
+  status: String!
+  dateOfPayment: String!
+  endDateOfSubscription: String!
+  getUser: UserModel
+}
+
+type PaginatedPaymentsModel {
+  pageNumber: Int!
+  pageSize: Int!
+  pagesCount: Int!
+  totalCount: Int!
+  items: [PaymentsModel!]!
+}
+
 type Query {
   sayHello: String!
   loginSa: String!
   getUser(id: String!): UserModel
   getUsers(queryString: QueryStringInput): PaginatedUserModel!
+  getPaymentsByUser(queryString: QueryStringInput, userId: String!): PaginatedPaymentsModel!
 }
 
 input QueryStringInput {

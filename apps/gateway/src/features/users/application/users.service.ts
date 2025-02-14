@@ -37,6 +37,11 @@ export class UsersService {
     return this.mapUser(user);
   }
 
+  async gerUsersByIds(ids: string[]): Promise<UserModel[]> {
+    const users = await this.usersQueryRepository.findUsersByIds(ids);
+    return this.mapUsers(users);
+  }
+
   async removeUser(userId: string): Promise<boolean> {
     return this.usersRepository.removeUser(userId);
   }
