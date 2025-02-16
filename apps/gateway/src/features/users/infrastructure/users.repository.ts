@@ -13,20 +13,37 @@ import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class UsersRepository {
+  private readonly TRANSACTION_TIMEOUT: number = 50000;
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
+    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersRepository.name);
   }
 
-  public getUserById(userId: string): Promise<User | null> {
-    return this.txHost.tx.user.findUnique({ where: { id: userId } });
+  async getUserById(id: string): Promise<User | null> {
+    this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
+    return user ? user : null;
+  }
+
+  async getUsersById(id: string[]): Promise<User[] | null> {
+    const users = await this.txHost.tx.user.findMany({
+      where: { id: { in: id } },
+    });
+    return users && users.length > 0 ? users : null;
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
+    this.logger.debug(
+      `Execute: get user by email ${email}`,
+      this.getUserByEmail.name,
+    );
     const user = await this.txHost.tx.user.findFirst({
       where: {
         email,
@@ -142,10 +159,8 @@ export class UsersRepository {
       },
     });
   }
-  public async findUserByToken(
-    token: string,
-  ): Promise<User & { confirmationToken: UserConfirmationToken }> {
-    return this.txHost.tx.user.findFirst({
+  public async findUserByToken(token: string) {
+    const user = await this.txHost.tx.user.findFirst({
       where: {
         confirmationToken: {
           token,
@@ -155,6 +170,7 @@ export class UsersRepository {
         confirmationToken: true,
       },
     });
+    return user;
   }
 
   public deleteConfirmationToken(token: string) {
@@ -351,7 +367,25 @@ export class UsersRepository {
         updatedAt: dto.updatedAt,
         city: dto.city,
         country: dto.country,
+        subscriptionExpireAt: dto.subscriptionExpireAt,
+        accountType: dto.accountType,
       },
     });
+  }
+
+  async updateManyUsers(users: User[]): Promise<void> {
+    await this.txHost.withTransaction(
+      { timeout: this.TRANSACTION_TIMEOUT },
+      async (): Promise<void> => {
+        const promises = users.map((user: User) => {
+          return this.txHost.tx.user.update({
+            where: { id: user.id },
+            data: user,
+          });
+        });
+
+        await Promise.all(promises);
+      },
+    );
   }
 }

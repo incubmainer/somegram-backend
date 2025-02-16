@@ -22,6 +22,27 @@ export const USER_PUBLIC_ROUTE = {
   PROFILE: 'profile',
 };
 
+export const SUBSCRIPTIONS_ROUTE = {
+  MAIN: 'subscriptions',
+  CREATE_PAYMENT: 'create-payment',
+  MY_PAYMENTS: 'my-payments',
+  INFO: 'info',
+  STRIPE_WEBHOOK: 'stripe-webhook',
+  DISABLE_AUTO_RENEWAL: 'disable-auto-renewal',
+  ENABLE_AUTO_RENEWAL: 'enable-auto-renewal',
+  PAYPAL_WEBHOOK: 'paypal-webhook',
+  TESTING: 'testing',
+  CANCEL_SUBSCRIPTION: 'cancel-subscription',
+};
+
+export const NOTIFICATION_NAME_SPACE = 'notification';
+
+export const NOTIFICATION_ROUTE = {
+  MAIN: 'notifications',
+  MARK_AS_READ: 'read',
+  TESTING: 'testing',
+};
+
 export const POST_PUBLIC_ROUTE = {
   MAIN: 'public-posts',
   ALL: 'all',

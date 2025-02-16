@@ -9,28 +9,36 @@ generator client {
 }
 
 model User {
-  id                String                 @id @default(uuid())
-  username          String
-  email             String
-  hashPassword      String?
-  createdAt         DateTime
-  updatedAt         DateTime?
-  isConfirmed       Boolean
-  confirmationToken UserConfirmationToken?
-  resetPasswordCode UserResetPasswordCode?
-  securityDevices   SecurityDevices[]
-  userGithubInfo    UserGithubInfo?
-  googleInfo        UserGoogleInfo?
-  firstName         String?
-  lastName          String?
-  dateOfBirth       DateTime?
-  about             String?
-  city              String?
-  country           String?
-  UserPost          UserPost[]
+  id                   String                 @id @default(uuid())
+  username             String
+  email                String
+  hashPassword         String?
+  createdAt            DateTime
+  updatedAt            DateTime?
+  isConfirmed          Boolean
+  confirmationToken    UserConfirmationToken?
+  resetPasswordCode    UserResetPasswordCode?
+  securityDevices      SecurityDevices[]
+  userGithubInfo       UserGithubInfo?
+  googleInfo           UserGoogleInfo?
+  firstName            String?
+  lastName             String?
+  dateOfBirth          DateTime?
+  about                String?
+  city                 String?
+  country              String?
+  UserPost             UserPost[]
+  accountType          AccountType            @default(Personal)
+  subscriptionExpireAt DateTime?
+  Notification         Notification[]
 
   @@index([username])
   @@index([email])
+}
+
+enum AccountType {
+  Personal
+  Business
 }
 
 model UserGithubInfo {
@@ -106,4 +114,14 @@ model CityCatalog {
   CountryCatalog CountryCatalog @relation(fields: [countryId], references: [id])
 
   @@unique([countryId, name])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean   @default(false)
+  createdAt DateTime
+  updateAt  DateTime?
+  User      User      @relation(fields: [userId], references: [id])
 }

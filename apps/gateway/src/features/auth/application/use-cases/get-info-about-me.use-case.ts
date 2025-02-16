@@ -39,7 +39,6 @@ export class GetInfoAboutMeUseCase
     command: GetInfoAboutMeCommand,
   ): Promise<NotificationObject<MeOutputDto>> {
     const notification = new NotificationObject<MeOutputDto>(MeCodes.Success);
-    console.log(command.userId);
     try {
       const user = await this.usersQueryRepository.getInfoAboutMe(
         command.userId,

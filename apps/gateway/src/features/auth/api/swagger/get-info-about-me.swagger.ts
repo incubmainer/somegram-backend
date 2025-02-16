@@ -1,10 +1,16 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 export function GetInfoAboutMeSwagger() {
   return applyDecorators(
     ApiTags('Auth'),
     ApiOperation({ summary: 'Get info about user' }),
+    ApiBearerAuth('access-token'),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'Returns user information',

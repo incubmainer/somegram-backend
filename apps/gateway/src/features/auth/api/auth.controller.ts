@@ -11,6 +11,7 @@ import {
   Req,
   InternalServerErrorException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -18,6 +19,12 @@ import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { RegistrationCommand } from '../application/use-cases/registration.use-case';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+
+import {
+  RegistrationCodes,
+  RegistrationCommand,
+} from '../application/use-cases/registration.use-case';
 import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
@@ -82,6 +89,11 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { JWTTokensType } from '../../../common/domain/types/types';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
@@ -421,17 +433,25 @@ export class AuthController {
     @Res() res: Response,
   ) {
     this.logger.debug('start refresh token', this.renewTokens.name);
-    const tokens = await this.commandBus.execute(
-      new RenewTokensCommand(refreshToken),
-    );
-    this.logger.debug('refresh token success', this.renewTokens.name);
-    return res
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .send({ accessToken: tokens.accessToken });
+    const result: AppNotificationResultType<JWTTokensType> =
+      await this.commandBus.execute(new RenewTokensCommand(refreshToken));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('refresh token success', this.renewTokens.name);
+        return res
+          .cookie('refreshToken', result.data.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+          })
+          .send({ accessToken: result.data.accessToken });
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug(`Unauthorized`, this.renewTokens.name);
+        throw new UnauthorizedException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get('github')
@@ -495,7 +515,7 @@ export class AuthController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.debug('start me request', this.getInfoAboutMe.name);
     const notification: NotificationObject<MeOutputDto> =

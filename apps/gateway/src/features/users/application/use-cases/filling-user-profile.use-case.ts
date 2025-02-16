@@ -57,7 +57,8 @@ export class FillingUserProfileUseCase
         }
       }
       await this.usersRepository.updateUserProfileInfo(userId, {
-        userName,
+        ...user,
+        username: userName,
         firstName,
         lastName,
         dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,
@@ -66,7 +67,6 @@ export class FillingUserProfileUseCase
         city: city ? city : null,
         country: country ? country : null,
       });
-
       return this.appNotification.success(userId);
     } catch (e) {
       this.logger.error(e, this.execute.name);
