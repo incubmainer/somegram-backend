@@ -12,6 +12,7 @@ import { ClsTransactionalModule } from './modules/cls-transactional.module';
 import { EmailModule } from './modules/email.module';
 import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
 import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
+import { DateFormatter } from './utils/date-formatter.util';
 
 @Global()
 @Module({
@@ -31,6 +32,7 @@ import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
     CommandExecutorService,
     WsJwtAuthGuard,
     WsJwtStrategy,
+    DateFormatter,
   ],
   exports: [
     CqrsModule,
@@ -42,6 +44,7 @@ import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
     EmailModule,
     WsJwtAuthGuard,
     WsJwtStrategy,
+    DateFormatter,
   ],
 })
 export class CommonModule {}
