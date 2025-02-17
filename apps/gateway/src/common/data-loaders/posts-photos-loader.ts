@@ -19,25 +19,23 @@ export class PostsPhotosLoader
       const filesData =
         await this.photoServiceAdapter.getPostsPhotosByOwnerId(userIds);
       if (!filesData) {
-        return userIds.map(() => null); // Если данные не получены, возвращаем null
+        return userIds.map(() => null);
       }
 
-      const fileMap = new Map<string, FileModel[]>(); // Изменяем на массивы
+      const fileMap = new Map<string, FileModel[]>();
 
-      // Предполагается, что filesData - массив объектов FileModel с полем postId
       filesData.forEach((file) => {
         if (!fileMap.has(file.ownerId)) {
           fileMap.set(file.ownerId, []);
         }
-        fileMap.get(file.ownerId)!.push(file); // Добавляем файл в массив
+        fileMap.get(file.ownerId)!.push(file);
       });
 
-      // Формируем ответ - массив файлов для каждого postId
       return userIds.map((userId) => {
-        return fileMap.get(userId) || null; // Возвращаем массив файлов или null
+        return fileMap.get(userId) || null;
       });
     };
 
-    return new DataLoader(batchLoadFn); // Возвращаем DataLoader с batchLoadFn
+    return new DataLoader(batchLoadFn);
   }
 }

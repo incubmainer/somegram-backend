@@ -1,4 +1,8 @@
-import { NotFoundException, UseGuards } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -7,6 +11,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
 
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaginatedUserModel } from './models/paginated-user.model';
@@ -27,16 +36,27 @@ export class UsersResolver {
     private readonly userImagesLoader: UserAvatarsLoader,
     private readonly postsPhotosLoader: PostsPhotosLoader,
     private readonly paymentsLoader: PaymentsLoader,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(UsersResolver.name);
+  }
 
   @Query(() => UserModel, { nullable: true })
   @UseGuards(BasicGqlGuard)
   async getUser(@Args('id') id: string): Promise<UserModel> {
-    const user = await this.usersService.getUser(id);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    this.logger.debug('Execute: Get user', this.getUser.name);
+    const result: AppNotificationResultType<UserModel> =
+      await this.usersService.getUser(id);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getUser.name);
+        return result.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`NotFound`, this.getUser.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
     }
-    return user;
   }
 
   @Query(() => PaginatedUserModel)
@@ -45,7 +65,16 @@ export class UsersResolver {
     @Args('queryString', { type: () => QueryStringInput, nullable: true })
     queryString: QueryStringInput,
   ): Promise<PaginatedUserModel> {
-    return await this.usersService.getUsers(queryString);
+    this.logger.debug('Execute: Get users', this.getUsers.name);
+    const result: AppNotificationResultType<PaginatedUserModel> =
+      await this.usersService.getUsers(queryString);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getUsers.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Mutation(() => Boolean)
@@ -53,11 +82,19 @@ export class UsersResolver {
   async deleteUser(
     @Args('userId', { type: () => String }) userId: string,
   ): Promise<boolean> {
-    const res = await this.usersService.removeUser(userId);
-    if (!res) {
-      throw new NotFoundException('User not found');
+    this.logger.debug('Execute: delete user', this.deleteUser.name);
+    const result: AppNotificationResultType<null> =
+      await this.usersService.removeUser(userId);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.deleteUser.name);
+        return true;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`NotFound`, this.deleteUser.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
-    return true;
   }
 
   @Mutation(() => Boolean)
@@ -66,11 +103,19 @@ export class UsersResolver {
     @Args('banUserInput', { type: () => BanUserInput })
     banUserInput: BanUserInput,
   ): Promise<boolean> {
-    const res = await this.usersService.banUser(banUserInput);
-    if (!res) {
-      throw new NotFoundException('User not found');
+    this.logger.debug('Execute: ban user', this.banUser.name);
+    const result: AppNotificationResultType<null> =
+      await this.usersService.banUser(banUserInput);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.banUser.name);
+        return true;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`NotFound`, this.banUser.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
-    return true;
   }
 
   @Mutation(() => Boolean)
@@ -78,11 +123,19 @@ export class UsersResolver {
   async unbanUser(
     @Args('userId', { type: () => String }) userId: string,
   ): Promise<boolean> {
-    const res = await this.usersService.unbanUser(userId);
-    if (!res) {
-      throw new NotFoundException('User not found');
+    this.logger.debug('Execute: unban user', this.unbanUser.name);
+    const result: AppNotificationResultType<boolean> =
+      await this.usersService.unbanUser(userId);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.unbanUser.name);
+        return true;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`NotFound`, this.unbanUser.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
     }
-    return true;
   }
 
   @ResolveField(() => FileModel, { nullable: true })

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatorService } from '@app/paginator';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
 
 import { UserModel } from '../../../resolvers/users/models/user.model';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
@@ -16,55 +21,103 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly paginatorService: PaginatorService,
+    private readonly appNotification: ApplicationNotification,
+    private readonly logger: LoggerService,
   ) {}
-  async getUsers(queryString: QueryStringInput): Promise<PaginatedUserModel> {
-    const { users, count } =
-      await this.usersQueryRepository.getUsers(queryString);
+  async getUsers(
+    queryString: QueryStringInput,
+  ): Promise<AppNotificationResultType<PaginatedUserModel>> {
+    try {
+      const { users, count } =
+        await this.usersQueryRepository.getUsers(queryString);
 
-    return this.paginatorService.create(
-      queryString.pageNumber,
-      queryString.pageSize,
-      count,
-      this.mapUsers(users),
-    );
-  }
+      const data = this.paginatorService.create(
+        queryString.pageNumber,
+        queryString.pageSize,
+        count,
+        this.mapUsers(users),
+      );
 
-  async getUser(id: string): Promise<UserModel> {
-    const user = await this.usersQueryRepository.findUserById(id);
-    if (!user) {
-      return null;
+      return this.appNotification.success(data);
+    } catch (e) {
+      this.logger.error(e, this.getUsers.name);
+      return this.appNotification.internalServerError();
     }
-    return this.mapUser(user);
   }
 
-  async gerUsersByIds(ids: string[]): Promise<UserModel[]> {
-    const users = await this.usersQueryRepository.findUsersByIds(ids);
-    return this.mapUsers(users);
-  }
-
-  async removeUser(userId: string): Promise<boolean> {
-    return this.usersRepository.removeUser(userId);
-  }
-
-  async banUser(banUserInput: BanUserInput): Promise<boolean> {
-    const user = await this.usersQueryRepository.findUserById(
-      banUserInput.userId,
-    );
-    if (!user) {
-      return false;
+  async getUser(id: string): Promise<AppNotificationResultType<UserModel>> {
+    try {
+      const user = await this.usersQueryRepository.findUserById(id);
+      if (!user) {
+        this.appNotification.notFound();
+      }
+      return this.appNotification.success(this.mapUser(user));
+    } catch (e) {
+      this.logger.error(e, this.getUser.name);
+      return this.appNotification.internalServerError();
     }
-    return this.usersRepository.banUser(
-      banUserInput.userId,
-      banUserInput.banReason,
-    );
   }
 
-  async unbanUser(userId: string): Promise<boolean> {
-    const user = await this.usersQueryRepository.findUserById(userId);
-    if (!user) {
-      return false;
+  async gerUsersByIds(
+    ids: string[],
+  ): Promise<AppNotificationResultType<UserModel[]>> {
+    try {
+      const users = await this.usersQueryRepository.findUsersByIds(ids);
+      return this.appNotification.success(this.mapUsers(users));
+    } catch (e) {
+      this.logger.error(e, this.gerUsersByIds.name);
+      return this.appNotification.internalServerError();
     }
-    return this.usersRepository.unbanUser(userId);
+  }
+
+  async removeUser(userId: string): Promise<AppNotificationResultType<null>> {
+    try {
+      const res = this.usersRepository.removeUser(userId);
+      if (!res) return this.appNotification.notFound();
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.removeUser.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async banUser(
+    banUserInput: BanUserInput,
+  ): Promise<AppNotificationResultType<null>> {
+    try {
+      const user = await this.usersQueryRepository.findUserById(
+        banUserInput.userId,
+      );
+      if (!user) {
+        return this.appNotification.notFound();
+      }
+
+      if (user.UserBanInfo) {
+        return this.appNotification.success(null);
+      }
+      this.usersRepository.banUser(banUserInput.userId, banUserInput.banReason);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.banUser.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async unbanUser(userId: string): Promise<AppNotificationResultType<null>> {
+    try {
+      const user = await this.usersQueryRepository.findUserById(userId);
+      if (!user) {
+        return this.appNotification.notFound();
+      }
+      if (!user.UserBanInfo) {
+        return this.appNotification.success(null);
+      }
+      this.usersRepository.unbanUser(userId);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.unbanUser.name);
+      return this.appNotification.internalServerError();
+    }
   }
 
   private mapUsers(users: UserWithBanInfo[]): UserModel[] {

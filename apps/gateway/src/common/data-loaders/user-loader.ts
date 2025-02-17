@@ -1,6 +1,10 @@
 import * as DataLoader from 'dataloader';
 import { Injectable } from '@nestjs/common';
 import { NestDataLoader } from 'nestjs-dataloader';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 import { UserModel } from '../../resolvers/users/models/user.model';
 import { UsersService } from '../../features/users/application/users.service';
@@ -14,12 +18,18 @@ export class UserLoader implements NestDataLoader<string, UserModel | null> {
       string,
       UserModel | null
     > = async (userIds: string[]) => {
-      const users = await this.usersService.gerUsersByIds(userIds);
-      const usersMap = new Map<string, UserModel>();
+      const result: AppNotificationResultType<UserModel[]> =
+        await this.usersService.gerUsersByIds(userIds);
 
-      users.forEach((user) => usersMap.set(user.id, user));
+      if (result.appResult === AppNotificationResultEnum.Success) {
+        const usersMap = new Map<string, UserModel>();
 
-      return userIds.map((userId) => usersMap.get(userId) || null);
+        result.data.forEach((user) => usersMap.set(user.id, user));
+
+        return userIds.map((userId) => usersMap.get(userId) || null);
+      } else {
+        return userIds.map(() => null);
+      }
     };
 
     return new DataLoader(batchLoadFn);

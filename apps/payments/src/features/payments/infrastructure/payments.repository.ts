@@ -216,6 +216,10 @@ export class PaymentsRepository {
   public async getSubscriptionsByUserIds(
     userIds: string[],
   ): Promise<Subscription[]> {
+    this.logger.debug(
+      'Execute: get subscriptions by users',
+      this.getSubscriptionsByUserIds.name,
+    );
     return await this.txHost.tx.subscription.findMany({
       where: {
         userId: {

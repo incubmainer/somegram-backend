@@ -1,5 +1,11 @@
-import { UseGuards } from '@nestjs/common';
+import { InternalServerErrorException, UseGuards } from '@nestjs/common';
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { Pagination } from '@app/paginator';
 
 import { PaymentsModel } from './models/subscription.payments.model';
 import { PaginatedPaymentsModel } from './models/paginated-payments.model';
@@ -8,12 +14,14 @@ import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.ada
 import { QueryStringInput } from '../users/models/pagination-users-input';
 import { UserLoader } from '../../common/data-loaders/user-loader';
 import { UserModel } from '../users/models/user.model';
+import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 
 @Resolver(() => PaymentsModel)
 export class PaymentsResolver {
   constructor(
     private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
     private readonly userLoader: UserLoader,
+    private readonly logger: LoggerService,
   ) {}
 
   @Query(() => PaginatedPaymentsModel)
@@ -23,20 +31,32 @@ export class PaymentsResolver {
     queryString: QueryStringInput,
     @Args('userId') userId: string,
   ): Promise<PaginatedPaymentsModel> {
-    const payments = await this.paymentsServiceAdapter.getPayments({
-      userId,
-      queryString,
-    });
-    //Возможно проще добавить в MyPaymentsOutputDto userId
-    return {
-      ...payments.data,
-      items: payments.data.items.map((i) => {
+    this.logger.debug(
+      'Execute: Get payments byuser',
+      this.getPaymentsByUser.name,
+    );
+    const result: AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>> =
+      await this.paymentsServiceAdapter.getPayments({
+        userId,
+        queryString,
+      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getPaymentsByUser.name);
+        //Возможно проще добавить в MyPaymentsOutputDto userId
         return {
-          ...i,
-          userId,
+          ...result.data,
+          items: result.data.items.map((i) => {
+            return {
+              ...i,
+              userId,
+            };
+          }),
         };
-      }),
-    };
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @ResolveField(() => UserModel, { nullable: true })
