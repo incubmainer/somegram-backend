@@ -13,7 +13,7 @@ import { PaginatedUserModel } from '../../../resolvers/users/models/paginated-us
 import { AccountType } from '../../../../../../libs/common/enums/payments';
 import { BanUserInput } from '../../../resolvers/users/models/ban-user-input';
 import { UserWithBanInfo } from '../domain/user.interfaces';
-import { QueryStringInput } from '../../../resolvers/users/models/pagination-users-input';
+import { QueryStringInput } from '../../../resolvers/users/models/query-string-input';
 
 @Injectable()
 export class UsersService {

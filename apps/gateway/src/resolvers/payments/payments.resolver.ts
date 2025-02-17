@@ -11,7 +11,7 @@ import { PaymentsModel } from './models/subscription.payments.model';
 import { PaginatedPaymentsModel } from './models/paginated-payments.model';
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
-import { QueryStringInput } from '../users/models/pagination-users-input';
+import { QueryStringInput } from '../users/models/query-string-input';
 import { UserLoader } from '../../common/data-loaders/user-loader';
 import { UserModel } from '../users/models/user.model';
 import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';

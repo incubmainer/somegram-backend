@@ -22,7 +22,7 @@ import { PaginatedUserModel } from './models/paginated-user.model';
 import { UsersService } from '../../features/users/application/users.service';
 import { UserModel } from './models/user.model';
 import { BanUserInput } from './models/ban-user-input';
-import { QueryStringInput } from './models/pagination-users-input';
+import { QueryStringInput } from './models/query-string-input';
 import { FileModel } from './models/file-model';
 import { UserAvatarsLoader } from '../../common/data-loaders/user-avatars-loader';
 import { PostsPhotosLoader } from '../../common/data-loaders/posts-photos-loader';

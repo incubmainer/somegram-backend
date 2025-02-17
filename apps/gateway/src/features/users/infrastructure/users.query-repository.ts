@@ -8,7 +8,7 @@ import {
 } from '../../auth/api/dto/output-dto/me-output-dto';
 import { LoggerService } from '@app/logger';
 import { UserWithBanInfo } from '../domain/user.interfaces';
-import { QueryStringInput } from '../../../resolvers/users/models/pagination-users-input';
+import { QueryStringInput } from '../../../resolvers/users/models/query-string-input';
 
 @Injectable()
 export class UsersQueryRepository {
