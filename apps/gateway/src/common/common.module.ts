@@ -13,6 +13,7 @@ import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 import { clsModule } from './services/cls-service/cls.module';
 import { PrismaService } from './services/prisma-service/prisma.service';
 import { EmailSender } from './utils/email.sender';
+import { DateFormatter } from './utils/date-formatter.util';
 
 @Global()
 @Module({
@@ -36,6 +37,7 @@ import { EmailSender } from './utils/email.sender';
     WsJwtAuthGuard,
     WsJwtStrategy,
     EmailSender,
+    DateFormatter,
   ],
   exports: [
     PrismaService,
@@ -48,6 +50,7 @@ import { EmailSender } from './utils/email.sender';
     WsJwtAuthGuard,
     EmailSender,
     WsJwtStrategy,
+    DateFormatter,
   ],
 })
 export class CommonModule {}

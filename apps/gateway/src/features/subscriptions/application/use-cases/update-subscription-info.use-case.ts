@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AccountType } from '../../../../../../../libs/common/enums/payments';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { SubscriptionInfoGatewayType } from '../../domain/types';
@@ -7,6 +7,9 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
+import { User } from '@prisma/gateway';
+import { SendEmailNotificationSubscriptionActivatedEvent } from '../../../notification/application/event/send-email-notification-subscription-activated.event';
+import { SendEmailNotificationSubscriptionDisabledEvent } from '../../../notification/application/event/send-email-notification-subscription-disabled.event';
 
 export class UpdateSubscriptionInfoCommand {
   constructor(public payload: SubscriptionInfoGatewayType) {}
@@ -24,6 +27,7 @@ export class UpdateSubscriptionInfoUseCase
     private readonly usersRepository: UsersRepository,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
+    private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(UpdateSubscriptionInfoUseCase.name);
   }
@@ -47,10 +51,28 @@ export class UpdateSubscriptionInfoUseCase
         }
         await this.usersRepository.updateUserProfileInfo(user.id, user);
       }
+
+      this.handleEvent(user);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
+    }
+  }
+
+  private handleEvent(user: User): void {
+    console.log('handle event', user);
+    if (user.accountType === AccountType.Business) {
+      this.eventBus.publish(
+        new SendEmailNotificationSubscriptionActivatedEvent(
+          user.email,
+          user.subscriptionExpireAt,
+        ),
+      );
+    } else {
+      this.eventBus.publish(
+        new SendEmailNotificationSubscriptionDisabledEvent(user.email),
+      );
     }
   }
 }

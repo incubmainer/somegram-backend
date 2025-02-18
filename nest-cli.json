@@ -3,6 +3,11 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "apps/gateway/src",
   "compilerOptions": {
+    "assets": [
+      "**/*.hbs",
+      "**/*.html",
+      "**/*.svg"
+    ],
     "deleteOutDir": true,
     "webpack": true,
     "tsConfigPath": "apps/gateway/tsconfig.app.json"
