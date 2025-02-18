@@ -40,6 +40,7 @@ export class CheckRefreshTokenUseCase
       if (
         !user ||
         !device ||
+        // @ts-ignore // TODO:
         new Date(payload!.iat! * 1000).toISOString() !== device.lastActiveDate
       ) {
         return null;

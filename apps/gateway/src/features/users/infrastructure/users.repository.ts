@@ -10,6 +10,13 @@ import {
 } from '@prisma/gateway';
 import { UserFromGithub } from '../../auth/api/dto/input-dto/user-from-github';
 import { LoggerService } from '@app/logger';
+import { UserEntity } from '../domain/user.entity';
+import {
+  UserCreatedByGoogleDto,
+  UserCreatedDto,
+  UserGoogleInfoCreatedDto,
+} from '../domain/types';
+import { UserGoogleAccount } from '../domain/user-google-account.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -18,12 +25,173 @@ export class UsersRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    //@InjectCustomLoggerService() private readonly logger: CustomLoggerService,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(UsersRepository.name);
   }
 
+  public async getUserByEmail(email: string): Promise<UserEntity | null> {
+    this.logger.debug(`Execute: get user by email`, this.getUserByEmail.name);
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        email,
+      },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
+  public async getUserByUsername(username: string): Promise<UserEntity | null> {
+    this.logger.debug(
+      `Execute: get user by username`,
+      this.getUserByUsername.name,
+    );
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        username,
+      },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
+  public async getUserByEmailOrUserName(
+    email: string,
+    userName: string,
+  ): Promise<UserEntity | null> {
+    this.logger.debug(
+      `Execute: get user by email or username`,
+      this.getUserByEmail.name,
+    );
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        OR: [{ email: email }, { username: userName }],
+      },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
+  public async createNotConfirmedUser(
+    createdDto: UserCreatedDto,
+  ): Promise<UserEntity> {
+    this.logger.debug(
+      `Execute: save not confirmed user`,
+      this.createNotConfirmedUser.name,
+    );
+    const user = await this.txHost.tx.user.create({
+      data: {
+        username: createdDto.username,
+        email: createdDto.email,
+        hashPassword: createdDto.hashPassword,
+        createdAt: createdDto.createdAt,
+        isConfirmed: createdDto.isConfirmed,
+        confirmationToken: {
+          create: {
+            token: createdDto.confirmationToken,
+            createdAt: createdDto.createdAt,
+            expiredAt: createdDto.confirmationTokenExpiresAt,
+          },
+        },
+      },
+    });
+
+    return new UserEntity(user);
+  }
+
+  public async createUserByGoogle(
+    createdDto: UserCreatedByGoogleDto,
+  ): Promise<UserEntity> {
+    this.logger.debug(
+      `Execute: save user by google`,
+      this.createUserByGoogle.name,
+    );
+    const user = await this.txHost.tx.user.create({
+      data: {
+        username: createdDto.username,
+        email: createdDto.email,
+        createdAt: createdDto.createdAt,
+        isConfirmed: createdDto.isConfirmed,
+      },
+    });
+
+    return new UserEntity(user);
+  }
+
+  public async getUserByEmailWithGoogleInfo(email: string): Promise<{
+    user: UserEntity;
+    googleInfo: UserGoogleAccount | null;
+  } | null> {
+    this.logger.debug(
+      `Execute: get user by email with google info`,
+      this.getUserByEmailWithGoogleInfo.name,
+    );
+    const result = await this.txHost.tx.user.findFirst({
+      where: {
+        email,
+      },
+      include: {
+        googleInfo: true,
+      },
+    });
+
+    if (!result) return null;
+
+    const user = new UserEntity(result);
+
+    if (!result.googleInfo) return { user, googleInfo: null };
+
+    return { user, googleInfo: new UserGoogleAccount(result.googleInfo) };
+  }
+
+  public async addGoogleInfoToUser(
+    createdGoogleInfoDto: UserGoogleInfoCreatedDto,
+  ): Promise<void> {
+    this.logger.debug(
+      `Execute: save google info for user`,
+      this.addGoogleInfoToUser.name,
+    );
+    await this.txHost.tx.userGoogleInfo.create({
+      data: {
+        userId: createdGoogleInfoDto.userId,
+        sub: createdGoogleInfoDto.subGoogleId,
+        email: createdGoogleInfoDto.googleEmail,
+        emailVerified: createdGoogleInfoDto.googleEmailVerified,
+      },
+    });
+  }
+
+  public async confirmUser(userId: string): Promise<void> {
+    this.logger.debug(
+      `Execute: confirm user by user id`,
+      this.confirmUser.name,
+    );
+    await this.txHost.tx.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        isConfirmed: true,
+      },
+    });
+  }
+
+  public async getUserByGoogleSub(sub: string): Promise<UserEntity | null> {
+    this.logger.debug(
+      `Execute: get user by google info`,
+      this.getUserByGoogleSub.name,
+    );
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        googleInfo: {
+          sub: sub,
+        },
+      },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
   async getUserById(id: string): Promise<User | null> {
     this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
     const user = await this.txHost.tx.user.findUnique({
@@ -37,19 +205,6 @@ export class UsersRepository {
       where: { id: { in: id } },
     });
     return users && users.length > 0 ? users : null;
-  }
-
-  public async getUserByEmail(email: string): Promise<User | null> {
-    this.logger.debug(
-      `Execute: get user by email ${email}`,
-      this.getUserByEmail.name,
-    );
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        email,
-      },
-    });
-    return user;
   }
 
   public async getUserWithGithubInfo(
@@ -91,26 +246,15 @@ export class UsersRepository {
       data: { isConfirmed: true },
     });
   }
-  public async getUserByEmailWithGoogleInfo(email: string) {
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        email,
-      },
-      include: {
-        googleInfo: true,
-      },
-    });
-    return user;
-  }
 
-  public async getUserByUsername(username: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        username,
-      },
-    });
-    return user;
-  }
+  // public async getUserByUsername(username: string): Promise<User | null> {
+  //   const user = await this.txHost.tx.user.findFirst({
+  //     where: {
+  //       username,
+  //     },
+  //   });
+  //   return user;
+  // }
   public async deleteUserById(id: User['id']): Promise<void> {
     await this.txHost.tx.user.delete({
       where: {
@@ -118,31 +262,31 @@ export class UsersRepository {
       },
     });
   }
-  public async createNotConfirmedUser(dto: {
-    username: User['username'];
-    email: User['email'];
-    hashPassword: User['hashPassword'];
-    createdAt: Date;
-    confirmationToken: UserConfirmationToken['token'];
-    confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
-  }) {
-    await this.txHost.tx.user.create({
-      data: {
-        username: dto.username,
-        email: dto.email,
-        hashPassword: dto.hashPassword,
-        createdAt: dto.createdAt,
-        isConfirmed: false,
-        confirmationToken: {
-          create: {
-            token: dto.confirmationToken,
-            createdAt: dto.createdAt,
-            expiredAt: dto.confirmationTokenExpiresAt,
-          },
-        },
-      },
-    });
-  }
+  // public async createNotConfirmedUser(dto: {
+  //   username: User['username'];
+  //   email: User['email'];
+  //   hashPassword: User['hashPassword'];
+  //   createdAt: Date;
+  //   confirmationToken: UserConfirmationToken['token'];
+  //   confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
+  // }) {
+  //   await this.txHost.tx.user.create({
+  //     data: {
+  //       username: dto.username,
+  //       email: dto.email,
+  //       hashPassword: dto.hashPassword,
+  //       createdAt: dto.createdAt,
+  //       isConfirmed: false,
+  //       confirmationToken: {
+  //         create: {
+  //           token: dto.confirmationToken,
+  //           createdAt: dto.createdAt,
+  //           expiredAt: dto.confirmationTokenExpiresAt,
+  //         },
+  //       },
+  //     },
+  //   });
+  // }
 
   public async updateUserConfirmationInfo(dto: {
     userId: User['id'];
@@ -181,16 +325,6 @@ export class UsersRepository {
     });
   }
 
-  public confirmUser(id: User['id']) {
-    return this.txHost.tx.user.update({
-      where: {
-        id,
-      },
-      data: {
-        isConfirmed: true,
-      },
-    });
-  }
   public async updateRestorePasswordCode(dto: {
     userId: User['id'];
     restorePasswordCode: UserResetPasswordCode['code'];
@@ -290,63 +424,11 @@ export class UsersRepository {
       data: { email: user.email },
     });
   }
-  public async deleteAll() {
-    await this.txHost.tx.userGithubInfo.deleteMany({});
-    return await this.txHost.tx.user.deleteMany({});
-  }
-  public async getUserByGoogleSub(sub: string): Promise<User> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        googleInfo: {
-          sub: sub,
-        },
-      },
-    });
-    return user;
-  }
-  public async createConfirmedUserWithGoogleInfo(dto: {
-    username: string;
-    email: string;
-    createdAt: Date;
-    googleInfo: {
-      sub: string;
-      name: string;
-      email: string;
-      email_verified: boolean;
-    };
-  }): Promise<User['id']> {
-    const user = await this.txHost.tx.user.create({
-      data: {
-        username: dto.username,
-        email: dto.email,
-        createdAt: dto.createdAt,
-        isConfirmed: true,
-        googleInfo: {
-          create: {
-            sub: dto.googleInfo.sub,
-            email: dto.googleInfo.email,
-            emailVerified: dto.googleInfo.email_verified,
-          },
-        },
-      },
-    });
-    return user.id;
-  }
-
-  async findUserById(currentUserId: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { id: currentUserId },
-    });
-    if (!user) {
-      return null;
-    }
-    return user;
-  }
 
   async updateUserProfileInfo(
     userId: User['id'],
     dto: {
-      userName: User['username'];
+      username: User['username'];
       firstName: User['firstName'];
       lastName: User['lastName'];
       dateOfBirth: User['dateOfBirth'];
@@ -354,12 +436,14 @@ export class UsersRepository {
       updatedAt: User['updatedAt'];
       city: User['city'];
       country: User['country'];
+      subscriptionExpireAt: User['subscriptionExpireAt'];
+      accountType: User['accountType'];
     },
   ): Promise<User> {
     return await this.txHost.tx.user.update({
       where: { id: userId },
       data: {
-        username: dto.userName,
+        username: dto.username,
         firstName: dto.firstName,
         lastName: dto.lastName,
         dateOfBirth: dto.dateOfBirth,

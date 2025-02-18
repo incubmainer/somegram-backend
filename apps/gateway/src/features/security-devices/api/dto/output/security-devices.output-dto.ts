@@ -37,7 +37,7 @@ export class SecurityDevicesOutputMapper {
         deviceId: device.deviceId,
         deviceName: device.title,
         ip: device.ip,
-        lastVisit: device.lastActiveDate,
+        lastVisit: device.lastActiveDate.toISOString(),
       };
     });
   }

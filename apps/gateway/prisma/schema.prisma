@@ -5,7 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/@prisma/gateway"
+  output   = "../../../node_modules/@prisma/gateway"
 }
 
 model User {
@@ -73,11 +73,11 @@ model UserResetPasswordCode {
 }
 
 model SecurityDevices {
-  userId         String?
-  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ip             String
-  deviceId       String  @unique()
-  lastActiveDate String
+  deviceId       String   @unique()
+  lastActiveDate DateTime
   title          String
 
   @@index([deviceId])

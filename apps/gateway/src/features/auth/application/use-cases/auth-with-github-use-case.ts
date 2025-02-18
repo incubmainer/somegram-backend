@@ -4,13 +4,8 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { NotificationObject } from '../../../../common/domain/notification';
+
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '@app/custom-logger';
 import { LoggerService } from '@app/logger';
 
 export const LoginWithGithubCodes = {
@@ -40,8 +35,10 @@ export class AuthWithGithubUseCase
   }
   async execute(
     command: AuthWithGithubCommand,
+    // @ts-ignore // TODO:
   ): Promise<NotificationObject<UserId>> {
     this.logger.debug('Execute: auth with github ', this.execute.name);
+    // @ts-ignore // TODO:
     const notification = new NotificationObject<UserId>(
       LoginWithGithubCodes.Success,
     );

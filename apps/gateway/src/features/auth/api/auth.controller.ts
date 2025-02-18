@@ -20,12 +20,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { RegistrationCommand } from '../application/use-cases/registration.use-case';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-
-import {
-  RegistrationCodes,
-  RegistrationCommand,
-} from '../application/use-cases/registration.use-case';
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
@@ -57,10 +51,7 @@ import {
   AuthWithGithubCommand,
   LoginWithGithubCodes,
 } from '../application/use-cases/auth-with-github-use-case';
-import {
-  LoginByGoogleCodes,
-  LoginByGoogleCommand,
-} from '../application/use-cases/login-by-google.use-case';
+import { LoginByGoogleCommand } from '../application/use-cases/login-by-google.use-case';
 import { GoogleProfile } from '../strategies/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
@@ -76,19 +67,12 @@ import { MeOutputDto } from './dto/output-dto/me-output-dto';
 import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
 import { RegistrationEmailResendingSwagger } from './swagger/registration-email-resending.swagger';
 import { RegistrationEmailResendingBodyInputDto } from './dto/input-dto/registration-email-resending.body.input-dto';
-import {
-  RegistrationEmailResendingCodes,
-  RegistrationEmailResendingCommand,
-} from '../application/use-cases/registration-email-resending.use-case';
+import { RegistrationEmailResendingCommand } from '../application/use-cases/registration-email-resending.use-case';
 import { CreateTokensCommand } from '../application/use-cases/create-token.use-case';
 import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
 import { AUTH_ROUTE } from '../../../common/constants/route.constants';
-import {
-  AppNotificationResultEnum,
-  AppNotificationResultType,
-} from '@app/application-notification';
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
@@ -168,52 +152,56 @@ export class AuthController {
   @RegistrationEmailResendingSwagger()
   public async registrationEmailResending(
     @Body() body: RegistrationEmailResendingBodyInputDto,
-  ) {
+  ): Promise<void> {
     this.logger.debug(
-      'start registration-email-resending',
+      'Execute: start registration-email-resending',
       this.registrationEmailResending.name,
     );
-    const notification: NotificationObject<null> =
-      await this.commandBus.execute(
-        new RegistrationEmailResendingCommand(body.token, body.html),
-      );
-    const code = notification.getCode();
-    if (code === RegistrationEmailResendingCodes.Success) {
-      this.logger.debug(
-        'registration-email-resending success',
-        this.registrationEmailResending.name,
-      );
-      return;
-    }
-    if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
-      this.logger.debug(
-        'email already confirmed',
-        this.registrationEmailResending.name,
-      );
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'email_already_confirmated',
-        message: 'User with current email already confirmed',
-      });
-    }
-    if (code === RegistrationEmailResendingCodes.UserNotFound) {
-      this.logger.debug(
-        'username not found',
-        this.registrationEmailResending.name,
-      );
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'User not found',
-        message: 'User with current email not found',
-      });
-    }
-    if (code === RegistrationEmailResendingCodes.TransactionError) {
-      this.logger.error(
-        'transaction error',
-        this.registrationEmailResending.name,
-      );
-      throw new InternalServerErrorException();
-    }
+    const result = await this.commandBus.execute(
+      new RegistrationEmailResendingCommand(body.token, body.html),
+    );
+
+    // const notification: NotificationObject<null> =
+    //   await this.commandBus.execute(
+    //     new RegistrationEmailResendingCommand(body.token, body.html),
+    //   );
+    // const code = notification.getCode();
+    // if (code === RegistrationEmailResendingCodes.Success) {
+    //   this.logger.debug(
+    //     'registration-email-resending success',
+    //     this.registrationEmailResending.name,
+    //   );
+    //   return;
+    // }
+    // if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
+    //   this.logger.debug(
+    //     'email already confirmed',
+    //     this.registrationEmailResending.name,
+    //   );
+    //   throw new BadRequestException({
+    //     statusCode: HttpStatus.BAD_REQUEST,
+    //     error: 'email_already_confirmated',
+    //     message: 'User with current email already confirmed',
+    //   });
+    // }
+    // if (code === RegistrationEmailResendingCodes.UserNotFound) {
+    //   this.logger.debug(
+    //     'username not found',
+    //     this.registrationEmailResending.name,
+    //   );
+    //   throw new BadRequestException({
+    //     statusCode: HttpStatus.BAD_REQUEST,
+    //     error: 'User not found',
+    //     message: 'User with current email not found',
+    //   });
+    // }
+    // if (code === RegistrationEmailResendingCodes.TransactionError) {
+    //   this.logger.error(
+    //     'transaction error',
+    //     this.registrationEmailResending.name,
+    //   );
+    //   throw new InternalServerErrorException();
+    // }
   }
 
   @Get(AUTH_ROUTE.GOOGLE)
@@ -231,62 +219,34 @@ export class AuthController {
     @UserAgent() userAgent?: string,
   ): Promise<any> {
     this.logger.debug(
-      'start google auth callback',
+      'Execute: start google auth callback',
       this.googleAuthCallback.name,
     );
-    const notification: NotificationObject<string> =
+
+    const result: AppNotificationResultType<JWTTokensType, string> =
       await this.commandBus.execute(
-        new LoginByGoogleCommand(
-          googleProfile.id,
-          googleProfile.name,
-          googleProfile.email,
-          googleProfile.emailVerified,
-        ),
+        new LoginByGoogleCommand(googleProfile, ip, userAgent),
       );
-    const code = notification.getCode();
-    if (code === LoginByGoogleCodes.WrongEmail) {
-      this.logger.debug('wrong email', this.googleAuthCallback.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'login_by_google_failed',
-        message: 'Login by google failed due to wrong email.',
-      });
-    }
-    if (code === LoginByGoogleCodes.TransactionError) {
-      this.logger.error('transaction error', this.googleAuthCallback.name);
-      throw new InternalServerErrorException();
-    }
-    if (!ip) {
-      this.logger.debug('unknown ip address', this.googleAuthCallback.name);
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        error: 'login failed',
-        message: 'Unknown ip address',
-        details: {
-          ip: 'Invlid ip address',
-        },
-      });
-    }
-    const userId = notification.getData();
-    const tokens = await this.commandBus.execute(
-      new CreateTokensCommand(userId),
-    );
 
-    await this.commandBus.execute(
-      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
-    );
-
-    this.logger.debug(
-      'google auth callback success',
-      this.googleAuthCallback.name,
-    );
-    response
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .redirect(`${this.frontendProvider}/?accessToken=${tokens.accessToken}`);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.googleAuthCallback.name);
+        response
+          .cookie('refreshToken', result.data.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+          })
+          .redirect(
+            `${this.frontendProvider}/?accessToken=${result.data.accessToken}`,
+          );
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad Request', this.googleAuthCallback.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get('recaptcha-site-key')
@@ -310,6 +270,7 @@ export class AuthController {
   @RestorePasswordSwagger()
   public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
     this.logger.debug('start restore password', this.restorePassword.name);
+    // @ts-ignore // TODO:
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
@@ -354,6 +315,7 @@ export class AuthController {
       'start restore password confirmation',
       this.restorePasswordConfirmation.name,
     );
+    // @ts-ignore // TODO:
     const notification: NotificationObject<null> =
       await this.commandBus.execute(
         new RestorePasswordConfirmationCommand(body.code, body.password),
@@ -472,6 +434,7 @@ export class AuthController {
       this.githubAuthCallback.name,
     );
     const user: UserFromGithub = req.user;
+    // @ts-ignore // TODO:
     const notification: NotificationObject<string> =
       await this.commandBus.execute(new AuthWithGithubCommand(user));
     const code = notification.getCode();
@@ -518,6 +481,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
     this.logger.debug('start me request', this.getInfoAboutMe.name);
+    // @ts-ignore // TODO:
     const notification: NotificationObject<MeOutputDto> =
       await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
     const code = notification.getCode();

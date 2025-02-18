@@ -11,12 +11,12 @@ import { ConfigurationType } from '../../../settings/configuration/configuration
 import { LoggerService } from '@app/logger';
 
 export class GoogleProfile {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  accessToken: string;
-  refreshToken: string;
+  googleId: string;
+  googleName: string;
+  googleEmail: string;
+  googleEmailVerified: boolean;
+  googleAccessToken: string;
+  googleRefreshToken: string;
 }
 
 @Injectable()
@@ -57,12 +57,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<void> {
     const user: GoogleProfile = {
-      id: profile.id,
-      name: profile.displayName,
-      email: profile.emails[0].value,
-      emailVerified: profile.emails[0].verified,
-      accessToken,
-      refreshToken,
+      googleId: profile.id,
+      googleName: profile.displayName,
+      googleEmail: profile.emails[0].value,
+      googleEmailVerified: profile.emails[0].verified,
+      googleAccessToken: accessToken,
+      googleRefreshToken: refreshToken,
     };
     done(null, { googleProfile: user });
   }

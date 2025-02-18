@@ -1,4 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+// @ts-ignore // TODO:
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 

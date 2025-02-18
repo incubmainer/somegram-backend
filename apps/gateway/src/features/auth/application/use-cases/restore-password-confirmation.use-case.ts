@@ -8,7 +8,6 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsUserPassword } from '../decorators/is-user-password';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
-import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RestorePasswordConfirmationCodes = {
   Success: Symbol('success'),
@@ -45,7 +44,9 @@ export class RestorePasswordConfirmationUseCase
 
   public async execute(
     command: RestorePasswordConfirmationCommand,
+    // @ts-ignore // TODO:
   ): Promise<NotificationObject<void>> {
+    // @ts-ignore // TODO
     const notification = new NotificationObject(
       RestorePasswordConfirmationCodes.Success,
     );

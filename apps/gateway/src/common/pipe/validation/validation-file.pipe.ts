@@ -68,7 +68,6 @@ export const filesValidationPipe = (
         try {
           if (!allowedMimeRegex.test(file.mimetype)) {
             errors.push({
-              // TODO: Мб с индексмо поинтерестнее отдавать ? property: `${propertyName}[${index}]`,
               property: file.originalname,
               constraints: {
                 isFileType: `Invalid file type. Allowed only: ${allowedMimeRegex}`,

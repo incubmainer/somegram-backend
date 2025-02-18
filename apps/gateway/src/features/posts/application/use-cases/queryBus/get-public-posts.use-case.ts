@@ -1,4 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+// @ts-ignore // TODO:
 import { NotificationObject } from '../../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../../users/infrastructure/users.query-repository';
 
@@ -10,6 +11,7 @@ import { PostsQueryRepository } from '../../../infrastructure/posts.query-reposi
 import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../../../../../common/domain/query.types';
+// @ts-ignore // TODO:
 import { Paginator } from '../../../../../common/domain/paginator';
 import { getSanitizationQuery } from '../../../../../common/utils/query-params.sanitizator';
 

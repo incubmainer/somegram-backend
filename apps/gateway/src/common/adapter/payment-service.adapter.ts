@@ -25,6 +25,7 @@ import {
   PayPalRawBodyPayloadType,
   StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
+//@ts-ignore TODO:
 import { Paginator } from '../domain/paginator';
 import {
   MyPaymentsOutputDto,

@@ -7,7 +7,7 @@ import { IsString } from 'class-validator';
 export class RegistrationBodyInputDto {
   @ApiProperty({
     type: String,
-    description: 'this is name of user',
+    description: 'Name of user',
     example: 'Rayan_Ghosling',
     pattern: '^[0-9A-Za-z_-]+$',
     minLength: 6,

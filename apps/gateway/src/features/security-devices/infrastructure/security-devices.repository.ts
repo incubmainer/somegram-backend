@@ -6,8 +6,8 @@ import {
   SecurityDevices,
 } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
+import { SecurityDeviceCreateDto } from '../domain/types';
 
-// TODO Сделать логику выполнения в одной транзакции и блокировка записи в БД когда удаляем девайс
 @Injectable()
 export class SecurityDevicesRepository {
   constructor(
@@ -17,6 +17,20 @@ export class SecurityDevicesRepository {
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(SecurityDevicesRepository.name);
+  }
+
+  public async createSession(
+    sessionCreatedDto: SecurityDeviceCreateDto,
+  ): Promise<void> {
+    await this.txHost.tx.securityDevices.create({
+      data: {
+        userId: sessionCreatedDto.userId,
+        ip: sessionCreatedDto.ip,
+        deviceId: sessionCreatedDto.deviceId,
+        lastActiveDate: sessionCreatedDto.iat,
+        title: sessionCreatedDto.userAgent,
+      },
+    });
   }
 
   public async addDevice(

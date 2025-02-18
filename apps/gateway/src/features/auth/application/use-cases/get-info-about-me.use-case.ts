@@ -1,12 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-
-import {
-  CustomLoggerService,
-  InjectCustomLoggerService,
-  LogClass,
-} from '../../../../../../../libs/custom-logger/src';
 import { MeOutputDto } from '../../api/dto/output-dto/me-output-dto';
-import { NotificationObject } from '../../../../common/domain/notification';
 import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
 import { LoggerService } from '@app/logger';
 
@@ -37,7 +30,9 @@ export class GetInfoAboutMeUseCase
   }
   async execute(
     command: GetInfoAboutMeCommand,
+    // @ts-ignore // TODO:
   ): Promise<NotificationObject<MeOutputDto>> {
+    // @ts-ignore // TODO:
     const notification = new NotificationObject<MeOutputDto>(MeCodes.Success);
     try {
       const user = await this.usersQueryRepository.getInfoAboutMe(

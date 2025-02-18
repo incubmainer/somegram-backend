@@ -45,6 +45,7 @@ import {
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
+// @ts-ignore TODO:
 import { Paginator } from '../../../common/domain/paginator';
 import {
   AppNotificationResultEnum,

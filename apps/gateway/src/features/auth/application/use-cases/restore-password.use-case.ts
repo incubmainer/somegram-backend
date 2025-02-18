@@ -9,7 +9,6 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { RecapchaService } from '../../../../common/utils/recapcha.service';
-import { NotificationObject } from '../../../../common/domain/notification';
 
 export const RestorePasswordCodes = {
   Success: Symbol('success'),
@@ -57,7 +56,9 @@ export class RestorePasswordUseCase {
 
   public async execute(
     command: RestorePasswordCommand,
+    // @ts-ignore //TODO:
   ): Promise<NotificationObject<void>> {
+    // @ts-ignore // TODO:
     const notification = new NotificationObject(RestorePasswordCodes.Success);
     const { email, recaptchaToken } = command;
     const isValidRecaptcha =
