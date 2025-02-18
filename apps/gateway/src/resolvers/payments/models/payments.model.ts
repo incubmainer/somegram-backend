@@ -3,9 +3,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class PaymentsModel {
   @Field()
-  userId: string;
-
-  @Field()
   subscriptionId: string;
 
   @Field()
@@ -25,4 +22,7 @@ export class PaymentsModel {
 
   @Field()
   endDateOfSubscription: string;
+
+  @Field()
+  userId?: string;
 }

@@ -29,6 +29,10 @@ import { StripeSubscriptionDeletedHandler } from './features/payments/applicatio
 import { StripeCheckouSessionCompletedHandler } from './features/payments/application/handlers/stripe/stripe-checkout-session-completed.handler';
 import { PaymentService } from './features/payments/application/payments.service';
 import { PaginatorService } from '@app/paginator';
+import { GraphqlPaymentsRepository } from './features/payments/infrastructure/graphql-payments.repository';
+import { GetPaymentsByUserQueryUseCase } from './features/payments/application/use-cases/query/graphql/get-payments.use-case';
+import { GetPaymentsByUsersQueryUseCase } from './features/payments/application/use-cases/query/graphql/get-payments-by-users.use-case';
+import { GetAllPaymentsQueryUseCase } from './features/payments/application/use-cases/query/graphql/get-all-payments.use-case';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -43,7 +47,13 @@ const useCases = [
   StripeSubscriptionCreateUseCase,
 ];
 
-const repositories = [PaymentsRepository];
+const useCasesGraphql = [
+  GetPaymentsByUserQueryUseCase,
+  GetPaymentsByUsersQueryUseCase,
+  GetAllPaymentsQueryUseCase,
+];
+
+const repositories = [PaymentsRepository, GraphqlPaymentsRepository];
 
 const transactionEntityProvider = {
   provide: 'TransactionEntity',
@@ -85,6 +95,7 @@ const stripeHandlers = [
   controllers: [PaymentsController],
   providers: [
     ...useCases,
+    ...useCasesGraphql,
     ...repositories,
     ...services,
     ...payPalHandlers,

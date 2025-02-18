@@ -8,6 +8,13 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+
+import { LoggerService } from '@app/logger';
+
+import {
   ProfilePublicInfoOutputDtoModel,
   UserCountOutputDto,
 } from './dto/output-dto/profile-info-output-dto';
@@ -15,12 +22,7 @@ import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { PublicProfileInfoSwagger } from './swagger/public-profile-info.swagger';
 import { PublicGetUsersCountSwagger } from './swagger/public-get-users-count.swagger';
 import { USER_PUBLIC_ROUTE } from '../../../common/constants/route.constants';
-import {
-  AppNotificationResultEnum,
-  AppNotificationResultType,
-} from '@app/application-notification';
-import { GetPublicProfileInfoQuery } from '../application/use-cases/queryBus/get-public-profile-info.use-case';
-import { LoggerService } from '@app/logger';
+import { GetPublicProfileInfoQuery } from '../application/query-command/get-public-profile-info.use-case';
 
 @ApiTags('Public-Users')
 @Controller(USER_PUBLIC_ROUTE.MAIN)

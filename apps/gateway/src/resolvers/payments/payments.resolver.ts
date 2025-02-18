@@ -7,14 +7,16 @@ import {
 import { LoggerService } from '@app/logger';
 import { Pagination } from '@app/paginator';
 
-import { PaymentsModel } from './models/subscription.payments.model';
+import { PaymentsModel } from './models/payments.model';
 import { PaginatedPaymentsModel } from './models/paginated-payments.model';
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
-import { QueryStringInput } from '../users/models/query-string-input';
 import { UserLoader } from '../../common/data-loaders/user-loader';
 import { UserModel } from '../users/models/user.model';
+
 import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
+import { PaymentsQueryStringInputWithSearch } from './models/payments-query-input-with-search';
+import { PaymentsQueryStringInput } from './models/payments-query-string-input';
 
 @Resolver(() => PaymentsModel)
 export class PaymentsResolver {
@@ -22,21 +24,27 @@ export class PaymentsResolver {
     private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
     private readonly userLoader: UserLoader,
     private readonly logger: LoggerService,
-  ) {}
+  ) {
+    this.logger.setContext(PaymentsResolver.name);
+  }
 
   @Query(() => PaginatedPaymentsModel)
   @UseGuards(BasicGqlGuard)
   async getPaymentsByUser(
-    @Args('queryString', { type: () => QueryStringInput, nullable: true })
-    queryString: QueryStringInput,
+    @Args('queryString', {
+      type: () => PaymentsQueryStringInput,
+      nullable: false,
+    })
+    queryString: PaymentsQueryStringInput,
     @Args('userId') userId: string,
   ): Promise<PaginatedPaymentsModel> {
+    console.log('resolver', queryString);
     this.logger.debug(
-      'Execute: Get payments byuser',
+      'Execute: Get payments by user',
       this.getPaymentsByUser.name,
     );
     const result: AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>> =
-      await this.paymentsServiceAdapter.getPayments({
+      await this.paymentsServiceAdapter.getPaymentsByUser({
         userId,
         queryString,
       });
@@ -44,20 +52,23 @@ export class PaymentsResolver {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.getPaymentsByUser.name);
-        //Возможно проще добавить в MyPaymentsOutputDto userId
-        return {
-          ...result.data,
-          items: result.data.items.map((i) => {
-            return {
-              ...i,
-              userId,
-            };
-          }),
-        };
+        return result.data;
       default:
         throw new InternalServerErrorException();
     }
   }
+
+  // @Query(() => PaginatedPaymentsModel)
+  // @UseGuards(BasicGqlGuard)
+  // async getAllPayments(
+  //   @Args('queryString', {
+  //     type: () => PaymentsQueryStringInputWithSearch,
+  //     nullable: true,
+  //   })
+  //   queryString: PaymentsQueryStringInputWithSearch,
+  // ): Promise<AppNotificationResultType<Pagination<any[]>>> {
+  //   return this.paymentsServiceAdapter.getAllPayments({ queryString });
+  // }
 
   @ResolveField(() => UserModel, { nullable: true })
   async getUser(@Parent() paymentsModel: PaymentsModel) {

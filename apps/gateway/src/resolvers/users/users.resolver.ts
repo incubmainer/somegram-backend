@@ -19,41 +19,47 @@ import { LoggerService } from '@app/logger';
 
 import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaginatedUserModel } from './models/paginated-user.model';
-import { UsersService } from '../../features/users/application/users.service';
 import { UserModel } from './models/user.model';
 import { BanUserInput } from './models/ban-user-input';
-import { QueryStringInput } from './models/query-string-input';
+import { UsersQueryStringInput } from './models/users-query-string-input';
 import { FileModel } from './models/file-model';
 import { UserAvatarsLoader } from '../../common/data-loaders/user-avatars-loader';
 import { PostsPhotosLoader } from '../../common/data-loaders/posts-photos-loader';
-import { PaymentsModel } from '../payments/models/subscription.payments.model';
+import { PaymentsModel } from '../payments/models/payments.model';
 import { PaymentsLoader } from '../../common/data-loaders/payments-loader';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { RemoveUserCommand } from '../../features/users/application/use-cases/graphql/remove-user.use-case';
+import { BanUserCommand } from '../../features/users/application/use-cases/graphql/ban-user.use-case';
+import { UnbanUserCommand } from '../../features/users/application/use-cases/graphql/unban-user.use-case';
+import { GetUserQuery } from '../../features/users/application/query-command/graphql/get-user.use-case';
+import { GetUsersQuery } from '../../features/users/application/query-command/graphql/get-users.use-case';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
   constructor(
-    private readonly usersService: UsersService,
     private readonly userImagesLoader: UserAvatarsLoader,
     private readonly postsPhotosLoader: PostsPhotosLoader,
     private readonly paymentsLoader: PaymentsLoader,
     private readonly logger: LoggerService,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {
     this.logger.setContext(UsersResolver.name);
   }
 
   @Query(() => UserModel, { nullable: true })
   @UseGuards(BasicGqlGuard)
-  async getUser(@Args('id') id: string): Promise<UserModel> {
+  async getUser(@Args('id') id: string) {
     this.logger.debug('Execute: Get user', this.getUser.name);
     const result: AppNotificationResultType<UserModel> =
-      await this.usersService.getUser(id);
+      await this.queryBus.execute(new GetUserQuery(id));
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.getUser.name);
         return result.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`NotFound`, this.getUser.name);
-        return result.data;
+        throw new NotFoundException();
       default:
         throw new InternalServerErrorException();
     }
@@ -62,12 +68,12 @@ export class UsersResolver {
   @Query(() => PaginatedUserModel)
   @UseGuards(BasicGqlGuard)
   async getUsers(
-    @Args('queryString', { type: () => QueryStringInput, nullable: true })
-    queryString: QueryStringInput,
+    @Args('queryString', { type: () => UsersQueryStringInput, nullable: true })
+    queryString: UsersQueryStringInput,
   ): Promise<PaginatedUserModel> {
     this.logger.debug('Execute: Get users', this.getUsers.name);
     const result: AppNotificationResultType<PaginatedUserModel> =
-      await this.usersService.getUsers(queryString);
+      await this.queryBus.execute(new GetUsersQuery(queryString));
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.getUsers.name);
@@ -84,7 +90,7 @@ export class UsersResolver {
   ): Promise<boolean> {
     this.logger.debug('Execute: delete user', this.deleteUser.name);
     const result: AppNotificationResultType<null> =
-      await this.usersService.removeUser(userId);
+      await this.commandBus.execute(new RemoveUserCommand(userId));
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.deleteUser.name);
@@ -105,7 +111,7 @@ export class UsersResolver {
   ): Promise<boolean> {
     this.logger.debug('Execute: ban user', this.banUser.name);
     const result: AppNotificationResultType<null> =
-      await this.usersService.banUser(banUserInput);
+      await this.commandBus.execute(new BanUserCommand(banUserInput));
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.banUser.name);
@@ -125,7 +131,7 @@ export class UsersResolver {
   ): Promise<boolean> {
     this.logger.debug('Execute: unban user', this.unbanUser.name);
     const result: AppNotificationResultType<boolean> =
-      await this.usersService.unbanUser(userId);
+      await this.commandBus.execute(new UnbanUserCommand(userId));
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.unbanUser.name);

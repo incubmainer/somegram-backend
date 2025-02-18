@@ -31,7 +31,7 @@ import { ProfileInfoOutputDto } from './dto/output-dto/profile-info-output-dto';
 import { ProfileInfoSwagger } from './swagger/profile-info.swagger';
 import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
 import { DeleteAvatarCommand } from '../application/use-cases/delete-avatar.use-case';
-import { GetProfileInfoQuery } from '../application/use-cases/queryBus/get-profile-info.use-case';
+
 import { LoggerService } from '@app/logger';
 import { USER_ROUTE } from '../../../common/constants/route.constants';
 import {
@@ -44,6 +44,7 @@ import {
   ALLOWED_AVATAR_MIMETYPES,
   ALLOWED_AVATAR_SIZE,
 } from '../../../common/constants/allowed-mimetype-size.constants';
+import { GetProfileInfoQuery } from '../application/query-command/get-profile-info.use-case';
 
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })

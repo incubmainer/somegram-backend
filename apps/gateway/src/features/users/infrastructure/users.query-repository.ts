@@ -8,7 +8,6 @@ import {
 } from '../../auth/api/dto/output-dto/me-output-dto';
 import { LoggerService } from '@app/logger';
 import { UserWithBanInfo } from '../domain/user.interfaces';
-import { QueryStringInput } from '../../../resolvers/users/models/query-string-input';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -73,56 +72,5 @@ export class UsersQueryRepository {
     this.logger.debug(`Get total users count`, this.getTotalCountUsers.name);
 
     return this.txHost.tx.user.count();
-  }
-
-  public async getUsers(
-    queryString: QueryStringInput,
-  ): Promise<{ users: UserWithBanInfo[]; count: number }> {
-    this.logger.debug(`Get all users`, this.getUsers.name);
-
-    const skip = queryString.pageSize * (queryString.pageNumber - 1);
-    let where = {};
-    if (queryString.search && queryString.search.trim() !== '') {
-      where = {
-        isDeleted: false,
-        username: {
-          contains: queryString.search,
-          mode: 'insensitive',
-        },
-      };
-    } else {
-      where = {
-        isDeleted: false,
-      };
-    }
-
-    const users = await this.txHost.tx.user.findMany({
-      where,
-      include: { UserBanInfo: true },
-      orderBy: { [queryString.sortBy]: queryString.sortDirection },
-      skip,
-      take: queryString.pageSize,
-    });
-
-    const count = await this.txHost.tx.user.count({
-      where,
-    });
-
-    return {
-      users,
-      count,
-    };
-  }
-
-  async findUsersByIds(ids: string[]) {
-    this.logger.debug(`Get users by ids `, this.findUsersByIds.name);
-    return await this.txHost.tx.user.findMany({
-      where: {
-        id: {
-          in: ids,
-        },
-      },
-      include: { UserBanInfo: true },
-    });
   }
 }

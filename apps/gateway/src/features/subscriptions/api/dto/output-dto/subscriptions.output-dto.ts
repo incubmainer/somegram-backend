@@ -42,6 +42,12 @@ export class MyPaymentsOutputDto {
     example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
   })
   subscriptionId: string;
+
+  @ApiProperty({
+    description: 'user id',
+    example: '2f4a4a9c-3503-47fe-8d55-1310bb2e4403',
+  })
+  userId?: string;
 }
 
 export class SubscriptionInfoOutputDto {

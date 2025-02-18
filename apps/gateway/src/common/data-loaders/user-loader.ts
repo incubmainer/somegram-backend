@@ -7,11 +7,12 @@ import {
 } from '@app/application-notification';
 
 import { UserModel } from '../../resolvers/users/models/user.model';
-import { UsersService } from '../../features/users/application/users.service';
+import { QueryBus } from '@nestjs/cqrs';
+import { GetUsersByIdsQuery } from '../../features/users/application/query-command/graphql/get-users-by-ids.use-case';
 
 @Injectable()
 export class UserLoader implements NestDataLoader<string, UserModel | null> {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
   generateDataLoader(): DataLoader<string, UserModel | null> {
     const batchLoadFn: DataLoader.BatchLoadFn<
@@ -19,7 +20,7 @@ export class UserLoader implements NestDataLoader<string, UserModel | null> {
       UserModel | null
     > = async (userIds: string[]) => {
       const result: AppNotificationResultType<UserModel[]> =
-        await this.usersService.gerUsersByIds(userIds);
+        await this.queryBus.execute(new GetUsersByIdsQuery(userIds));
 
       if (result.appResult === AppNotificationResultEnum.Success) {
         const usersMap = new Map<string, UserModel>();

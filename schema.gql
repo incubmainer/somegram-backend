@@ -56,7 +56,6 @@ type FileModel {
 }
 
 type PaymentsModel {
-  userId: String!
   subscriptionId: String!
   subscriptionType: String!
   price: Float!
@@ -64,6 +63,7 @@ type PaymentsModel {
   status: String!
   dateOfPayment: String!
   endDateOfSubscription: String!
+  userId: String!
   getUser: UserModel
 }
 
@@ -79,21 +79,35 @@ type Query {
   sayHello: String!
   loginSa: String!
   getUser(id: String!): UserModel
-  getUsers(queryString: QueryStringInput): PaginatedUserModel!
-  getPaymentsByUser(queryString: QueryStringInput, userId: String!): PaginatedPaymentsModel!
+  getUsers(queryString: UsersQueryStringInput): PaginatedUserModel!
+  getPaymentsByUser(queryString: PaymentsQueryStringInput!, userId: String!): PaginatedPaymentsModel!
 }
 
-input QueryStringInput {
+input UsersQueryStringInput {
   pageNumber: Int! = 1
   pageSize: Int! = 8
-  sortBy: String! = "username"
   sortDirection: SortDirection! = ASC
+  statusFilter: UserBlockStatus! = ALL
   search: String
+  sortBy: String! = "username"
 }
 
 enum SortDirection {
   ASC
   DESC
+}
+
+enum UserBlockStatus {
+  ALL
+  BLOCKED
+  UNBLOCKED
+}
+
+input PaymentsQueryStringInput {
+  pageNumber: Int! = 1
+  pageSize: Int! = 8
+  sortDirection: SortDirection! = ASC
+  sortBy: String! = "dateOfPayment"
 }
 
 type Mutation {

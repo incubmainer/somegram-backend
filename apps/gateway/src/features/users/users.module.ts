@@ -12,9 +12,15 @@ import { FillingUserProfileUseCase } from './application/use-cases/filling-user-
 import { UsersQueryRepository } from './infrastructure/users.query-repository';
 import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case';
 import { PublicUsersController } from './api/public-users.controller';
-import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
-import { GetPublicProfileInfoUseCase } from './application/use-cases/queryBus/get-public-profile-info.use-case';
-import { UsersService } from './application/users.service';
+import { GetProfileInfoUseCase } from './application/query-command/get-profile-info.use-case';
+import { GetPublicProfileInfoUseCase } from './application/query-command/get-public-profile-info.use-case';
+import { RemoveUserUseCase } from './application/use-cases/graphql/remove-user.use-case';
+import { BanUserUseCase } from './application/use-cases/graphql/ban-user.use-case';
+import { UnbanUserUseCase } from './application/use-cases/graphql/unban-user.use-case';
+import { UsersGraphqlRepository } from './infrastructure/users.graphql-repository';
+import { GetUserUseCase } from './application/query-command/graphql/get-user.use-case';
+import { GetUsersUseCase } from './application/query-command/graphql/get-users.use-case';
+import { GetUsersByIdsUseCase } from './application/query-command/graphql/get-users-by-ids.use-case';
 
 const useCases = [
   UploadAvatarUseCase,
@@ -24,9 +30,22 @@ const useCases = [
   GetPublicProfileInfoUseCase,
 ];
 
-const repositories = [UsersRepository, UsersQueryRepository];
+const useCasesGraphql = [
+  RemoveUserUseCase,
+  BanUserUseCase,
+  UnbanUserUseCase,
+  GetUserUseCase,
+  GetUsersUseCase,
+  GetUsersByIdsUseCase,
+];
 
-const services = [AuthService, CryptoService, UsersService];
+const repositories = [
+  UsersRepository,
+  UsersQueryRepository,
+  UsersGraphqlRepository,
+];
+
+const services = [AuthService, CryptoService];
 
 @Module({
   imports: [
@@ -37,7 +56,13 @@ const services = [AuthService, CryptoService, UsersService];
     }),
   ],
   controllers: [UsersController, PublicUsersController],
-  providers: [JwtStrategy, ...services, ...useCases, ...repositories],
-  exports: [UsersRepository, UsersService],
+  providers: [
+    JwtStrategy,
+    ...services,
+    ...useCases,
+    ...repositories,
+    ...useCasesGraphql,
+  ],
+  exports: [UsersRepository],
 })
 export class UsersModule {}

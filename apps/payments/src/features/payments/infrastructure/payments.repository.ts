@@ -27,6 +27,7 @@ export class PaymentsRepository {
     userId: string,
     queryString: SearchQueryParametersType,
   ) {
+    this.logger.debug('Execute: get payments', this.getPaymentsByUserId.name);
     const { pageSize, pageNumber } = queryString;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -211,24 +212,5 @@ export class PaymentsRepository {
       },
     });
     return subscriptions && subscriptions.length > 0 ? subscriptions : null;
-  }
-
-  public async getSubscriptionsByUserIds(
-    userIds: string[],
-  ): Promise<Subscription[]> {
-    this.logger.debug(
-      'Execute: get subscriptions by users',
-      this.getSubscriptionsByUserIds.name,
-    );
-    return await this.txHost.tx.subscription.findMany({
-      where: {
-        userId: {
-          in: userIds,
-        },
-      },
-      include: {
-        payments: true,
-      },
-    });
   }
 }

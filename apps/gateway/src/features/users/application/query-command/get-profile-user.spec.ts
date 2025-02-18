@@ -7,17 +7,14 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+
 import {
   GetProfileInfoQuery,
   GetProfileInfoUseCase,
 } from './get-profile-info.use-case';
-import { ProfileInfoOutputDto } from '../../../api/dto/output-dto/profile-info-output-dto';
-import { GatewayModule } from '../../../../../gateway.module';
-import {
-  GetPublicProfileInfoQuery,
-  GetPublicProfileInfoUseCase,
-} from './get-public-profile-info.use-case';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
+import { GatewayModule } from '../../../../gateway.module';
+import { ProfileInfoOutputDto } from '../../api/dto/output-dto/profile-info-output-dto';
 
 type UserInsertType = {
   username: string;
@@ -33,7 +30,7 @@ class PhotoServiceAdapterMock extends PhotoServiceAdapter {
   }
 }
 
-describe('Get public user profile', () => {
+describe('Get user profile', () => {
   let queryBus: QueryBus;
   let txHost: TransactionHost<TransactionalAdapterPrisma<GatewayPrismaClient>>;
   let insertUserData: UserInsertType;
@@ -52,7 +49,7 @@ describe('Get public user profile', () => {
       module.get<PhotoServiceAdapter>(PhotoServiceAdapter);
     queryBus = module.get<QueryBus>(QueryBus);
     txHost = module.get<TransactionHost>(TransactionHost);
-    queryBus.register([GetPublicProfileInfoUseCase]);
+    queryBus.register([GetProfileInfoUseCase]);
   });
 
   beforeEach(async () => {
@@ -76,31 +73,36 @@ describe('Get public user profile', () => {
     await txHost.tx.securityDevices.deleteMany();
   };
 
-  it('should get public user profile', async () => {
+  it('should get user profile', async () => {
     const user: User = await insertUser(insertUserData);
     const userId: string = user.id;
 
     const result: AppNotificationResultType<ProfileInfoOutputDto> =
-      await queryBus.execute(new GetPublicProfileInfoQuery(userId));
+      await queryBus.execute(new GetProfileInfoQuery(userId));
     expect(result.appResult).toBe(AppNotificationResultEnum.Success);
     expect(result.errorField).toBeNull();
     expect(result.data).toEqual({
-      id: userId,
+      email: insertUserData.email,
       userName: insertUserData.username,
+      firstName: null,
+      lastName: null,
+      dateOfBirth: null,
       about: null,
+      city: null,
+      country: null,
       avatar: { url: null },
     });
   });
 
-  it('should not get public user profile, user not found', async () => {
+  it('should not get user profile, user not found', async () => {
     const result: AppNotificationResultType<ProfileInfoOutputDto> =
-      await queryBus.execute(new GetPublicProfileInfoQuery('userId'));
+      await queryBus.execute(new GetProfileInfoQuery('userId'));
     expect(result.appResult).toBe(AppNotificationResultEnum.NotFound);
     expect(result.errorField).toBeNull();
     expect(result.data).toBeNull();
   });
 
-  it('should not get public user profile, some internal server error', async () => {
+  it('should not get user profile, some internal server error', async () => {
     const user: User = await insertUser(insertUserData);
     const userId: string = user.id;
 
@@ -109,7 +111,7 @@ describe('Get public user profile', () => {
       .mockRejectedValue(new Error('Test error'));
 
     const result: AppNotificationResultType<ProfileInfoOutputDto> =
-      await queryBus.execute(new GetPublicProfileInfoQuery(userId));
+      await queryBus.execute(new GetProfileInfoQuery(userId));
     expect(result.appResult).toBe(AppNotificationResultEnum.InternalError);
     expect(result.errorField).toBeNull();
     expect(result.data).toBeNull();

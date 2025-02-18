@@ -1,6 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
-import { PaymentsModel } from './subscription.payments.model';
+import { PaymentsModel } from './payments.model';
 
 @ObjectType()
 export class PaginatedPaymentsModel {

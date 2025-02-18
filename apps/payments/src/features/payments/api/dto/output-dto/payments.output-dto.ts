@@ -12,6 +12,7 @@ export class MyPaymentsOutputDto {
   dateOfPayment: string;
   endDateOfSubscription: string;
   subscriptionId: string;
+  userId?: string;
 
   constructor(data?: Partial<MyPaymentsOutputDto>) {
     Object.assign(this, data);
@@ -20,25 +21,30 @@ export class MyPaymentsOutputDto {
 
 export const myPaymentsMapper = (
   payments: PaymentTransaction[],
+  userId?: string,
 ): MyPaymentsOutputDto[] => {
-  return payments.map(
-    (payment) =>
-      new MyPaymentsOutputDto({
-        subscriptionType: payment.subscriptionType as SubscriptionType,
-        price: payment.price,
-        paymentSystem: payment.paymentSystem,
-        status: payment.status,
-        dateOfPayment: payment.dateOfPayment
-          ? payment.dateOfPayment.toISOString()
-          : null,
-        endDateOfSubscription: payment.endDateOfSubscription
-          ? payment.endDateOfSubscription.toISOString()
-          : null,
-        subscriptionId: payment.subId,
-      }),
-  );
-};
+  return payments.map((payment) => {
+    const dtoData: any = {
+      subscriptionType: payment.subscriptionType as SubscriptionType,
+      price: payment.price,
+      paymentSystem: payment.paymentSystem,
+      status: payment.status,
+      dateOfPayment: payment.dateOfPayment
+        ? payment.dateOfPayment.toISOString()
+        : null,
+      endDateOfSubscription: payment.endDateOfSubscription
+        ? payment.endDateOfSubscription.toISOString()
+        : null,
+      subscriptionId: payment.subId,
+    };
 
+    if (userId) {
+      dtoData.userId = userId;
+    }
+
+    return new MyPaymentsOutputDto(dtoData);
+  });
+};
 export class SubscriptionInfoOutputDto {
   userId: string;
   subscriptionId: string;

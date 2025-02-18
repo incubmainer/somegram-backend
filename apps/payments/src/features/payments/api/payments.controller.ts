@@ -12,7 +12,9 @@ import {
   TESTING_CANCEL_SUBSCRIPTION,
   TESTING_GET_PAYMENTS,
   TESTING_GET_NOTIFICATION,
-  GET_PAYMENTS_BY_USERS,
+  GET_PAYMENTS_BY_USERS_GQL,
+  GET_PAYMENTS_GQL,
+  GET_ALL_PAYMENTS_GQL,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PaypalEventAdapter } from '../../../common/adapters/paypal-event.adapter';
@@ -38,8 +40,12 @@ import {
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/payments.output-dto';
 import { PaymentService } from '../application/payments.service';
-import { PaymentsRepository } from '../infrastructure/payments.repository';
 import { Subscription } from '@prisma/payments';
+import { GraphqlPaymentsRepository } from '../infrastructure/graphql-payments.repository';
+import { GetPaymentsByUserQuery } from '../application/use-cases/query/graphql/get-payments.use-case';
+import { GetPaymentsByUsersQuery } from '../application/use-cases/query/graphql/get-payments-by-users.use-case';
+import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
+import { GetAllPaymentsQuery } from '../application/use-cases/query/graphql/get-all-payments.use-case';
 
 @Controller('payments')
 export class PaymentsController {
@@ -49,7 +55,7 @@ export class PaymentsController {
     private readonly eventManager: PaypalEventAdapter,
     private readonly logger: LoggerService,
     private readonly paymentService: PaymentService,
-    private readonly paymentsRepository: PaymentsRepository,
+    private readonly graphqlPaymentsRepository: GraphqlPaymentsRepository,
   ) {
     this.logger.setContext(PaymentsController.name);
   }
@@ -169,16 +175,37 @@ export class PaymentsController {
     return await this.paymentService.testSendNotification(payload.userId);
   }
 
-  @MessagePattern({ cmd: GET_PAYMENTS_BY_USERS })
+  @MessagePattern({ cmd: GET_PAYMENTS_BY_USERS_GQL })
   async getSubscriptionsByUserIds(payload: {
     userIds: string[];
-  }): Promise<Subscription[]> {
+  }): Promise<AppNotificationResultType<Subscription[]>> {
     this.logger.debug(
       'Execute: get payments by users',
       this.getSubscriptionsByUserIds.name,
     );
-    return await this.paymentsRepository.getSubscriptionsByUserIds(
-      payload.userIds,
+    return this.queryBus.execute(new GetPaymentsByUsersQuery(payload.userIds));
+  }
+
+  @MessagePattern({ cmd: GET_PAYMENTS_GQL })
+  async getPaymentsByUser(
+    payload: GetUserPaymentPayloadType,
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
+    this.logger.debug(
+      'Execute: get payments by users',
+      this.getPaymentsByUser.name,
+    );
+
+    return this.queryBus.execute(
+      new GetPaymentsByUserQuery(payload.userId, payload.queryString),
     );
   }
+
+  // @MessagePattern({ cmd: GET_ALL_PAYMENTS_GQL })
+  // async getAllPayments(payload: {
+  //   queryString?: SearchQueryParametersType;
+  // }): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
+  //   this.logger.debug('Execute: get all payments', this.getPaymentsByUser.name);
+
+  //   return this.queryBus.execute(new GetAllPaymentsQuery(payload.queryString));
+  // }
 }

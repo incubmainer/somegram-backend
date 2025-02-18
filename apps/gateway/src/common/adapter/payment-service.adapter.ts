@@ -5,8 +5,10 @@ import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
+  GET_ALL_PAYMENTS_GQL,
   GET_PAYMENTS,
-  GET_PAYMENTS_BY_USERS,
+  GET_PAYMENTS_BY_USERS_GQL,
+  GET_PAYMENTS_GQL,
   GET_SUBSCRIPTION_INFO,
   PAYPAL_WEBHOOK_HANDLER,
   STRIPE_WEBHOOK_HANDLER,
@@ -39,7 +41,9 @@ export class PaymentsServiceAdapter {
     private readonly paymentsServiceClient: ClientProxy,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
-  ) {}
+  ) {
+    this.logger.setContext(PaymentsServiceAdapter.name);
+  }
 
   async createSubscription(
     payload: CreatePaymentDto,
@@ -204,10 +208,10 @@ export class PaymentsServiceAdapter {
   }
   async getSubscriptionsByUserIds(payload: {
     userIds: string[];
-  }): Promise<any> {
+  }): Promise<AppNotificationResultType<any>> {
     try {
       const responseOfService: Observable<any> = this.paymentsServiceClient
-        .send({ cmd: GET_PAYMENTS_BY_USERS }, payload)
+        .send({ cmd: GET_PAYMENTS_BY_USERS_GQL }, payload)
         .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
@@ -216,4 +220,39 @@ export class PaymentsServiceAdapter {
       return this.appNotification.internalServerError();
     }
   }
+  async getPaymentsByUser(
+    payload: GetUserPaymentPayloadType,
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
+    console.log('adapter', payload.queryString);
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_PAYMENTS_GQL }, payload)
+        .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  // async getAllPayments(payload: {
+  //   queryString?: SearchQueryParametersType;
+  // }): Promise<AppNotificationResultType<Pagination<any[]>>> {
+  //   console.log('adapter', payload.queryString);
+  //   try {
+  //     const responseOfService: Observable<
+  //       AppNotificationResultType<Pagination<any[]>>
+  //     > = this.paymentsServiceClient
+  //       .send({ cmd: GET_ALL_PAYMENTS_GQL }, payload)
+  //       .pipe(timeout(10000));
+
+  //     return await firstValueFrom(responseOfService);
+  //   } catch (e) {
+  //     this.logger.error(e, this.getAllPayments.name);
+  //     return this.appNotification.internalServerError();
+  //   }
+  // }
 }

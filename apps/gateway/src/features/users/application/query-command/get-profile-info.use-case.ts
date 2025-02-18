@@ -1,16 +1,17 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
 import { User } from '@prisma/gateway';
-import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import {
   ProfileInfoOutputDto,
   userProfileInfoMapper,
-} from '../../../api/dto/output-dto/profile-info-output-dto';
+} from '../../api/dto/output-dto/profile-info-output-dto';
+import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 
 export class GetProfileInfoQuery {
   constructor(public userId: string) {}
