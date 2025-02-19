@@ -102,6 +102,9 @@ const mailerModule = MailerModule.forRootAsync({
     SendEmailNotificationSubscriptionActivatedEventHandler,
     SendEmailNotificationSubscriptionDisabledEventHandler,
   ],
-  exports: [SendEmailNotificationSubscriptionActivatedEventHandler],
+  exports: [
+    SendEmailNotificationSubscriptionActivatedEventHandler,
+    emailAdapter,
+  ],
 })
 export class NotificationModule {}

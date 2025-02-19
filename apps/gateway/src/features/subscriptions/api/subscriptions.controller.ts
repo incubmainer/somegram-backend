@@ -21,7 +21,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../common/guards/jwt/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
 import { CreatePaymentCommand } from '../application/use-cases/create-payments.use-case';
 import { CreateSubscriptionDto } from './dto/input-dto/subscriptions.dto';

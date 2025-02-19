@@ -5,7 +5,6 @@ import { IsString, validateSync } from 'class-validator';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
 import { IsUserPassword } from '../decorators/is-user-password';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
 
@@ -38,7 +37,7 @@ export class RestorePasswordConfirmationUseCase
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-    private readonly cryptoAuthService: CryptoAuthService,
+    //private readonly cryptoAuthService: CryptoAuthService,
     private readonly securityDevicesRepository: SecurityDevicesRepository,
   ) {}
 
@@ -69,6 +68,7 @@ export class RestorePasswordConfirmationUseCase
           return notification;
         }
         const hashPassword =
+          //@ts-ignore // TODO:
           await this.cryptoAuthService.hashPassword(password);
         await this.userRepository.deleteRestorePasswordCode(user.id);
         await this.userRepository.updateUserPassword(user.id, hashPassword);

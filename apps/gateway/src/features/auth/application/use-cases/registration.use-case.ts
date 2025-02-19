@@ -1,11 +1,7 @@
-import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
+import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'crypto';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { CryptoAuthService } from '../../infrastructure/crypto-auth.service';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
@@ -32,7 +28,6 @@ export class RegistrationUseCase
     private readonly userRepository: UsersRepository,
     private readonly authService: AuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    private readonly emailAuthService: EmailAuthService,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly publisher: EventPublisher,
@@ -46,7 +41,7 @@ export class RegistrationUseCase
   public async execute(
     command: RegistrationCommand,
   ): Promise<AppNotificationResultType<null>> {
-    this.logger.debug('registration use-cases', this.execute.name);
+    this.logger.debug('Execute; registration user', this.execute.name);
 
     const { username, email, password, html } = command.registrationDto;
 
@@ -57,10 +52,6 @@ export class RegistrationUseCase
         this.userRepository.getUserByEmail(email),
         this.userRepository.getUserByUsername(username),
       ]);
-      // const user = await this.userRepository.getUserByEmailOrUserName(
-      //   email,
-      //   username,
-      // );
 
       if (
         (userByEmail && userByEmail.isConfirmed) ||
@@ -85,17 +76,14 @@ export class RegistrationUseCase
         isConfirmed: false,
       };
 
-      // await this.emailAuthService.sendConfirmationEmail({
-      //   name: username,
-      //   email,
-      //   expiredAt: confirmationTokenExpiresAt,
-      //   confirmationToken,
-      //   html,
-      // });
-
       const newUser = await this.executeTransaction(userCreatedDto);
 
-      this.publishEvent(newUser, confirmationToken, html);
+      this.publishEvent(
+        newUser,
+        confirmationToken,
+        confirmationTokenExpiredAt,
+        html,
+      );
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
@@ -114,10 +102,15 @@ export class RegistrationUseCase
     return newUser;
   }
 
-  private publishEvent(newUser: UserEntity, code: string, html: string): void {
+  private publishEvent(
+    newUser: UserEntity,
+    code: string,
+    expiredAt: Date,
+    html: string,
+  ): void {
     const customerWithEvents = this.publisher.mergeObjectContext(newUser);
 
-    customerWithEvents.registrationUserEvent(code, html);
+    customerWithEvents.registrationUserEvent(code, expiredAt, html);
     customerWithEvents.commit();
   }
 

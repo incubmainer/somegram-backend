@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
+import { jwtConstants } from '../../constants/jwt-basic-constants';
 import { LoggerService } from '@app/logger';
 interface JwtPayload {
   userId: string;

@@ -14,6 +14,11 @@ import { clsModule } from './services/cls-service/cls.module';
 import { PrismaService } from './services/prisma-service/prisma.service';
 import { EmailSender } from './utils/email.sender';
 import { DateFormatter } from './utils/date-formatter.util';
+import { JwtStrategy } from './guards/jwt/jwt.strategy';
+import { GithubStrategy } from './guards/jwt/github.strategy';
+import { GoogleStrategy } from './guards/jwt/google.strategy';
+
+const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
 
 @Global()
 @Module({
@@ -29,6 +34,7 @@ import { DateFormatter } from './utils/date-formatter.util';
   controllers: [],
   providers: [
     PrismaService,
+    ...strategy,
     ////////////////////////////
     PhotoServiceAdapter,
     JwtRefreshTokenStrategyStrategy,
@@ -41,6 +47,7 @@ import { DateFormatter } from './utils/date-formatter.util';
   ],
   exports: [
     PrismaService,
+    ...strategy,
     ////////////////////////////
     CqrsModule,
     JwtRefreshTokenStrategyStrategy,

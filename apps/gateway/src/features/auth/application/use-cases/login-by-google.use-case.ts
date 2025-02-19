@@ -1,13 +1,12 @@
 import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { GoogleProfile } from '../../strategies/google.strategy';
+import { GoogleProfile } from '../../../../common/guards/jwt/google.strategy';
 import {
   UserCreatedByGoogleDto,
   UserGoogleInfoCreatedDto,
@@ -74,7 +73,6 @@ export class LoginByGoogleUseCase
         googleEmail: googleEmail,
         googleEmailVerified: googleEmailVerified,
       };
-      console.log('createdGoogleInfoDto', createdGoogleInfoDto);
 
       const result = await this.handleUser(
         createdGoogleInfoDto,
@@ -97,12 +95,14 @@ export class LoginByGoogleUseCase
     userAgent: string,
   ): Promise<JWTTokensType> {
     let userId: string;
+    let userForEvent: UserEntity;
     if (user) {
       await this.userRepository.addGoogleInfoToUser(createdGoogleInfoDto);
 
       if (!user.isConfirmed) await this.userRepository.confirmUser(user.id);
 
       userId = user.id;
+      userForEvent = user;
     } else {
       const { googleEmail } = createdGoogleInfoDto;
       const createdUserDto: UserCreatedByGoogleDto = {
@@ -112,12 +112,12 @@ export class LoginByGoogleUseCase
         username: this.authService.generateUniqUserName(googleEmail),
       };
 
-      console.log('createdUserDto', createdUserDto);
       const newUser =
         await this.userRepository.createUserByGoogle(createdUserDto);
 
       createdGoogleInfoDto.userId = newUser.id;
       userId = newUser.id;
+      userForEvent = newUser;
 
       await this.userRepository.addGoogleInfoToUser(createdGoogleInfoDto);
     }
@@ -140,6 +140,8 @@ export class LoginByGoogleUseCase
     };
 
     await this.securityDevicesRepository.createSession(sessionCreatedDto);
+
+    this.publishEvent(userForEvent);
     return {
       accessToken,
       refreshToken,
@@ -149,6 +151,7 @@ export class LoginByGoogleUseCase
   private publishEvent(user: UserEntity): void {
     const userWithEvents = this.publisher.mergeObjectContext(user);
 
+    userWithEvents.registrationSuccessEvent();
     userWithEvents.commit();
   }
 }

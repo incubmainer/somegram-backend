@@ -87,6 +87,29 @@ export class EmailAdapter implements IEmailAdapter {
         this.logger.error(e, this.sendSubscriptionNotification.name);
       });
   }
+
+  async sendEmailWithHtmlPattern(
+    email: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
+    await this.mailerService
+      .sendMail({
+        to: email,
+        from: `Somegram <${this.sender}>`,
+        subject: subject,
+        html: html,
+      })
+      .then((res) => {
+        this.logger.debug(
+          `Email response: ${JSON.stringify(res)}`,
+          this.sendEmailWithHtmlPattern.name,
+        );
+      })
+      .catch((e) => {
+        this.logger.error(e, this.sendEmailWithHtmlPattern.name);
+      });
+  }
 }
 
 @Injectable()
@@ -99,6 +122,7 @@ export class EmailAdapterMock extends EmailAdapter {
   ): Promise<void> {
     this.logger.log(
       `Send mock email. Email: ${email}, url: ${url}, subject: ${subject}, template: ${template}`,
+      this.sendEmail.name,
     );
   }
 
@@ -110,6 +134,18 @@ export class EmailAdapterMock extends EmailAdapter {
   ): Promise<void> {
     this.logger.log(
       `Send mock email. Email: ${email}, date: ${date}, subject: ${subject}, template: ${template}`,
+      this.sendSubscriptionNotification.name,
+    );
+  }
+
+  async sendEmailWithHtmlPattern(
+    email: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
+    this.logger.log(
+      `Send mock email. Email: ${email}, subject: ${subject}, html: ${html}`,
+      this.sendEmailWithHtmlPattern.name,
     );
   }
 }

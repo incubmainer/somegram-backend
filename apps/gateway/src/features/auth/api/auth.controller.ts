@@ -19,7 +19,7 @@ import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { RegistrationCommand } from '../application/use-cases/registration.use-case';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../common/guards/jwt/jwt-auth.guard';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
@@ -52,7 +52,7 @@ import {
   LoginWithGithubCodes,
 } from '../application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleCommand } from '../application/use-cases/login-by-google.use-case';
-import { GoogleProfile } from '../strategies/google.strategy';
+import { GoogleProfile } from '../../../common/guards/jwt/google.strategy';
 import { GoogleUser } from './decorators/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
@@ -206,7 +206,7 @@ export class AuthController {
 
   @Get(AUTH_ROUTE.GOOGLE)
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  async googleAuth(): Promise<void> {}
 
   @Get(`${AUTH_ROUTE.GOOGLE}/${AUTH_ROUTE.CALLBACK}`)
   @UseGuards(AuthGuard('google'))
@@ -214,10 +214,9 @@ export class AuthController {
   async googleAuthCallback(
     @GoogleUser() googleProfile: GoogleProfile | null,
     @Res() response: Response,
-    @Req() request: Request,
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
-  ): Promise<any> {
+  ): Promise<void> {
     this.logger.debug(
       'Execute: start google auth callback',
       this.googleAuthCallback.name,

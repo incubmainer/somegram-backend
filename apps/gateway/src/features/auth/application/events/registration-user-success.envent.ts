@@ -1,7 +1,7 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 
 export class RegistrationUserSuccessEvent {
-  constructor() {}
+  constructor(public email: string) {}
 }
 
 @EventsHandler(RegistrationUserSuccessEvent)
