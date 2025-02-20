@@ -21,7 +21,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt/jwt-auth.guard';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { AddPostSwagger } from './swagger/add-post.swagger';
 import { UpdatePostCommand } from '../application/use-cases/update-post.use-case';
 import { UpdatePostSwagger } from './swagger/update-post.swagger';

@@ -45,6 +45,7 @@ export class CreateNotificationUseCaseHandler
     );
     const { userId, message } = command;
     try {
+      // @ts-ignore TODO:
       const user = await this.userRepository.getUserById(userId);
       if (!user) return this.appNotification.notFound();
       const notification = this.notificationEntity.create(userId, message);

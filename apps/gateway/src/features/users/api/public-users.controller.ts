@@ -19,7 +19,7 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { GetPublicProfileInfoQuery } from '../application/use-cases/queryBus/get-public-profile-info.use-case';
+import { GetPublicProfileInfoQuery } from '../application/queryBus/get-public-profile-info.use-case';
 import { LoggerService } from '@app/logger';
 
 @ApiTags('Public-Users')

@@ -7,13 +7,13 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import {
   GetProfileInfoQuery,
   GetProfileInfoUseCase,
 } from './get-profile-info.use-case';
-import { ProfileInfoOutputDto } from '../../../api/dto/output-dto/profile-info-output-dto';
-import { GatewayModule } from '../../../../../gateway.module';
+import { ProfileInfoOutputDto } from '../../api/dto/output-dto/profile-info-output-dto';
+import { GatewayModule } from '../../../../gateway.module';
 import {
   GetPublicProfileInfoQuery,
   GetPublicProfileInfoUseCase,

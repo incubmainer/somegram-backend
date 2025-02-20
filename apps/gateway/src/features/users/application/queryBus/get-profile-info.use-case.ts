@@ -1,27 +1,27 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
+import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { User } from '@prisma/gateway';
-import { PhotoServiceAdapter } from '../../../../../common/adapter/photo-service.adapter';
+import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import {
-  ProfilePublicInfoOutputDtoModel,
-  userPublicProfileInfoMapper,
-} from '../../../api/dto/output-dto/profile-info-output-dto';
+  ProfileInfoOutputDto,
+  userProfileInfoMapper,
+} from '../../api/dto/output-dto/profile-info-output-dto';
 
-export class GetPublicProfileInfoQuery {
+export class GetProfileInfoQuery {
   constructor(public userId: string) {}
 }
 
-@QueryHandler(GetPublicProfileInfoQuery)
-export class GetPublicProfileInfoUseCase
+@QueryHandler(GetProfileInfoQuery)
+export class GetProfileInfoUseCase
   implements
     IQueryHandler<
-      GetPublicProfileInfoQuery,
-      AppNotificationResultType<ProfilePublicInfoOutputDtoModel>
+      GetProfileInfoQuery,
+      AppNotificationResultType<ProfileInfoOutputDto>
     >
 {
   constructor(
@@ -30,11 +30,11 @@ export class GetPublicProfileInfoUseCase
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
   ) {
-    this.logger.setContext(GetPublicProfileInfoUseCase.name);
+    this.logger.setContext(GetProfileInfoUseCase.name);
   }
   async execute(
-    command: GetPublicProfileInfoQuery,
-  ): Promise<AppNotificationResultType<ProfilePublicInfoOutputDtoModel>> {
+    command: GetProfileInfoQuery,
+  ): Promise<AppNotificationResultType<ProfileInfoOutputDto>> {
     try {
       const user: User | null = await this.usersQueryRepository.getProfileInfo(
         command.userId,
@@ -43,9 +43,10 @@ export class GetPublicProfileInfoUseCase
 
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);
 
-      const mapUser: ProfilePublicInfoOutputDtoModel =
-        userPublicProfileInfoMapper(user, avatarUrl);
-
+      const mapUser: ProfileInfoOutputDto = userProfileInfoMapper(
+        user,
+        avatarUrl,
+      );
       return this.appNotification.success(mapUser);
     } catch (e) {
       this.logger.error(e, this.execute.name);

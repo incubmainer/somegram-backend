@@ -17,6 +17,7 @@ import {
   UserGoogleInfoCreatedDto,
 } from '../domain/types';
 import { UserGoogleAccount } from '../domain/user-google-account.entity';
+import { UserConfirmationEntity } from '../../auth/domain/user-confirmation.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -48,22 +49,6 @@ export class UsersRepository {
     const user = await this.txHost.tx.user.findFirst({
       where: {
         username,
-      },
-    });
-    return user ? new UserEntity(user) : null;
-  }
-
-  public async getUserByEmailOrUserName(
-    email: string,
-    userName: string,
-  ): Promise<UserEntity | null> {
-    this.logger.debug(
-      `Execute: get user by email or username`,
-      this.getUserByEmail.name,
-    );
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        OR: [{ email: email }, { username: userName }],
       },
     });
     return user ? new UserEntity(user) : null;
@@ -188,123 +173,11 @@ export class UsersRepository {
     return user ? new UserEntity(user) : null;
   }
 
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  async getUserById(id: string): Promise<User | null> {
-    this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
-    const user = await this.txHost.tx.user.findUnique({
-      where: { id },
-    });
-    return user ? user : null;
-  }
-
-  async getUsersById(id: string[]): Promise<User[] | null> {
-    const users = await this.txHost.tx.user.findMany({
-      where: { id: { in: id } },
-    });
-    return users && users.length > 0 ? users : null;
-  }
-
-  public async getUserWithGithubInfo(
-    email: string,
-  ): Promise<(User & { userGithubInfo: UserGithubInfo | null }) | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        email: email,
-      },
-      include: { userGithubInfo: true },
-    });
-    return user;
-  }
-
-  public async generateUniqueUsername(): Promise<string> {
-    const result = await this.txHost.tx
-      .$queryRaw`SELECT set_sequential_username() AS username`;
-    return result[0].username;
-  }
-  public async addGoogleInfoToUserAndConfirm(
-    userId: User['id'],
-    googleInfo: {
-      sub: string;
-      name: string;
-      email: string;
-      email_verified: boolean;
-    },
-  ) {
-    await this.txHost.tx.userGoogleInfo.create({
-      data: {
-        userId,
-        sub: googleInfo.sub,
-        email: googleInfo.email,
-        emailVerified: googleInfo.email_verified,
-      },
-    });
-    await this.txHost.tx.user.update({
-      where: { id: userId },
-      data: { isConfirmed: true },
-    });
-  }
-
-  // public async getUserByUsername(username: string): Promise<User | null> {
-  //   const user = await this.txHost.tx.user.findFirst({
-  //     where: {
-  //       username,
-  //     },
-  //   });
-  //   return user;
-  // }
-  public async deleteUserById(id: User['id']): Promise<void> {
-    await this.txHost.tx.user.delete({
-      where: {
-        id: id,
-      },
-    });
-  }
-  // public async createNotConfirmedUser(dto: {
-  //   username: User['username'];
-  //   email: User['email'];
-  //   hashPassword: User['hashPassword'];
-  //   createdAt: Date;
-  //   confirmationToken: UserConfirmationToken['token'];
-  //   confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
-  // }) {
-  //   await this.txHost.tx.user.create({
-  //     data: {
-  //       username: dto.username,
-  //       email: dto.email,
-  //       hashPassword: dto.hashPassword,
-  //       createdAt: dto.createdAt,
-  //       isConfirmed: false,
-  //       confirmationToken: {
-  //         create: {
-  //           token: dto.confirmationToken,
-  //           createdAt: dto.createdAt,
-  //           expiredAt: dto.confirmationTokenExpiresAt,
-  //         },
-  //       },
-  //     },
-  //   });
-  // }
-
-  public async updateUserConfirmationInfo(dto: {
-    userId: User['id'];
-    createdAt: Date;
-    confirmationToken: UserConfirmationToken['token'];
-    confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
-  }) {
-    await this.txHost.tx.userConfirmationToken.update({
-      where: { userId: dto.userId },
-      data: {
-        token: dto.confirmationToken,
-        createdAt: dto.createdAt,
-        expiredAt: dto.confirmationTokenExpiresAt,
-      },
-    });
-  }
-  public async findUserByToken(token: string) {
-    const user = await this.txHost.tx.user.findFirst({
+  public async getUserByToken(token: string): Promise<{
+    user: UserEntity;
+    confirmation: UserConfirmationEntity | null;
+  } | null> {
+    const result = await this.txHost.tx.user.findFirst({
       where: {
         confirmationToken: {
           token,
@@ -314,162 +187,267 @@ export class UsersRepository {
         confirmationToken: true,
       },
     });
-    return user;
+
+    if (!result) return null;
+
+    const user = new UserEntity(result);
+    let confirmation: UserConfirmationEntity | null = null;
+    if (result.confirmationToken)
+      confirmation = new UserConfirmationEntity(result.confirmationToken);
+
+    return { user, confirmation };
   }
 
-  public deleteConfirmationToken(token: string) {
-    return this.txHost.tx.userConfirmationToken.deleteMany({
-      where: {
-        token,
-      },
-    });
-  }
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
+  //////////////////////////////////
 
-  public async updateRestorePasswordCode(dto: {
-    userId: User['id'];
-    restorePasswordCode: UserResetPasswordCode['code'];
-    restorePasswordCodeCreatedAt: UserResetPasswordCode['createdAt'];
-    restorePasswordCodeExpiresAt: UserResetPasswordCode['expiredAt'];
-  }) {
-    await this.txHost.tx.userResetPasswordCode.deleteMany({
-      where: {
-        userId: dto.userId,
-      },
-    });
-    return this.txHost.tx.user.update({
-      where: {
-        id: dto.userId,
-      },
-      data: {
-        resetPasswordCode: {
-          create: {
-            code: dto.restorePasswordCode,
-            createdAt: dto.restorePasswordCodeCreatedAt,
-            expiredAt: dto.restorePasswordCodeExpiresAt,
-          },
-        },
-      },
-    });
-  }
-  public async getUserByRestorePasswordCode(code: string) {
-    const user = await this.txHost.tx.user.findFirst({
-      where: {
-        resetPasswordCode: {
-          code,
-        },
-      },
-      include: {
-        resetPasswordCode: true,
-      },
-    });
-    return user;
-  }
-  public async deleteRestorePasswordCode(userId: User['id']) {
-    return this.txHost.tx.userResetPasswordCode.deleteMany({
-      where: {
-        userId,
-      },
-    });
-  }
-  public async updateUserPassword(userId: User['id'], hashPassword: string) {
-    return this.txHost.tx.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        hashPassword,
-      },
-    });
-  }
+  // async getUserById(id: string): Promise<User | null> {
+  //   this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
+  //   const user = await this.txHost.tx.user.findUnique({
+  //     where: { id },
+  //   });
+  //   return user ? user : null;
+  // }
+  //
+  // async getUsersById(id: string[]): Promise<User[] | null> {
+  //   const users = await this.txHost.tx.user.findMany({
+  //     where: { id: { in: id } },
+  //   });
+  //   return users && users.length > 0 ? users : null;
+  // }
+  //
+  // public async getUserWithGithubInfo(
+  //   email: string,
+  // ): Promise<(User & { userGithubInfo: UserGithubInfo | null }) | null> {
+  //   const user = await this.txHost.tx.user.findFirst({
+  //     where: {
+  //       email: email,
+  //     },
+  //     include: { userGithubInfo: true },
+  //   });
+  //   return user;
+  // }
+  //
+  // public async generateUniqueUsername(): Promise<string> {
+  //   const result = await this.txHost.tx
+  //     .$queryRaw`SELECT set_sequential_username() AS username`;
+  //   return result[0].username;
+  // }
+  // public async addGoogleInfoToUserAndConfirm(
+  //   userId: User['id'],
+  //   googleInfo: {
+  //     sub: string;
+  //     name: string;
+  //     email: string;
+  //     email_verified: boolean;
+  //   },
+  // ) {
+  //   await this.txHost.tx.userGoogleInfo.create({
+  //     data: {
+  //       userId,
+  //       sub: googleInfo.sub,
+  //       email: googleInfo.email,
+  //       emailVerified: googleInfo.email_verified,
+  //     },
+  //   });
+  //   await this.txHost.tx.user.update({
+  //     where: { id: userId },
+  //     data: { isConfirmed: true },
+  //   });
+  // }
+  //
+  // public async updateUserConfirmationInfo(dto: {
+  //   userId: User['id'];
+  //   createdAt: Date;
+  //   confirmationToken: UserConfirmationToken['token'];
+  //   confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
+  // }) {
+  //   await this.txHost.tx.userConfirmationToken.update({
+  //     where: { userId: dto.userId },
+  //     data: {
+  //       token: dto.confirmationToken,
+  //       createdAt: dto.createdAt,
+  //       expiredAt: dto.confirmationTokenExpiresAt,
+  //     },
+  //   });
+  // }
 
-  public async createConfirmedUserWithGithub(
-    user: UserFromGithub,
-    { username, email, createdAt },
-  ) {
-    const createdUser = await this.txHost.tx.user.create({
-      data: {
-        username: username,
-        email: email,
-        createdAt: createdAt,
-        isConfirmed: true,
-        userGithubInfo: {
-          create: {
-            githubId: user.githubId,
-            userName: user.username,
-            displayName: user.displayName,
-            email: user.email,
-          },
-        },
-      },
-    });
-    return createdUser;
-  }
-  public async addGithubInfo(
-    user: UserFromGithub,
-    userId: string,
-  ): Promise<UserGithubInfo> {
-    return await this.txHost.tx.userGithubInfo.create({
-      data: {
-        userId: userId,
-        githubId: user.githubId,
-        userName: user.username,
-        displayName: user.displayName,
-        email: user.email,
-      },
-    });
-  }
-  public async changeGithubEmail(id: string, user: UserFromGithub) {
-    return await this.txHost.tx.userGithubInfo.update({
-      where: { userId: id, githubId: user.githubId },
-      data: { email: user.email },
-    });
-  }
-
-  async updateUserProfileInfo(
-    userId: User['id'],
-    dto: {
-      username: User['username'];
-      firstName: User['firstName'];
-      lastName: User['lastName'];
-      dateOfBirth: User['dateOfBirth'];
-      about: User['about'];
-      updatedAt: User['updatedAt'];
-      city: User['city'];
-      country: User['country'];
-      subscriptionExpireAt: User['subscriptionExpireAt'];
-      accountType: User['accountType'];
-    },
-  ): Promise<User> {
-    return await this.txHost.tx.user.update({
-      where: { id: userId },
-      data: {
-        username: dto.username,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        dateOfBirth: dto.dateOfBirth,
-        about: dto.about,
-        updatedAt: dto.updatedAt,
-        city: dto.city,
-        country: dto.country,
-        subscriptionExpireAt: dto.subscriptionExpireAt,
-        accountType: dto.accountType,
-      },
-    });
-  }
-
-  async updateManyUsers(users: User[]): Promise<void> {
-    await this.txHost.withTransaction(
-      { timeout: this.TRANSACTION_TIMEOUT },
-      async (): Promise<void> => {
-        const promises = users.map((user: User) => {
-          return this.txHost.tx.user.update({
-            where: { id: user.id },
-            data: user,
-          });
-        });
-
-        await Promise.all(promises);
-      },
-    );
-  }
+  //
+  // public deleteConfirmationToken(token: string) {
+  //   return this.txHost.tx.userConfirmationToken.deleteMany({
+  //     where: {
+  //       token,
+  //     },
+  //   });
+  // }
+  //
+  // public async updateRestorePasswordCode(dto: {
+  //   userId: User['id'];
+  //   restorePasswordCode: UserResetPasswordCode['code'];
+  //   restorePasswordCodeCreatedAt: UserResetPasswordCode['createdAt'];
+  //   restorePasswordCodeExpiresAt: UserResetPasswordCode['expiredAt'];
+  // }) {
+  //   await this.txHost.tx.userResetPasswordCode.deleteMany({
+  //     where: {
+  //       userId: dto.userId,
+  //     },
+  //   });
+  //   return this.txHost.tx.user.update({
+  //     where: {
+  //       id: dto.userId,
+  //     },
+  //     data: {
+  //       resetPasswordCode: {
+  //         create: {
+  //           code: dto.restorePasswordCode,
+  //           createdAt: dto.restorePasswordCodeCreatedAt,
+  //           expiredAt: dto.restorePasswordCodeExpiresAt,
+  //         },
+  //       },
+  //     },
+  //   });
+  // }
+  // public async getUserByRestorePasswordCode(code: string) {
+  //   const user = await this.txHost.tx.user.findFirst({
+  //     where: {
+  //       resetPasswordCode: {
+  //         code,
+  //       },
+  //     },
+  //     include: {
+  //       resetPasswordCode: true,
+  //     },
+  //   });
+  //   return user;
+  // }
+  // public async deleteRestorePasswordCode(userId: User['id']) {
+  //   return this.txHost.tx.userResetPasswordCode.deleteMany({
+  //     where: {
+  //       userId,
+  //     },
+  //   });
+  // }
+  // public async updateUserPassword(userId: User['id'], hashPassword: string) {
+  //   return this.txHost.tx.user.update({
+  //     where: {
+  //       id: userId,
+  //     },
+  //     data: {
+  //       hashPassword,
+  //     },
+  //   });
+  // }
+  //
+  // public async createConfirmedUserWithGithub(
+  //   user: UserFromGithub,
+  //   { username, email, createdAt },
+  // ) {
+  //   const createdUser = await this.txHost.tx.user.create({
+  //     data: {
+  //       username: username,
+  //       email: email,
+  //       createdAt: createdAt,
+  //       isConfirmed: true,
+  //       userGithubInfo: {
+  //         create: {
+  //           githubId: user.githubId,
+  //           userName: user.username,
+  //           displayName: user.displayName,
+  //           email: user.email,
+  //         },
+  //       },
+  //     },
+  //   });
+  //   return createdUser;
+  // }
+  // public async addGithubInfo(
+  //   user: UserFromGithub,
+  //   userId: string,
+  // ): Promise<UserGithubInfo> {
+  //   return await this.txHost.tx.userGithubInfo.create({
+  //     data: {
+  //       userId: userId,
+  //       githubId: user.githubId,
+  //       userName: user.username,
+  //       displayName: user.displayName,
+  //       email: user.email,
+  //     },
+  //   });
+  // }
+  // public async changeGithubEmail(id: string, user: UserFromGithub) {
+  //   return await this.txHost.tx.userGithubInfo.update({
+  //     where: { userId: id, githubId: user.githubId },
+  //     data: { email: user.email },
+  //   });
+  // }
+  //
+  // async updateUserProfileInfo(
+  //   userId: User['id'],
+  //   dto: {
+  //     username: User['username'];
+  //     firstName: User['firstName'];
+  //     lastName: User['lastName'];
+  //     dateOfBirth: User['dateOfBirth'];
+  //     about: User['about'];
+  //     updatedAt: User['updatedAt'];
+  //     city: User['city'];
+  //     country: User['country'];
+  //     subscriptionExpireAt: User['subscriptionExpireAt'];
+  //     accountType: User['accountType'];
+  //   },
+  // ): Promise<User> {
+  //   return await this.txHost.tx.user.update({
+  //     where: { id: userId },
+  //     data: {
+  //       username: dto.username,
+  //       firstName: dto.firstName,
+  //       lastName: dto.lastName,
+  //       dateOfBirth: dto.dateOfBirth,
+  //       about: dto.about,
+  //       updatedAt: dto.updatedAt,
+  //       city: dto.city,
+  //       country: dto.country,
+  //       subscriptionExpireAt: dto.subscriptionExpireAt,
+  //       accountType: dto.accountType,
+  //     },
+  //   });
+  // }
+  //
+  // async updateManyUsers(users: User[]): Promise<void> {
+  //   await this.txHost.withTransaction(
+  //     { timeout: this.TRANSACTION_TIMEOUT },
+  //     async (): Promise<void> => {
+  //       const promises = users.map((user: User) => {
+  //         return this.txHost.tx.user.update({
+  //           where: { id: user.id },
+  //           data: user,
+  //         });
+  //       });
+  //
+  //       await Promise.all(promises);
+  //     },
+  //   );
+  // }
 }

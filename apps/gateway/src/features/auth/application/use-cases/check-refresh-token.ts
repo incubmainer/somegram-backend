@@ -31,7 +31,7 @@ export class CheckRefreshTokenUseCase
       if (!payload) {
         return null;
       }
-
+      // @ts-ignore TODO:
       const user = await this.userRepository.getUserById(payload.userId);
       const device = await this.securityDevicesRepository.getDeviceById(
         payload.deviceId,

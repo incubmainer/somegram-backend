@@ -1,10 +1,15 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthService } from '../auth.service';
-
 import { LoginDto } from '../../api/dto/input-dto/login-user-with-device.dto';
-import { CreateTokensCommand } from './create-token.use-case';
-import { AddUserDeviceCommand } from './add-user-device.use-case';
-import { UnauthorizedException } from '@nestjs/common';
+import { SecurityDeviceCreateDto } from '../../../security-devices/domain/types';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { TokensPairType } from '../../domain/types';
 
 export class LoginUserCommand {
   constructor(
@@ -15,31 +20,64 @@ export class LoginUserCommand {
 }
 
 @CommandHandler(LoginUserCommand)
-export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
+export class LoginUserUseCase
+  implements
+    ICommandHandler<
+      LoginUserCommand,
+      AppNotificationResultType<TokensPairType, null>
+    >
+{
   constructor(
     private readonly authService: AuthService,
-    private readonly commandBus: CommandBus,
-  ) {}
+    private readonly userRepository: UsersRepository,
+    private readonly appNotification: ApplicationNotification,
+    private readonly logger: LoggerService,
+    private readonly securityDevicesRepository: SecurityDevicesRepository,
+  ) {
+    this.logger.setContext(LoginUserUseCase.name);
+  }
   async execute(
     command: LoginUserCommand,
-  ): Promise<{ refreshToken: string; accessToken: string } | null> {
-    const { loginDto, ip, userAgent } = command;
-    // @ts-ignore TODO:
-    const userId = await this.authService.validateUser(
-      loginDto.email.toLowerCase(),
-      loginDto.password,
-    );
-    if (!userId) {
-      throw new UnauthorizedException();
+  ): Promise<AppNotificationResultType<TokensPairType, null>> {
+    this.logger.debug('Execute: login command', this.execute.name);
+    const { password, email } = command.loginDto;
+    const { ip, userAgent } = command;
+    try {
+      const user = await this.userRepository.getUserByEmail(email);
+
+      if (!user) return this.appNotification.unauthorized();
+      if (!user.isConfirmed) return this.appNotification.unauthorized();
+
+      const verifyPassword = await this.authService.comparePass(
+        password,
+        user.hashPassword,
+      );
+      if (!verifyPassword) return this.appNotification.unauthorized();
+
+      const userId = user.id;
+      const deviceId = this.authService.generateDeviceId(userId);
+      const accessToken = await this.authService.generateAccessToken(userId);
+      const refreshToken = await this.authService.generateRefreshToken(
+        userId,
+        deviceId,
+      );
+
+      const { iat } = await this.authService.verifyRefreshToken(refreshToken);
+
+      const sessionCreatedDto: SecurityDeviceCreateDto = {
+        iat: new Date(iat * 1000),
+        deviceId: deviceId,
+        userId: userId,
+        userAgent: userAgent,
+        ip: ip,
+      };
+
+      await this.securityDevicesRepository.createSession(sessionCreatedDto);
+
+      return this.appNotification.success({ accessToken, refreshToken });
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    const tokens = await this.commandBus.execute(
-      new CreateTokensCommand(userId),
-    );
-
-    await this.commandBus.execute(
-      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
-    );
-
-    return tokens;
   }
 }

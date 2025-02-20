@@ -17,6 +17,7 @@ import { DateFormatter } from './utils/date-formatter.util';
 import { JwtStrategy } from './guards/jwt/jwt.strategy';
 import { GithubStrategy } from './guards/jwt/github.strategy';
 import { GoogleStrategy } from './guards/jwt/google.strategy';
+import { JwtService } from '@nestjs/jwt';
 
 const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
 
@@ -44,6 +45,7 @@ const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
     WsJwtStrategy,
     EmailSender,
     DateFormatter,
+    JwtService,
   ],
   exports: [
     PrismaService,
@@ -58,6 +60,7 @@ const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
     EmailSender,
     WsJwtStrategy,
     DateFormatter,
+    JwtService,
   ],
 })
 export class CommonModule {}

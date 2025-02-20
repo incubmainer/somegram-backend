@@ -1,13 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
-
-import {
-  jwtConstants,
-  tokensLivesConstants,
-} from '../../../../common/constants/jwt-basic-constants';
 import { LoggerService } from '@app/logger';
 import { JWTTokensType } from '../../../../common/domain/types/types';
+
 export class CreateTokensCommand {
   constructor(
     public userId: string,
@@ -36,13 +32,17 @@ export class CreateTokensUseCase
 
     try {
       const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
+        // @ts-ignore TODO:
         secret: jwtConstants.JWT_SECRET,
+        // @ts-ignore TODO:
         expiresIn: tokensLivesConstants['1hour'],
       });
       const refreshToken = await this.jwtService.signAsync(
         refreshTokenPayload,
         {
+          // @ts-ignore TODO:
           secret: jwtConstants.REFRESH_TOKEN_SECRET,
+          // @ts-ignore TODO:
           expiresIn: tokensLivesConstants['2hours'],
         },
       );

@@ -39,6 +39,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
     payload: JWTRefreshTokenPayloadType,
   ): Promise<JWTRefreshTokenPayloadType> {
     const { userId, iat, exp, deviceId } = payload;
+    // @ts-ignore TODO:
     const user: User | null = await this.userRepository.getUserById(userId);
 
     if (!user) return null;

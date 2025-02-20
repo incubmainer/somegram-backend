@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './api/auth.controller';
 import { RegistrationUseCase } from './application/use-cases/registration.use-case';
 import { UsersRepository } from '../users/infrastructure/users.repository';
-// import { CryptoService } from '../../common/utils/crypto.service';
 import { EmailAuthService } from './infrastructure/email-auth.service';
 import { AuthService } from './application/auth.service';
 import { LoginUserUseCase } from './application/use-cases/login-use-case';
@@ -30,12 +29,7 @@ import { RegistrationUserSuccessEventHandler } from './application/events/regist
 import { RegisteredUserEventHandler } from './application/events/registred-user.envent';
 import { NotificationModule } from '../notification/notification.module';
 
-const services = [
-  AuthService,
-  JwtService,
-  //CryptoService,
-  EmailAuthService,
-];
+const services = [AuthService, JwtService, EmailAuthService];
 const useCases = [
   LoginUserUseCase,
   LogoutUseCase,
@@ -75,7 +69,7 @@ const repositories = [
     {
       provide: RecapchaService,
       useClass:
-        process.env.NODE_ENV === 'production'
+        process.env.NODE_ENV === 'production' // TODO:
           ? RecapchaService
           : MockRecapchaService,
     },

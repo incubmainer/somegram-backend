@@ -69,12 +69,12 @@ export class SecurityDevicesRepository {
     }
   }
 
-  public async deleteDevice(deviceId: string) {
+  public async deleteDevice(deviceId: string): Promise<void> {
     this.logger.debug(
-      `Execute: delete device by deviceId ${deviceId}`,
+      `Execute: delete device by deviceId: ${deviceId}`,
       this.deleteDevice.name,
     );
-    return await this.txHost.tx.securityDevices.delete({
+    await this.txHost.tx.securityDevices.delete({
       where: { deviceId: deviceId },
     });
   }

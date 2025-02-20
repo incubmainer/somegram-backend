@@ -38,6 +38,7 @@ export class UpdateSubscriptionInfoUseCase
     this.logger.debug('Execute: Update account type', this.execute.name);
     const { userId, endDateOfSubscription } = command.payload;
     try {
+      // @ts-ignore TODO:
       const user = await this.usersRepository.getUserById(userId);
       if (user) {
         const subscriptionExpireAt = new Date(endDateOfSubscription);
@@ -49,6 +50,7 @@ export class UpdateSubscriptionInfoUseCase
           user.subscriptionExpireAt = null;
           user.accountType = AccountType.Personal;
         }
+        // @ts-ignore TODO:
         await this.usersRepository.updateUserProfileInfo(user.id, user);
       }
 

@@ -22,7 +22,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt/jwt-auth.guard';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { CreatePaymentCommand } from '../application/use-cases/create-payments.use-case';
 import { CreateSubscriptionDto } from './dto/input-dto/subscriptions.dto';
 import { PaymentsServiceAdapter } from '../../../common/adapter/payment-service.adapter';

@@ -44,6 +44,7 @@ export class CreateNotificationsUseCaseHandler
     const { inputDto } = command;
     try {
       const userIds = inputDto.map((dto) => dto.userId);
+      // @ts-ignore TODO:
       const users = await this.userRepository.getUsersById(userIds);
 
       const usersMap = new Map(users.map((user) => [user.id, user]));

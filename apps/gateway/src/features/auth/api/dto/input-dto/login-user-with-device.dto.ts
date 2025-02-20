@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUserEmail } from '../../../application/decorators/is-user-email';
-import { IsUserPassword } from '../../../application/decorators/is-user-password';
+import { IsUserEmail } from '../../../../../common/decorators/validation/is-user-email';
+import { IsUserPassword } from '../../../../../common/decorators/validation/is-user-password';
 
 export class LoginDto {
   @ApiProperty({

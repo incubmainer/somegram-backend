@@ -1,19 +1,22 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiCookieAuth,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 export function LogOutSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({
       summary:
-        'In cookie client must send correct refreshToken that will be revoked',
+        'Logout current user. In cookie client must send correct refreshToken that will be revoked',
     }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
-      description: 'No content',
+    ApiCookieAuth(),
+    ApiNoContentResponse({
+      description: 'Success',
     }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
+    ApiUnauthorizedResponse({
       description: 'Token expired, user or user device not found',
     }),
   );

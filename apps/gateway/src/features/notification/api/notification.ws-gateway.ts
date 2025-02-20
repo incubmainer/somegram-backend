@@ -22,7 +22,6 @@ import { ConfigurationType } from '../../../settings/configuration/configuration
 import { ConfigService } from '@nestjs/config';
 import { EnvSettings } from '../../../settings/env/env.settings';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
 import { JWTAccessTokenPayloadType } from '../../../common/domain/types/types';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import {
@@ -90,15 +89,15 @@ export class NotificationWsGateway
     }
 
     try {
-      // TODO Secret из ENVSettings полсе окончания рефакторинга auth можно будет изменить
       const result: JWTAccessTokenPayloadType = this.jwtService.verify(
         splitToken[1],
         {
-          secret: jwtConstants.JWT_SECRET,
+          secret: this.envSettings.JWT_SECRET,
         },
       );
       userId = result.userId;
 
+      // @ts-ignore TODO:
       const user = await this.usersRepository.getUserById(userId);
       if (!user) {
         this.forceDisconnect(client, unauthorizedPayload);

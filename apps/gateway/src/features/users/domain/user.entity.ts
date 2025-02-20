@@ -54,7 +54,4 @@ export class UserEntity extends AggregateRoot implements User {
   registrationSuccessEvent(): void {
     this.apply(new RegistrationUserSuccessEvent(this.email));
   }
-
-  addGoogleAccountToUser() {}
-  mergeUserWithGoogleAccount(googleUser: UserEntity) {}
 }

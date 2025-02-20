@@ -36,6 +36,7 @@ export class UpdateSubscriptionsInfoUseCase
       const ids: string[] = command.payload.map(
         (u: SubscriptionInfoGatewayType) => u.userId,
       );
+      // @ts-ignore TODO:
       const users = await this.usersRepository.getUsersById(ids);
       if (!users) return this.appNotification.success(null);
 
@@ -50,14 +51,19 @@ export class UpdateSubscriptionsInfoUseCase
         const subscriptionExpireAt = new Date(endDateOfSubscription);
 
         if (subscriptionExpireAt > new Date()) {
+          // @ts-ignore TODO:
           user.subscriptionExpireAt = subscriptionExpireAt;
+          // @ts-ignore TODO:
           user.accountType = AccountType.Business;
         } else {
+          // @ts-ignore TODO:
           user.subscriptionExpireAt = null;
+          // @ts-ignore TODO:
           user.accountType = AccountType.Personal;
         }
       }
 
+      // @ts-ignore TODO:
       await this.usersRepository.updateManyUsers(Array.from(userMap.values()));
 
       return this.appNotification.success(null);

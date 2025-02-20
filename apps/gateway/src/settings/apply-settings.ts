@@ -68,6 +68,11 @@ const enableSwagger = (
   const globalPrefix: string = envSettings.GLOBAL_PREFIX;
   const config: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
     .setTitle('api')
+    .addCookieAuth('refreshToken', {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    })
     .addBearerAuth(
       {
         type: 'http',

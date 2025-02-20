@@ -27,7 +27,7 @@ import { NotificationOutputDto } from './dto/output-dto/notification.output.dto'
 import { CreateNotificationsUseCases } from '../application/use-cases/create-notifications.use-cases';
 import { GetNotificationsByUserIdQueryCommand } from '../application/query/get-notifications.query.command';
 import { NOTIFICATION_ROUTE } from '../../../common/constants/route.constants';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,

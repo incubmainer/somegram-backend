@@ -40,12 +40,12 @@ import {
 } from '../application/use-cases/restore-password-confirmation.use-case';
 import { RestorePasswordConfirmationBodyInputDto } from './dto/input-dto/restore-password-confirmation.body.input-dto';
 import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-confirmation.swagger';
-import { CurrentUserId } from './decorators/current-user-id-param.decorator';
-import { IpAddress } from './decorators/ip-address.decorator';
-import { UserAgent } from './decorators/user-agent.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
+import { IpAddress } from '../../../common/decorators/http-parse/ip-address.decorator';
+import { UserAgent } from '../../../common/decorators/http-parse/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
-import { RefreshToken } from './decorators/refresh-token.decorator';
+import { RefreshToken } from '../../../common/decorators/http-parse/refresh-token.decorator';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
 import {
   AuthWithGithubCommand,
@@ -53,7 +53,7 @@ import {
 } from '../application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleCommand } from '../application/use-cases/login-by-google.use-case';
 import { GoogleProfile } from '../../../common/guards/jwt/google.strategy';
-import { GoogleUser } from './decorators/google-user.decorator';
+import { GoogleUser } from '../../../common/decorators/http-parse/google-user.decorator';
 import { GoogleAuthCallbackSwagger } from './swagger/google-auth-callback.swagger';
 import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagger';
 import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
@@ -77,12 +77,20 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { JWTTokensType } from '../../../common/domain/types/types';
+import {
+  JWTRefreshTokenPayloadType,
+  JWTTokensType,
+} from '../../../common/domain/types/types';
+import { TokensPairType } from '../domain/types';
+import { LoginOutputDto } from './dto/output-dto/login-outptu.dto';
+import { CurrentUser } from '../../../common/decorators/http-parse/current-user.decorator';
+import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
 export class AuthController {
   private readonly frontendProvider: string;
+
   constructor(
     private readonly commandBus: CommandBus,
     private readonly configService: ConfigService<ConfigurationType, true>,
@@ -352,38 +360,64 @@ export class AuthController {
     }
   }
 
-  @Post('login')
+  // TODO: DONE
+  @Post(AUTH_ROUTE.LOGIN)
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
-  @ApiBody({ type: LoginDto })
   async login(
     @Body() loginDto: LoginDto,
     @IpAddress() ip: string,
     @UserAgent() userAgent: string,
-    @Res() response: Response,
-  ) {
-    this.logger.debug('start login', this.login.name);
-    const tokens = await this.commandBus.execute(
-      new LoginUserCommand(loginDto, userAgent, ip),
-    );
-    this.logger.debug('login success', this.login.name);
-    response
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .send({ accessToken: tokens.accessToken });
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginOutputDto> {
+    this.logger.debug('Execute: start login', this.login.name);
+    const result: AppNotificationResultType<TokensPairType, null> =
+      await this.commandBus.execute(
+        new LoginUserCommand(loginDto, userAgent, ip),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.login.name);
+        const { accessToken, refreshToken } = result.data;
+        response.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+        });
+
+        return { accessToken };
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.login.name);
+        throw new UnauthorizedException();
+
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
-  @Post('logout')
+  // TODO: DONE
+  @Post(AUTH_ROUTE.LOGOUT)
+  @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogOutSwagger()
-  async logout(@RefreshToken() refreshToken: string): Promise<boolean> {
-    this.logger.debug('start logout', this.logout.name);
-    await this.commandBus.execute(new LogoutCommand(refreshToken));
-    this.logger.debug('logout success', this.logout.name);
-    return;
+  async logout(
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<boolean> {
+    this.logger.debug('Execute: start logout', this.logout.name);
+
+    const result: AppNotificationResultType<null, null> =
+      await this.commandBus.execute(new LogoutCommand(user));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.logout.name);
+        response.clearCookie('refreshToken');
+        return;
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Post('refresh-token')

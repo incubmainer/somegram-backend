@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from '../../common/guards/jwt/jwt.strategy';
-import { jwtConstants } from '../../common/constants/jwt-basic-constants';
 import { UsersController } from './api/users.controller';
 import { AuthService } from '../auth/application/auth.service';
 import { UsersRepository } from './infrastructure/users.repository';
@@ -11,8 +10,8 @@ import { FillingUserProfileUseCase } from './application/use-cases/filling-user-
 import { UsersQueryRepository } from './infrastructure/users.query-repository';
 import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-case';
 import { PublicUsersController } from './api/public-users.controller';
-import { GetProfileInfoUseCase } from './application/use-cases/queryBus/get-profile-info.use-case';
-import { GetPublicProfileInfoUseCase } from './application/use-cases/queryBus/get-public-profile-info.use-case';
+import { GetProfileInfoUseCase } from './application/queryBus/get-profile-info.use-case';
+import { GetPublicProfileInfoUseCase } from './application/queryBus/get-public-profile-info.use-case';
 
 const useCases = [
   UploadAvatarUseCase,
@@ -28,11 +27,11 @@ const services = [AuthService];
 
 @Module({
   imports: [
-    CqrsModule,
-    JwtModule.register({
-      global: false,
-      secret: jwtConstants.JWT_SECRET,
-    }),
+    //CqrsModule,
+    // JwtModule.register({
+    //   global: false,
+    //   secret: jwtConstants.JWT_SECRET,
+    // }),
   ],
   controllers: [UsersController, PublicUsersController],
   providers: [JwtStrategy, ...services, ...useCases, ...repositories],

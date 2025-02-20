@@ -1,11 +1,5 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  PrismaClient as GatewayPrismaClient,
-  User,
-  UserConfirmationToken,
-} from '@prisma/gateway';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import {
   ApplicationNotification,
@@ -27,9 +21,6 @@ export class RegistrationConfirmationUseCase
 {
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
   ) {
@@ -45,20 +36,19 @@ export class RegistrationConfirmationUseCase
     );
     const { token } = command;
     try {
-      return await this.txHost.withTransaction(async () => {
-        const currentDate: Date = new Date();
-        const user: User & { confirmationToken: UserConfirmationToken } =
-          await this.userRepository.findUserByToken(token);
-        if (!user) return this.appNotification.notFound();
+      const currentDate: Date = new Date();
+      const { user, confirmation } =
+        await this.userRepository.getUserByToken(token);
 
-        if (user.confirmationToken.expiredAt < currentDate)
-          return this.appNotification.badRequest('Token is expired');
+      if (!user || !confirmation) return this.appNotification.notFound();
+      if (confirmation.expiredAt < currentDate)
+        return this.appNotification.badRequest('Token is expired');
 
-        await this.userRepository.deleteConfirmationToken(token);
-        await this.userRepository.confirmUser(user.id);
+      await this.userRepository.confirmUser(user.id);
+      //TODO: Нужно вообще удалять сущность подтвреждения ?
+      // await this.userRepository.deleteConfirmationToken(token);
 
-        return this.appNotification.success(null);
-      });
+      return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

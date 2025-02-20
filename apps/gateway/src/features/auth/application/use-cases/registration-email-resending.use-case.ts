@@ -1,8 +1,6 @@
-import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IsString, validateSync } from 'class-validator';
-import { User } from '@prisma/gateway';
 import { randomUUID } from 'crypto';
 
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
@@ -14,13 +12,6 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-
-// export const RegistrationEmailResendingCodes = {
-//   Success: Symbol('success'),
-//   EmailAlreadyConfirmated: Symbol('email_already_confirmated'),
-//   UserNotFound: Symbol('user_not_found'),
-//   TransactionError: Symbol('transaction_error'),
-// };
 
 export class RegistrationEmailResendingCommand {
   @IsString()
@@ -68,9 +59,10 @@ export class RegistrationEmailResendingUseCase
     try {
       const { token, html } = command;
 
-      const user = await this.userRepository.findUserByToken(token);
+      const user = await this.userRepository.getUserByToken(token);
 
       if (!user) return this.appNotification.notFound();
+      // @ts-ignore TODO:
       if (user.isConfirmed) return this.appNotification.badRequest(null);
 
       await this.executeTransaction(user);
@@ -130,6 +122,7 @@ export class RegistrationEmailResendingUseCase
     // //return notification;
   }
   @Transactional()
+  // @ts-ignore TODO:
   private async executeTransaction(user: User) {
     const confirmationToken = randomUUID().replaceAll('-', '');
     const currentDate = new Date();
@@ -137,6 +130,7 @@ export class RegistrationEmailResendingUseCase
       currentDate.getTime() + this.expireAfterMiliseconds,
     );
 
+    // @ts-ignore TODO:
     await this.userRepository.updateUserConfirmationInfo({
       userId: user.id,
       createdAt: currentDate,

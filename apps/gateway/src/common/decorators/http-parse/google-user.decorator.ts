@@ -1,5 +1,5 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
-import { GoogleProfile } from '../../../../common/guards/jwt/google.strategy';
+import { GoogleProfile } from '../../guards/jwt/google.strategy';
 
 export const GoogleUser = createParamDecorator(
   (data: unknown, context: ExecutionContext): GoogleProfile | null => {

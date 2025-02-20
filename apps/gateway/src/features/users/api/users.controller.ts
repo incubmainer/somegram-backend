@@ -22,7 +22,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UploadAvatarSwagger } from './swagger/upload-avatar.swagger';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FillProfileInputDto } from './dto/input-dto/fill-profile.input-dto';
 import { FillingUserProfileCommand } from '../application/use-cases/filling-user-profile.use-case';
@@ -31,7 +31,7 @@ import { ProfileInfoOutputDto } from './dto/output-dto/profile-info-output-dto';
 import { ProfileInfoSwagger } from './swagger/profile-info.swagger';
 import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
 import { DeleteAvatarCommand } from '../application/use-cases/delete-avatar.use-case';
-import { GetProfileInfoQuery } from '../application/use-cases/queryBus/get-profile-info.use-case';
+import { GetProfileInfoQuery } from '../application/queryBus/get-profile-info.use-case';
 import { LoggerService } from '@app/logger';
 import { USER_ROUTE } from '../../../common/constants/route.constants';
 import {

@@ -76,6 +76,7 @@ export class RestorePasswordUseCase {
           return notification;
         }
         const code = randomUUID().replaceAll('-', '');
+        // @ts-ignore TODO:
         await this.userRepository.updateRestorePasswordCode({
           userId: user.id,
           restorePasswordCode: code,

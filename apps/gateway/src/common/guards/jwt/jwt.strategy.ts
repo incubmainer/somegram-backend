@@ -1,8 +1,8 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { jwtConstants } from '../../constants/jwt-basic-constants';
-import { LoggerService } from '@app/logger';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
 interface JwtPayload {
   userId: string;
   iat?: number;
@@ -10,13 +10,14 @@ interface JwtPayload {
 }
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly logger: LoggerService) {
+  constructor(
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConstants.JWT_SECRET,
+      secretOrKey: configService.get('envSettings', { infer: true }).JWT_SECRET,
     });
-    this.logger.setContext(JwtStrategy.name);
   }
 
   async validate(payload: JwtPayload) {

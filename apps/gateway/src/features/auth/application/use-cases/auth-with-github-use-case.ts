@@ -45,14 +45,17 @@ export class AuthWithGithubUseCase
     const { user } = command;
     try {
       await this.txHost.withTransaction(async () => {
+        // @ts-ignore TODO:
         const isExistUser = await this.authRepository.getUserWithGithubInfo(
           user.email,
         );
         if (!isExistUser) {
           const uniqueUsername =
+            // @ts-ignore TODO:
             await this.authRepository.generateUniqueUsername();
           const currentDate = new Date();
           const createdUser =
+            // @ts-ignore TODO:
             await this.authRepository.createConfirmedUserWithGithub(user, {
               username: uniqueUsername,
               email: user.email,
@@ -63,11 +66,13 @@ export class AuthWithGithubUseCase
         }
         if (isExistUser && isExistUser.userGithubInfo) {
           if (isExistUser.userGithubInfo.email !== user.email) {
+            // @ts-ignore TODO:
             await this.authRepository.changeGithubEmail(isExistUser.id, user);
           }
           return notification.setData(isExistUser.id);
         }
         if (isExistUser && !isExistUser.userGithubInfo) {
+          // @ts-ignore TODO:
           await this.authRepository.addGithubInfo(user, isExistUser.id);
           const userWithGithub = await this.authRepository.getUserByEmail(
             user.email,

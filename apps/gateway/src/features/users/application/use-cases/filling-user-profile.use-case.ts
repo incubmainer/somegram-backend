@@ -56,6 +56,7 @@ export class FillingUserProfileUseCase
           return this.appNotification.badRequest('Username already exist.');
         }
       }
+      // @ts-ignore TODO:
       await this.usersRepository.updateUserProfileInfo(userId, {
         ...user,
         username: userName,

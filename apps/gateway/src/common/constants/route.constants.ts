@@ -59,4 +59,6 @@ export const AUTH_ROUTE = {
   REGISTRATION_EMAIL_RESENDING: 'registration-email-resending',
   GOOGLE: 'google',
   CALLBACK: 'callback',
+  LOGIN: 'login',
+  LOGOUT: 'logout',
 };

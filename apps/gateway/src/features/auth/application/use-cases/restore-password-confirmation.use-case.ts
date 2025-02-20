@@ -5,7 +5,7 @@ import { IsString, validateSync } from 'class-validator';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { IsUserPassword } from '../decorators/is-user-password';
+import { IsUserPassword } from '../../../../common/decorators/validation/is-user-password';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
 
 export const RestorePasswordConfirmationCodes = {
@@ -54,6 +54,7 @@ export class RestorePasswordConfirmationUseCase
       await this.txHost.withTransaction(async () => {
         const currentDate = new Date();
         const user =
+          // @ts-ignore TODO:
           await this.userRepository.getUserByRestorePasswordCode(code);
         if (!user) {
           notification.setCode(RestorePasswordConfirmationCodes.InvalidCode);
@@ -70,7 +71,9 @@ export class RestorePasswordConfirmationUseCase
         const hashPassword =
           //@ts-ignore // TODO:
           await this.cryptoAuthService.hashPassword(password);
+        // @ts-ignore TODO:
         await this.userRepository.deleteRestorePasswordCode(user.id);
+        // @ts-ignore TODO:
         await this.userRepository.updateUserPassword(user.id, hashPassword);
         await this.securityDevicesRepository.deleteAllSessionsForUser(user.id);
       });
