@@ -198,6 +198,14 @@ export class UsersRepository {
     return { user, confirmation };
   }
 
+  async getUserById(id: string): Promise<UserEntity | null> {
+    this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
   //////////////////////////////////
   //////////////////////////////////
   //////////////////////////////////
@@ -223,13 +231,6 @@ export class UsersRepository {
   //////////////////////////////////
   //////////////////////////////////
 
-  // async getUserById(id: string): Promise<User | null> {
-  //   this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
-  //   const user = await this.txHost.tx.user.findUnique({
-  //     where: { id },
-  //   });
-  //   return user ? user : null;
-  // }
   //
   // async getUsersById(id: string[]): Promise<User[] | null> {
   //   const users = await this.txHost.tx.user.findMany({

@@ -3,10 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWTRefreshTokenPayloadType } from '../../domain/types/types';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
-import { User } from '@prisma/gateway';
 import { Request } from 'express';
 import { SecurityDevicesRepository } from '../../../features/security-devices/infrastructure/security-devices.repository';
-import { SecurityDevices } from '@prisma/gateway';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { ConfigService } from '@nestjs/config';
 
@@ -39,8 +37,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
     payload: JWTRefreshTokenPayloadType,
   ): Promise<JWTRefreshTokenPayloadType> {
     const { userId, iat, exp, deviceId } = payload;
-    // @ts-ignore TODO:
-    const user: User | null = await this.userRepository.getUserById(userId);
+    const user = await this.userRepository.getUserById(userId);
 
     if (!user) return null;
 
