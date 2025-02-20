@@ -7,6 +7,7 @@ import {
 } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
 import { SecurityDeviceCreateDto } from '../domain/types';
+import { SessionEntity } from '../domain/session.entity';
 
 @Injectable()
 export class SecurityDevicesRepository {
@@ -22,6 +23,7 @@ export class SecurityDevicesRepository {
   public async createSession(
     sessionCreatedDto: SecurityDeviceCreateDto,
   ): Promise<void> {
+    this.logger.debug(`Execute: create new session`, this.createSession.name);
     await this.txHost.tx.securityDevices.create({
       data: {
         userId: sessionCreatedDto.userId,
@@ -32,6 +34,40 @@ export class SecurityDevicesRepository {
       },
     });
   }
+
+  async updateLastActiveDate(session: SessionEntity): Promise<void> {
+    this.logger.debug(
+      `Execute: update last active date`,
+      this.updateLastActiveDate.name,
+    );
+    await this.txHost.tx.securityDevices.update({
+      where: { deviceId: session.deviceId },
+      data: { lastActiveDate: session.lastActiveDate },
+    });
+  }
+
+  async getDeviceById(deviceId: string): Promise<SessionEntity | null> {
+    this.logger.debug(
+      `Execute: get device by deviceId ${deviceId}`,
+      this.getDeviceById.name,
+    );
+    const device = await this.txHost.tx.securityDevices.findFirst({
+      where: { deviceId },
+    });
+    return device ? new SessionEntity(device) : null;
+  }
+
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
 
   public async addDevice(
     userId: string,
@@ -79,18 +115,6 @@ export class SecurityDevicesRepository {
     });
   }
 
-  async getDeviceById(deviceId: string): Promise<SecurityDevices | null> {
-    this.logger.debug(
-      `Execute: get device by deviceId ${deviceId}`,
-      this.getDeviceById.name,
-    );
-    const device = await this.txHost.tx.securityDevices.findFirst({
-      where: { deviceId },
-    });
-    if (!device) return null;
-    return device;
-  }
-
   public async getDevicesByUserId(
     userId: string,
   ): Promise<SecurityDevices[] | null> {
@@ -101,17 +125,5 @@ export class SecurityDevicesRepository {
 
     if (devices.length <= 0) return null;
     return devices;
-  }
-
-  async updateLastActiveDate(
-    deviceId: string,
-    lastActiveDate: string,
-  ): Promise<boolean> {
-    const result = await this.txHost.tx.securityDevices.update({
-      where: { deviceId: deviceId },
-      data: { lastActiveDate: lastActiveDate },
-    });
-    if (!result) return null;
-    return true;
   }
 }

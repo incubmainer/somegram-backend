@@ -44,8 +44,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
 
     if (!user) return null;
 
-    const session: SecurityDevices | null =
-      await this.sessionRepositories.getDeviceById(deviceId);
+    const session = await this.sessionRepositories.getDeviceById(deviceId);
     if (!session) return null;
     if (
       session.lastActiveDate.toISOString() !==

@@ -420,27 +420,29 @@ export class AuthController {
     }
   }
 
-  @Post('refresh-token')
+  // TODO: DONE
+  @Post(AUTH_ROUTE.UPDATE_TOKENS)
+  @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(HttpStatus.OK)
   @RefreshTokenSwagger()
   async renewTokens(
-    @RefreshToken() refreshToken: string,
-    @Res() res: Response,
-  ) {
-    this.logger.debug('start refresh token', this.renewTokens.name);
-    const result: AppNotificationResultType<JWTTokensType> =
-      await this.commandBus.execute(new RenewTokensCommand(refreshToken));
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginOutputDto> {
+    this.logger.debug('Execute: start refresh token', this.renewTokens.name);
+    const result: AppNotificationResultType<TokensPairType, null> =
+      await this.commandBus.execute(new RenewTokensCommand(user));
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
-        this.logger.debug('refresh token success', this.renewTokens.name);
-        return res
-          .cookie('refreshToken', result.data.refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-          })
-          .send({ accessToken: result.data.accessToken });
+        this.logger.debug('Success', this.renewTokens.name);
+        const { accessToken, refreshToken } = result.data;
+        response.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+        });
+        return { accessToken };
       case AppNotificationResultEnum.Unauthorized:
         this.logger.debug(`Unauthorized`, this.renewTokens.name);
         throw new UnauthorizedException();

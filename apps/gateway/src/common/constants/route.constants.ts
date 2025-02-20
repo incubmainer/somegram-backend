@@ -61,4 +61,5 @@ export const AUTH_ROUTE = {
   CALLBACK: 'callback',
   LOGIN: 'login',
   LOGOUT: 'logout',
+  UPDATE_TOKENS: 'refresh-token',
 };

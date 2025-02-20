@@ -14,4 +14,8 @@ export class SessionEntity implements SecurityDevices {
     this.lastActiveDate = dto.lastActiveDate;
     this.title = dto.title;
   }
+
+  renewSession(iat: Date): void {
+    this.lastActiveDate = iat;
+  }
 }
