@@ -97,7 +97,6 @@ export class NotificationWsGateway
       );
       userId = result.userId;
 
-      // @ts-ignore TODO:
       const user = await this.usersRepository.getUserById(userId);
       if (!user) {
         this.forceDisconnect(client, unauthorizedPayload);

@@ -28,6 +28,7 @@ import { UsersQueryRepository } from '../users/infrastructure/users.query-reposi
 import { RegistrationUserSuccessEventHandler } from './application/events/registration-user-success.envent';
 import { RegisteredUserEventHandler } from './application/events/registred-user.envent';
 import { NotificationModule } from '../notification/notification.module';
+import { UserConfirmationRepository } from './infrastructure/user-confirmation.repository';
 
 const services = [AuthService, JwtService, EmailAuthService];
 const useCases = [
@@ -56,6 +57,7 @@ const repositories = [
   UsersRepository,
   UsersQueryRepository,
   SecurityDevicesRepository,
+  UserConfirmationRepository,
 ];
 
 @Module({

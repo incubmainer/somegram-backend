@@ -14,12 +14,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { RegistrationCommand } from '../application/use-cases/registration.use-case';
-import { JwtAuthGuard } from '../../../common/guards/jwt/jwt-auth.guard';
 import { RegistrationBodyInputDto } from './dto/input-dto/registration.body.input-dto';
 import { RegistrationSwagger } from './swagger/registration.swagger';
 import { LoginDto } from './dto/input-dto/login-user-with-device.dto';
@@ -40,12 +39,10 @@ import {
 } from '../application/use-cases/restore-password-confirmation.use-case';
 import { RestorePasswordConfirmationBodyInputDto } from './dto/input-dto/restore-password-confirmation.body.input-dto';
 import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-confirmation.swagger';
-import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { IpAddress } from '../../../common/decorators/http-parse/ip-address.decorator';
 import { UserAgent } from '../../../common/decorators/http-parse/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
-import { RefreshToken } from '../../../common/decorators/http-parse/refresh-token.decorator';
 import { UserFromGithub } from './dto/input-dto/user-from-github';
 import {
   AuthWithGithubCommand,
@@ -59,10 +56,6 @@ import { GithubAuthCallbackSwagger } from './swagger/github-auth-callback.swagge
 import { RenewTokensCommand } from '../application/use-cases/refresh-token-use-case';
 import { RefreshTokenSwagger } from './swagger/refresh-token-swagger';
 import { RecaptchaSiteKeySwagger } from './swagger/recaptcha-site-key.swagger';
-import {
-  GetInfoAboutMeCommand,
-  MeCodes,
-} from '../application/use-cases/get-info-about-me.use-case';
 import { MeOutputDto } from './dto/output-dto/me-output-dto';
 import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
 import { RegistrationEmailResendingSwagger } from './swagger/registration-email-resending.swagger';
@@ -125,6 +118,7 @@ export class AuthController {
     }
   }
 
+  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION_CONFIRMATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationConfirmationSwagger()
@@ -405,7 +399,7 @@ export class AuthController {
   async logout(
     @CurrentUser() user: JWTRefreshTokenPayloadType,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<boolean> {
+  ): Promise<void> {
     this.logger.debug('Execute: start logout', this.logout.name);
 
     const result: AppNotificationResultType<null, null> =

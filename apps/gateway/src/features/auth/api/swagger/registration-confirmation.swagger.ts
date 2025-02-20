@@ -1,62 +1,32 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiNoContentResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
+import {
+  BadRequestExceptionDto,
+  UnprocessableExceptionDto,
+} from '@app/base-types-enum';
 
 export function RegistrationConfirmationSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'Registration Confirmation' }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+    ApiNoContentResponse({
       description: 'Registration confirmation successful',
     }),
-    ApiResponse({
+    ApiBadRequestResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'Registration confirmation failed',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'registration_confirmation_failed',
-              message:
-                'Registration confirmation failed due to token expiration.',
-            },
-          },
-        ],
-      },
+      type: BadRequestExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
+    ApiNotFoundResponse({
       description: 'User with confirmation token not found',
-      schema: {
-        example: {
-          status: HttpStatus.NOT_FOUND,
-          error: 'User not found',
-          message: 'User with confirmation token not found',
-        },
-      },
     }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+    ApiUnprocessableEntityResponse({
       description: 'Validation error',
-      schema: {
-        example: {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'token',
-              constraints: {
-                IsString: 'some message',
-              },
-            },
-          ],
-        },
-      },
+      type: UnprocessableExceptionDto,
     }),
   );
 }

@@ -55,7 +55,7 @@ model UserGithubInfo {
 model UserConfirmationToken {
   userId    String   @unique()
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String
+  token     String   @unique
   expiredAt DateTime
   createdAt DateTime
 

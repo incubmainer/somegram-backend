@@ -15,5 +15,13 @@ export class UserConfirmationRepository {
     this.logger.setContext(UserConfirmationRepository.name);
   }
 
-  async removeConfirmation(): Promise<void> {}
+  async removeConfirmationByToken(token: string): Promise<void> {
+    this.logger.debug(
+      `Execute: remove confirmation by token: ${token}`,
+      this.removeConfirmationByToken.name,
+    );
+    await this.txHost.tx.userConfirmationToken.delete({
+      where: { token: token },
+    });
+  }
 }

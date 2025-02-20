@@ -1,4 +1,3 @@
-import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import {
@@ -6,6 +5,8 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
+import { Transactional } from '@nestjs-cls/transactional';
+import { UserConfirmationRepository } from '../../infrastructure/user-confirmation.repository';
 
 export class RegistrationConfirmationCommand {
   constructor(public token: string) {}
@@ -23,6 +24,7 @@ export class RegistrationConfirmationUseCase
     private readonly userRepository: UsersRepository,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly userConfirmationRepository: UserConfirmationRepository,
   ) {
     this.logger.setContext(RegistrationConfirmationUseCase.name);
   }
@@ -44,14 +46,17 @@ export class RegistrationConfirmationUseCase
       if (confirmation.expiredAt < currentDate)
         return this.appNotification.badRequest('Token is expired');
 
-      await this.userRepository.confirmUser(user.id);
-      //TODO: Нужно вообще удалять сущность подтвреждения ?
-      // await this.userRepository.deleteConfirmationToken(token);
-
+      await this.handleConfirm(user.id, confirmation.token);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
+  }
+
+  @Transactional()
+  private async handleConfirm(userId: string, token: string): Promise<void> {
+    await this.userRepository.confirmUser(userId);
+    await this.userConfirmationRepository.removeConfirmationByToken(token);
   }
 }
