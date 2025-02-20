@@ -101,6 +101,16 @@ export class UsersRepository {
     return new UserEntity(user);
   }
 
+  public async updatePassword(user: UserEntity): Promise<void> {
+    this.logger.debug(`Execute: update password`, this.updatePassword.name);
+    await this.txHost.tx.user.update({
+      data: {
+        hashPassword: user.hashPassword,
+      },
+      where: { id: user.id },
+    });
+  }
+
   public async getUserByEmailWithGoogleInfo(email: string): Promise<{
     user: UserEntity;
     googleInfo: UserGoogleAccount | null;

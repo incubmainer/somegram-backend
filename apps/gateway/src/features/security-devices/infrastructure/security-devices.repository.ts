@@ -35,7 +35,7 @@ export class SecurityDevicesRepository {
     });
   }
 
-  async updateLastActiveDate(session: SessionEntity): Promise<void> {
+  public async updateLastActiveDate(session: SessionEntity): Promise<void> {
     this.logger.debug(
       `Execute: update last active date`,
       this.updateLastActiveDate.name,
@@ -46,7 +46,13 @@ export class SecurityDevicesRepository {
     });
   }
 
-  async getDeviceById(deviceId: string): Promise<SessionEntity | null> {
+  public async deleteAllSessionsForUser(userId: string): Promise<void> {
+    await this.txHost.tx.securityDevices.deleteMany({
+      where: { userId: userId },
+    });
+  }
+
+  public async getDeviceById(deviceId: string): Promise<SessionEntity | null> {
     this.logger.debug(
       `Execute: get device by deviceId ${deviceId}`,
       this.getDeviceById.name,
@@ -84,12 +90,6 @@ export class SecurityDevicesRepository {
         lastActiveDate: lastActiveDate,
         title: title,
       },
-    });
-  }
-
-  public async deleteAllSessionsForUser(userId: string): Promise<void> {
-    await this.txHost.tx.securityDevices.deleteMany({
-      where: { userId: userId },
     });
   }
 

@@ -64,4 +64,6 @@ export const AUTH_ROUTE = {
   UPDATE_TOKENS: 'refresh-token',
   ME: 'me',
   RESTORE_PASSWORD: 'restore-password',
+  RESTORE_PASSWORD_CONFIRM: 'restore-password-confirmation',
+  RECAPTCHA_SITE_KEY: 'recaptcha-site-key',
 };

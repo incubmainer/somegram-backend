@@ -66,4 +66,8 @@ export class UserEntity extends AggregateRoot implements User {
   registrationSuccessEvent(): void {
     this.apply(new RegistrationUserSuccessEvent(this.email));
   }
+
+  updatePassword(password: string): void {
+    this.hashPassword = password;
+  }
 }

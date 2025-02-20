@@ -30,10 +30,7 @@ import { RegistrationConfirmationSwagger } from './swagger/registration-confirma
 import { RestorePasswordBodyInputDto } from './dto/input-dto/restore-password.body.input-dto';
 import { RestorePasswordCommand } from '../application/use-cases/restore-password.use-case';
 import { RestorePasswordSwagger } from './swagger/restore-password.swagger';
-import {
-  RestorePasswordConfirmationCodes,
-  RestorePasswordConfirmationCommand,
-} from '../application/use-cases/restore-password-confirmation.use-case';
+import { RestorePasswordConfirmationCommand } from '../application/use-cases/restore-password-confirmation.use-case';
 import { RestorePasswordConfirmationBodyInputDto } from './dto/input-dto/restore-password-confirmation.body.input-dto';
 import { RestorePasswordConfirmationSwagger } from './swagger/restore-password-confirmation.swagger';
 import { IpAddress } from '../../../common/decorators/http-parse/ip-address.decorator';
@@ -77,6 +74,7 @@ import { CurrentUser } from '../../../common/decorators/http-parse/current-user.
 import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
 import { MeAccessTokenGuard } from '../../../common/guards/jwt/jwt-me-access-token.guard';
 import { RecaptchaGuard } from '../../../common/guards/recaptcha.guard';
+import { RecaptchaSiteKeyOutputDto } from './dto/output-dto/recaptcha-site-key-output.dto';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
@@ -223,15 +221,11 @@ export class AuthController {
     }
   }
 
-  @Get('recaptcha-site-key')
+  // TODO: DONE
+  @Get(AUTH_ROUTE.RECAPTCHA_SITE_KEY)
   @RecaptchaSiteKeySwagger()
-  async recaptchaSiteKey() {
-    this.logger.debug('get recaptcha site key', this.recaptchaSiteKey.name);
-    //const authConfig = this.configService.get<AuthConfig>('auth');
-    //  return {
-    //    recaptchaSiteKey: authConfig.recaptchaSiteKey,
-    //  };
-
+  async recaptchaSiteKey(): Promise<RecaptchaSiteKeyOutputDto> {
+    this.logger.debug('Get recaptcha site key', this.recaptchaSiteKey.name);
     return {
       recaptchaSiteKey: this.configService.get('envSettings', {
         infer: true,
@@ -268,51 +262,31 @@ export class AuthController {
     }
   }
 
-  @Post('restore-password-confirmation')
+  // TODO: DONE
+  @Post(AUTH_ROUTE.RESTORE_PASSWORD_CONFIRM)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RestorePasswordConfirmationSwagger()
   public async restorePasswordConfirmation(
     @Body() body: RestorePasswordConfirmationBodyInputDto,
-  ) {
+  ): Promise<void> {
     this.logger.debug(
-      'start restore password confirmation',
+      'Execute: start restore password confirmation',
       this.restorePasswordConfirmation.name,
     );
-    // @ts-ignore // TODO:
-    const notification: NotificationObject<null> =
+    const result: AppNotificationResultType<null, string> =
       await this.commandBus.execute(
         new RestorePasswordConfirmationCommand(body.code, body.password),
       );
-    const code = notification.getCode();
-    if (code === RestorePasswordConfirmationCodes.Success) {
-      this.logger.debug(
-        'restore password confirmation success',
-        this.restorePasswordConfirmation.name,
-      );
-      return;
-    }
-    if (code === RestorePasswordConfirmationCodes.ExpiredCode) {
-      this.logger.debug('expired code', this.restorePasswordConfirmation.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'restore_password_confirmation_failed',
-        message: 'Restore password confirmation failed due to expired code.',
-      });
-    }
-    if (code === RestorePasswordConfirmationCodes.InvalidCode) {
-      this.logger.debug('invalid code', this.restorePasswordConfirmation.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'restore_password_confirmation_failed',
-        message: 'Restore password confirmation failed due to Invalid code.',
-      });
-    }
-    if (code === RestorePasswordConfirmationCodes.TransactionError) {
-      this.logger.error(
-        'transaction error',
-        this.restorePasswordConfirmation.name,
-      );
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.restorePasswordConfirmation.name);
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad request', this.restorePasswordConfirmation.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
     }
   }
 

@@ -39,10 +39,9 @@ export class RegistrationConfirmationUseCase
     const { token } = command;
     try {
       const currentDate: Date = new Date();
-      const { user, confirmation } =
-        await this.userRepository.getUserByToken(token);
-
-      if (!user || !confirmation) return this.appNotification.notFound();
+      const result = await this.userRepository.getUserByToken(token);
+      if (!result) return this.appNotification.notFound();
+      const { user, confirmation } = result;
       if (confirmation.expiredAt < currentDate)
         return this.appNotification.badRequest('Token is expired');
 

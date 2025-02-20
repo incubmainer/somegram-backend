@@ -1,85 +1,84 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { IsString, validateSync } from 'class-validator';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { IsUserPassword } from '../../../../common/decorators/validation/is-user-password';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
-
-export const RestorePasswordConfirmationCodes = {
-  Success: Symbol('success'),
-  InvalidCode: Symbol('Invalid_code'),
-  ExpiredCode: Symbol('expired_code'),
-  TransactionError: Symbol('transaction_error'),
-};
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { AuthService } from '../auth.service';
+import { UserEntity } from '../../../users/domain/user.entity';
+import { UserResetPasswordRepository } from '../../infrastructure/user-reset-password.repository';
 
 export class RestorePasswordConfirmationCommand {
-  @IsString()
-  code: string;
-  @IsUserPassword()
-  password: string;
-  constructor(code: string, password: string) {
-    this.code = code;
-    this.password = password;
-    const errors = validateSync(this);
-    if (errors.length) throw new Error('Validation failed');
-  }
+  constructor(
+    public code: string,
+    public password: string,
+  ) {}
 }
 
 @CommandHandler(RestorePasswordConfirmationCommand)
 export class RestorePasswordConfirmationUseCase
-  implements ICommandHandler<RestorePasswordConfirmationCommand>
+  implements
+    ICommandHandler<
+      RestorePasswordConfirmationCommand,
+      AppNotificationResultType<null, string>
+    >
 {
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-    //private readonly cryptoAuthService: CryptoAuthService,
     private readonly securityDevicesRepository: SecurityDevicesRepository,
+    private readonly appNotification: ApplicationNotification,
+    private readonly logger: LoggerService,
+    private readonly authService: AuthService,
+    private readonly userResetPasswordRepository: UserResetPasswordRepository,
   ) {}
 
   public async execute(
     command: RestorePasswordConfirmationCommand,
-    // @ts-ignore // TODO:
-  ): Promise<NotificationObject<void>> {
-    // @ts-ignore // TODO
-    const notification = new NotificationObject(
-      RestorePasswordConfirmationCodes.Success,
+  ): Promise<AppNotificationResultType<null, string>> {
+    this.logger.debug(
+      'Execute: restore password confirm command',
+      this.execute.name,
     );
     const { code, password } = command;
+
     try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-        const user =
-          // @ts-ignore TODO:
-          await this.userRepository.getUserByRestorePasswordCode(code);
-        if (!user) {
-          notification.setCode(RestorePasswordConfirmationCodes.InvalidCode);
-          return notification;
-        }
-        if (!user.resetPasswordCode) {
-          notification.setCode(RestorePasswordConfirmationCodes.InvalidCode);
-          return notification;
-        }
-        if (user.resetPasswordCode.expiredAt < currentDate) {
-          notification.setCode(RestorePasswordConfirmationCodes.ExpiredCode);
-          return notification;
-        }
-        const hashPassword =
-          //@ts-ignore // TODO:
-          await this.cryptoAuthService.hashPassword(password);
-        // @ts-ignore TODO:
-        await this.userRepository.deleteRestorePasswordCode(user.id);
-        // @ts-ignore TODO:
-        await this.userRepository.updateUserPassword(user.id, hashPassword);
-        await this.securityDevicesRepository.deleteAllSessionsForUser(user.id);
-      });
-    } catch {
-      notification.setCode(RestorePasswordConfirmationCodes.TransactionError);
+      const currentDate = new Date();
+      const result = await this.userRepository.getUserByResetPasswordCode(code);
+      if (!result)
+        return this.appNotification.badRequest(
+          'Restore password confirmation failed due to Invalid code.',
+        );
+      const { user, resetPassword } = result;
+
+      if (resetPassword.expiredAt < currentDate)
+        return this.appNotification.badRequest(
+          'Restore password confirmation failed due to expired code.',
+        );
+
+      const hashPassword = await this.authService.generateHash(password);
+
+      user.updatePassword(hashPassword);
+
+      await this.handleUpdatePassword(user, code);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
+  }
+
+  @Transactional()
+  private async handleUpdatePassword(
+    user: UserEntity,
+    code: string,
+  ): Promise<void> {
+    await Promise.all([
+      this.userRepository.updatePassword(user),
+      this.userResetPasswordRepository.removeResetPasswordByCode(code),
+      this.securityDevicesRepository.deleteAllSessionsForUser(user.id),
+    ]);
   }
 }
