@@ -85,6 +85,7 @@ import { TokensPairType } from '../domain/types';
 import { LoginOutputDto } from './dto/output-dto/login-outptu.dto';
 import { CurrentUser } from '../../../common/decorators/http-parse/current-user.decorator';
 import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
+import { MeAccessTokenGuard } from '../../../common/guards/jwt/jwt-me-access-token.guard';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
@@ -510,21 +511,12 @@ export class AuthController {
       .redirect(`${this.frontendProvider}/?accessToken=${tokens.accessToken}`);
   }
 
-  @Get('me')
+  // TODO: DONE
+  @Get(AUTH_ROUTE.ME)
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()
-  @UseGuards(JwtAuthGuard)
-  async getInfoAboutMe(@CurrentUserId() userId: string): Promise<MeOutputDto> {
-    this.logger.debug('start me request', this.getInfoAboutMe.name);
-    // @ts-ignore // TODO:
-    const notification: NotificationObject<MeOutputDto> =
-      await this.commandBus.execute(new GetInfoAboutMeCommand(userId));
-    const code = notification.getCode();
-    if (code === MeCodes.TransactionError) {
-      this.logger.error('transaction error', this.getInfoAboutMe.name);
-      throw new InternalServerErrorException();
-    }
-    const outputUser = notification.getData();
-    return outputUser;
+  @UseGuards(MeAccessTokenGuard)
+  async getInfoAboutMe(@CurrentUser() user: MeOutputDto): Promise<MeOutputDto> {
+    return user;
   }
 }

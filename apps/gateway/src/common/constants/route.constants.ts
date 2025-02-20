@@ -62,4 +62,5 @@ export const AUTH_ROUTE = {
   LOGIN: 'login',
   LOGOUT: 'logout',
   UPDATE_TOKENS: 'refresh-token',
+  ME: 'me',
 };

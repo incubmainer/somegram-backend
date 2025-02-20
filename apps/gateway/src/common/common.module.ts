@@ -18,8 +18,14 @@ import { JwtStrategy } from './guards/jwt/jwt.strategy';
 import { GithubStrategy } from './guards/jwt/github.strategy';
 import { GoogleStrategy } from './guards/jwt/google.strategy';
 import { JwtService } from '@nestjs/jwt';
+import { MeAccessTokenStrategy } from './guards/jwt/jwt-me-access-token.strategy';
 
-const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
+const strategy = [
+  JwtStrategy,
+  GithubStrategy,
+  GoogleStrategy,
+  MeAccessTokenStrategy,
+];
 
 @Global()
 @Module({
@@ -36,6 +42,7 @@ const strategy = [JwtStrategy, GithubStrategy, GoogleStrategy];
   providers: [
     PrismaService,
     ...strategy,
+
     ////////////////////////////
     PhotoServiceAdapter,
     JwtRefreshTokenStrategyStrategy,
