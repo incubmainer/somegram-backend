@@ -56,7 +56,9 @@ export class RegistrationConfirmationUseCase
 
   @Transactional()
   private async handleConfirm(userId: string, token: string): Promise<void> {
-    await this.userRepository.confirmUser(userId);
-    await this.userConfirmationRepository.removeConfirmationByToken(token);
+    await Promise.all([
+      this.userRepository.confirmUser(userId),
+      this.userConfirmationRepository.removeConfirmationByToken(token),
+    ]);
   }
 }

@@ -17,6 +17,9 @@ export class AuthService {
   private readonly jwtSecret: string;
   private readonly jwtAccessExpiredTime: string;
   private readonly jwtRefreshExpiredTime: string;
+  private readonly recaptchaSecretKey: string;
+  private readonly recaptchaCheckUri: string =
+    'https://www.google.com/recaptcha/api/siteverify';
   constructor(
     private jwtService: JwtService,
     private usersRepository: UsersRepository,
@@ -29,6 +32,7 @@ export class AuthService {
     this.jwtSecret = envSettings.JWT_SECRET;
     this.jwtAccessExpiredTime = envSettings.JWT_ACCESS_EXPIRED_TIME;
     this.jwtRefreshExpiredTime = envSettings.JWT_REFRESH_EXPIRED_TIME;
+    this.recaptchaSecretKey = envSettings.RECAPTCHA_SECRET_KEY;
   }
 
   async generateHash(password: string): Promise<string> {
@@ -76,25 +80,29 @@ export class AuthService {
     return await this.jwtService.signAsync(payload, options);
   }
 
-  // async validateUser(email: string, pass: string) {
-  //   this.logger.debug('Execute: validate user ', this.validateUser.name);
-  //   try {
-  //     const user = await this.usersRepository.getUserByEmail(email);
-  //     if (!user || !user.isConfirmed) {
-  //       return null;
-  //     }
-  //     // @ts-ignore // TODO:
-  //     const isValidPassword = await this.cryptoService.validatePassword(
-  //       pass,
-  //       user.hashPassword,
-  //     );
-  //     if (!isValidPassword) return null;
-  //
-  //     return user.id;
-  //   } catch (e) {
-  //     this.logger.error(e, this.validateUser.name);
-  //   }
-  // }
+  async verifyRecaptchaToken(token: string): Promise<boolean> {
+    const payload = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${this.recaptchaSecretKey}&response=${token}`,
+    } as const;
+    try {
+      const response = await fetch(this.recaptchaCheckUri, payload);
+
+      const data = await response.json();
+      if (!data) return false;
+
+      return data.success;
+    } catch (e) {
+      this.logger.error(
+        `Recaptcha fetch error: ${e}`,
+        this.verifyRecaptchaToken.name,
+      );
+      return false;
+    }
+  }
 
   async verifyRefreshToken(
     refreshToken: string,

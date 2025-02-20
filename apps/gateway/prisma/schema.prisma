@@ -65,7 +65,7 @@ model UserConfirmationToken {
 model UserResetPasswordCode {
   userId    String   @unique()
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  code      String
+  code      String   @unique
   expiredAt DateTime
   createdAt DateTime
 

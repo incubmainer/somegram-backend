@@ -18,6 +18,7 @@ import {
 } from '../domain/types';
 import { UserGoogleAccount } from '../domain/user-google-account.entity';
 import { UserConfirmationEntity } from '../../auth/domain/user-confirmation.entity';
+import { UserResetPasswordEntity } from '../../auth/domain/user-reset-password.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -198,6 +199,30 @@ export class UsersRepository {
     return { user, confirmation };
   }
 
+  public async getUserByResetPasswordCode(code: string): Promise<{
+    user: UserEntity;
+    resetPassword: UserResetPasswordEntity | null;
+  } | null> {
+    const result = await this.txHost.tx.user.findFirst({
+      where: {
+        resetPasswordCode: {
+          code,
+        },
+      },
+      include: {
+        resetPasswordCode: true,
+      },
+    });
+
+    if (!result) return null;
+
+    const user = new UserEntity(result);
+    let resetPassword: UserResetPasswordEntity | null = null;
+    if (result.resetPasswordCode)
+      resetPassword = new UserResetPasswordEntity(result.resetPasswordCode);
+
+    return { user, resetPassword };
+  }
   async getUserById(id: string): Promise<UserEntity | null> {
     this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
     const user = await this.txHost.tx.user.findUnique({

@@ -2,6 +2,7 @@ import { $Enums, User } from '@prisma/gateway';
 import { AggregateRoot } from '@nestjs/cqrs';
 import { RegisteredUserEvent } from '../../auth/application/events/registred-user.envent';
 import { RegistrationUserSuccessEvent } from '../../auth/application/events/registration-user-success.envent';
+import { RestorePasswordEvent } from '../../auth/application/events/restore-password.envent';
 
 export class UserEntity extends AggregateRoot implements User {
   id: string;
@@ -45,6 +46,17 @@ export class UserEntity extends AggregateRoot implements User {
         this.email,
         this.firstName ?? this.username,
         expiredAt,
+        code,
+        html,
+      ),
+    );
+  }
+
+  passwordRecoveryEvent(code: string, html: string): void {
+    this.apply(
+      new RestorePasswordEvent(
+        this.email,
+        this.firstName ?? this.username,
         code,
         html,
       ),

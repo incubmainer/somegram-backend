@@ -29,6 +29,8 @@ import { RegistrationUserSuccessEventHandler } from './application/events/regist
 import { RegisteredUserEventHandler } from './application/events/registred-user.envent';
 import { NotificationModule } from '../notification/notification.module';
 import { UserConfirmationRepository } from './infrastructure/user-confirmation.repository';
+import { UserResetPasswordRepository } from './infrastructure/user-reset-password.repository';
+import { RestorePasswordEventHandler } from './application/events/restore-password.envent';
 
 const services = [AuthService, JwtService, EmailAuthService];
 const useCases = [
@@ -51,6 +53,7 @@ const useCases = [
 const events = [
   RegistrationUserSuccessEventHandler,
   RegisteredUserEventHandler,
+  RestorePasswordEventHandler,
 ];
 
 const repositories = [
@@ -58,6 +61,7 @@ const repositories = [
   UsersQueryRepository,
   SecurityDevicesRepository,
   UserConfirmationRepository,
+  UserResetPasswordRepository,
 ];
 
 @Module({

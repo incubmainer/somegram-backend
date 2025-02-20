@@ -28,10 +28,7 @@ import { RegistrationConfirmationBodyInputDto } from './dto/input-dto/registrati
 import { RegistrationConfirmationCommand } from '../application/use-cases/registration-confirmation.use-case';
 import { RegistrationConfirmationSwagger } from './swagger/registration-confirmation.swagger';
 import { RestorePasswordBodyInputDto } from './dto/input-dto/restore-password.body.input-dto';
-import {
-  RestorePasswordCodes,
-  RestorePasswordCommand,
-} from '../application/use-cases/restore-password.use-case';
+import { RestorePasswordCommand } from '../application/use-cases/restore-password.use-case';
 import { RestorePasswordSwagger } from './swagger/restore-password.swagger';
 import {
   RestorePasswordConfirmationCodes,
@@ -79,6 +76,7 @@ import { LoginOutputDto } from './dto/output-dto/login-outptu.dto';
 import { CurrentUser } from '../../../common/decorators/http-parse/current-user.decorator';
 import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
 import { MeAccessTokenGuard } from '../../../common/guards/jwt/jwt-me-access-token.guard';
+import { RecaptchaGuard } from '../../../common/guards/recaptcha.guard';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
@@ -241,43 +239,32 @@ export class AuthController {
     };
   }
 
-  @Post('restore-password')
+  // TODO: DONE
+  @Post(AUTH_ROUTE.RESTORE_PASSWORD)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(RecaptchaGuard)
   @RestorePasswordSwagger()
-  public async restorePassword(@Body() body: RestorePasswordBodyInputDto) {
-    this.logger.debug('start restore password', this.restorePassword.name);
-    // @ts-ignore // TODO:
-    const notification: NotificationObject<null> =
+  public async restorePassword(
+    @Body() body: RestorePasswordBodyInputDto,
+  ): Promise<void> {
+    this.logger.debug(
+      'Execute: start restore password',
+      this.restorePassword.name,
+    );
+    const result: AppNotificationResultType<null, string> =
       await this.commandBus.execute(
-        new RestorePasswordCommand(body.email, body.recaptchaToken, body.html),
+        new RestorePasswordCommand(body.email, body.html),
       );
-    const code = notification.getCode();
-    if (code === RestorePasswordCodes.Success) {
-      this.logger.debug('restore password success', this.restorePassword.name);
-      return;
-    }
-    if (code === RestorePasswordCodes.InvalidRecaptcha) {
-      this.logger.debug('invalid recaptcha token', this.restorePassword.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'invalid_recaptcha_token',
-        message: 'Restore password failed due to invalid recaptcha token.',
-      });
-    }
-    if (code === RestorePasswordCodes.UserNotFound) {
-      this.logger.debug('user not found', this.restorePassword.name);
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        error: 'user_not_found',
-        message: 'Restore password failed due to user not found.',
-      });
-    }
-    if (code === RestorePasswordCodes.TransactionError) {
-      this.logger.error('transaction error', this.restorePassword.name);
-      throw new InternalServerErrorException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Transaction error',
-      });
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.restorePassword.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not found', this.restorePassword.name);
+        throw new NotFoundException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
     }
   }
 
