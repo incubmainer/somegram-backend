@@ -150,6 +150,7 @@ export class AuthController {
     }
   }
 
+  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION_EMAIL_RESENDING)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationEmailResendingSwagger()
@@ -160,51 +161,24 @@ export class AuthController {
       'Execute: start registration-email-resending',
       this.registrationEmailResending.name,
     );
-    const result = await this.commandBus.execute(
-      new RegistrationEmailResendingCommand(body.token, body.html),
-    );
+    const result: AppNotificationResultType<null, string> =
+      await this.commandBus.execute(
+        new RegistrationEmailResendingCommand(body.token, body.html),
+      );
 
-    // const notification: NotificationObject<null> =
-    //   await this.commandBus.execute(
-    //     new RegistrationEmailResendingCommand(body.token, body.html),
-    //   );
-    // const code = notification.getCode();
-    // if (code === RegistrationEmailResendingCodes.Success) {
-    //   this.logger.debug(
-    //     'registration-email-resending success',
-    //     this.registrationEmailResending.name,
-    //   );
-    //   return;
-    // }
-    // if (code === RegistrationEmailResendingCodes.EmailAlreadyConfirmated) {
-    //   this.logger.debug(
-    //     'email already confirmed',
-    //     this.registrationEmailResending.name,
-    //   );
-    //   throw new BadRequestException({
-    //     statusCode: HttpStatus.BAD_REQUEST,
-    //     error: 'email_already_confirmated',
-    //     message: 'User with current email already confirmed',
-    //   });
-    // }
-    // if (code === RegistrationEmailResendingCodes.UserNotFound) {
-    //   this.logger.debug(
-    //     'username not found',
-    //     this.registrationEmailResending.name,
-    //   );
-    //   throw new BadRequestException({
-    //     statusCode: HttpStatus.BAD_REQUEST,
-    //     error: 'User not found',
-    //     message: 'User with current email not found',
-    //   });
-    // }
-    // if (code === RegistrationEmailResendingCodes.TransactionError) {
-    //   this.logger.error(
-    //     'transaction error',
-    //     this.registrationEmailResending.name,
-    //   );
-    //   throw new InternalServerErrorException();
-    // }
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.registrationEmailResending.name);
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad request', this.registrationEmailResending.name);
+        throw new BadRequestException(result.errorField);
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not found', this.registrationEmailResending.name);
+        throw new NotFoundException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get(AUTH_ROUTE.GOOGLE)

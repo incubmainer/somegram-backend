@@ -12,4 +12,9 @@ export class UserConfirmationEntity implements UserConfirmationToken {
     this.expiredAt = dto.expiredAt;
     this.createdAt = dto.createdAt;
   }
+
+  updateConfirmation(token: string, expiredAt: Date): void {
+    this.token = token;
+    this.expiredAt = expiredAt;
+  }
 }

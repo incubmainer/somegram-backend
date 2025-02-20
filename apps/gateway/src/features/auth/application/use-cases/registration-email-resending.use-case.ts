@@ -1,10 +1,7 @@
-import { Transactional } from '@nestjs-cls/transactional';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { IsString, validateSync } from 'class-validator';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'crypto';
 
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
@@ -12,18 +9,14 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { UserEntity } from '../../../users/domain/user.entity';
+import { UserConfirmationRepository } from '../../infrastructure/user-confirmation.repository';
 
 export class RegistrationEmailResendingCommand {
-  @IsString()
-  token: string;
-  @IsString()
-  html: string;
-  constructor(token: string, html: string) {
-    this.token = token;
-    this.html = html;
-    const errors = validateSync(this);
-    if (errors.length) throw new Error('Validation failed');
-  }
+  constructor(
+    public token: string,
+    public html: string,
+  ) {}
 }
 
 @CommandHandler(RegistrationEmailResendingCommand)
@@ -31,16 +24,17 @@ export class RegistrationEmailResendingUseCase
   implements
     ICommandHandler<
       RegistrationEmailResendingCommand,
-      AppNotificationResultType<null>
+      AppNotificationResultType<null, string>
     >
 {
   private readonly expireAfterMiliseconds: number;
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly emailAuthService: EmailAuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly publisher: EventPublisher,
+    private readonly userConfirmationRepository: UserConfirmationRepository,
   ) {
     this.expireAfterMiliseconds = this.configService.get('envSettings', {
       infer: true,
@@ -50,7 +44,7 @@ export class RegistrationEmailResendingUseCase
 
   public async execute(
     command: RegistrationEmailResendingCommand,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<null, string>> {
     this.logger.debug(
       'Execute: registration email resending',
       this.execute.name,
@@ -59,93 +53,45 @@ export class RegistrationEmailResendingUseCase
     try {
       const { token, html } = command;
 
-      const user = await this.userRepository.getUserByToken(token);
+      const result = await this.userRepository.getUserByToken(token);
+      if (!result) return this.appNotification.notFound();
+      const { user, confirmation } = result;
+      if (user.isConfirmed || !confirmation)
+        return this.appNotification.badRequest('The user is confirmed');
 
-      if (!user) return this.appNotification.notFound();
-      // @ts-ignore TODO:
-      if (user.isConfirmed) return this.appNotification.badRequest(null);
+      const confirmationToken = randomUUID().replaceAll('-', '');
+      const currentDate = new Date();
+      const confirmationTokenExpiredAt = new Date(
+        currentDate.getTime() + this.expireAfterMiliseconds,
+      );
 
-      await this.executeTransaction(user);
+      confirmation.updateConfirmation(
+        confirmationToken,
+        confirmationTokenExpiredAt,
+      );
+
+      await this.userConfirmationRepository.updateConfirmationByToken(
+        confirmation,
+        token,
+      );
+
+      this.publish(user, confirmationToken, confirmationTokenExpiredAt, html);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
-    // const notification = new NotificationObject(
-    //   RegistrationEmailResendingCodes.Success,
-    // );
-    //const { token, html } = command;
-    // try {
-    //   await this.txHost.withTransaction(async () => {
-    // const userByToken = await this.userRepository.findUserByToken(token);
-    // if (!userByToken) {
-    //   //notification.setCode(RegistrationEmailResendingCodes.UserNotFound);
-    //   this.logger.debug('user not found', this.execute.name);
-    //   //return notification;
-    // }
-    // if (userByToken && userByToken.isConfirmed) {
-    //   // notification.setCode(
-    //   //   RegistrationEmailResendingCodes.EmailAlreadyConfirmated,
-    //   // );
-    //   this.logger.debug('email already confirmed', this.execute.name);
-    //   //return notification;
-    // }
-    //     const confirmationToken = randomUUID().replaceAll('-', '');
-    //     const currentDate = new Date();
-    //     const confirmationTokenExpiresAt = new Date(
-    //       currentDate.getTime() + this.expireAfterMiliseconds,
-    //     );
-    //
-    //     await this.userRepository.updateUserConfirmationInfo({
-    //       userId: userByToken.id,
-    //       createdAt: currentDate,
-    //       confirmationToken,
-    //       confirmationTokenExpiresAt,
-    //     });
-    //
-    //     await this.emailAuthService.sendConfirmationEmail({
-    //       name: userByToken.username,
-    //       email: userByToken.email,
-    //       expiredAt: confirmationTokenExpiresAt,
-    //       confirmationToken,
-    //       html,
-    //     });
-    //     this.logger.debug(
-    //       'Email have been confirmed success ',
-    //       this.execute.name,
-    //     );
-    //   });
-    // } catch (e) {
-    //   this.logger.error(e, this.execute.name);
-    //   // notification.setCode(RegistrationEmailResendingCodes.TransactionError);
-    // }
-    // //return notification;
   }
-  @Transactional()
-  // @ts-ignore TODO:
-  private async executeTransaction(user: User) {
-    const confirmationToken = randomUUID().replaceAll('-', '');
-    const currentDate = new Date();
-    const confirmationTokenExpiresAt = new Date(
-      currentDate.getTime() + this.expireAfterMiliseconds,
-    );
 
-    // @ts-ignore TODO:
-    await this.userRepository.updateUserConfirmationInfo({
-      userId: user.id,
-      createdAt: currentDate,
-      confirmationToken,
-      confirmationTokenExpiresAt,
-    });
+  private publish(
+    user: UserEntity,
+    code: string,
+    expiredAt: Date,
+    html: string,
+  ): void {
+    const userWithEvent = this.publisher.mergeObjectContext(user);
 
-    // TODO
-
-    // await this.emailAuthService.sendConfirmationEmail({
-    //   name: user.username,
-    //   email: user.email,
-    //   expiredAt: confirmationTokenExpiresAt,
-    //   confirmationToken,
-    //   html,
-    // });
+    userWithEvent.registrationUserEvent(code, expiredAt, html);
+    userWithEvent.commit();
   }
 }
