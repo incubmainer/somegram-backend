@@ -1,14 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../infrastructure/users.repository';
-import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { FillProfileInputDto } from '../../api/dto/input-dto/fill-profile.input-dto';
-import { User } from '@prisma/gateway';
-import { parseDateDDMMYYYY } from '../../../../common/utils/parse-date-dd-mm-yyyy';
+import { DateFormatter } from '../../../../common/utils/date-formatter.util';
 
 export class FillingUserProfileCommand {
   constructor(
@@ -27,9 +25,9 @@ export class FillingUserProfileUseCase
 {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly dateFormatter: DateFormatter,
   ) {
     this.logger.setContext(FillingUserProfileUseCase.name);
   }
@@ -37,37 +35,29 @@ export class FillingUserProfileUseCase
   public async execute(
     command: FillingUserProfileCommand,
   ): Promise<AppNotificationResultType<string, string>> {
-    const { userName, firstName, lastName, dateOfBirth, about, city, country } =
-      command.fillProfileInputDto;
+    this.logger.debug(
+      'Execute: filling user profile info command',
+      this.execute.name,
+    );
+    const { userName, dateOfBirth } = command.fillProfileInputDto;
     const { userId } = command;
     try {
-      const user: User | null = await this.usersQueryRepository.findUserById(
-        command.userId,
-      );
-      if (!user) {
-        return this.appNotification.notFound();
-      }
+      const user = await this.usersRepository.getUserById(userId);
+      if (!user) return this.appNotification.notFound();
 
-      const uniqueUsername: User | null =
-        await this.usersQueryRepository.getUserByUsername(userName);
+      const uniqueUsername =
+        await this.usersRepository.getUserByUsername(userName);
 
       if (uniqueUsername?.username) {
-        if (user.id !== uniqueUsername.id) {
+        if (user.id !== uniqueUsername.id)
           return this.appNotification.badRequest('Username already exist.');
-        }
       }
-      // @ts-ignore TODO:
-      await this.usersRepository.updateUserProfileInfo(userId, {
-        ...user,
-        username: userName,
-        firstName,
-        lastName,
-        dateOfBirth: dateOfBirth ? parseDateDDMMYYYY(dateOfBirth) : null,
-        about: about ? about : null,
-        updatedAt: new Date(),
-        city: city ? city : null,
-        country: country ? country : null,
-      });
+
+      let birthday: Date | null = null;
+      if (dateOfBirth) birthday = this.dateFormatter.fromDDMMYYY(dateOfBirth);
+
+      user.fillProfileInfo(command.fillProfileInputDto, birthday);
+      await this.usersRepository.updateUserProfileInfo(user);
       return this.appNotification.success(userId);
     } catch (e) {
       this.logger.error(e, this.execute.name);

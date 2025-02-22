@@ -232,6 +232,11 @@ export class UsersRepository {
     user: UserEntity;
     confirmation: UserConfirmationEntity | null;
   } | null> {
+    this.logger.debug(
+      `Execute: get user by confirmation token`,
+      this.getUserByToken.name,
+    );
+
     const result = await this.txHost.tx.user.findFirst({
       where: {
         confirmationToken: {
@@ -257,6 +262,10 @@ export class UsersRepository {
     user: UserEntity;
     resetPassword: UserResetPasswordEntity | null;
   } | null> {
+    this.logger.debug(
+      `Execute: get user by reset password token`,
+      this.getUserByResetPasswordCode.name,
+    );
     const result = await this.txHost.tx.user.findFirst({
       where: {
         resetPasswordCode: {
@@ -325,6 +334,24 @@ export class UsersRepository {
     return { user, githubInfo };
   }
 
+  async updateUserProfileInfo(user: UserEntity): Promise<void> {
+    await this.txHost.tx.user.update({
+      where: { id: user.id },
+      data: {
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        dateOfBirth: user.dateOfBirth,
+        about: user.about,
+        updatedAt: user.updatedAt,
+        city: user.city,
+        country: user.country,
+        subscriptionExpireAt: user.subscriptionExpireAt,
+        accountType: user.accountType,
+      },
+    });
+  }
+
   //////////////////////////////////
   //////////////////////////////////
   //////////////////////////////////
@@ -350,21 +377,6 @@ export class UsersRepository {
   //////////////////////////////////
   //////////////////////////////////
 
-  //
-  // async getUsersById(id: string[]): Promise<User[] | null> {
-  //   const users = await this.txHost.tx.user.findMany({
-  //     where: { id: { in: id } },
-  //   });
-  //   return users && users.length > 0 ? users : null;
-  // }
-  //
-
-  //
-  // public async generateUniqueUsername(): Promise<string> {
-  //   const result = await this.txHost.tx
-  //     .$queryRaw`SELECT set_sequential_username() AS username`;
-  //   return result[0].username;
-  // }
   // public async addGoogleInfoToUserAndConfirm(
   //   userId: User['id'],
   //   googleInfo: {
@@ -513,37 +525,7 @@ export class UsersRepository {
   //   });
   // }
   //
-  // async updateUserProfileInfo(
-  //   userId: User['id'],
-  //   dto: {
-  //     username: User['username'];
-  //     firstName: User['firstName'];
-  //     lastName: User['lastName'];
-  //     dateOfBirth: User['dateOfBirth'];
-  //     about: User['about'];
-  //     updatedAt: User['updatedAt'];
-  //     city: User['city'];
-  //     country: User['country'];
-  //     subscriptionExpireAt: User['subscriptionExpireAt'];
-  //     accountType: User['accountType'];
-  //   },
-  // ): Promise<User> {
-  //   return await this.txHost.tx.user.update({
-  //     where: { id: userId },
-  //     data: {
-  //       username: dto.username,
-  //       firstName: dto.firstName,
-  //       lastName: dto.lastName,
-  //       dateOfBirth: dto.dateOfBirth,
-  //       about: dto.about,
-  //       updatedAt: dto.updatedAt,
-  //       city: dto.city,
-  //       country: dto.country,
-  //       subscriptionExpireAt: dto.subscriptionExpireAt,
-  //       accountType: dto.accountType,
-  //     },
-  //   });
-  // }
+
   //
   // async updateManyUsers(users: User[]): Promise<void> {
   //   await this.txHost.withTransaction(

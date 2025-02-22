@@ -3,6 +3,7 @@ import { AggregateRoot } from '@nestjs/cqrs';
 import { RegisteredUserEvent } from '../../auth/application/events/registred-user.envent';
 import { RegistrationUserSuccessEvent } from '../../auth/application/events/registration-user-success.envent';
 import { RestorePasswordEvent } from '../../auth/application/events/restore-password.envent';
+import { FillProfileInputDto } from '../api/dto/input-dto/fill-profile.input-dto';
 
 export class UserEntity extends AggregateRoot implements User {
   id: string;
@@ -69,5 +70,16 @@ export class UserEntity extends AggregateRoot implements User {
 
   updatePassword(password: string): void {
     this.hashPassword = password;
+  }
+
+  fillProfileInfo(updateDto: FillProfileInputDto, birthday: Date | null): void {
+    this.username = updateDto.userName;
+    this.firstName = updateDto.firstName;
+    this.lastName = updateDto.lastName;
+    this.dateOfBirth = birthday;
+    this.about = updateDto.about ?? null;
+    this.updatedAt = new Date();
+    this.city = '' ?? null;
+    this.country = '' ?? null;
   }
 }

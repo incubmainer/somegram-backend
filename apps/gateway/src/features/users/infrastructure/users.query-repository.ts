@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as GatewayPrismaClient, User } from '@prisma/gateway';
-import { MeOutputDto } from '../../auth/api/dto/output-dto/me-output-dto';
+import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
+import { UserEntity } from '../domain/user.entity';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -15,51 +15,25 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
-  async findUserById(id?: string): Promise<User | null> {
-    this.logger.debug(`Find user by id: ${id}`, this.findUserById.name);
+  async findUserById(id?: string): Promise<UserEntity | null> {
+    this.logger.debug(`Execute: get user by id: ${id}`, this.findUserById.name);
 
     const user = await this.txHost.tx.user.findFirst({
       where: { id },
     });
-    return user ? user : null;
+    return user ? new UserEntity(user) : null;
   }
 
-  async getInfoAboutMe(currentUserId: string): Promise<MeOutputDto | null> {
+  async getProfileInfo(userId: string): Promise<UserEntity | null> {
     this.logger.debug(
-      `Find user by current user id: ${currentUserId}`,
-      this.getInfoAboutMe.name,
-    );
-
-    const user = await this.txHost.tx.user.findFirst({
-      where: { id: currentUserId },
-    });
-    if (!user) return null;
-
-    return new MeOutputDto(user);
-  }
-
-  async getProfileInfo(userId: string): Promise<User | null> {
-    this.logger.debug(
-      `Find user by user id: ${userId}`,
+      `Execute: get profile info by user id: ${userId}`,
       this.getProfileInfo.name,
     );
 
-    return this.txHost.tx.user.findFirst({
+    const user = await this.txHost.tx.user.findFirst({
       where: { id: userId },
     });
-  }
-
-  public async getUserByUsername(username: string): Promise<User | null> {
-    this.logger.debug(
-      `Find user by username: ${username}`,
-      this.getUserByUsername.name,
-    );
-
-    return this.txHost.tx.user.findFirst({
-      where: {
-        username,
-      },
-    });
+    return user ? new UserEntity(user) : null;
   }
 
   public async getTotalCountUsers(): Promise<number> {

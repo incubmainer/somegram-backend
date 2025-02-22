@@ -19,7 +19,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message: string = 'Internal Server Error';
 
     if (status === HttpStatus.UNPROCESSABLE_ENTITY) {
-      // TODO Протипизировать нормльно
       const responseBody: any = exception.getResponse();
       message = 'Validation failed';
       const errors: UnprocessableExceptionErrorDto[] = [];
@@ -41,7 +40,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     if (status === HttpStatus.BAD_REQUEST) {
-      // TODO Протипизировать нормльно
       const responseBody: any = exception.getResponse();
 
       return response.status(status).json(responseBody);

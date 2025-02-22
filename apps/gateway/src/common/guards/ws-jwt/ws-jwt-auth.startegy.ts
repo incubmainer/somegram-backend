@@ -37,7 +37,6 @@ export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
   ): Promise<JWTAccessTokenPayloadType> {
     if (!payload || !payload.userId) throw new WsUnauthorizedException();
 
-    // @ts-ignore TODO:
     const user = await this.usersRepository.getUserById(payload.userId);
 
     if (!user) throw new WsUnauthorizedException();

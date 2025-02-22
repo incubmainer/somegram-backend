@@ -11,7 +11,6 @@ import {
   ProfilePublicInfoOutputDtoModel,
   UserCountOutputDto,
 } from './dto/output-dto/profile-info-output-dto';
-import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { PublicProfileInfoSwagger } from './swagger/public-profile-info.swagger';
 import { PublicGetUsersCountSwagger } from './swagger/public-get-users-count.swagger';
 import { USER_PUBLIC_ROUTE } from '../../../common/constants/route.constants';
@@ -21,13 +20,13 @@ import {
 } from '@app/application-notification';
 import { GetPublicProfileInfoQuery } from '../application/queryBus/get-public-profile-info.use-case';
 import { LoggerService } from '@app/logger';
+import { GetTotalRegisteredUserQuery } from '../application/queryBus/get-total-registered-users-count.use-case';
 
 @ApiTags('Public-Users')
 @Controller(USER_PUBLIC_ROUTE.MAIN)
 export class PublicUsersController {
   constructor(
     private readonly queryBus: QueryBus,
-    private readonly usersQueryRepository: UsersQueryRepository,
     private readonly logger: LoggerService,
   ) {
     this.logger.setContext(PublicUsersController.name);
@@ -60,11 +59,19 @@ export class PublicUsersController {
 
   @Get()
   @PublicGetUsersCountSwagger()
-  async getTotalRegistredUsersCount(): Promise<UserCountOutputDto> {
+  async getTotalRegisteredUsersCount(): Promise<UserCountOutputDto> {
     this.logger.debug(
       `Execute: Get total users count`,
-      this.getTotalRegistredUsersCount.name,
+      this.getTotalRegisteredUsersCount.name,
     );
-    return { totalCount: await this.usersQueryRepository.getTotalCountUsers() };
+    const result: AppNotificationResultType<UserCountOutputDto> =
+      await this.queryBus.execute(new GetTotalRegisteredUserQuery());
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 }

@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
-import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from '../../common/guards/jwt/jwt.strategy';
 import { UsersController } from './api/users.controller';
-import { AuthService } from '../auth/application/auth.service';
 import { UsersRepository } from './infrastructure/users.repository';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.use-case';
 import { FillingUserProfileUseCase } from './application/use-cases/filling-user-profile.use-case';
@@ -12,24 +9,27 @@ import { DeleteAvatarUseCase } from './application/use-cases/delete-avatar.use-c
 import { PublicUsersController } from './api/public-users.controller';
 import { GetProfileInfoUseCase } from './application/queryBus/get-profile-info.use-case';
 import { GetPublicProfileInfoUseCase } from './application/queryBus/get-public-profile-info.use-case';
+import { GetTotalRegisteredUserQueryHandler } from './application/queryBus/get-total-registered-users-count.use-case';
 
-const useCases = [
-  UploadAvatarUseCase,
-  FillingUserProfileUseCase,
+const queryHandlers = [
   GetProfileInfoUseCase,
-  DeleteAvatarUseCase,
   GetPublicProfileInfoUseCase,
+  GetTotalRegisteredUserQueryHandler,
 ];
 
-const services = [AuthService];
+const handlers = [
+  UploadAvatarUseCase,
+  FillingUserProfileUseCase,
+  DeleteAvatarUseCase,
+];
 
 @Module({
   imports: [],
   controllers: [UsersController, PublicUsersController],
   providers: [
     JwtStrategy,
-    ...services,
-    ...useCases,
+    ...handlers,
+    ...queryHandlers,
     UsersRepository,
     UsersQueryRepository,
   ],

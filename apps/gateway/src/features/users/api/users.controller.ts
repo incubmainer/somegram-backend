@@ -48,6 +48,7 @@ import {
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBearerAuth('access-token')
+@UseGuards(AuthGuard('jwt'))
 @Controller(USER_ROUTE.MAIN)
 export class UsersController {
   constructor(
@@ -60,7 +61,6 @@ export class UsersController {
 
   @Get(USER_ROUTE.PROFILE_INFO)
   @ProfileInfoSwagger()
-  @UseGuards(AuthGuard('jwt'))
   async gerProfileInfo(
     @CurrentUserId() userId: string,
   ): Promise<ProfileInfoOutputDto> {
@@ -85,7 +85,6 @@ export class UsersController {
   }
 
   @Post(USER_ROUTE.PROFILE_UPLOAD_AVATAR)
-  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -116,7 +115,6 @@ export class UsersController {
   }
 
   @Put(USER_ROUTE.PROFILE_FILL_INFO)
-  @UseGuards(AuthGuard('jwt'))
   @ProfileFillInfoSwagger()
   @HttpCode(HttpStatus.OK)
   async fillProfile(
@@ -152,7 +150,6 @@ export class UsersController {
 
   @Delete(USER_ROUTE.PROFILE_DELETE_AVATAR)
   @DeleteAvatarSwagger()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUserAvatar(@CurrentUserId() userId: string): Promise<void> {
     this.logger.debug(
