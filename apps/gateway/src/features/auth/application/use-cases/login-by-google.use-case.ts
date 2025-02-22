@@ -13,9 +13,9 @@ import {
 } from '../../../users/domain/types';
 import { UserEntity } from '../../../users/domain/user.entity';
 import { AuthService } from '../auth.service';
-import { JWTTokensType } from '../../../../common/domain/types/types';
 import { SecurityDeviceCreateDto } from '../../../security-devices/domain/types';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { TokensPairType } from '../../domain/types';
 
 export class LoginByGoogleCommand {
   constructor(
@@ -30,7 +30,7 @@ export class LoginByGoogleUseCase
   implements
     ICommandHandler<
       LoginByGoogleCommand,
-      AppNotificationResultType<JWTTokensType, string>
+      AppNotificationResultType<TokensPairType, string>
     >
 {
   constructor(
@@ -46,7 +46,7 @@ export class LoginByGoogleUseCase
 
   public async execute(
     command: LoginByGoogleCommand,
-  ): Promise<AppNotificationResultType<JWTTokensType, string>> {
+  ): Promise<AppNotificationResultType<TokensPairType, string>> {
     const { googleId, googleEmail, googleEmailVerified } =
       command.googleProfile;
 
@@ -56,15 +56,24 @@ export class LoginByGoogleUseCase
       if (!ip || !userAgent)
         return this.appNotification.badRequest('Bad input data');
 
+      if (!googleEmailVerified)
+        return this.appNotification.badRequest('Google email not verified');
+
       const [userGoogleInfo, userWithGoogleInfo] = await Promise.all([
         this.userRepository.getUserByGoogleSub(googleId),
         this.userRepository.getUserByEmailWithGoogleInfo(googleEmail),
       ]);
 
-      if (
-        userGoogleInfo ||
-        (userWithGoogleInfo?.user && userWithGoogleInfo?.googleInfo)
-      )
+      if (userGoogleInfo) {
+        const result = await this.createSession(
+          userGoogleInfo.id,
+          userAgent,
+          ip,
+        );
+        return this.appNotification.success(result);
+      }
+
+      if (userWithGoogleInfo?.user && userWithGoogleInfo?.googleInfo)
         return this.appNotification.badRequest('User already exist');
 
       const createdGoogleInfoDto: UserGoogleInfoCreatedDto = {
@@ -93,7 +102,7 @@ export class LoginByGoogleUseCase
     user: UserEntity | null,
     ip: string,
     userAgent: string,
-  ): Promise<JWTTokensType> {
+  ): Promise<TokensPairType> {
     let userId: string;
     let userForEvent: UserEntity;
     if (user) {
@@ -122,6 +131,23 @@ export class LoginByGoogleUseCase
       await this.userRepository.addGoogleInfoToUser(createdGoogleInfoDto);
     }
 
+    const tokens = await this.createSession(userId, userAgent, ip);
+    this.publishEvent(userForEvent);
+    return tokens;
+  }
+
+  private publishEvent(user: UserEntity): void {
+    const userWithEvents = this.publisher.mergeObjectContext(user);
+
+    userWithEvents.registrationSuccessEvent();
+    userWithEvents.commit();
+  }
+
+  private async createSession(
+    userId: string,
+    userAgent: string,
+    ip: string,
+  ): Promise<TokensPairType> {
     const deviceId = this.authService.generateDeviceId(userId);
     const accessToken = await this.authService.generateAccessToken(userId);
     const refreshToken = await this.authService.generateRefreshToken(
@@ -140,18 +166,6 @@ export class LoginByGoogleUseCase
     };
 
     await this.securityDevicesRepository.createSession(sessionCreatedDto);
-
-    this.publishEvent(userForEvent);
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  private publishEvent(user: UserEntity): void {
-    const userWithEvents = this.publisher.mergeObjectContext(user);
-
-    userWithEvents.registrationSuccessEvent();
-    userWithEvents.commit();
+    return { accessToken, refreshToken };
   }
 }

@@ -111,6 +111,15 @@ export class UsersRepository {
     });
   }
 
+  public async removeUserById(userId: string): Promise<void> {
+    this.logger.debug(
+      `Execute: remove user by id: ${userId}`,
+      this.removeUserById.name,
+    );
+
+    await this.txHost.tx.user.delete({ where: { id: userId } });
+  }
+
   public async getUserByEmailWithGoogleInfo(email: string): Promise<{
     user: UserEntity;
     googleInfo: UserGoogleAccount | null;

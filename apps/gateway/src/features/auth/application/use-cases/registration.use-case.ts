@@ -21,7 +21,10 @@ export class RegistrationCommand {
 @CommandHandler(RegistrationCommand)
 export class RegistrationUseCase
   implements
-    ICommandHandler<RegistrationCommand, AppNotificationResultType<null>>
+    ICommandHandler<
+      RegistrationCommand,
+      AppNotificationResultType<null, string>
+    >
 {
   private readonly expireAfterMiliseconds: number;
   constructor(
@@ -40,14 +43,12 @@ export class RegistrationUseCase
 
   public async execute(
     command: RegistrationCommand,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<null, string>> {
     this.logger.debug('Execute; registration user', this.execute.name);
 
     const { username, email, password, html } = command.registrationDto;
 
     try {
-      const currentDate = new Date();
-
       const [userByEmail, userByUserName] = await Promise.all([
         this.userRepository.getUserByEmail(email),
         this.userRepository.getUserByUsername(username),
@@ -57,7 +58,10 @@ export class RegistrationUseCase
         (userByEmail && userByEmail.isConfirmed) ||
         (userByUserName && userByUserName.isConfirmed)
       )
-        return this.appNotification.badRequest(null); // TODO Bad request fields
+        return this.appNotification.badRequest('The user already exists');
+
+      const userIdToDell = this.handleUser(userByEmail, userByUserName);
+      const currentDate = new Date();
 
       const hashPassword = await this.authService.generateHash(password);
 
@@ -76,7 +80,10 @@ export class RegistrationUseCase
         isConfirmed: false,
       };
 
-      const newUser = await this.executeTransaction(userCreatedDto);
+      const newUser = await this.executeTransaction(
+        userCreatedDto,
+        userIdToDell,
+      );
 
       this.publishEvent(
         newUser,
@@ -94,12 +101,11 @@ export class RegistrationUseCase
   @Transactional()
   private async executeTransaction(
     userCreatedDto: UserCreatedDto,
+    userIdToDell: string,
   ): Promise<UserEntity> {
-    const newUser =
-      await this.userRepository.createNotConfirmedUser(userCreatedDto);
-    // TODO Доделать с oauth2 авторизаций + слиять аккаунты если они уже есть.
+    if (userIdToDell) await this.userRepository.removeUserById(userIdToDell);
 
-    return newUser;
+    return await this.userRepository.createNotConfirmedUser(userCreatedDto);
   }
 
   private publishEvent(
@@ -114,16 +120,22 @@ export class RegistrationUseCase
     customerWithEvents.commit();
   }
 
-  // private handleUser(userByEmail: UserEntity, userByUserName: UserEntity) {
-  //   if (userByEmail && userByUserName && userByEmail.id === userByUserName.id) {
-  //     await this.userRepository.deleteUserById(userByEmail.id);
-  //   } else {
-  //     if (userByEmail) {
-  //       await this.userRepository.deleteUserById(userByEmail.id);
-  //     }
-  //     if (userByUsername) {
-  //       await this.userRepository.deleteUserById(userByUsername.id);
-  //     }
-  //   }
-  // }
+  private handleUser(
+    userByEmail: UserEntity,
+    userByUserName: UserEntity,
+  ): string {
+    let userIdToDell: string | null = null;
+    if (userByEmail && userByUserName && userByEmail.id === userByUserName.id) {
+      userIdToDell = userByEmail.id;
+    } else {
+      if (userByEmail) {
+        userIdToDell = userByEmail.id;
+      }
+      if (userByUserName) {
+        userIdToDell = userByUserName.id;
+      }
+    }
+
+    return userIdToDell;
+  }
 }

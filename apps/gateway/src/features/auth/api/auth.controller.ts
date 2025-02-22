@@ -64,10 +64,7 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import {
-  JWTRefreshTokenPayloadType,
-  JWTTokensType,
-} from '../../../common/domain/types/types';
+import { JWTRefreshTokenPayloadType } from '../../../common/domain/types/types';
 import { TokensPairType } from '../domain/types';
 import { LoginOutputDto } from './dto/output-dto/login-outptu.dto';
 import { CurrentUser } from '../../../common/decorators/http-parse/current-user.decorator';
@@ -92,6 +89,7 @@ export class AuthController {
     }).FRONTED_PROVIDER;
   }
 
+  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationSwagger()
@@ -181,6 +179,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuth(): Promise<void> {}
 
+  // TODO: DONE
   @Get(`${AUTH_ROUTE.GOOGLE}/${AUTH_ROUTE.CALLBACK}`)
   @UseGuards(AuthGuard('google'))
   @GoogleAuthCallbackSwagger()
@@ -195,7 +194,7 @@ export class AuthController {
       this.googleAuthCallback.name,
     );
 
-    const result: AppNotificationResultType<JWTTokensType, string> =
+    const result: AppNotificationResultType<TokensPairType, string> =
       await this.commandBus.execute(
         new LoginByGoogleCommand(googleProfile, ip, userAgent),
       );

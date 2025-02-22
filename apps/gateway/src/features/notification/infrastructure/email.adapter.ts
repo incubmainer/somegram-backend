@@ -12,11 +12,23 @@ interface IEmailAdapter {
     template: string,
   ): Promise<void>;
 
+  sendInfoEmail(
+    email: string,
+    subject: string,
+    template: string,
+  ): Promise<void>;
+
   sendSubscriptionNotification(
     email: string,
     subject: string,
     template: string,
     date?: string,
+  ): Promise<void>;
+
+  sendEmailWithHtmlPattern(
+    email: string,
+    subject: string,
+    html: string,
   ): Promise<void>;
 }
 
@@ -57,6 +69,29 @@ export class EmailAdapter implements IEmailAdapter {
       })
       .catch((e) => {
         this.logger.error(e, this.sendEmail.name);
+      });
+  }
+
+  async sendInfoEmail(
+    email: string,
+    subject: string,
+    template: string,
+  ): Promise<void> {
+    await this.mailerService
+      .sendMail({
+        to: email,
+        from: `Somegram <${this.sender}>`,
+        subject: subject,
+        template: template, // `.hbs` extension is appended automatically
+      })
+      .then((res) => {
+        this.logger.debug(
+          `Email response: ${JSON.stringify(res)}`,
+          this.sendInfoEmail.name,
+        );
+      })
+      .catch((e) => {
+        this.logger.error(e, this.sendInfoEmail.name);
       });
   }
 
@@ -123,6 +158,17 @@ export class EmailAdapterMock extends EmailAdapter {
     this.logger.log(
       `Send mock email. Email: ${email}, url: ${url}, subject: ${subject}, template: ${template}`,
       this.sendEmail.name,
+    );
+  }
+
+  async sendInfoEmail(
+    email: string,
+    subject: string,
+    template: string,
+  ): Promise<void> {
+    this.logger.log(
+      `Send mock email. Email: ${email}, subject: ${subject}, template: ${template}`,
+      this.sendInfoEmail.name,
     );
   }
 
