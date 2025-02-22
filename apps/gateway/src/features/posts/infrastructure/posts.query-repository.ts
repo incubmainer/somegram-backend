@@ -4,6 +4,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
+import { PostEntity } from '../domain/post.entity';
+import { LoggerService } from '@app/logger';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -11,21 +13,35 @@ export class PostsQueryRepository {
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PostsQueryRepository.name);
+  }
 
-  public async getPostById(postId: UserPost['id']): Promise<UserPost> {
-    return await this.txHost.tx.userPost.findFirst({
+  public async getPostById(postId: string): Promise<PostEntity | null> {
+    this.logger.debug(
+      `Execute: get post by id: ${postId}`,
+      this.getPostById.name,
+    );
+    const post = await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
       },
     });
+
+    return post ? new PostEntity(post) : null;
   }
 
   public async getPostsByUser(
-    userId: UserPost['userId'],
+    userId: string,
     queryString?: SearchQueryParametersType,
     endCursorPostId?: string,
-  ) {
+  ): Promise<{ posts: PostEntity[]; count: number }> {
+    this.logger.debug(
+      `Execute: get posts by user id: ${userId}`,
+      this.getPostsByUser.name,
+    );
+
     const sanitizationQuery = getSanitizationQuery(queryString);
 
     let endCursorCreatedAt: Date | undefined = undefined;
@@ -65,11 +81,11 @@ export class PostsQueryRepository {
           }
         : {}),
     };
-    const posts = await this.txHost.tx.userPost.findMany({
+    const posts = (await this.txHost.tx.userPost.findMany({
       where,
       orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
       take: sanitizationQuery.pageSize,
-    });
+    })) as PostEntity[];
 
     const count = await this.txHost.tx.userPost.count({
       where,
@@ -84,7 +100,8 @@ export class PostsQueryRepository {
   public async getAllPosts(
     queryString?: SearchQueryParametersType,
     endCursorPostId?: string,
-  ): Promise<{ posts: UserPost[]; count: number }> {
+  ): Promise<{ posts: PostEntity[]; count: number }> {
+    this.logger.debug(`Execute: get all posts`, this.getAllPosts.name);
     const sanitizationQuery = getSanitizationQuery(queryString);
 
     let endCursorCreatedAt: Date | undefined = undefined;
@@ -124,11 +141,11 @@ export class PostsQueryRepository {
         : {}),
     };
 
-    const posts = await this.txHost.tx.userPost.findMany({
+    const posts = (await this.txHost.tx.userPost.findMany({
       orderBy: { [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection },
       where,
       take: sanitizationQuery.pageSize,
-    });
+    })) as PostEntity[];
 
     const count = await this.txHost.tx.userPost.count({
       where,

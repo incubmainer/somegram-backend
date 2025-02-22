@@ -1,6 +1,5 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
-  ApiResponse,
   ApiOperation,
   ApiQuery,
   ApiParam,

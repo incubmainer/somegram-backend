@@ -14,7 +14,6 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { Pagination, PaginatorService } from '@app/paginator';
-import { UserPost } from '@prisma/gateway';
 
 export class GetPublicPostsByUserQuery {
   constructor(
@@ -44,25 +43,24 @@ export class GetPublicPostsByUserUseCase
   async execute(
     command: GetPublicPostsByUserQuery,
   ): Promise<AppNotificationResultType<Pagination<PostOutputDto[]>>> {
+    this.logger.debug('Execute: get public posts command', this.execute.name);
     const { queryString, endCursorPostId } = command;
 
     const sanitizationQuery = getSanitizationQuery(queryString);
     try {
-      const { posts, count }: { posts: UserPost[]; count: number } =
-        await this.postsQueryRepository.getAllPosts(
-          queryString,
-          endCursorPostId,
-        );
+      const { posts, count } = await this.postsQueryRepository.getAllPosts(
+        queryString,
+        endCursorPostId,
+      );
 
       const mappedPosts: PostOutputDto[] = await Promise.all(
-        posts.map(async (post: UserPost): Promise<PostOutputDto> => {
+        posts.map(async (post): Promise<PostOutputDto> => {
           const user = await this.usersQueryRepository.findUserById(
             post.userId,
           );
           const avatarUrl: string = await this.photoServiceAdapter.getAvatar(
             post.userId,
           );
-          // TODO: Type
           const postPhotos = await this.photoServiceAdapter.getPostPhotos(
             post.id,
           );

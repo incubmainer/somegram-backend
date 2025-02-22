@@ -14,7 +14,6 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { User, UserPost } from '@prisma/gateway';
 
 export class GetPostsByUserQuery {
   constructor(
@@ -45,26 +44,24 @@ export class GetPostsByUserUseCase
   async execute(
     command: GetPostsByUserQuery,
   ): Promise<AppNotificationResultType<Pagination<PostOutputDto[]>>> {
+    this.logger.debug('Execute: get user posts command', this.execute.name);
     const { userId, queryString, endCursorPostId } = command;
 
-    const user: User | null =
-      await this.usersQueryRepository.findUserById(userId);
-    if (!user) return this.appNotification.notFound();
-
-    const sanitizationQuery = getSanitizationQuery(queryString);
     try {
-      const avatarUrl: string =
-        await this.photoServiceAdapter.getAvatar(userId);
+      const user = await this.usersQueryRepository.findUserById(userId);
+      if (!user) return this.appNotification.notFound();
+      const sanitizationQuery = getSanitizationQuery(queryString);
 
-      const { posts, count }: { posts: UserPost[]; count: number } =
-        await this.postsQueryRepository.getPostsByUser(
-          user.id,
-          queryString,
-          endCursorPostId,
-        );
+      const avatarUrl = await this.photoServiceAdapter.getAvatar(userId);
+
+      const { posts, count } = await this.postsQueryRepository.getPostsByUser(
+        user.id,
+        queryString,
+        endCursorPostId,
+      );
 
       const mappedPosts: PostOutputDto[] = await Promise.all(
-        posts.map(async (post: UserPost): Promise<PostOutputDto> => {
+        posts.map(async (post): Promise<PostOutputDto> => {
           return postToOutputMapper(
             post,
             user,

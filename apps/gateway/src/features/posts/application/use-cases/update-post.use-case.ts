@@ -5,7 +5,6 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { UserPost } from '@prisma/gateway';
 
 export class UpdatePostCommand {
   constructor(
@@ -30,18 +29,15 @@ export class UpdatePostUseCase
   async execute(
     command: UpdatePostCommand,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: update post command', this.execute.name);
     const { postId, userId, description } = command;
     try {
-      const post: UserPost | null =
-        await this.postsRepository.getPostById(postId);
+      const post = await this.postsRepository.getPostById(postId);
       if (!post) return this.appNotification.notFound();
       if (post.userId !== userId) return this.appNotification.forbidden();
 
-      await this.postsRepository.updatePost({
-        postId,
-        description,
-        updatedAt: new Date(),
-      });
+      post.updatePost(description);
+      await this.postsRepository.updatePost(post);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);

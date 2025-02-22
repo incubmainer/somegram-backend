@@ -23,14 +23,13 @@ export class PhotoServiceAdapter {
     private readonly configService: ConfigService,
   ) {}
 
-  async getPostPhotos(postId: string) {
+  async getPostPhotos(postId: string): Promise<string[]> {
     try {
-      const responseOfService = this.fileServiceClient
+      const responseOfService: Observable<string[]> = this.fileServiceClient
         .send({ cmd: GET_POST_PHOTOS }, { postId })
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
       throw new InternalServerErrorException();
     }

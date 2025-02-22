@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtStrategy } from '../../common/guards/jwt/jwt.strategy';
 import { UsersController } from './api/users.controller';
 import { UsersRepository } from './infrastructure/users.repository';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.use-case';
@@ -27,7 +26,6 @@ const handlers = [
   imports: [],
   controllers: [UsersController, PublicUsersController],
   providers: [
-    JwtStrategy,
     ...handlers,
     ...queryHandlers,
     UsersRepository,

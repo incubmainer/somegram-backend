@@ -37,7 +37,6 @@ export class AddPostDto {
   description?: string;
 }
 
-// TODO: Переделать?
 export class FileDto {
   @IsString()
   @IsNotEmpty()

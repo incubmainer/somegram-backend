@@ -1,6 +1,7 @@
-import { User, UserPost } from '@prisma/gateway';
 import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
+import { UserEntity } from '../../../../users/domain/user.entity';
+import { PostEntity } from '../../../domain/post.entity';
 
 export class PostOwnerOutputDtoModel {
   @ApiProperty({
@@ -90,14 +91,8 @@ export class PostOutputDto {
 }
 
 export const postToOutputMapper = (
-  post: {
-    id: UserPost['id'];
-    userId: UserPost['userId'];
-    createdAt: UserPost['createdAt'];
-    updatedAt: UserPost['updatedAt'] | null;
-    description?: UserPost['description'] | null;
-  },
-  user: User,
+  post: PostEntity,
+  user: UserEntity,
   avatarUrl: string,
   images: string[],
 ): PostOutputDto => {

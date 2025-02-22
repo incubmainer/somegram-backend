@@ -6,7 +6,7 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { UserPost } from '@prisma/gateway';
+import { Transactional } from '@nestjs-cls/transactional';
 
 export class DeletePostCommand {
   constructor(
@@ -31,21 +31,26 @@ export class DeletePostUseCase
   async execute(
     command: DeletePostCommand,
   ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: delete post command', this.execute.name);
     const { postId, userId } = command;
     try {
-      const post: UserPost | null =
-        await this.postsRepository.getPostById(postId);
+      const post = await this.postsRepository.getPostById(postId);
       if (!post) return this.appNotification.notFound();
       if (post.userId !== userId) return this.appNotification.forbidden();
 
-      await this.photoServiceAdapter.deletePostPhotos(postId);
-      await this.postsRepository.deletePost({
-        postId,
-      });
+      await this.handleDelete(postId);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
     }
+  }
+
+  @Transactional()
+  async handleDelete(postId: string): Promise<void> {
+    await Promise.all([
+      this.photoServiceAdapter.deletePostPhotos(postId),
+      this.postsRepository.deletePost(postId),
+    ]);
   }
 }

@@ -11,7 +11,6 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { UserPost, User } from '@prisma/gateway';
 
 export class GetPostQuery {
   constructor(public postId: string) {}
@@ -34,23 +33,18 @@ export class GetPostUseCase
   async execute(
     command: GetPostQuery,
   ): Promise<AppNotificationResultType<PostOutputDto>> {
+    this.logger.debug('Execute: get post by id command', this.execute.name);
     const { postId } = command;
 
     try {
-      const post: UserPost | null =
-        await this.postsQueryRepository.getPostById(postId);
+      const post = await this.postsQueryRepository.getPostById(postId);
       if (!post) this.appNotification.notFound();
 
-      const postOwner: User = await this.usersQueryRepository.findUserById(
-        post.userId,
-      );
-
-      const ownerAvatarUrl: string = await this.photoServiceAdapter.getAvatar(
-        post.userId,
-      );
-
-      // TODO: Type
-      const postPhotos = await this.photoServiceAdapter.getPostPhotos(post.id);
+      const [postOwner, ownerAvatarUrl, postPhotos] = await Promise.all([
+        this.usersQueryRepository.findUserById(post.userId),
+        this.photoServiceAdapter.getAvatar(post.userId),
+        this.photoServiceAdapter.getPostPhotos(post.id),
+      ]);
 
       const result: PostOutputDto = postToOutputMapper(
         post,
