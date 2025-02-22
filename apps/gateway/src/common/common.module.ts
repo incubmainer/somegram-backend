@@ -7,7 +7,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { PhotoServiceAdapter } from './adapter/photo-service.adapter';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from '../settings/configuration/photo-service.options';
-import { CommandExecutorService } from './services/command-executor-service';
 import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
 import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 import { clsModule } from './services/cls-service/cls.module';
@@ -46,7 +45,6 @@ const strategy = [
     PhotoServiceAdapter,
     JwtRefreshTokenStrategyStrategy,
     RefreshJWTAccessGuard,
-    CommandExecutorService,
     WsJwtAuthGuard,
     WsJwtStrategy,
     DateFormatter,
@@ -60,7 +58,6 @@ const strategy = [
     JwtRefreshTokenStrategyStrategy,
     RefreshJWTAccessGuard,
     PhotoServiceAdapter,
-    CommandExecutorService,
     WsJwtAuthGuard,
     WsJwtStrategy,
     DateFormatter,

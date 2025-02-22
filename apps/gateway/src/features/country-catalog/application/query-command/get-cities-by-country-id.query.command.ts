@@ -10,6 +10,7 @@ import {
   CityCatalog,
 } from '@prisma/gateway';
 import { NotFoundException } from '@nestjs/common';
+import { LoggerService } from '@app/logger';
 
 export class GetCitiesByCountryIdQueryCommand {
   constructor(public countryId: string) {}
@@ -23,12 +24,19 @@ export class GetCitiesByCountryIdQueryCommandHandler
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
+    private readonly logger: LoggerService,
     private readonly cityOutputDtoMapper: CityOutputDtoMapper,
-  ) {}
+  ) {
+    this.logger.setContext(GetCitiesByCountryIdQueryCommandHandler.name);
+  }
 
   async execute(
     query: GetCitiesByCountryIdQueryCommand,
   ): Promise<CityOutputDto[]> {
+    this.logger.debug(
+      'Execute: get cities by country id command',
+      this.execute.name,
+    );
     const { countryId } = query;
     const cities: CityCatalog[] | [] =
       await this.txHost.tx.cityCatalog.findMany({
