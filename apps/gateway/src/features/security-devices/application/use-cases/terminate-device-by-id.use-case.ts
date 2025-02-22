@@ -1,10 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SecurityDevicesRepository } from '../../infrastructure/security-devices.repository';
-import { SecurityDevices } from '@prisma/gateway';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { LoggerService } from '@app/logger';
 
 export class TerminateDeviceByIdCommand {
   constructor(
@@ -24,14 +24,21 @@ export class TerminateDeviceByIdCommandHandler
   constructor(
     private readonly securityDevicesRepository: SecurityDevicesRepository,
     private readonly applicationNotification: ApplicationNotification,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(TerminateDeviceByIdCommandHandler.name);
+  }
 
   async execute(
     command: TerminateDeviceByIdCommand,
   ): Promise<AppNotificationResultType<void>> {
+    this.logger.debug(
+      'Execute: delete device by id command',
+      this.execute.name,
+    );
     const { userId, deviceId } = command;
     try {
-      const device: SecurityDevices | null =
+      const device =
         await this.securityDevicesRepository.getDeviceById(deviceId);
 
       if (!device) return this.applicationNotification.notFound();
@@ -42,6 +49,7 @@ export class TerminateDeviceByIdCommandHandler
 
       return this.applicationNotification.success(null);
     } catch (e) {
+      this.logger.error(e, this.execute.name);
       return this.applicationNotification.internalServerError();
     }
   }

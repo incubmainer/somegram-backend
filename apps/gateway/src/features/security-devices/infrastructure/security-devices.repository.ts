@@ -47,6 +47,10 @@ export class SecurityDevicesRepository {
   }
 
   public async deleteAllSessionsForUser(userId: string): Promise<void> {
+    this.logger.debug(
+      `Execute: delete all session for user by user id: ${userId}`,
+      this.deleteAllSessionsForUser.name,
+    );
     await this.txHost.tx.securityDevices.deleteMany({
       where: { userId: userId },
     });
@@ -63,48 +67,6 @@ export class SecurityDevicesRepository {
     return device ? new SessionEntity(device) : null;
   }
 
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////
-
-  public async addDevice(
-    userId: string,
-    deviceId: string,
-    ip: string,
-    lastActiveDate: string,
-    title: string,
-  ) {
-    await this.txHost.tx.securityDevices.create({
-      data: {
-        userId: userId,
-        ip: ip,
-        deviceId: deviceId,
-        lastActiveDate: lastActiveDate,
-        title: title,
-      },
-    });
-  }
-
-  public async deleteSessionsById(sessionsId: string[]): Promise<boolean> {
-    try {
-      await this.txHost.tx.securityDevices.deleteMany({
-        where: { deviceId: { in: sessionsId } },
-      });
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
   public async deleteDevice(deviceId: string): Promise<void> {
     this.logger.debug(
       `Execute: delete device by deviceId: ${deviceId}`,
@@ -115,9 +77,23 @@ export class SecurityDevicesRepository {
     });
   }
 
+  public async deleteSessionsById(sessionsId: string[]): Promise<void> {
+    this.logger.debug(
+      `Execute: delete sessions by id`,
+      this.deleteSessionsById.name,
+    );
+    await this.txHost.tx.securityDevices.deleteMany({
+      where: { deviceId: { in: sessionsId } },
+    });
+  }
+
   public async getDevicesByUserId(
     userId: string,
   ): Promise<SecurityDevices[] | null> {
+    this.logger.debug(
+      `Execute: get devices by userId: ${userId}`,
+      this.getDevicesByUserId.name,
+    );
     const devices: SecurityDevices[] | [] =
       await this.txHost.tx.securityDevices.findMany({
         where: { userId: userId },
