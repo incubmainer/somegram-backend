@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { LoggerService } from '@app/logger';
-import {
-  JWTAccessTokenPayloadType,
-  JWTRefreshTokenPayloadType,
-} from '../../../common/domain/types/types';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { randomUUID } from 'crypto';
+import {
+  JWTAccessTokenPayloadType,
+  JWTRefreshTokenPayloadType,
+} from '../domain/types';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +21,6 @@ export class AuthService {
     'https://www.google.com/recaptcha/api/siteverify';
   constructor(
     private jwtService: JwtService,
-    private usersRepository: UsersRepository,
     private readonly logger: LoggerService,
     private readonly configService: ConfigService<ConfigurationType, true>,
   ) {

@@ -1,12 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
-import { JWTRefreshTokenPayloadType } from '../../../../common/domain/types/types';
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { JWTRefreshTokenPayloadType } from '../../domain/types';
 
 export class LogoutCommand {
   constructor(public user: JWTRefreshTokenPayloadType) {}

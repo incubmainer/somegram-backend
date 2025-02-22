@@ -4,9 +4,9 @@ import { Strategy } from 'passport-jwt';
 import { Socket } from 'socket.io';
 import { WsUnauthorizedException } from '../../exception-filter/ws/exceptions/ws-unauthorized.exception';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
-import { JWTAccessTokenPayloadType } from '../../domain/types/types';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {

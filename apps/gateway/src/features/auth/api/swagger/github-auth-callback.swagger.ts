@@ -1,34 +1,23 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
+import { BadRequestExceptionDto } from '@app/base-types-enum';
 
 export function GithubAuthCallbackSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'GitHub Authentication Callback' }),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiOkResponse({
       description: `Login successful.
 Redirect to home page. ({homePage}/?accessToken={accessToken})
 The refreshToken is set in an HTTP-only cookie.
 The accessToken set to the query parameter.`,
     }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: 'Unknown IP address',
-      schema: {
-        example: {
-          status: HttpStatus.NOT_FOUND,
-          error: 'login_failed',
-          message: 'Unknown IP address',
-          details: {
-            ip: 'Invalid IP address',
-          },
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
+    ApiBadRequestResponse({
+      description: 'Unknown IP address or useragent',
+      type: BadRequestExceptionDto,
     }),
   );
 }

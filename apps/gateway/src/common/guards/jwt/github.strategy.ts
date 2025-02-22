@@ -3,6 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-github2';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { VerifiedCallback } from 'passport-jwt';
+
+export class GithubProfile {
+  githubId: string;
+  username: string;
+  displayName: string;
+  email: string;
+}
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
@@ -20,13 +28,19 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: Profile) {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+    done: VerifiedCallback,
+  ): Promise<void> {
     const { id, username, displayName, emails } = profile;
-    return {
+    const user: GithubProfile = {
       githubId: id,
       username,
       displayName,
       email: emails[0].value,
     };
+    done(null, user);
   }
 }

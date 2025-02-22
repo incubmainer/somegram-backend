@@ -10,18 +10,9 @@ export class MeOutputDto {
   @ApiProperty()
   email: string;
 
-  constructor(user: UserEntity) {
+  constructor(user: UserEntity | User) {
     this.userId = user.id;
     this.userName = user.username;
     this.email = user.email;
   }
 }
-
-export const userMapper = (user: User): MeOutputDto => {
-  // @ts-ignore TODO: Удалить?
-  const outputUser = new MeOutputDto();
-  outputUser.email = user.email;
-  outputUser.userName = user.username;
-  outputUser.userId = user.id;
-  return outputUser;
-};

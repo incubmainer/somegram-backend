@@ -8,7 +8,6 @@ import {
   UseGuards,
   NotFoundException,
   Get,
-  Req,
   InternalServerErrorException,
   BadRequestException,
   UnauthorizedException,
@@ -37,11 +36,7 @@ import { IpAddress } from '../../../common/decorators/http-parse/ip-address.deco
 import { UserAgent } from '../../../common/decorators/http-parse/user-agent.decorator';
 import { LogoutCommand } from '../application/use-cases/logout-use-case';
 import { LogOutSwagger } from './swagger/logout.swagger';
-import { UserFromGithub } from './dto/input-dto/user-from-github';
-import {
-  AuthWithGithubCommand,
-  LoginWithGithubCodes,
-} from '../application/use-cases/auth-with-github-use-case';
+import { AuthWithGithubCommand } from '../application/use-cases/auth-with-github-use-case';
 import { LoginByGoogleCommand } from '../application/use-cases/login-by-google.use-case';
 import { GoogleProfile } from '../../../common/guards/jwt/google.strategy';
 import { GoogleUser } from '../../../common/decorators/http-parse/google-user.decorator';
@@ -55,8 +50,6 @@ import { GetInfoAboutMeSwagger } from './swagger/get-info-about-me.swagger';
 import { RegistrationEmailResendingSwagger } from './swagger/registration-email-resending.swagger';
 import { RegistrationEmailResendingBodyInputDto } from './dto/input-dto/registration-email-resending.body.input-dto';
 import { RegistrationEmailResendingCommand } from '../application/use-cases/registration-email-resending.use-case';
-import { CreateTokensCommand } from '../application/use-cases/create-token.use-case';
-import { AddUserDeviceCommand } from '../application/use-cases/add-user-device.use-case';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { LoggerService } from '@app/logger';
 import { AUTH_ROUTE } from '../../../common/constants/route.constants';
@@ -64,14 +57,15 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { JWTRefreshTokenPayloadType } from '../../../common/domain/types/types';
-import { TokensPairType } from '../domain/types';
+import { JWTRefreshTokenPayloadType, TokensPairType } from '../domain/types';
 import { LoginOutputDto } from './dto/output-dto/login-outptu.dto';
 import { CurrentUser } from '../../../common/decorators/http-parse/current-user.decorator';
 import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
 import { MeAccessTokenGuard } from '../../../common/guards/jwt/jwt-me-access-token.guard';
 import { RecaptchaGuard } from '../../../common/guards/recaptcha.guard';
 import { RecaptchaSiteKeyOutputDto } from './dto/output-dto/recaptcha-site-key-output.dto';
+import { GithubUser } from '../../../common/decorators/http-parse/github-user.decorator';
+import { GithubProfile } from '../../../common/guards/jwt/github.strategy';
 
 @ApiTags('Auth')
 @Controller(AUTH_ROUTE.MAIN)
@@ -89,7 +83,6 @@ export class AuthController {
     }).FRONTED_PROVIDER;
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationSwagger()
@@ -112,7 +105,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION_CONFIRMATION)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationConfirmationSwagger()
@@ -144,7 +136,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.REGISTRATION_EMAIL_RESENDING)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegistrationEmailResendingSwagger()
@@ -179,7 +170,6 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuth(): Promise<void> {}
 
-  // TODO: DONE
   @Get(`${AUTH_ROUTE.GOOGLE}/${AUTH_ROUTE.CALLBACK}`)
   @UseGuards(AuthGuard('google'))
   @GoogleAuthCallbackSwagger()
@@ -220,7 +210,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Get(AUTH_ROUTE.RECAPTCHA_SITE_KEY)
   @RecaptchaSiteKeySwagger()
   async recaptchaSiteKey(): Promise<RecaptchaSiteKeyOutputDto> {
@@ -232,7 +221,6 @@ export class AuthController {
     };
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.RESTORE_PASSWORD)
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(RecaptchaGuard)
@@ -261,7 +249,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.RESTORE_PASSWORD_CONFIRM)
   @HttpCode(HttpStatus.NO_CONTENT)
   @RestorePasswordConfirmationSwagger()
@@ -289,7 +276,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.LOGIN)
   @HttpCode(HttpStatus.OK)
   @LoginSwagger()
@@ -325,7 +311,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.LOGOUT)
   @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -349,7 +334,6 @@ export class AuthController {
     }
   }
 
-  // TODO: DONE
   @Post(AUTH_ROUTE.UPDATE_TOKENS)
   @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(HttpStatus.OK)
@@ -380,66 +364,49 @@ export class AuthController {
     }
   }
 
-  @Get('github')
+  @Get(AUTH_ROUTE.GITHUB)
   @UseGuards(AuthGuard('github'))
-  async githubAuth() {}
+  async githubAuth(): Promise<void> {}
 
-  @Get('github/callback')
+  @Get(`${AUTH_ROUTE.GITHUB}/${AUTH_ROUTE.CALLBACK}`)
   @UseGuards(AuthGuard('github'))
   @GithubAuthCallbackSwagger()
   async githubAuthCallback(
-    @Req() req,
-    @Res() res: Response,
+    @GithubUser() user: GithubProfile,
+    @Res() response: Response,
     @IpAddress() ip?: string,
     @UserAgent() userAgent?: string,
-  ) {
+  ): Promise<void> {
     this.logger.debug(
-      'start github auth callback',
+      'Execute: start github auth callback',
       this.githubAuthCallback.name,
     );
-    const user: UserFromGithub = req.user;
-    // @ts-ignore // TODO:
-    const notification: NotificationObject<string> =
-      await this.commandBus.execute(new AuthWithGithubCommand(user));
-    const code = notification.getCode();
-    if (code === LoginWithGithubCodes.TransactionError) {
-      this.logger.error('transaction error', this.githubAuthCallback.name);
-      throw new InternalServerErrorException();
-    }
-    if (!ip) {
-      this.logger.debug('unknown ip address', this.githubAuthCallback.name);
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        error: 'login failed',
-        message: 'Unknown ip address',
-        details: {
-          ip: 'Invlid ip address',
-        },
-      });
-    }
-    const userId = notification.getData();
-    const tokens = await this.commandBus.execute(
-      new CreateTokensCommand(userId),
-    );
 
-    await this.commandBus.execute(
-      new AddUserDeviceCommand(tokens.refreshToken, userAgent, ip),
-    );
+    const result: AppNotificationResultType<TokensPairType> =
+      await this.commandBus.execute(
+        new AuthWithGithubCommand(user, ip, userAgent),
+      );
 
-    this.logger.debug(
-      'github auth callback success',
-      this.githubAuthCallback.name,
-    );
-    res
-      .cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-      })
-      .redirect(`${this.frontendProvider}/?accessToken=${tokens.accessToken}`);
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.githubAuthCallback.name);
+        const { accessToken, refreshToken } = result.data;
+        response
+          .cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+          })
+          .redirect(`${this.frontendProvider}/?accessToken=${accessToken}`);
+        return;
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug('Bad request', this.githubAuthCallback.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
-  // TODO: DONE
   @Get(AUTH_ROUTE.ME)
   @HttpCode(HttpStatus.OK)
   @GetInfoAboutMeSwagger()

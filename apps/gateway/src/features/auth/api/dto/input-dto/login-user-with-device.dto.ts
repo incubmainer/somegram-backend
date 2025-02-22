@@ -5,7 +5,7 @@ import { IsUserPassword } from '../../../../../common/decorators/validation/is-u
 export class LoginDto {
   @ApiProperty({
     type: String,
-    description: 'this is email of user',
+    description: 'This is email of user',
     example: 'some@mail.com',
   })
   @IsUserEmail()
@@ -13,7 +13,7 @@ export class LoginDto {
   @ApiProperty({
     type: String,
     description:
-      'this is password of user. Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
+      'This is password of user. Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
     example: 'password',
     minLength: 6,
     maxLength: 20,

@@ -54,4 +54,17 @@ export class UserResetPasswordRepository {
       },
     });
   }
+
+  async getResetPasswordByUserId(
+    userId: string,
+  ): Promise<UserResetPasswordEntity | null> {
+    this.logger.debug(
+      `Execute: get reset password by user id: ${userId}`,
+      this.getResetPasswordByUserId.name,
+    );
+    const result = await this.txHost.tx.userResetPasswordCode.findUnique({
+      where: { userId },
+    });
+    return result ? new UserResetPasswordEntity(result) : null;
+  }
 }

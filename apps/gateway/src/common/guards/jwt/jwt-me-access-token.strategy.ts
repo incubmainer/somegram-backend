@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
 import { MeOutputDto } from '../../../features/auth/api/dto/output-dto/me-output-dto';
-import { JWTAccessTokenPayloadType } from '../../domain/types/types';
 import { LoggerService } from '@app/logger';
+import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class MeAccessTokenStrategy extends PassportStrategy(

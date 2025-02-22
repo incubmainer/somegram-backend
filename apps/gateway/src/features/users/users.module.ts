@@ -21,20 +21,18 @@ const useCases = [
   GetPublicProfileInfoUseCase,
 ];
 
-const repositories = [UsersRepository, UsersQueryRepository];
-
 const services = [AuthService];
 
 @Module({
-  imports: [
-    //CqrsModule,
-    // JwtModule.register({
-    //   global: false,
-    //   secret: jwtConstants.JWT_SECRET,
-    // }),
-  ],
+  imports: [],
   controllers: [UsersController, PublicUsersController],
-  providers: [JwtStrategy, ...services, ...useCases, ...repositories],
-  exports: [UsersRepository],
+  providers: [
+    JwtStrategy,
+    ...services,
+    ...useCases,
+    UsersRepository,
+    UsersQueryRepository,
+  ],
+  exports: [UsersRepository, UsersQueryRepository],
 })
 export class UsersModule {}

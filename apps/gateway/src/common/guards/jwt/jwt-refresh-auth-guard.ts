@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWTRefreshTokenPayloadType } from '../../domain/types/types';
+import { JWTRefreshTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class RefreshJWTAccessGuard extends AuthGuard('jwt-refresh-token') {

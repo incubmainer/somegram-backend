@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import {
-  PrismaClient as GatewayPrismaClient,
-  User,
-  UserGithubInfo,
-  UserConfirmationToken,
-  UserResetPasswordCode,
-} from '@prisma/gateway';
-import { UserFromGithub } from '../../auth/api/dto/input-dto/user-from-github';
+import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
 import { UserEntity } from '../domain/user.entity';
 import {
+  UserCreatedByGithubDto,
   UserCreatedByGoogleDto,
   UserCreatedDto,
+  UserGitHubInfoCreatedDto,
   UserGoogleInfoCreatedDto,
 } from '../domain/types';
 import { UserGoogleAccount } from '../domain/user-google-account.entity';
 import { UserConfirmationEntity } from '../../auth/domain/user-confirmation.entity';
 import { UserResetPasswordEntity } from '../../auth/domain/user-reset-password.entity';
+import { UserGithubAccountEntity } from '../domain/user-github-account.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -101,6 +97,27 @@ export class UsersRepository {
     return new UserEntity(user);
   }
 
+  public async createUserByGithub(
+    createdDto: UserCreatedByGithubDto,
+  ): Promise<UserEntity> {
+    this.logger.debug(
+      `Execute: save user by github`,
+      this.createUserByGithub.name,
+    );
+
+    const user = await this.txHost.tx.user.create({
+      data: {
+        username: createdDto.username,
+        email: createdDto.email,
+        createdAt: createdDto.createdAt,
+        isConfirmed: createdDto.isConfirmed,
+        firstName: createdDto.firstName,
+      },
+    });
+
+    return new UserEntity(user);
+  }
+
   public async updatePassword(user: UserEntity): Promise<void> {
     this.logger.debug(`Execute: update password`, this.updatePassword.name);
     await this.txHost.tx.user.update({
@@ -159,6 +176,24 @@ export class UsersRepository {
         sub: createdGoogleInfoDto.subGoogleId,
         email: createdGoogleInfoDto.googleEmail,
         emailVerified: createdGoogleInfoDto.googleEmailVerified,
+      },
+    });
+  }
+
+  public async addGithubInfoToUser(
+    createdGithubInfoDto: UserGitHubInfoCreatedDto,
+  ): Promise<void> {
+    this.logger.debug(
+      `Execute: save github info for user`,
+      this.addGithubInfoToUser.name,
+    );
+    await this.txHost.tx.userGithubInfo.create({
+      data: {
+        userId: createdGithubInfoDto.userId,
+        githubId: createdGithubInfoDto.githubId,
+        email: createdGithubInfoDto.email,
+        userName: createdGithubInfoDto.userName,
+        displayName: createdGithubInfoDto.displayName,
       },
     });
   }
@@ -250,6 +285,46 @@ export class UsersRepository {
     return user ? new UserEntity(user) : null;
   }
 
+  public async getUserByGithubId(githubId: string): Promise<UserEntity | null> {
+    this.logger.debug(
+      `Execute: get user by github id: ${githubId}`,
+      this.getUserByGithubId.name,
+    );
+    const user = await this.txHost.tx.user.findFirst({
+      where: {
+        userGithubInfo: {
+          githubId: githubId,
+        },
+      },
+    });
+    return user ? new UserEntity(user) : null;
+  }
+
+  public async getUserByEmailWithGithubInfo(email: string): Promise<{
+    user: UserEntity;
+    githubInfo: UserGithubAccountEntity | null;
+  } | null> {
+    this.logger.debug(
+      `Execute: get user by email with github info: ${email}`,
+      this.getUserByGithubId.name,
+    );
+
+    const result = await this.txHost.tx.user.findFirst({
+      where: {
+        email: email,
+      },
+      include: { userGithubInfo: true },
+    });
+
+    if (!result) return null;
+
+    const user = new UserEntity(result);
+    let githubInfo: UserGithubAccountEntity | null = null;
+    if (result.userGithubInfo) githubInfo = result.userGithubInfo;
+
+    return { user, githubInfo };
+  }
+
   //////////////////////////////////
   //////////////////////////////////
   //////////////////////////////////
@@ -283,17 +358,7 @@ export class UsersRepository {
   //   return users && users.length > 0 ? users : null;
   // }
   //
-  // public async getUserWithGithubInfo(
-  //   email: string,
-  // ): Promise<(User & { userGithubInfo: UserGithubInfo | null }) | null> {
-  //   const user = await this.txHost.tx.user.findFirst({
-  //     where: {
-  //       email: email,
-  //     },
-  //     include: { userGithubInfo: true },
-  //   });
-  //   return user;
-  // }
+
   //
   // public async generateUniqueUsername(): Promise<string> {
   //   const result = await this.txHost.tx

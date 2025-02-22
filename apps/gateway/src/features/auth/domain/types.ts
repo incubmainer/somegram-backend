@@ -9,3 +9,16 @@ export class UserResetPasswordCreatedDto {
   expiredAt: Date;
   createdAt: Date;
 }
+
+export class JWTRefreshTokenPayloadType {
+  userId: string;
+  deviceId: string;
+  iat: number;
+  exp: number;
+}
+
+export class JWTAccessTokenPayloadType {
+  userId: string;
+  iat: number;
+  exp: number;
+}

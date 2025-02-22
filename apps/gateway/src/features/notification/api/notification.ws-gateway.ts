@@ -22,13 +22,13 @@ import { ConfigurationType } from '../../../settings/configuration/configuration
 import { ConfigService } from '@nestjs/config';
 import { EnvSettings } from '../../../settings/env/env.settings';
 import { JwtService } from '@nestjs/jwt';
-import { JWTAccessTokenPayloadType } from '../../../common/domain/types/types';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import {
   WS_CORS_ALLOWED_HEADERS,
   WS_CORS_METHODS,
   WS_CORS_ORIGIN,
 } from '../../../common/constants/ws-cors.constants';
+import { JWTAccessTokenPayloadType } from '../../auth/domain/types';
 
 @UseFilters(WsExceptionFilter)
 @UsePipes(new ValidationPipe(new WsValidationPipeOption()))

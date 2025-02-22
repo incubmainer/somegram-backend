@@ -58,6 +58,7 @@ export const AUTH_ROUTE = {
   REGISTRATION_CONFIRMATION: 'registration-confirmation',
   REGISTRATION_EMAIL_RESENDING: 'registration-email-resending',
   GOOGLE: 'google',
+  GITHUB: 'github',
   CALLBACK: 'callback',
   LOGIN: 'login',
   LOGOUT: 'logout',

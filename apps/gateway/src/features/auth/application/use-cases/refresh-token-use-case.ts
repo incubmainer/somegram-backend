@@ -1,4 +1,4 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { AuthService } from '../auth.service';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
@@ -7,8 +7,7 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { JWTRefreshTokenPayloadType } from '../../../../common/domain/types/types';
-import { TokensPairType } from '../../domain/types';
+import { JWTRefreshTokenPayloadType, TokensPairType } from '../../domain/types';
 
 export class RenewTokensCommand {
   constructor(public user: JWTRefreshTokenPayloadType) {}

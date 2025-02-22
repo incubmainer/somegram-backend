@@ -52,19 +52,31 @@ export class RestorePasswordUseCase
       const currentDate = new Date();
       const user = await this.userRepository.getUserByEmail(email);
       if (!user) return this.appNotification.notFound();
+      const resetPassword =
+        await this.userResetPasswordRepository.getResetPasswordByUserId(
+          user.id,
+        );
 
       const code = randomUUID().replaceAll('-', '');
-
-      const createdDto: UserResetPasswordCreatedDto = {
-        userId: user.id,
-        code: code,
-        createdAt: currentDate,
-        expiredAt: new Date(
-          currentDate.getTime() + this.expireAfterMiliseconds,
-        ),
-      };
-
-      await this.userResetPasswordRepository.create(createdDto);
+      const expiredAt = new Date(
+        currentDate.getTime() + this.expireAfterMiliseconds,
+      );
+      if (resetPassword) {
+        const lastCode = resetPassword.code;
+        resetPassword.updateResetPassword(code, expiredAt);
+        await this.userResetPasswordRepository.updateResetPasswordByCode(
+          resetPassword,
+          lastCode,
+        );
+      } else {
+        const createdDto: UserResetPasswordCreatedDto = {
+          userId: user.id,
+          code: code,
+          createdAt: currentDate,
+          expiredAt: expiredAt,
+        };
+        await this.userResetPasswordRepository.create(createdDto);
+      }
 
       this.publish(user, code, html);
       return this.appNotification.success(null);

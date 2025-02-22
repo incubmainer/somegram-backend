@@ -21,3 +21,19 @@ export class UserGoogleInfoCreatedDto {
   googleEmail: string;
   googleEmailVerified: boolean;
 }
+
+export class UserGitHubInfoCreatedDto {
+  userId: string;
+  githubId: string;
+  email: string;
+  userName: string;
+  displayName: string;
+}
+
+export class UserCreatedByGithubDto {
+  username: string;
+  email: string;
+  createdAt: Date;
+  isConfirmed: boolean;
+  firstName: string;
+}

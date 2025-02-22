@@ -12,7 +12,6 @@ import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
 import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 import { clsModule } from './services/cls-service/cls.module';
 import { PrismaService } from './services/prisma-service/prisma.service';
-import { EmailSender } from './utils/email.sender';
 import { DateFormatter } from './utils/date-formatter.util';
 import { JwtStrategy } from './guards/jwt/jwt.strategy';
 import { GithubStrategy } from './guards/jwt/github.strategy';
@@ -50,7 +49,6 @@ const strategy = [
     CommandExecutorService,
     WsJwtAuthGuard,
     WsJwtStrategy,
-    EmailSender,
     DateFormatter,
     JwtService,
   ],
@@ -64,7 +62,6 @@ const strategy = [
     PhotoServiceAdapter,
     CommandExecutorService,
     WsJwtAuthGuard,
-    EmailSender,
     WsJwtStrategy,
     DateFormatter,
     JwtService,
