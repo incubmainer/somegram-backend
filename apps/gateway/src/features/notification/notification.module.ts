@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NotificationWsGateway } from './api/notification.ws-gateway';
 import { NotificationController } from './api/notification.controller';
-import { NotificationEntity } from './domain/notification.entity';
 import { CreateNotificationUseCaseHandler } from './application/use-cases/create-notification.use-cases';
 import { NotificationRepository } from './infrastructure/notification.repository';
 import { MarkNotificationAsReadUseCaseHandler } from './application/use-cases/mark-as-read.use-cases';
@@ -14,7 +13,6 @@ import { NotificationSwaggerController } from './api/swagger/notification-contro
 import { CreateNotificationsUseCaseHandler } from './application/use-cases/create-notifications.use-cases';
 import { GetNotificationsByIdQueryCommandHandler } from './application/query/get-notifications-by-id.query.command';
 import { CreatedNotificationEventHandler } from './application/event/created-notification.event';
-import { CreatedNotificationsEventHandler } from './application/event/created-notifications.event';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
 import { ConfigService } from '@nestjs/config';
 import { MailerModule, MailerService } from '@nestjs-modules/mailer';
@@ -24,11 +22,6 @@ import { LoggerService } from '@app/logger';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SendEmailNotificationSubscriptionActivatedEventHandler } from './application/event/send-email-notification-subscription-activated.event';
 import { SendEmailNotificationSubscriptionDisabledEventHandler } from './application/event/send-email-notification-subscription-disabled.event';
-
-const notificationEntityProvider = {
-  provide: 'NotificationEntity',
-  useValue: NotificationEntity,
-};
 
 const emailAdapter = {
   provide: EmailAdapter,
@@ -80,7 +73,6 @@ const mailerModule = MailerModule.forRootAsync({
   providers: [
     emailAdapter,
     NotificationWsGateway,
-    notificationEntityProvider,
     CreateNotificationUseCaseHandler,
     CreateNotificationsUseCaseHandler,
     NotificationRepository,
@@ -91,7 +83,6 @@ const mailerModule = MailerModule.forRootAsync({
     GetNotificationsByIdQueryCommandHandler,
     JwtService,
     CreatedNotificationEventHandler,
-    CreatedNotificationsEventHandler,
     PaymentsServiceAdapter,
     SendEmailNotificationSubscriptionActivatedEventHandler,
     SendEmailNotificationSubscriptionDisabledEventHandler,

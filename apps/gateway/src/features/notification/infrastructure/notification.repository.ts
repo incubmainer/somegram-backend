@@ -6,6 +6,8 @@ import {
   PrismaClient as GatewayPrismaClient,
   Notification,
 } from '@prisma/gateway';
+import { NotificationEntity } from '../domain/notification.entity';
+import { CreateNotificationDto } from '../domain/types';
 
 @Injectable()
 export class NotificationRepository {
@@ -19,24 +21,33 @@ export class NotificationRepository {
     this.logger.setContext(NotificationRepository.name);
   }
 
-  async create(newNotification: Notification): Promise<string> {
+  async create(
+    notificationDto: CreateNotificationDto,
+  ): Promise<NotificationEntity> {
     this.logger.debug('Execute: create notification into db', this.create.name);
     const notification: Notification = await this.txHost.tx.notification.create(
       {
-        data: newNotification,
+        data: {
+          createdAt: notificationDto.createdAt,
+          message: notificationDto.message,
+          userId: notificationDto.userId,
+          isRead: notificationDto.isRead,
+        },
       },
     );
-    return notification.id;
+    return new NotificationEntity(notification);
   }
 
-  async createMany(newNotifications: Notification[]): Promise<string[]> {
+  async createMany(
+    newNotifications: CreateNotificationDto[],
+  ): Promise<NotificationEntity[]> {
     this.logger.debug(
       'Execute: create many notifications into db',
       this.createMany.name,
     );
     return await this.txHost.withTransaction(
       { timeout: this.TRANSACTION_TIMEOUT },
-      async (): Promise<string[]> => {
+      async (): Promise<NotificationEntity[]> => {
         const promises = newNotifications.map((notification: Notification) => {
           return this.txHost.tx.notification.create({
             data: notification,
@@ -44,29 +55,32 @@ export class NotificationRepository {
         });
 
         const result = await Promise.all(promises);
-        return result.map((notification: Notification) => notification.id);
+        return result.map(
+          (notification: Notification) => new NotificationEntity(notification),
+        );
       },
     );
   }
 
-  async update(notification: Notification): Promise<void> {
-    this.logger.debug('Execute: update notification into db', this.update.name);
-
+  async readNotification(notification: NotificationEntity): Promise<void> {
+    this.logger.debug('Execute: read notification', this.readNotification.name);
     await this.txHost.tx.notification.update({
       where: { id: notification.id },
-      data: notification,
+      data: { isRead: notification.isRead, updateAt: notification.updateAt },
     });
   }
 
   async getNotificationById(
     notificationId: string,
-  ): Promise<Notification | null> {
+  ): Promise<NotificationEntity | null> {
     this.logger.debug(
       'Execute: get notification by id from db',
       this.getNotificationById.name,
     );
-    return this.txHost.tx.notification.findUnique({
+    const notification = await this.txHost.tx.notification.findUnique({
       where: { id: notificationId },
     });
+
+    return notification ? new NotificationEntity(notification) : null;
   }
 }

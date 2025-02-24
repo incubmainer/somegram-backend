@@ -131,6 +131,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/base-types-enum/tsconfig.lib.json"
       }
+    },
+    "date-formater": {
+      "type": "library",
+      "root": "libs/date-formater",
+      "entryFile": "index",
+      "sourceRoot": "libs/date-formater/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/date-formater/tsconfig.lib.json"
+      }
     }
   }
 }

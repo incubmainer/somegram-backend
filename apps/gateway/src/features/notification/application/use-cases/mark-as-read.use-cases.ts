@@ -4,8 +4,6 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { Inject } from '@nestjs/common';
-import { NotificationEntity } from '../../domain/notification.entity';
 import { NotificationRepository } from '../../infrastructure/notification.repository';
 
 export class MarkNotificationAsReadUseCases {
@@ -26,8 +24,6 @@ export class MarkNotificationAsReadUseCaseHandler
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
-    @Inject(NotificationEntity.name)
-    private readonly notificationEntity: typeof NotificationEntity,
     private readonly notificationRepository: NotificationRepository,
   ) {
     this.logger.setContext(MarkNotificationAsReadUseCaseHandler.name);
@@ -49,8 +45,8 @@ export class MarkNotificationAsReadUseCaseHandler
         return this.appNotification.forbidden();
       if (notification.isRead) return this.appNotification.success(null);
 
-      this.notificationEntity.markAsRead(notification);
-      await this.notificationRepository.update(notification);
+      notification.markAsRead();
+      await this.notificationRepository.readNotification(notification);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);

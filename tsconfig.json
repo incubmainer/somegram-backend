@@ -77,6 +77,12 @@
       ],
       "@app/base-types-enum/*": [
         "libs/base-types-enum/src/*"
+      ],
+      "@app/date-formater": [
+        "libs/date-formater/src"
+      ],
+      "@app/date-formater/*": [
+        "libs/date-formater/src/*"
       ]
     }
   }

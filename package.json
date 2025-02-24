@@ -148,7 +148,8 @@
       "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1",
       "^@app/logger(|/.*)$": "<rootDir>/libs/logger/src/$1",
       "^@app/async-local-storage(|/.*)$": "<rootDir>/libs/async-local-storage/src/$1",
-      "^@app/base-types-enum(|/.*)$": "<rootDir>/libs/base-types-enum/src/$1"
+      "^@app/base-types-enum(|/.*)$": "<rootDir>/libs/base-types-enum/src/$1",
+      "^@app/date-formater(|/.*)$": "<rootDir>/libs/date-formater/src/$1"
     }
   }
 }

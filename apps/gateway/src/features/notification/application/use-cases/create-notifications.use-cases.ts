@@ -1,15 +1,13 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { NotificationEntity } from '../../domain/notification.entity';
-import { Inject } from '@nestjs/common';
 import { NotificationRepository } from '../../infrastructure/notification.repository';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CreateNotificationInputDto } from '../../api/dto/input-dto/notification.input-dto';
-import { CreatedNotificationsEvent } from '../event/created-notifications.event';
+import { NotificationEntity } from '../../domain/notification.entity';
 
 export class CreateNotificationsUseCases {
   constructor(public inputDto: CreateNotificationInputDto[]) {}
@@ -26,11 +24,9 @@ export class CreateNotificationsUseCaseHandler
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
-    @Inject(NotificationEntity.name)
-    private readonly notificationEntity: typeof NotificationEntity,
     private readonly notificationRepository: NotificationRepository,
     private readonly userRepository: UsersRepository,
-    private readonly eventBus: EventBus,
+    private readonly publisher: EventPublisher,
   ) {
     this.logger.setContext(CreateNotificationsUseCaseHandler.name);
   }
@@ -44,8 +40,7 @@ export class CreateNotificationsUseCaseHandler
     const { inputDto } = command;
     try {
       const userIds = inputDto.map((dto) => dto.userId);
-      // @ts-ignore TODO:
-      const users = await this.userRepository.getUsersById(userIds);
+      const users = await this.userRepository.getUsersByIds(userIds);
 
       const usersMap = new Map(users.map((user) => [user.id, user]));
 
@@ -53,19 +48,36 @@ export class CreateNotificationsUseCaseHandler
 
       if (validInputDto.length === 0) return this.appNotification.notFound();
 
-      const notifications = validInputDto.map((dto) => {
+      const notificationsCreateDto = validInputDto.map((dto) => {
         const { userId, message } = dto;
-        return this.notificationEntity.create(userId, message);
+
+        return {
+          userId: userId,
+          createdAt: new Date(),
+          message: message,
+          isRead: false,
+        };
       });
 
-      const result: string[] =
-        await this.notificationRepository.createMany(notifications);
+      const newNotifications = await this.notificationRepository.createMany(
+        notificationsCreateDto,
+      );
 
-      this.eventBus.publish(new CreatedNotificationsEvent(result));
+      this.publish(newNotifications);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
+    }
+  }
+
+  private publish(newNotifications: NotificationEntity[]): void {
+    for (const notification of newNotifications) {
+      const notificationWithEvent =
+        this.publisher.mergeObjectContext(notification);
+
+      notificationWithEvent.newNotificationEvent();
+      notificationWithEvent.commit();
     }
   }
 }

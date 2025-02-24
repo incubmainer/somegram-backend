@@ -1,6 +1,8 @@
 import { Notification } from '@prisma/gateway';
+import { AggregateRoot } from '@nestjs/cqrs';
+import { CreatedNotificationEvent } from '../application/event/created-notification.event';
 
-export class NotificationEntity implements Notification {
+export class NotificationEntity extends AggregateRoot implements Notification {
   id: string;
   userId: string;
   message: string;
@@ -8,17 +10,22 @@ export class NotificationEntity implements Notification {
   createdAt: Date;
   updateAt: Date;
 
-  static create(userId: string, message: string): NotificationEntity {
-    const notification = new this();
-    notification.userId = userId;
-    notification.message = message;
-    notification.isRead = false;
-    notification.createdAt = new Date();
-    return notification;
+  constructor(dto: Notification) {
+    super();
+    this.id = dto.id;
+    this.userId = dto.userId;
+    this.message = dto.message;
+    this.isRead = dto.isRead;
+    this.createdAt = dto.createdAt;
+    this.updateAt = dto.updateAt;
   }
 
-  static markAsRead(notification: NotificationEntity): void {
-    notification.isRead = true;
-    notification.updateAt = new Date();
+  newNotificationEvent(): void {
+    this.apply(new CreatedNotificationEvent(this.id, this.userId));
+  }
+
+  markAsRead(): void {
+    this.isRead = true;
+    this.updateAt = new Date();
   }
 }
