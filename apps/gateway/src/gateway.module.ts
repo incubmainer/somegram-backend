@@ -10,7 +10,6 @@ import {
 } from '@app/logger';
 import { SecurityDevicesModule } from './features/security-devices/security-devices.module';
 import { CountryCatalogModule } from './features/country-catalog/country-catalog.module';
-import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
 import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
 import { NotificationModule } from './features/notification/notification.module';
@@ -23,7 +22,6 @@ import { PaginatorModule } from '@app/paginator';
     AuthModule,
     UsersModule,
     PostsModule,
-    ApplicationNotificationModule,
     CountryCatalogModule,
     SubscriptionsModule,
     CommonModule,

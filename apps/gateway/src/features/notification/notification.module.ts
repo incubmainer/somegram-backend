@@ -16,8 +16,6 @@ import { GetNotificationsByIdQueryCommandHandler } from './application/query/get
 import { CreatedNotificationEventHandler } from './application/event/created-notification.event';
 import { CreatedNotificationsEventHandler } from './application/event/created-notifications.event';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
-import { ClientsModule } from '@nestjs/microservices';
-import { paymentsServiceOptions } from '../../settings/configuration/get-pyments-service.options';
 import { ConfigService } from '@nestjs/config';
 import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 import { ConfigurationType } from '../../settings/configuration/configuration';
@@ -77,11 +75,7 @@ const mailerModule = MailerModule.forRootAsync({
 });
 
 @Module({
-  imports: [
-    UsersModule,
-    ClientsModule.registerAsync([paymentsServiceOptions()]),
-    mailerModule,
-  ],
+  imports: [UsersModule, mailerModule],
   controllers: [NotificationController, NotificationSwaggerController],
   providers: [
     emailAdapter,

@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { AccountType } from '../../../../../../../libs/common/enums/payments';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { SubscriptionInfoGatewayType } from '../../domain/types';
@@ -7,6 +7,8 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
+import { Transactional } from '@nestjs-cls/transactional';
+import { UserEntity } from '../../../users/domain/user.entity';
 
 export class UpdateSubscriptionsInfoCommand {
   constructor(public payload: SubscriptionInfoGatewayType[]) {}
@@ -24,6 +26,7 @@ export class UpdateSubscriptionsInfoUseCase
     private readonly usersRepository: UsersRepository,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
+    private readonly publisher: EventPublisher,
   ) {
     this.logger.setContext(UpdateSubscriptionsInfoUseCase.name);
   }
@@ -31,13 +34,15 @@ export class UpdateSubscriptionsInfoUseCase
   async execute(
     command: UpdateSubscriptionsInfoCommand,
   ): Promise<AppNotificationResultType<null>> {
-    this.logger.debug('Execute: Update accounts type', this.execute.name);
+    this.logger.debug(
+      'Execute: Update accounts type for users command',
+      this.execute.name,
+    );
     try {
       const ids: string[] = command.payload.map(
         (u: SubscriptionInfoGatewayType) => u.userId,
       );
-      // @ts-ignore TODO:
-      const users = await this.usersRepository.getUsersById(ids);
+      const users = await this.usersRepository.getUsersByIds(ids);
       if (!users) return this.appNotification.success(null);
 
       const userMap = new Map(users.map((user) => [user.id, user]));
@@ -51,25 +56,42 @@ export class UpdateSubscriptionsInfoUseCase
         const subscriptionExpireAt = new Date(endDateOfSubscription);
 
         if (subscriptionExpireAt > new Date()) {
-          // @ts-ignore TODO:
-          user.subscriptionExpireAt = subscriptionExpireAt;
-          // @ts-ignore TODO:
-          user.accountType = AccountType.Business;
+          user.changeUserSubscription(
+            subscriptionExpireAt,
+            AccountType.Business,
+          );
         } else {
-          // @ts-ignore TODO:
-          user.subscriptionExpireAt = null;
-          // @ts-ignore TODO:
-          user.accountType = AccountType.Personal;
+          user.changeUserSubscription(null, AccountType.Personal);
         }
       }
+      await this.handleUsers(Array.from(userMap.values()));
 
-      // @ts-ignore TODO:
-      await this.usersRepository.updateManyUsers(Array.from(userMap.values()));
-
+      this.handleEvents(Array.from(userMap.values()));
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
+    }
+  }
+
+  @Transactional()
+  private async handleUsers(users: UserEntity[]): Promise<void> {
+    const promises = users.map((user) => {
+      return this.usersRepository.updateAccountType(user);
+    });
+
+    await Promise.all(promises);
+  }
+
+  private handleEvents(users: UserEntity[]): void {
+    for (const user of users) {
+      const userWithEvent = this.publisher.mergeObjectContext(user);
+      if (user.accountType === AccountType.Business) {
+        userWithEvent.changeAccountTypeToBusinessEvent();
+      } else {
+        userWithEvent.changeAccountTypeToPersonalEvent();
+      }
+      userWithEvent.commit();
     }
   }
 }

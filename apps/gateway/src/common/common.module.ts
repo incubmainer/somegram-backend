@@ -1,5 +1,4 @@
 import { Global, Module } from '@nestjs/common';
-import { RefreshJWTAccessGuard } from './guards/jwt/jwt-refresh-auth-guard';
 import { JwtRefreshTokenStrategyStrategy } from './guards/jwt/jwt-refresh-auth-strategy';
 import { UsersModule } from '../features/users/users.module';
 import { SecurityDevicesModule } from '../features/security-devices/security-devices.module';
@@ -7,7 +6,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { PhotoServiceAdapter } from './adapter/photo-service.adapter';
 import { ClientsModule } from '@nestjs/microservices';
 import { photoServiceOptions } from '../settings/configuration/photo-service.options';
-import { WsJwtAuthGuard } from './guards/ws-jwt/ws-jwt-auth.guard';
 import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 import { clsModule } from './services/cls-service/cls.module';
 import { PrismaService } from './services/prisma-service/prisma.service';
@@ -17,51 +15,53 @@ import { GithubStrategy } from './guards/jwt/github.strategy';
 import { GoogleStrategy } from './guards/jwt/google.strategy';
 import { JwtService } from '@nestjs/jwt';
 import { MeAccessTokenStrategy } from './guards/jwt/jwt-me-access-token.strategy';
+import { ApplicationNotificationModule } from '@app/application-notification';
+import { paymentsServiceOptions } from '../settings/configuration/get-pyments-service.options';
+import { PaymentsServiceAdapter } from './adapter/payment-service.adapter';
 
 const strategy = [
   JwtStrategy,
   GithubStrategy,
   GoogleStrategy,
   MeAccessTokenStrategy,
+  JwtRefreshTokenStrategyStrategy,
+  WsJwtStrategy,
 ];
+const clientsModule = ClientsModule.registerAsync([
+  photoServiceOptions(),
+  paymentsServiceOptions(),
+]);
 
 @Global()
 @Module({
   imports: [
     clsModule,
-    /////////////////////////////
+    clientsModule,
+    ApplicationNotificationModule,
     UsersModule,
     SecurityDevicesModule,
     CqrsModule,
-    ClientsModule.registerAsync([photoServiceOptions()]),
-    //ClsTransactionalModule,
   ],
   controllers: [],
   providers: [
     PrismaService,
     ...strategy,
 
-    ////////////////////////////
     PhotoServiceAdapter,
-    JwtRefreshTokenStrategyStrategy,
-    RefreshJWTAccessGuard,
-    WsJwtAuthGuard,
-    WsJwtStrategy,
     DateFormatter,
     JwtService,
+    PaymentsServiceAdapter,
   ],
   exports: [
     PrismaService,
     ...strategy,
-    ////////////////////////////
+    clientsModule,
+    ApplicationNotificationModule,
     CqrsModule,
-    JwtRefreshTokenStrategyStrategy,
-    RefreshJWTAccessGuard,
     PhotoServiceAdapter,
-    WsJwtAuthGuard,
-    WsJwtStrategy,
     DateFormatter,
     JwtService,
+    PaymentsServiceAdapter,
   ],
 })
 export class CommonModule {}

@@ -4,6 +4,9 @@ import { RegisteredUserEvent } from '../../auth/application/events/registred-use
 import { RegistrationUserSuccessEvent } from '../../auth/application/events/registration-user-success.envent';
 import { RestorePasswordEvent } from '../../auth/application/events/restore-password.envent';
 import { FillProfileInputDto } from '../api/dto/input-dto/fill-profile.input-dto';
+import { AccountType } from '../../../../../../libs/common/enums/payments';
+import { SendEmailNotificationSubscriptionActivatedEvent } from '../../notification/application/event/send-email-notification-subscription-activated.event';
+import { SendEmailNotificationSubscriptionDisabledEvent } from '../../notification/application/event/send-email-notification-subscription-disabled.event';
 
 export class UserEntity extends AggregateRoot implements User {
   id: string;
@@ -68,6 +71,19 @@ export class UserEntity extends AggregateRoot implements User {
     this.apply(new RegistrationUserSuccessEvent(this.email));
   }
 
+  changeAccountTypeToBusinessEvent(): void {
+    this.apply(
+      new SendEmailNotificationSubscriptionActivatedEvent(
+        this.email,
+        this.subscriptionExpireAt,
+      ),
+    );
+  }
+
+  changeAccountTypeToPersonalEvent(): void {
+    this.apply(new SendEmailNotificationSubscriptionDisabledEvent(this.email));
+  }
+
   updatePassword(password: string): void {
     this.hashPassword = password;
   }
@@ -79,7 +95,15 @@ export class UserEntity extends AggregateRoot implements User {
     this.dateOfBirth = birthday;
     this.about = updateDto.about ?? null;
     this.updatedAt = new Date();
-    this.city = '' ?? null;
-    this.country = '' ?? null;
+    this.city = updateDto.city ?? null;
+    this.country = updateDto.country ?? null;
+  }
+
+  changeUserSubscription(
+    expireAt: Date | null,
+    accountType: AccountType,
+  ): void {
+    this.subscriptionExpireAt = expireAt;
+    this.accountType = accountType;
   }
 }

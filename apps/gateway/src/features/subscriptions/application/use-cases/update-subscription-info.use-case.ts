@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { AccountType } from '../../../../../../../libs/common/enums/payments';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { SubscriptionInfoGatewayType } from '../../domain/types';
@@ -7,9 +7,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { User } from '@prisma/gateway';
-import { SendEmailNotificationSubscriptionActivatedEvent } from '../../../notification/application/event/send-email-notification-subscription-activated.event';
-import { SendEmailNotificationSubscriptionDisabledEvent } from '../../../notification/application/event/send-email-notification-subscription-disabled.event';
+import { UserEntity } from '../../../users/domain/user.entity';
 
 export class UpdateSubscriptionInfoCommand {
   constructor(public payload: SubscriptionInfoGatewayType) {}
@@ -27,7 +25,7 @@ export class UpdateSubscriptionInfoUseCase
     private readonly usersRepository: UsersRepository,
     private readonly appNotification: ApplicationNotification,
     private readonly logger: LoggerService,
-    private readonly eventBus: EventBus,
+    private readonly publisher: EventPublisher,
   ) {
     this.logger.setContext(UpdateSubscriptionInfoUseCase.name);
   }
@@ -35,7 +33,10 @@ export class UpdateSubscriptionInfoUseCase
   async execute(
     command: UpdateSubscriptionInfoCommand,
   ): Promise<AppNotificationResultType<null>> {
-    this.logger.debug('Execute: Update account type', this.execute.name);
+    this.logger.debug(
+      'Execute: Update account type for user command',
+      this.execute.name,
+    );
     const { userId, endDateOfSubscription } = command.payload;
     try {
       const user = await this.usersRepository.getUserById(userId);
@@ -43,14 +44,14 @@ export class UpdateSubscriptionInfoUseCase
         const subscriptionExpireAt = new Date(endDateOfSubscription);
 
         if (subscriptionExpireAt > new Date()) {
-          user.subscriptionExpireAt = subscriptionExpireAt;
-          user.accountType = AccountType.Business;
+          user.changeUserSubscription(
+            subscriptionExpireAt,
+            AccountType.Business,
+          );
         } else {
-          user.subscriptionExpireAt = null;
-          user.accountType = AccountType.Personal;
+          user.changeUserSubscription(null, AccountType.Personal);
         }
-        // @ts-ignore TODO:
-        await this.usersRepository.updateUserProfileInfo(user.id, user);
+        await this.usersRepository.updateAccountType(user);
       }
 
       this.handleEvent(user);
@@ -61,19 +62,13 @@ export class UpdateSubscriptionInfoUseCase
     }
   }
 
-  private handleEvent(user: User): void {
-    console.log('handle event', user);
+  private handleEvent(user: UserEntity): void {
+    const userWithEvent = this.publisher.mergeObjectContext(user);
     if (user.accountType === AccountType.Business) {
-      this.eventBus.publish(
-        new SendEmailNotificationSubscriptionActivatedEvent(
-          user.email,
-          user.subscriptionExpireAt,
-        ),
-      );
+      userWithEvent.changeAccountTypeToBusinessEvent();
     } else {
-      this.eventBus.publish(
-        new SendEmailNotificationSubscriptionDisabledEvent(user.email),
-      );
+      userWithEvent.changeAccountTypeToPersonalEvent();
     }
+    userWithEvent.commit();
   }
 }

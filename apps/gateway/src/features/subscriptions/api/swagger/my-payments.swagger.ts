@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { SwaggerMyPaymentsDto } from '../dto/output-dto/subscriptions.output-dto';
 
 export function MyPaymentsSwagger() {
   return applyDecorators(
@@ -28,24 +29,7 @@ export function MyPaymentsSwagger() {
     }),
     ApiOkResponse({
       description: 'Get payments',
-      schema: {
-        example: {
-          pageSize: 8,
-          totalCount: 1,
-          items: [
-            {
-              subscriptionType: 'DAY',
-              price: 10,
-              paymentSystem: 'STRIPE',
-              status: 'Success',
-              dateOfPayment: '2024-12-23T08:48:02.000Z',
-              endDateOfSubscription: '2024-12-24T08:48:02.000Z',
-              subscriptionId: 'b25bb8cd-a97c-4505-91e3-03c3f637e814',
-            },
-          ],
-          pagesCount: 1,
-        },
-      },
+      type: SwaggerMyPaymentsDto,
     }),
   );
 }

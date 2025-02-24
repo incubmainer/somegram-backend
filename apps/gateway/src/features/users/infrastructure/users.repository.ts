@@ -18,7 +18,6 @@ import { UserGithubAccountEntity } from '../domain/user-github-account.entity';
 
 @Injectable()
 export class UsersRepository {
-  private readonly TRANSACTION_TIMEOUT: number = 50000;
   constructor(
     private readonly txHost: TransactionHost<
       TransactionalAdapterPrisma<GatewayPrismaClient>
@@ -36,6 +35,20 @@ export class UsersRepository {
       },
     });
     return user ? new UserEntity(user) : null;
+  }
+
+  public async getUsersByIds(ids: string[]): Promise<UserEntity[] | null> {
+    this.logger.debug(`Execute: get users by ids`, this.getUsersByIds.name);
+
+    const users = await this.txHost.tx.user.findMany({
+      where: {
+        id: { in: ids },
+      },
+    });
+
+    const userEntities = users.map((user) => new UserEntity(user));
+
+    return userEntities.length > 0 ? userEntities : null;
   }
 
   public async getUserByUsername(username: string): Promise<UserEntity | null> {
@@ -335,6 +348,10 @@ export class UsersRepository {
   }
 
   async updateUserProfileInfo(user: UserEntity): Promise<void> {
+    this.logger.debug(
+      `Execute: update user profile`,
+      this.updateUserProfileInfo.name,
+    );
     await this.txHost.tx.user.update({
       where: { id: user.id },
       data: {
@@ -352,194 +369,17 @@ export class UsersRepository {
     });
   }
 
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-  //////////////////////////////////
-
-  // public async addGoogleInfoToUserAndConfirm(
-  //   userId: User['id'],
-  //   googleInfo: {
-  //     sub: string;
-  //     name: string;
-  //     email: string;
-  //     email_verified: boolean;
-  //   },
-  // ) {
-  //   await this.txHost.tx.userGoogleInfo.create({
-  //     data: {
-  //       userId,
-  //       sub: googleInfo.sub,
-  //       email: googleInfo.email,
-  //       emailVerified: googleInfo.email_verified,
-  //     },
-  //   });
-  //   await this.txHost.tx.user.update({
-  //     where: { id: userId },
-  //     data: { isConfirmed: true },
-  //   });
-  // }
-  //
-  // public async updateUserConfirmationInfo(dto: {
-  //   userId: User['id'];
-  //   createdAt: Date;
-  //   confirmationToken: UserConfirmationToken['token'];
-  //   confirmationTokenExpiresAt: UserConfirmationToken['expiredAt'];
-  // }) {
-  //   await this.txHost.tx.userConfirmationToken.update({
-  //     where: { userId: dto.userId },
-  //     data: {
-  //       token: dto.confirmationToken,
-  //       createdAt: dto.createdAt,
-  //       expiredAt: dto.confirmationTokenExpiresAt,
-  //     },
-  //   });
-  // }
-
-  //
-  // public deleteConfirmationToken(token: string) {
-  //   return this.txHost.tx.userConfirmationToken.deleteMany({
-  //     where: {
-  //       token,
-  //     },
-  //   });
-  // }
-  //
-  // public async updateRestorePasswordCode(dto: {
-  //   userId: User['id'];
-  //   restorePasswordCode: UserResetPasswordCode['code'];
-  //   restorePasswordCodeCreatedAt: UserResetPasswordCode['createdAt'];
-  //   restorePasswordCodeExpiresAt: UserResetPasswordCode['expiredAt'];
-  // }) {
-  //   await this.txHost.tx.userResetPasswordCode.deleteMany({
-  //     where: {
-  //       userId: dto.userId,
-  //     },
-  //   });
-  //   return this.txHost.tx.user.update({
-  //     where: {
-  //       id: dto.userId,
-  //     },
-  //     data: {
-  //       resetPasswordCode: {
-  //         create: {
-  //           code: dto.restorePasswordCode,
-  //           createdAt: dto.restorePasswordCodeCreatedAt,
-  //           expiredAt: dto.restorePasswordCodeExpiresAt,
-  //         },
-  //       },
-  //     },
-  //   });
-  // }
-  // public async getUserByRestorePasswordCode(code: string) {
-  //   const user = await this.txHost.tx.user.findFirst({
-  //     where: {
-  //       resetPasswordCode: {
-  //         code,
-  //       },
-  //     },
-  //     include: {
-  //       resetPasswordCode: true,
-  //     },
-  //   });
-  //   return user;
-  // }
-  // public async deleteRestorePasswordCode(userId: User['id']) {
-  //   return this.txHost.tx.userResetPasswordCode.deleteMany({
-  //     where: {
-  //       userId,
-  //     },
-  //   });
-  // }
-  // public async updateUserPassword(userId: User['id'], hashPassword: string) {
-  //   return this.txHost.tx.user.update({
-  //     where: {
-  //       id: userId,
-  //     },
-  //     data: {
-  //       hashPassword,
-  //     },
-  //   });
-  // }
-  //
-  // public async createConfirmedUserWithGithub(
-  //   user: UserFromGithub,
-  //   { username, email, createdAt },
-  // ) {
-  //   const createdUser = await this.txHost.tx.user.create({
-  //     data: {
-  //       username: username,
-  //       email: email,
-  //       createdAt: createdAt,
-  //       isConfirmed: true,
-  //       userGithubInfo: {
-  //         create: {
-  //           githubId: user.githubId,
-  //           userName: user.username,
-  //           displayName: user.displayName,
-  //           email: user.email,
-  //         },
-  //       },
-  //     },
-  //   });
-  //   return createdUser;
-  // }
-  // public async addGithubInfo(
-  //   user: UserFromGithub,
-  //   userId: string,
-  // ): Promise<UserGithubInfo> {
-  //   return await this.txHost.tx.userGithubInfo.create({
-  //     data: {
-  //       userId: userId,
-  //       githubId: user.githubId,
-  //       userName: user.username,
-  //       displayName: user.displayName,
-  //       email: user.email,
-  //     },
-  //   });
-  // }
-  // public async changeGithubEmail(id: string, user: UserFromGithub) {
-  //   return await this.txHost.tx.userGithubInfo.update({
-  //     where: { userId: id, githubId: user.githubId },
-  //     data: { email: user.email },
-  //   });
-  // }
-  //
-
-  //
-  // async updateManyUsers(users: User[]): Promise<void> {
-  //   await this.txHost.withTransaction(
-  //     { timeout: this.TRANSACTION_TIMEOUT },
-  //     async (): Promise<void> => {
-  //       const promises = users.map((user: User) => {
-  //         return this.txHost.tx.user.update({
-  //           where: { id: user.id },
-  //           data: user,
-  //         });
-  //       });
-  //
-  //       await Promise.all(promises);
-  //     },
-  //   );
-  // }
+  async updateAccountType(user: UserEntity): Promise<void> {
+    this.logger.debug(
+      `Execute: update account type`,
+      this.updateAccountType.name,
+    );
+    await this.txHost.tx.user.update({
+      where: { id: user.id },
+      data: {
+        subscriptionExpireAt: user.subscriptionExpireAt,
+        accountType: user.accountType,
+      },
+    });
+  }
 }
