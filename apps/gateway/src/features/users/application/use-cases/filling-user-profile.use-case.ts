@@ -6,7 +6,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { FillProfileInputDto } from '../../api/dto/input-dto/fill-profile.input-dto';
-import { DateFormatter } from '../../../../common/utils/date-formatter.util';
+import { DateFormatter } from '@app/date-formater';
 
 export class FillingUserProfileCommand {
   constructor(

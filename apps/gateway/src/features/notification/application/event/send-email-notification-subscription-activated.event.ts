@@ -1,7 +1,7 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { LoggerService } from '@app/logger';
-import { DateFormatter } from '../../../../common/utils/date-formatter.util';
 import { EmailAdapter } from '../../infrastructure/email.adapter';
+import { DateFormatter } from '@app/date-formater';
 
 export class SendEmailNotificationSubscriptionActivatedEvent {
   constructor(

@@ -9,7 +9,6 @@ import { photoServiceOptions } from '../settings/configuration/photo-service.opt
 import { WsJwtStrategy } from './guards/ws-jwt/ws-jwt-auth.startegy';
 import { clsModule } from './services/cls-service/cls.module';
 import { PrismaService } from './services/prisma-service/prisma.service';
-import { DateFormatter } from './utils/date-formatter.util';
 import { JwtStrategy } from './guards/jwt/jwt.strategy';
 import { GithubStrategy } from './guards/jwt/github.strategy';
 import { GoogleStrategy } from './guards/jwt/google.strategy';
@@ -18,6 +17,7 @@ import { MeAccessTokenStrategy } from './guards/jwt/jwt-me-access-token.strategy
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { paymentsServiceOptions } from '../settings/configuration/get-pyments-service.options';
 import { PaymentsServiceAdapter } from './adapter/payment-service.adapter';
+import { DateFormaterModule } from '@app/date-formater';
 
 const strategy = [
   JwtStrategy,
@@ -41,6 +41,7 @@ const clientsModule = ClientsModule.registerAsync([
     UsersModule,
     SecurityDevicesModule,
     CqrsModule,
+    DateFormaterModule,
   ],
   controllers: [],
   providers: [
@@ -48,7 +49,6 @@ const clientsModule = ClientsModule.registerAsync([
     ...strategy,
 
     PhotoServiceAdapter,
-    DateFormatter,
     JwtService,
     PaymentsServiceAdapter,
   ],
@@ -59,9 +59,9 @@ const clientsModule = ClientsModule.registerAsync([
     ApplicationNotificationModule,
     CqrsModule,
     PhotoServiceAdapter,
-    DateFormatter,
     JwtService,
     PaymentsServiceAdapter,
+    DateFormaterModule,
   ],
 })
 export class CommonModule {}
