@@ -46,6 +46,7 @@ export class NotificationWsGateway
   @WebSocketServer() io: Server;
 
   private readonly clients: Map<Socket, string> = new Map();
+  private readonly userSockets: Map<string, Set<Socket>> = new Map();
   private readonly envSettings: EnvSettings;
 
   constructor(
@@ -110,12 +111,28 @@ export class NotificationWsGateway
     return userId;
   }
 
+  private clearClient(client: Socket): void {
+    const userId = this.clients.get(client);
+    if (!userId) return;
+
+    this.clients.delete(client);
+
+    const sockets = this.userSockets.get(userId);
+    if (sockets) {
+      sockets.delete(client);
+      if (sockets.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    }
+  }
+
   private forceDisconnect<T = null>(client: Socket, payload: T): void {
     this.logger.debug(
       `Client force disconnected: ${client.id}`,
       this.forceDisconnect.name,
     );
-    this.clients.delete(client);
+    this.clearClient(client);
+
     client.emit(WS_ERROR_EVENT, payload);
     client.disconnect();
   }
@@ -127,7 +144,13 @@ export class NotificationWsGateway
     );
     const userId = await this.authConnection(client);
     if (!userId) return;
+
     this.clients.set(client, userId);
+
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId)!.add(client);
   }
 
   handleDisconnect(client: Socket): void {
@@ -135,7 +158,8 @@ export class NotificationWsGateway
       `Client disconnected: ${client.id}`,
       this.handleDisconnect.name,
     );
-    this.clients.delete(client);
+
+    this.clearClient(client);
   }
 
   public emitMessageByUserId<T = null>(
@@ -144,23 +168,21 @@ export class NotificationWsGateway
     payload: T,
   ): AppNotificationResultType<null> {
     this.logger.debug(
-      'Execute: send message to connected client by user id',
+      `Execute: sending message to all connected clients of user ${userId}`,
       this.emitMessageByUserId.name,
     );
-    let client: Socket | undefined;
 
-    for (const [socket, storedUserId] of this.clients.entries()) {
-      if (storedUserId === userId) {
-        client = socket;
-        break;
-      }
-    }
+    const clients = this.userSockets.get(userId);
 
-    if (!client) {
-      this.logger.debug('Client not found', this.emitMessageByUserId.name);
+    if (!clients || clients.size === 0) {
+      this.logger.debug(
+        `No active clients found for user ${userId}`,
+        this.emitMessageByUserId.name,
+      );
       return this.appNotification.notFound();
     }
-    client.emit(event, payload);
+
+    clients.forEach((client) => client.emit(event, payload));
 
     return this.appNotification.success(null);
   }
