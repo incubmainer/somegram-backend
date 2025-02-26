@@ -38,7 +38,7 @@ export class GetPostUseCase
 
     try {
       const post = await this.postsQueryRepository.getPostById(postId);
-      if (!post) this.appNotification.notFound();
+      if (!post) return this.appNotification.notFound();
 
       const [postOwner, ownerAvatarUrl, postPhotos] = await Promise.all([
         this.usersQueryRepository.findUserById(post.userId),

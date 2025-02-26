@@ -47,6 +47,7 @@ export class LoginUserUseCase
 
       if (!user) return this.appNotification.unauthorized();
       if (!user.isConfirmed) return this.appNotification.unauthorized();
+      if (!user.hashPassword) return this.appNotification.unauthorized();
 
       const verifyPassword = await this.authService.comparePass(
         password,

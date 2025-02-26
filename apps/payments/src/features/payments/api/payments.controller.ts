@@ -31,12 +31,12 @@ import {
 } from '../../../../../gateway/src/features/subscriptions/domain/types';
 import { TestingCancelSubscriptionUseCase } from '../application/use-cases/command/testing-cancel-subscription';
 import { TestingGetPaymentsQuery } from '../application/use-cases/query/testing-get-payments.use-case';
-import { Paginator } from '../../../../../gateway/src/common/domain/paginator';
 import {
   MyPaymentsOutputDto,
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/payments.output-dto';
 import { PaymentService } from '../application/payments.service';
+import { Pagination } from '@app/paginator';
 
 @Controller('payments')
 export class PaymentsController {
@@ -110,7 +110,7 @@ export class PaymentsController {
   @MessagePattern({ cmd: GET_PAYMENTS })
   async getPayments(
     payload: GetUserPaymentPayloadType,
-  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     this.logger.debug('Execute: get payments', this.getPayments.name);
     return this.queryBus.execute(
       new GetPaymentsQuery(payload.userId, payload.queryString),
@@ -140,7 +140,7 @@ export class PaymentsController {
   @MessagePattern({ cmd: TESTING_GET_PAYMENTS })
   async testingGetPayments(
     payload: any,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     return await this.queryBus.execute(
       new TestingGetPaymentsQuery(payload.userId, payload.queryString),
     );
