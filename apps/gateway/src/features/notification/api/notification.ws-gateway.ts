@@ -156,7 +156,10 @@ export class NotificationWsGateway
       }
     }
 
-    if (!client) return this.appNotification.notFound();
+    if (!client) {
+      this.logger.debug('Client not found', this.emitMessageByUserId.name);
+      return this.appNotification.notFound();
+    }
     client.emit(event, payload);
 
     return this.appNotification.success(null);
