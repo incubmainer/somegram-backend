@@ -140,9 +140,6 @@
     ],
     "moduleNameMapper": {
       "^@app/databases(|/.*)$": "<rootDir>/libs/databases/src/$1",
-      "^@app/als(|/.*)$": "<rootDir>/libs/als/src/$1",
-      "^@app/custom-logger(|/.*)$": "<rootDir>/libs/custom-logger/src/$1",
-      "^@app/requests(|/.*)$": "<rootDir>/libs/requests/src/$1",
       "^@app/application-notification(|/.*)$": "<rootDir>/libs/application-notification/src/$1",
       "^@app/paginator(|/.*)$": "<rootDir>/libs/paginator/src/$1",
       "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1",
