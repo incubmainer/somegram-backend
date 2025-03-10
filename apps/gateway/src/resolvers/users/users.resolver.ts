@@ -154,8 +154,8 @@ export class UsersResolver {
     return await this.postsPhotosLoader.generateDataLoader().load(user.id);
   }
 
-  @ResolveField(() => [PaymentsModel], { nullable: true })
-  async getPayments(@Parent() user: UserModel) {
-    return await this.paymentsLoader.generateDataLoader().load(user.id);
-  }
+  // @ResolveField(() => [PaymentsModel], { nullable: true })
+  // async getPayments(@Parent() user: UserModel) {
+  //   return await this.paymentsLoader.generateDataLoader().load(user.id);
+  // }
 }

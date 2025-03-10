@@ -13,8 +13,6 @@ import { BasicGqlGuard } from '../../common/guards/graphql/basic-gql.guard';
 import { PaymentsServiceAdapter } from '../../common/adapter/payment-service.adapter';
 import { UserLoader } from '../../common/data-loaders/user-loader';
 import { UserModel } from '../users/models/user.model';
-
-import { MyPaymentsOutputDto } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 import { PaymentsQueryStringInputWithSearch } from './models/payments-query-input-with-search';
 import { PaymentsQueryStringInput } from './models/payments-query-string-input';
 
@@ -43,7 +41,7 @@ export class PaymentsResolver {
       'Execute: Get payments by user',
       this.getPaymentsByUser.name,
     );
-    const result: AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>> =
+    const result: AppNotificationResultType<PaginatedPaymentsModel> =
       await this.paymentsServiceAdapter.getPaymentsByUser({
         userId,
         queryString,
@@ -58,17 +56,20 @@ export class PaymentsResolver {
     }
   }
 
-  // @Query(() => PaginatedPaymentsModel)
-  // @UseGuards(BasicGqlGuard)
-  // async getAllPayments(
-  //   @Args('queryString', {
-  //     type: () => PaymentsQueryStringInputWithSearch,
-  //     nullable: true,
-  //   })
-  //   queryString: PaymentsQueryStringInputWithSearch,
-  // ): Promise<AppNotificationResultType<Pagination<any[]>>> {
-  //   return this.paymentsServiceAdapter.getAllPayments({ queryString });
-  // }
+  @Query(() => PaginatedPaymentsModel)
+  @UseGuards(BasicGqlGuard)
+  async getAllPayments(
+    @Args('queryString', {
+      type: () => PaymentsQueryStringInputWithSearch,
+      nullable: true,
+    })
+    queryString: PaymentsQueryStringInputWithSearch,
+  ): Promise<Pagination<any[]>> {
+    const res = await this.paymentsServiceAdapter.getAllPayments({
+      queryString,
+    });
+    return res.data;
+  }
 
   @ResolveField(() => UserModel, { nullable: true })
   async getUser(@Parent() paymentsModel: PaymentsModel) {

@@ -10,8 +10,8 @@ import { LoggerService } from '@app/logger';
 import { SearchQueryParametersType } from '../../../../../../../../gateway/src/common/domain/query.types';
 import { GraphqlPaymentsRepository } from '../../../../infrastructure/graphql-payments.repository';
 import {
-  myPaymentsMapper,
-  MyPaymentsOutputDto,
+  paymentsWithUserInfoMapper,
+  PaymentsWithUserInfoOutputDto,
 } from '../../../../api/dto/output-dto/payments.output-dto';
 
 export class GetAllPaymentsQuery {
@@ -33,7 +33,9 @@ export class GetAllPaymentsQueryUseCase
 
   async execute(
     command: GetAllPaymentsQuery,
-  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
+  ): Promise<
+    AppNotificationResultType<Pagination<PaymentsWithUserInfoOutputDto[]>>
+  > {
     this.logger.debug('Execute: get payments by user id', this.execute.name);
 
     try {
@@ -41,12 +43,15 @@ export class GetAllPaymentsQueryUseCase
         await this.graphqlPaymentsRepository.getAllPayments(
           command.queryString,
         );
+      const mapAllPayments = paymentsWithUserInfoMapper(payments);
 
-      const result = this.paginatorService.create<any[]>(
+      const result = this.paginatorService.create<
+        PaymentsWithUserInfoOutputDto[]
+      >(
         command.queryString.pageNumber,
         command.queryString.pageSize,
         count,
-        payments,
+        mapAllPayments,
       );
 
       return this.appNotification.success(result);

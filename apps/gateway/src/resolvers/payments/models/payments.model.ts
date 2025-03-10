@@ -24,5 +24,8 @@ export class PaymentsModel {
   endDateOfSubscription: string;
 
   @Field()
-  userId?: string;
+  userId: string;
+
+  @Field()
+  username: string;
 }

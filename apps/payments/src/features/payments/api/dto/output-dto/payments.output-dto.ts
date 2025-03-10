@@ -3,6 +3,7 @@ import {
   SubscriptionStatuses,
   SubscriptionType,
 } from '../../../../../../../../libs/common/enums/payments';
+import { PaymentTransactionWithSubUserInfo } from '../../../application/types/payment-data.type';
 
 export class MyPaymentsOutputDto {
   subscriptionType: SubscriptionType;
@@ -41,7 +42,6 @@ export const myPaymentsMapper = (
     if (userId) {
       dtoData.userId = userId;
     }
-
     return new MyPaymentsOutputDto(dtoData);
   });
 };
@@ -76,5 +76,41 @@ export const subscriptionInfoMapper = (
       ? subscription.endDateOfSubscription.toISOString()
       : null,
     subscriptionType: subscription.subscriptionType,
+  });
+};
+
+export class PaymentsWithUserInfoOutputDto {
+  subscriptionId: string;
+  subscriptionType: string;
+  price: number;
+  paymentSystem: string;
+  status: string;
+  dateOfPayment: string;
+  endDateOfSubscription: string;
+  userId: string;
+  username: string;
+
+  constructor(data?: Partial<PaymentsWithUserInfoOutputDto>) {
+    Object.assign(this, data);
+  }
+}
+
+export const paymentsWithUserInfoMapper = (
+  payments: PaymentTransactionWithSubUserInfo[],
+): PaymentsWithUserInfoOutputDto[] => {
+  return payments.map((payment) => {
+    return {
+      subscriptionId: payment.subId,
+      subscriptionType: payment.subscriptionType,
+      price: payment.price,
+      paymentSystem: payment.paymentSystem,
+      status: payment.status,
+      dateOfPayment: payment.dateOfPayment.toISOString(),
+      endDateOfSubscription: payment.endDateOfSubscription
+        ? payment.endDateOfSubscription.toISOString()
+        : null,
+      userId: payment.subscription?.userId,
+      username: payment.subscription?.username,
+    };
   });
 };

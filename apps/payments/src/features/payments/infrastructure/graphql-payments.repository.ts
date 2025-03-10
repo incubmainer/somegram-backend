@@ -7,6 +7,7 @@ import {
 } from '@prisma/payments';
 import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
 import { LoggerService } from '@app/logger';
+import { PaymentTransactionWithSubUserInfo } from '../application/types/payment-data.type';
 
 @Injectable()
 export class GraphqlPaymentsRepository {
@@ -22,7 +23,10 @@ export class GraphqlPaymentsRepository {
   public async getPaymentsByUserId(
     userId: string,
     queryString: SearchQueryParametersType,
-  ) {
+  ): Promise<{
+    payments: PaymentTransactionWithSubUserInfo[];
+    count: number;
+  }> {
     this.logger.debug('Execute: get payments', this.getPaymentsByUserId.name);
     const { pageSize, pageNumber, sortBy, sortDirection } = queryString;
 
@@ -31,6 +35,14 @@ export class GraphqlPaymentsRepository {
       where: {
         subscription: {
           userId,
+        },
+      },
+      include: {
+        subscription: {
+          select: {
+            userId: true,
+            username: true,
+          },
         },
       },
       orderBy: { [sortBy]: sortDirection },
@@ -68,18 +80,43 @@ export class GraphqlPaymentsRepository {
     });
   }
 
-  async getAllPayments(queryString: SearchQueryParametersType) {
+  async getAllPayments(queryString: SearchQueryParametersType): Promise<{
+    payments: PaymentTransactionWithSubUserInfo[];
+    count: number;
+  }> {
     this.logger.debug('Execute: get all payments', this.getAllPayments.name);
-    const { pageSize, pageNumber, sortBy, sortDirection } = queryString;
+    const { pageSize, pageNumber, sortBy, sortDirection, search } = queryString;
 
     const skip = (pageNumber - 1) * pageSize;
-    const payments = await this.txHost.tx.subscription.findMany({
+
+    const where: any = {};
+    if (search && search.trim() !== '') {
+      where.subscription = {
+        username: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    const payments = await this.txHost.tx.paymentTransaction.findMany({
+      where,
+      include: {
+        subscription: {
+          select: {
+            userId: true,
+            username: true,
+          },
+        },
+      },
       orderBy: { [sortBy]: sortDirection },
       take: pageSize,
       skip: skip,
     });
 
-    const count = await this.txHost.tx.paymentTransaction.count({});
+    const count = await this.txHost.tx.paymentTransaction.count({
+      where,
+    });
 
     return { payments, count };
   }

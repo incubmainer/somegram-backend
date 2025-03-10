@@ -30,7 +30,7 @@ export class GetUserUseCase
     try {
       const user = await this.usersGraphqlRepository.findUserById(id);
       if (!user) {
-        this.appNotification.notFound();
+        return this.appNotification.notFound();
       }
       return this.appNotification.success(UserModel.mapUser(user));
     } catch (e) {

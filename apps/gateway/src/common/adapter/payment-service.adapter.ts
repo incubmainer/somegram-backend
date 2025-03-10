@@ -33,6 +33,7 @@ import {
   SubscriptionInfoOutputDto,
 } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 import { Pagination } from '@app/paginator';
+import { PaginatedPaymentsModel } from '../../resolvers/payments/models/paginated-payments.model';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -222,11 +223,10 @@ export class PaymentsServiceAdapter {
   }
   async getPaymentsByUser(
     payload: GetUserPaymentPayloadType,
-  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
-    console.log('adapter', payload.queryString);
+  ): Promise<AppNotificationResultType<PaginatedPaymentsModel>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>
+        AppNotificationResultType<PaginatedPaymentsModel>
       > = this.paymentsServiceClient
         .send({ cmd: GET_PAYMENTS_GQL }, payload)
         .pipe(timeout(10000));
@@ -238,21 +238,20 @@ export class PaymentsServiceAdapter {
     }
   }
 
-  // async getAllPayments(payload: {
-  //   queryString?: SearchQueryParametersType;
-  // }): Promise<AppNotificationResultType<Pagination<any[]>>> {
-  //   console.log('adapter', payload.queryString);
-  //   try {
-  //     const responseOfService: Observable<
-  //       AppNotificationResultType<Pagination<any[]>>
-  //     > = this.paymentsServiceClient
-  //       .send({ cmd: GET_ALL_PAYMENTS_GQL }, payload)
-  //       .pipe(timeout(10000));
+  async getAllPayments(payload: {
+    queryString?: SearchQueryParametersType;
+  }): Promise<AppNotificationResultType<PaginatedPaymentsModel>> {
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<PaginatedPaymentsModel>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_ALL_PAYMENTS_GQL }, payload)
+        .pipe(timeout(10000));
 
-  //     return await firstValueFrom(responseOfService);
-  //   } catch (e) {
-  //     this.logger.error(e, this.getAllPayments.name);
-  //     return this.appNotification.internalServerError();
-  //   }
-  // }
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getAllPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
 }
