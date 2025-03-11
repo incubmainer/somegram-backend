@@ -42,7 +42,11 @@ export class AuthService {
   }
 
   generateUniqUserName(email: string): string {
-    return email.split('@')[0] + '-' + randomUUID();
+    const baseName = email.split('@')[0];
+    const uniquePart = randomUUID().replace(/-/g, '').slice(0, 8);
+
+    const userName = `${baseName}-${uniquePart}`;
+    return userName.slice(0, 30);
   }
 
   generateDeviceId(userId: string): string {

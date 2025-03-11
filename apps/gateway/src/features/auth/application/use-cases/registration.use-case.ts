@@ -29,7 +29,7 @@ export class RegistrationUseCase
   private readonly expireAfterMiliseconds: number;
   constructor(
     private readonly userRepository: UsersRepository,
-    //private readonly authService: AuthService,
+    private readonly authService: AuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
@@ -63,8 +63,7 @@ export class RegistrationUseCase
       const userIdToDell = this.handleUser(userByEmail, userByUserName);
       const currentDate = new Date();
 
-      const hashPassword = 'hashpassword';
-      //const hashPassword = await this.authService.generateHash(password);
+      const hashPassword = await this.authService.generateHash(password);
 
       const confirmationToken = randomUUID().replaceAll('-', '');
       const confirmationTokenExpiredAt = new Date(
