@@ -32,7 +32,6 @@ export class AddPostDto {
   @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
   @IsOptional()
   @Trim()
-  @IsNotEmpty()
   @IsString()
   description?: string;
 }
