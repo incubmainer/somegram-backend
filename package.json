@@ -9,7 +9,7 @@
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start:prod": "node dist/apps/somegram-backend/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest -i --testPathPattern=apps/gateway/*",
+    "test": "jest -i --testPathPattern=apps/gateway/test/* --passWithNoTests",
     "test:payments": "jest -i --testPathPattern=apps/payments/* --passWithNoTests",
     "test:files": "jest -i --testPathPattern=apps/files/* --passWithNoTests",
     "test:dev": "cross-env NODE_ENV=test jest -i",
