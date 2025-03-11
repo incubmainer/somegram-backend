@@ -19,6 +19,7 @@ import {
   TransactionInputDto,
 } from '../../../domain/transaction.entity';
 import { SUBSCRIPTION_TYPE } from '../../../../../common/enum/subscription-types.enum';
+import { PaymentService } from '../../payments.service';
 
 @Injectable()
 export class StripeInvoicePaymentSucceededHandler
@@ -31,6 +32,7 @@ export class StripeInvoicePaymentSucceededHandler
     private readonly transactionEntity: typeof TransactionEntity,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly paymentService: PaymentService,
   ) {
     this.logger.setContext(StripeInvoicePaymentSucceededHandler.name);
   }
@@ -64,6 +66,11 @@ export class StripeInvoicePaymentSucceededHandler
         userId: subscription.userId,
         endDateOfSubscription: subscription.endDateOfSubscription,
       });
+
+      this.paymentService.sendNotificationAfterSuccessPayment(
+        subscription.userId,
+        subscription.endDateOfSubscription,
+      );
       if (subscriptionData.amount > 0) {
         const transactionData: TransactionInputDto =
           this.generateDataTransaction(

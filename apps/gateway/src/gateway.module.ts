@@ -13,6 +13,7 @@ import { CountryCatalogModule } from './features/country-catalog/country-catalog
 import { ApplicationNotificationModule } from '@app/application-notification';
 import { CommonModule } from './common/common.module';
 import { SubscriptionsModule } from './features/subscriptions/subscriptions.module';
+import { NotificationModule } from './features/notification/notification.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SubscriptionsModule } from './features/subscriptions/subscriptions.modu
     SubscriptionsModule,
     CommonModule,
     LoggerModule.forRoot('Gateway'),
+    NotificationModule,
   ],
   controllers: [],
   providers: [AsyncLocalStorageService],

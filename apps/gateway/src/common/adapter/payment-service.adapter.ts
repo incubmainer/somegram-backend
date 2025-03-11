@@ -10,6 +10,7 @@ import {
   PAYPAL_WEBHOOK_HANDLER,
   STRIPE_WEBHOOK_HANDLER,
   TESTING_CANCEL_SUBSCRIPTION,
+  TESTING_GET_NOTIFICATION,
   TESTING_GET_PAYMENTS,
 } from '../constants/service.constants';
 import {
@@ -181,6 +182,22 @@ export class PaymentsServiceAdapter {
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.testingGetPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async testingSendNotification(payload: {
+    userId: string;
+  }): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: TESTING_GET_NOTIFICATION }, payload)
+          .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.testingSendNotification.name);
       return this.appNotification.internalServerError();
     }
   }

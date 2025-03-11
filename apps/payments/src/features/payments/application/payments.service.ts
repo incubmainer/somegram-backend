@@ -15,6 +15,12 @@ import {
 import { PaymentManager } from '../../../common/managers/payment.manager';
 import { SubscriptionStatuses } from '../../../common/enum/subscription-types.enum';
 import { SubscriptionInfoGatewayType } from '../../../../../gateway/src/features/subscriptions/domain/types';
+import { CreateNotificationInputDto } from '../../../../../gateway/src/features/notification/api/dto/input-dto/notification.input-dto';
+import { ConvertDateUtil } from '../../../common/utils/convert-date.util';
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
 
 @Injectable()
 export class PaymentService {
@@ -25,6 +31,8 @@ export class PaymentService {
     private readonly subscriptionEntity: typeof SubscriptionEntity,
     private readonly gatewayServiceClientAdapter: GatewayServiceClientAdapter,
     private readonly paymentManager: PaymentManager,
+    private readonly convertDateUtil: ConvertDateUtil,
+    private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(PaymentService.name);
   }
@@ -33,6 +41,21 @@ export class PaymentService {
   private async execute(): Promise<void> {
     this.logger.debug('Execute payment service crone', this.execute.name);
     this.disableSubscription();
+  }
+
+  @Cron('0 0 * * *')
+  private async execute12Am(): Promise<void> {
+    this.logger.debug('Execute payment service crone', this.execute12Am.name);
+    this.checkAndNotifySubscriptionEnd();
+  }
+
+  public async testSendNotification(
+    userId: string,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute test send notification', this.execute12Am.name);
+    this.checkAndNotifySubscriptionEnd();
+    this.sendNotificationAfterSuccessPayment(userId, new Date());
+    return this.appNotification.success(null);
   }
 
   private shouldCancelPayPalSubscription(
@@ -50,6 +73,67 @@ export class PaymentService {
     const pstOffset = -8 * 60 * 60 * 1000;
     const pstTimestamp = date.getTime() + pstOffset;
     return new Date(pstTimestamp);
+  }
+
+  private async checkAndNotifySubscriptionEnd(): Promise<void> {
+    this.logger.debug(
+      'Execute: Verification of the deadline for the subscription for notification',
+      this.checkAndNotifySubscriptionEnd.name,
+    );
+
+    try {
+      const date = new Date();
+      const subscriptions =
+        await this.paymentsRepository.getActiveSubscriptions();
+
+      if (!subscriptions || subscriptions.length === 0) return;
+
+      const data: CreateNotificationInputDto[] = [];
+
+      for (const subscription of subscriptions) {
+        const subEndAt = new Date(subscription.endDateOfSubscription);
+
+        const startOfDay = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+        );
+        const subEndOfDay = new Date(
+          subEndAt.getFullYear(),
+          subEndAt.getMonth(),
+          subEndAt.getDate(),
+        );
+
+        const diffInMs = subEndOfDay.getTime() - startOfDay.getTime();
+
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        if (diffInDays === 7) {
+          data.push({
+            userId: subscription.userId,
+            message: `Your subscription expires after 7 days.`,
+          });
+        }
+
+        if (diffInDays === 1) {
+          if (subscription.autoRenewal) {
+            data.push({
+              userId: subscription.userId,
+              message: `The next payment will be drunk after 1 day.`,
+            });
+          }
+          data.push({
+            userId: subscription.userId,
+            message: `Your subscription expires after 1 day.`,
+          });
+        }
+      }
+
+      if (data.length > 0)
+        this.gatewayServiceClientAdapter.createSubscriptionNotifications(data);
+    } catch (e) {
+      this.logger.error(e, this.checkAndNotifySubscriptionEnd.name);
+    }
   }
 
   public async disableSubscription(): Promise<void> {
@@ -149,5 +233,12 @@ export class PaymentService {
     }
 
     return null;
+  }
+
+  public sendNotificationAfterSuccessPayment(userId: string, date: Date) {
+    this.gatewayServiceClientAdapter.createSubscriptionNotificationWithDelay({
+      userId,
+      message: `Your subscription is activated and acts before: ${this.convertDateUtil.convertToDdMmYy(date)}`,
+    });
   }
 }
