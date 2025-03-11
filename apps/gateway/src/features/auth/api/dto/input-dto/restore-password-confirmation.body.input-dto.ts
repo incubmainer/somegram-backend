@@ -1,5 +1,5 @@
 import { IsString } from 'class-validator';
-import { IsUserPassword } from '../../../application/decorators/is-user-password';
+import { IsUserPassword } from '../../../../../common/decorators/validation/is-user-password';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RestorePasswordConfirmationBodyInputDto {

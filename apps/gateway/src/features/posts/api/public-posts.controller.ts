@@ -10,53 +10,70 @@ import {
 } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
-
-import { NotificationObject } from 'apps/gateway/src/common/domain/notification';
-import {
-  GetPostCodes,
-  GetPostQuery,
-} from '../application/use-cases/queryBus/get-public-post.use-case';
+import { GetPostQuery } from '../application/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPublicPostSwagger } from './swagger/get-public-post.swagger';
-import {
-  GetPublicPostsCodes,
-  GetPublicPostsByUserQuery,
-} from '../application/use-cases/queryBus/get-public-posts.use-case';
+import { GetPublicPostsByUserQuery } from '../application/queryBus/get-public-posts.use-case';
 import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
 import { GetPublicPostsSwagger } from './swagger/get-public-posts.swagger';
+import { POST_PUBLIC_ROUTE } from '../../../common/constants/route.constants';
+import {
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { Pagination } from '@app/paginator';
+import { LoggerService } from '@app/logger';
 
 @ApiTags('Public-Posts')
-@Controller('public-posts')
+@Controller(POST_PUBLIC_ROUTE.MAIN)
 export class PublicPostsController {
-  constructor(private readonly queryBus: QueryBus) {}
-  @Get('all/:endCursorPostId?')
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(PublicPostsController.name);
+  }
+
+  @Get(`${POST_PUBLIC_ROUTE.ALL}/:endCursorPostId?`)
   @GetPublicPostsSwagger()
   @HttpCode(HttpStatus.OK)
   async getPublicPosts(
     @Query() query?: SearchQueryParametersType,
     @Param('endCursorPostId') endCursorPostId?: string,
-  ) {
-    const result: NotificationObject<PostOutputDto, null> =
+  ): Promise<Pagination<PostOutputDto[]>> {
+    this.logger.debug('Execute: get posts', this.getPublicPosts.name);
+    const result: AppNotificationResultType<Pagination<PostOutputDto[]>> =
       await this.queryBus.execute(
         new GetPublicPostsByUserQuery(query, endCursorPostId),
       );
-    const code = result.getCode();
-    if (code === GetPublicPostsCodes.Success) return result.getData();
-    if (code === GetPublicPostsCodes.TransactionError)
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.getPublicPosts.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Get(':postId')
   @GetPublicPostSwagger()
   @HttpCode(HttpStatus.OK)
-  async getPublicPost(@Param('postId') postId: string) {
-    const result: NotificationObject<PostOutputDto, null> =
+  async getPublicPost(@Param('postId') postId: string): Promise<PostOutputDto> {
+    this.logger.debug('Execute: get post by id', this.getPublicPost.name);
+
+    const result: AppNotificationResultType<PostOutputDto> =
       await this.queryBus.execute(new GetPostQuery(postId));
-    const code = result.getCode();
-    if (code === GetPostCodes.Success) return result.getData();
-    if (code === GetPostCodes.PostNotFound)
-      throw new NotFoundException('Post not found');
-    if (code === GetPostCodes.TransactionError)
-      throw new InternalServerErrorException();
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.getPublicPost.name);
+        return result.data;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not found', this.getPublicPost.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 }

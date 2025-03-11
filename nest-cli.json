@@ -3,6 +3,11 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "apps/gateway/src",
   "compilerOptions": {
+    "assets": [
+      "**/*.hbs",
+      "**/*.html",
+      "**/*.svg"
+    ],
     "deleteOutDir": true,
     "webpack": true,
     "tsConfigPath": "apps/gateway/tsconfig.app.json"
@@ -26,33 +31,6 @@
       "sourceRoot": "libs/databases/src",
       "compilerOptions": {
         "tsConfigPath": "libs/databases/tsconfig.lib.json"
-      }
-    },
-    "als": {
-      "type": "library",
-      "root": "libs/als",
-      "entryFile": "index",
-      "sourceRoot": "libs/als/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/als/tsconfig.lib.json"
-      }
-    },
-    "custom-logger": {
-      "type": "library",
-      "root": "libs/custom-logger",
-      "entryFile": "index",
-      "sourceRoot": "libs/custom-logger/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/custom-logger/tsconfig.lib.json"
-      }
-    },
-    "requests": {
-      "type": "library",
-      "root": "libs/requests",
-      "entryFile": "index",
-      "sourceRoot": "libs/requests/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/requests/tsconfig.lib.json"
       }
     },
     "files": {
@@ -125,6 +103,15 @@
       "sourceRoot": "libs/base-types-enum/src",
       "compilerOptions": {
         "tsConfigPath": "libs/base-types-enum/tsconfig.lib.json"
+      }
+    },
+    "date-formater": {
+      "type": "library",
+      "root": "libs/date-formater",
+      "entryFile": "index",
+      "sourceRoot": "libs/date-formater/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/date-formater/tsconfig.lib.json"
       }
     }
   }

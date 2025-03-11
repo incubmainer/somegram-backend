@@ -1,38 +1,24 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
+import { BadRequestExceptionDto } from '@app/base-types-enum';
 
 export function GoogleAuthCallbackSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'Google Authentication Callback' }),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiOkResponse({
       description: `Login successful.
 Redirect to home page. ({homePage}/?accessToken={accessToken})
 The refreshToken is set in an HTTP-only cookie.
 The accessToken set to the query parameter.`,
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: 'Login failed due to wrong email',
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: 'Unknown IP address',
-      schema: {
-        example: {
-          status: HttpStatus.NOT_FOUND,
-          error: 'login_failed',
-          message: 'Unknown IP address',
-          details: {
-            ip: 'Invalid IP address',
-          },
-        },
-      },
+    ApiBadRequestResponse({
+      description:
+        'Login failed due to wrong email or ip or useragent not correct or not found',
+      type: BadRequestExceptionDto,
     }),
   );
 }

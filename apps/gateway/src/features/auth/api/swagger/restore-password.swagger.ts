@@ -1,58 +1,32 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiNoContentResponse,
+  ApiBadRequestResponse,
+  ApiUnprocessableEntityResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import {
+  BadRequestExceptionDto,
+  UnprocessableExceptionDto,
+} from '@app/base-types-enum';
 
 export function RestorePasswordSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'Restore Password' }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+    ApiNoContentResponse({
       description: 'Restore password successful',
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
+    ApiBadRequestResponse({
       description: 'Restore password failed',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'invalid_recaptcha_token',
-              message:
-                'Restore password failed due to invalid recaptcha token.',
-            },
-          },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'user_not_found',
-              message: 'Restore password failed due to user not found.',
-            },
-          },
-        ],
-      },
+      type: BadRequestExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+    ApiUnprocessableEntityResponse({
       description: 'Validation error',
-      schema: {
-        example: {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'email',
-              constraints: {
-                IsEmail: 'some message',
-              },
-            },
-          ],
-        },
-      },
+      type: UnprocessableExceptionDto,
+    }),
+    ApiNotFoundResponse({
+      description: 'User not found',
     }),
   );
 }

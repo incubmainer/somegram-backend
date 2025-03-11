@@ -1,59 +1,28 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiNoContentResponse,
+  ApiBadRequestResponse,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
+import {
+  BadRequestExceptionDto,
+  UnprocessableExceptionDto,
+} from '@app/base-types-enum';
 
 export function RestorePasswordConfirmationSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'Restore Password Confirmation' }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+    ApiNoContentResponse({
       description: 'Restore password confirmation successful',
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
+    ApiBadRequestResponse({
       description: 'Restore password confirmation failed due to expired code',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'restore_password_confirmation_failed',
-              message:
-                'Restore password confirmation failed due to expired code.',
-            },
-          },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'restore_password_confirmation_failed',
-              message:
-                'Restore password confirmation failed due to invalid code.',
-            },
-          },
-        ],
-      },
+      type: BadRequestExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+    ApiUnprocessableEntityResponse({
       description: 'Validation error',
-      schema: {
-        example: {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'code',
-              constraints: {
-                IsString: 'some message',
-              },
-            },
-          ],
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
+      type: UnprocessableExceptionDto,
     }),
   );
 }

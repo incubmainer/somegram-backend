@@ -1,62 +1,63 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { CommandHandler } from '@nestjs/cqrs';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { IsString, validateSync } from 'class-validator';
-import { NotificationObject } from '../../../../common/domain/notification';
-
-export const RegistrationConfirmationCodes = {
-  Success: Symbol('success'),
-  TokenExpired: Symbol('tokenExpired'),
-  UserNotFound: Symbol('userNotFound'),
-  TransactionError: Symbol('transactionError'),
-};
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { Transactional } from '@nestjs-cls/transactional';
+import { UserConfirmationRepository } from '../../infrastructure/user-confirmation.repository';
 
 export class RegistrationConfirmationCommand {
-  @IsString()
-  public readonly token: string;
-  constructor(token: string) {
-    this.token = token;
-    const errors = validateSync(this);
-    if (errors.length) throw new Error('Validation failed');
-  }
+  constructor(public token: string) {}
 }
 
 @CommandHandler(RegistrationConfirmationCommand)
-export class RegistrationConfirmationUseCase {
+export class RegistrationConfirmationUseCase
+  implements
+    ICommandHandler<
+      RegistrationConfirmationCommand,
+      AppNotificationResultType<null, string>
+    >
+{
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-  ) {}
+    private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
+    private readonly userConfirmationRepository: UserConfirmationRepository,
+  ) {
+    this.logger.setContext(RegistrationConfirmationUseCase.name);
+  }
 
   public async execute(
     command: RegistrationConfirmationCommand,
-  ): Promise<NotificationObject<void>> {
-    const notification = new NotificationObject(
-      RegistrationConfirmationCodes.Success,
+  ): Promise<AppNotificationResultType<null, string>> {
+    this.logger.debug(
+      'Execute: registration confirmation command',
+      this.execute.name,
     );
     const { token } = command;
     try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-        const user = await this.userRepository.findUserByToken(token);
-        if (!user) {
-          notification.setCode(RegistrationConfirmationCodes.UserNotFound);
-          return notification;
-        }
-        if (user.confirmationToken.expiredAt < currentDate) {
-          notification.setCode(RegistrationConfirmationCodes.TokenExpired);
-          return notification;
-        }
-        await this.userRepository.deleteConfirmationToken(token);
-        await this.userRepository.confirmUser(user.id);
-      });
-    } catch {
-      notification.setCode(RegistrationConfirmationCodes.TransactionError);
+      const currentDate: Date = new Date();
+      const result = await this.userRepository.getUserByToken(token);
+      if (!result) return this.appNotification.notFound();
+      const { user, confirmation } = result;
+      if (confirmation.expiredAt < currentDate)
+        return this.appNotification.badRequest('Token is expired');
+
+      await this.handleConfirm(user.id, confirmation.token);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
+  }
+
+  @Transactional()
+  private async handleConfirm(userId: string, token: string): Promise<void> {
+    await Promise.all([
+      this.userRepository.confirmUser(userId),
+      this.userConfirmationRepository.removeConfirmationByToken(token),
+    ]);
   }
 }

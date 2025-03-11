@@ -1,35 +1,22 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
-  ApiResponse,
-  ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { MeOutputDto } from '../dto/output-dto/me-output-dto';
 
 export function GetInfoAboutMeSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({ summary: 'Get info about user' }),
     ApiBearerAuth('access-token'),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiOkResponse({
       description: 'Returns user information',
-      schema: {
-        example: {
-          status: HttpStatus.OK,
-          userId: '123',
-          userName: 'John Doe',
-          email: 'john.doe@example.com',
-        },
-      },
+      type: MeOutputDto,
     }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
+    ApiUnauthorizedResponse({
       description: 'JWT token inside cookie missed, expired or incorrect',
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
     }),
   );
 }

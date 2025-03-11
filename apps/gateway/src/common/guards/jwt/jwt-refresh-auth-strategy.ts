@@ -1,13 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JWTRefreshTokenPayloadType } from '../../domain/types/types';
-import { jwtConstants } from '../../constants/jwt-basic-constants';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
-import { User } from '@prisma/gateway';
 import { Request } from 'express';
 import { SecurityDevicesRepository } from '../../../features/security-devices/infrastructure/security-devices.repository';
-import { SecurityDevices } from '@prisma/gateway';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { ConfigService } from '@nestjs/config';
+import { JWTRefreshTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
@@ -15,8 +14,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   'jwt-refresh-token',
 ) {
   constructor(
-    // TODO Достать secret из конфига
-    //private readonly configService: ConfigService<ConfigurationType, true>,
+    private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly sessionRepositories: SecurityDevicesRepository,
     private readonly userRepository: UsersRepository,
   ) {
@@ -31,7 +29,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: jwtConstants.REFRESH_TOKEN_SECRET,
+      secretOrKey: configService.get('envSettings', { infer: true }).JWT_SECRET,
     });
   }
 
@@ -39,14 +37,16 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
     payload: JWTRefreshTokenPayloadType,
   ): Promise<JWTRefreshTokenPayloadType> {
     const { userId, iat, exp, deviceId } = payload;
-    const user: User | null = await this.userRepository.getUserById(userId);
+    const user = await this.userRepository.getUserById(userId);
 
     if (!user) return null;
 
-    const session: SecurityDevices | null =
-      await this.sessionRepositories.getDeviceById(deviceId);
+    const session = await this.sessionRepositories.getDeviceById(deviceId);
     if (!session) return null;
-    if (session.lastActiveDate !== new Date(iat * 1000).toISOString())
+    if (
+      session.lastActiveDate.toISOString() !==
+      new Date(iat * 1000).toISOString()
+    )
       return null;
     if (session.userId !== userId) return null;
 

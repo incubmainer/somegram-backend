@@ -1,0 +1,127 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("GATEWAY_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/gateway"
+}
+
+model User {
+  id                   String                 @id @default(uuid())
+  username             String
+  email                String
+  hashPassword         String?
+  createdAt            DateTime
+  updatedAt            DateTime?
+  isConfirmed          Boolean
+  confirmationToken    UserConfirmationToken?
+  resetPasswordCode    UserResetPasswordCode?
+  securityDevices      SecurityDevices[]
+  userGithubInfo       UserGithubInfo?
+  googleInfo           UserGoogleInfo?
+  firstName            String?
+  lastName             String?
+  dateOfBirth          DateTime?
+  about                String?
+  city                 String?
+  country              String?
+  UserPost             UserPost[]
+  accountType          AccountType            @default(Personal)
+  subscriptionExpireAt DateTime?
+  Notification         Notification[]
+
+  @@index([username])
+  @@index([email])
+}
+
+enum AccountType {
+  Personal
+  Business
+}
+
+model UserGithubInfo {
+  userId      String  @unique()
+  User        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId    String
+  userName    String
+  displayName String?
+  email       String
+
+  @@index([githubId])
+}
+
+model UserConfirmationToken {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiredAt DateTime
+  createdAt DateTime
+
+  @@index([token])
+}
+
+model UserResetPasswordCode {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   @unique
+  expiredAt DateTime
+  createdAt DateTime
+
+  @@index([code])
+}
+
+model SecurityDevices {
+  userId         String
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip             String
+  deviceId       String   @unique()
+  lastActiveDate DateTime
+  title          String
+
+  @@index([deviceId])
+}
+
+model UserPost {
+  id          String    @id @default(uuid())
+  userId      String
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime
+  updatedAt   DateTime?
+  description String?
+}
+
+model UserGoogleInfo {
+  userId        String  @unique()
+  User          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sub           String  @unique()
+  email         String
+  emailVerified Boolean
+}
+
+model CountryCatalog {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  CityCatalog CityCatalog[]
+}
+
+model CityCatalog {
+  id             String         @id @default(uuid())
+  name           String
+  countryId      String
+  CountryCatalog CountryCatalog @relation(fields: [countryId], references: [id])
+
+  @@unique([countryId, name])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean   @default(false)
+  createdAt DateTime
+  updateAt  DateTime?
+  User      User      @relation(fields: [userId], references: [id])
+}

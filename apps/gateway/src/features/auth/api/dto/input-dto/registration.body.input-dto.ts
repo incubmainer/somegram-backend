@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUserEmail } from '../../../application/decorators/is-user-email';
-import { IsUserPassword } from '../../../application/decorators/is-user-password';
-import { IsUsername } from '../../../application/decorators/is-username';
+import { IsUserEmail } from '../../../../../common/decorators/validation/is-user-email';
+import { IsUserPassword } from '../../../../../common/decorators/validation/is-user-password';
+import { IsUsername } from '../../../../../common/decorators/validation/is-username';
 import { IsString } from 'class-validator';
 
 export class RegistrationBodyInputDto {
   @ApiProperty({
     type: String,
-    description: 'this is name of user',
+    description: 'Name of user',
     example: 'Rayan_Ghosling',
     pattern: '^[0-9A-Za-z_-]+$',
     minLength: 6,

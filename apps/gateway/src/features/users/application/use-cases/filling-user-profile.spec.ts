@@ -16,10 +16,10 @@ import {
 import {
   GetProfileInfoQuery,
   GetProfileInfoUseCase,
-} from './queryBus/get-profile-info.use-case';
+} from '../queryBus/get-profile-info.use-case';
 import { ProfileInfoOutputDto } from '../../api/dto/output-dto/profile-info-output-dto';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-import { parseDateDDMMYYYY } from '../../../../common/utils/parse-date-dd-mm-yyyy';
+import { DateFormatter } from '../../../../common/utils/date-formatter.util';
 
 type UserInsertType = {
   username: string;
@@ -41,7 +41,7 @@ describe('Filing user profile', () => {
   let txHost: TransactionHost<TransactionalAdapterPrisma<GatewayPrismaClient>>;
   let insertUserData: UserInsertType;
   let fillData: FillProfileInputDto;
-
+  let dateFormatter: DateFormatter;
   beforeAll(async () => {
     const moduleBuilder: TestingModuleBuilder = Test.createTestingModule({
       imports: [GatewayModule],
@@ -56,6 +56,7 @@ describe('Filing user profile', () => {
     txHost = module.get<TransactionHost>(TransactionHost);
     queryBus.register([GetProfileInfoUseCase]);
     commandBus.register([FillingUserProfileUseCase]);
+    dateFormatter = module.get<DateFormatter>(DateFormatter);
   });
 
   beforeEach(async () => {
@@ -128,7 +129,9 @@ describe('Filing user profile', () => {
       userName: fillData.userName,
       firstName: fillData.firstName,
       lastName: fillData.lastName,
-      dateOfBirth: parseDateDDMMYYYY(fillData.dateOfBirth).toISOString(),
+      dateOfBirth: dateFormatter
+        .fromDDMMYYY(fillData.dateOfBirth)
+        .toISOString(),
       about: fillData.about,
       city: fillData.city,
       country: fillData.country,

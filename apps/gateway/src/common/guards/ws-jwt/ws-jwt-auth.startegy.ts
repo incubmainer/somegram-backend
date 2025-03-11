@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { Socket } from 'socket.io';
-import { jwtConstants } from '../../constants/jwt-basic-constants';
 import { WsUnauthorizedException } from '../../exception-filter/ws/exceptions/ws-unauthorized.exception';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
-import { JWTAccessTokenPayloadType } from '../../domain/types/types';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
-  constructor(private readonly usersRepository: UsersRepository) {
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {
     super({
       jwtFromRequest: (req) => {
         if (!req || !req.handshake || !req.handshake.headers)
@@ -22,7 +26,7 @@ export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
         return authHeader.split(' ')[1];
       },
       ignoreExpiration: false,
-      secretOrKey: jwtConstants.JWT_SECRET,
+      secretOrKey: configService.get('envSettings', { infer: true }).JWT_SECRET,
       passReqToCallback: true,
     });
   }

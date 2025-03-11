@@ -11,7 +11,7 @@ import {
 import {
   GetProfileInfoQuery,
   GetProfileInfoUseCase,
-} from './queryBus/get-profile-info.use-case';
+} from '../queryBus/get-profile-info.use-case';
 import { ProfileInfoOutputDto } from '../../api/dto/output-dto/profile-info-output-dto';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import { FileDto } from '../../../posts/api/dto/input-dto/add-post.dto';

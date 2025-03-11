@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout } from 'rxjs';
+import { firstValueFrom, Observable, timeout } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import {
   DELETE_AVATAR,
@@ -23,52 +23,51 @@ export class PhotoServiceAdapter {
     private readonly configService: ConfigService,
   ) {}
 
-  async getPostPhotos(postId: string) {
+  async getPostPhotos(postId: string): Promise<string[]> {
     try {
-      const responseOfService = this.fileServiceClient
+      const responseOfService: Observable<string[]> = this.fileServiceClient
         .send({ cmd: GET_POST_PHOTOS }, { postId })
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
       throw new InternalServerErrorException();
     }
   }
 
-  async getAvatar(userId: string) {
+  async getAvatar(userId: string): Promise<string> {
     try {
-      const responseOfService = this.fileServiceClient
+      const responseOfService: Observable<string> = this.fileServiceClient
         .send({ cmd: GET_USER_AVATAR }, { userId })
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
       throw new InternalServerErrorException();
     }
   }
 
-  async deleteAvatar(userId: string) {
+  async deleteAvatar(userId: string): Promise<void> {
     try {
-      const responseOfService = this.fileServiceClient
+      const responseOfService: Observable<void> = this.fileServiceClient
         .send({ cmd: DELETE_AVATAR }, { userId })
         .pipe(timeout(10000));
 
-      const result = await firstValueFrom(responseOfService);
-      return result;
+      return await firstValueFrom(responseOfService);
     } catch (e) {
       throw new InternalServerErrorException();
     }
   }
 
-  async uploadAvatar(payload: { ownerId: string; file: FileDto }) {
+  async uploadAvatar(payload: {
+    ownerId: string;
+    file: FileDto;
+  }): Promise<string> {
     try {
-      const serviceResponse = this.fileServiceClient
+      const serviceResponse: Observable<string> = this.fileServiceClient
         .send({ cmd: UPLOAD_AVATAR }, payload)
         .pipe(timeout(10000));
-      const result = await firstValueFrom(serviceResponse);
-      return result;
+      return await firstValueFrom(serviceResponse);
     } catch (e) {
       throw new InternalServerErrorException(e);
     }

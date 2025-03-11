@@ -22,14 +22,13 @@ import { ConfigurationType } from '../../../settings/configuration/configuration
 import { ConfigService } from '@nestjs/config';
 import { EnvSettings } from '../../../settings/env/env.settings';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../../../common/constants/jwt-basic-constants';
-import { JWTAccessTokenPayloadType } from '../../../common/domain/types/types';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import {
   WS_CORS_ALLOWED_HEADERS,
   WS_CORS_METHODS,
   WS_CORS_ORIGIN,
 } from '../../../common/constants/ws-cors.constants';
+import { JWTAccessTokenPayloadType } from '../../auth/domain/types';
 
 @UseFilters(WsExceptionFilter)
 @UsePipes(new ValidationPipe(new WsValidationPipeOption()))
@@ -47,6 +46,7 @@ export class NotificationWsGateway
   @WebSocketServer() io: Server;
 
   private readonly clients: Map<Socket, string> = new Map();
+  private readonly userSockets: Map<string, Set<Socket>> = new Map();
   private readonly envSettings: EnvSettings;
 
   constructor(
@@ -90,11 +90,10 @@ export class NotificationWsGateway
     }
 
     try {
-      // TODO Secret из ENVSettings полсе окончания рефакторинга auth можно будет изменить
       const result: JWTAccessTokenPayloadType = this.jwtService.verify(
         splitToken[1],
         {
-          secret: jwtConstants.JWT_SECRET,
+          secret: this.envSettings.JWT_SECRET,
         },
       );
       userId = result.userId;
@@ -112,12 +111,28 @@ export class NotificationWsGateway
     return userId;
   }
 
+  private clearClient(client: Socket): void {
+    const userId = this.clients.get(client);
+    if (!userId) return;
+
+    this.clients.delete(client);
+
+    const sockets = this.userSockets.get(userId);
+    if (sockets) {
+      sockets.delete(client);
+      if (sockets.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    }
+  }
+
   private forceDisconnect<T = null>(client: Socket, payload: T): void {
     this.logger.debug(
       `Client force disconnected: ${client.id}`,
       this.forceDisconnect.name,
     );
-    this.clients.delete(client);
+    this.clearClient(client);
+
     client.emit(WS_ERROR_EVENT, payload);
     client.disconnect();
   }
@@ -129,7 +144,13 @@ export class NotificationWsGateway
     );
     const userId = await this.authConnection(client);
     if (!userId) return;
+
     this.clients.set(client, userId);
+
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId)!.add(client);
   }
 
   handleDisconnect(client: Socket): void {
@@ -137,7 +158,8 @@ export class NotificationWsGateway
       `Client disconnected: ${client.id}`,
       this.handleDisconnect.name,
     );
-    this.clients.delete(client);
+
+    this.clearClient(client);
   }
 
   public emitMessageByUserId<T = null>(
@@ -146,20 +168,21 @@ export class NotificationWsGateway
     payload: T,
   ): AppNotificationResultType<null> {
     this.logger.debug(
-      'Execute: send message to connected client by user id',
+      `Execute: sending message to all connected clients of user ${userId}`,
       this.emitMessageByUserId.name,
     );
-    let client: Socket | undefined;
 
-    for (const [socket, storedUserId] of this.clients.entries()) {
-      if (storedUserId === userId) {
-        client = socket;
-        break;
-      }
+    const clients = this.userSockets.get(userId);
+
+    if (!clients || clients.size === 0) {
+      this.logger.debug(
+        `No active clients found for user ${userId}`,
+        this.emitMessageByUserId.name,
+      );
+      return this.appNotification.notFound();
     }
 
-    if (!client) return this.appNotification.notFound();
-    client.emit(event, payload);
+    clients.forEach((client) => client.emit(event, payload));
 
     return this.appNotification.success(null);
   }

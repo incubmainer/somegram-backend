@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiCookieAuth,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -8,6 +9,7 @@ import {
 export function TerminateAllDevicesExcludeCurrentSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'End all sessions except the current one' }),
+    ApiCookieAuth(),
     ApiNoContentResponse({
       description: 'Success',
     }),

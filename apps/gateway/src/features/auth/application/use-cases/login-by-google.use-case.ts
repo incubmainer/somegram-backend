@@ -1,120 +1,171 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { CommandHandler } from '@nestjs/cqrs';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
+import { Transactional } from '@nestjs-cls/transactional';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { IsBoolean, IsEmail, IsString, validateSync } from 'class-validator';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
-import { NotificationObject } from '../../../../common/domain/notification';
-
-export const LoginByGoogleCodes = {
-  Success: Symbol('success'),
-  GoogleEmailNotVerified: Symbol('google_email_not_verified'),
-  GoogleAccountAlreadyUsed: Symbol('google_account_already_used'),
-  MergeAccountWithGoogle: Symbol('merge_account_with_google'),
-  WrongEmail: Symbol('wrong_email'),
-  TransactionError: Symbol('transaction_error'),
-};
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { GoogleProfile } from '../../../../common/guards/jwt/google.strategy';
+import {
+  UserCreatedByGoogleDto,
+  UserGoogleInfoCreatedDto,
+} from '../../../users/domain/types';
+import { UserEntity } from '../../../users/domain/user.entity';
+import { AuthService } from '../auth.service';
+import { SecurityDeviceCreateDto } from '../../../security-devices/domain/types';
+import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
+import { TokensPairType } from '../../domain/types';
 
 export class LoginByGoogleCommand {
-  @IsString()
-  googleId: string;
-  @IsString()
-  googleName: string;
-  @IsEmail()
-  googleEmail: string;
-  @IsBoolean()
-  googleEmailVerified: boolean;
   constructor(
-    googleId: string,
-    googleName: string,
-    googleEmail: string,
-    googleEmailVerified: boolean,
-  ) {
-    this.googleId = googleId;
-    this.googleName = googleName;
-    this.googleEmail = googleEmail;
-    this.googleEmailVerified = googleEmailVerified;
-    const errors = validateSync(this);
-    if (errors.length) throw new Error('Validation failed');
-  }
+    public googleProfile: GoogleProfile,
+    public ip: string,
+    public userAgent: string,
+  ) {}
 }
 
-type UserId = string;
-
 @CommandHandler(LoginByGoogleCommand)
-export class LoginByGoogleUseCase {
+export class LoginByGoogleUseCase
+  implements
+    ICommandHandler<
+      LoginByGoogleCommand,
+      AppNotificationResultType<TokensPairType, string>
+    >
+{
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-    private readonly emailAuthService: EmailAuthService,
-  ) {}
+    private readonly appNotification: ApplicationNotification,
+    private readonly logger: LoggerService,
+    private readonly authService: AuthService,
+    private readonly securityDevicesRepository: SecurityDevicesRepository,
+    private readonly publisher: EventPublisher,
+  ) {
+    this.logger.setContext(LoginByGoogleUseCase.name);
+  }
 
   public async execute(
     command: LoginByGoogleCommand,
-  ): Promise<NotificationObject<UserId>> {
-    const { googleId, googleEmail, googleEmailVerified, googleName } = command;
-    const notification = new NotificationObject<UserId>(
-      LoginByGoogleCodes.Success,
-    );
-    if (!googleEmailVerified) {
-      notification.setCode(LoginByGoogleCodes.GoogleEmailNotVerified);
-      return notification;
-    }
+  ): Promise<AppNotificationResultType<TokensPairType, string>> {
+    const { googleId, googleEmail, googleEmailVerified } =
+      command.googleProfile;
+
+    const { ip, userAgent } = command;
+
     try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
+      if (!ip || !userAgent)
+        return this.appNotification.badRequest('Bad input data');
 
-        const userByGoogleId =
-          await this.userRepository.getUserByGoogleSub(googleId);
-        if (userByGoogleId) {
-          notification.setData(userByGoogleId.id);
-          notification.setCode(LoginByGoogleCodes.GoogleAccountAlreadyUsed);
-          return notification;
-        }
-        const userByEmail =
-          await this.userRepository.getUserByEmailWithGoogleInfo(googleEmail);
-        if (userByEmail && userByEmail.googleInfo) {
-          notification.setCode(LoginByGoogleCodes.WrongEmail);
-          return notification;
-        }
-        if (userByEmail) {
-          await this.userRepository.addGoogleInfoToUserAndConfirm(
-            userByEmail.id,
-            {
-              sub: googleId,
-              name: googleName,
-              email: googleEmail,
-              email_verified: googleEmailVerified,
-            },
-          );
-          notification.setData(userByEmail.id);
-          notification.setCode(LoginByGoogleCodes.MergeAccountWithGoogle);
-          return;
-        }
+      if (!googleEmailVerified)
+        return this.appNotification.badRequest('Google email not verified');
 
-        const uniqueUsername =
-          await this.userRepository.generateUniqueUsername();
-        const userId =
-          await this.userRepository.createConfirmedUserWithGoogleInfo({
-            username: uniqueUsername,
-            email: googleEmail,
-            createdAt: currentDate,
-            googleInfo: {
-              sub: googleId,
-              name: googleName,
-              email: googleEmail,
-              email_verified: googleEmailVerified,
-            },
-          });
-        await this.emailAuthService.successRegistration(googleEmail);
-        notification.setData(userId);
-      });
-    } catch {
-      notification.setCode(LoginByGoogleCodes.TransactionError);
+      const [userGoogleInfo, userWithGoogleInfo] = await Promise.all([
+        this.userRepository.getUserByGoogleSub(googleId),
+        this.userRepository.getUserByEmailWithGoogleInfo(googleEmail),
+      ]);
+
+      if (userGoogleInfo) {
+        const result = await this.createSession(
+          userGoogleInfo.id,
+          userAgent,
+          ip,
+        );
+        return this.appNotification.success(result);
+      }
+
+      if (userWithGoogleInfo?.user && userWithGoogleInfo?.googleInfo)
+        return this.appNotification.badRequest('User already exist');
+
+      const createdGoogleInfoDto: UserGoogleInfoCreatedDto = {
+        userId: userWithGoogleInfo?.user.id ?? null,
+        subGoogleId: googleId,
+        googleEmail: googleEmail,
+        googleEmailVerified: googleEmailVerified,
+      };
+
+      const result = await this.handleUser(
+        createdGoogleInfoDto,
+        userWithGoogleInfo?.user,
+        ip,
+        userAgent,
+      );
+      return this.appNotification.success(result);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
     }
-    return notification;
+  }
+
+  @Transactional()
+  private async handleUser(
+    createdGoogleInfoDto: UserGoogleInfoCreatedDto,
+    user: UserEntity | null,
+    ip: string,
+    userAgent: string,
+  ): Promise<TokensPairType> {
+    let userId: string;
+    let userForEvent: UserEntity;
+    if (user) {
+      await this.userRepository.addGoogleInfoToUser(createdGoogleInfoDto);
+
+      if (!user.isConfirmed) await this.userRepository.confirmUser(user.id);
+
+      userId = user.id;
+      userForEvent = user;
+    } else {
+      const { googleEmail } = createdGoogleInfoDto;
+      const createdUserDto: UserCreatedByGoogleDto = {
+        createdAt: new Date(),
+        email: googleEmail,
+        isConfirmed: true,
+        username: this.authService.generateUniqUserName(googleEmail),
+      };
+
+      const newUser =
+        await this.userRepository.createUserByGoogle(createdUserDto);
+
+      createdGoogleInfoDto.userId = newUser.id;
+      userId = newUser.id;
+      userForEvent = newUser;
+
+      await this.userRepository.addGoogleInfoToUser(createdGoogleInfoDto);
+    }
+
+    const tokens = await this.createSession(userId, userAgent, ip);
+    this.publishEvent(userForEvent);
+    return tokens;
+  }
+
+  private publishEvent(user: UserEntity): void {
+    const userWithEvents = this.publisher.mergeObjectContext(user);
+
+    userWithEvents.registrationSuccessEvent();
+    userWithEvents.commit();
+  }
+
+  private async createSession(
+    userId: string,
+    userAgent: string,
+    ip: string,
+  ): Promise<TokensPairType> {
+    const deviceId = this.authService.generateDeviceId(userId);
+    const accessToken = await this.authService.generateAccessToken(userId);
+    const refreshToken = await this.authService.generateRefreshToken(
+      userId,
+      deviceId,
+    );
+
+    const { iat } = await this.authService.verifyRefreshToken(refreshToken);
+
+    const sessionCreatedDto: SecurityDeviceCreateDto = {
+      iat: new Date(iat * 1000),
+      deviceId: deviceId,
+      userId: userId,
+      userAgent: userAgent,
+      ip: ip,
+    };
+
+    await this.securityDevicesRepository.createSession(sessionCreatedDto);
+    return { accessToken, refreshToken };
   }
 }

@@ -30,7 +30,7 @@ import {
 } from '@app/application-notification';
 import { RefreshJWTAccessGuard } from '../../../common/guards/jwt/jwt-refresh-auth-guard';
 import { CurrentUser } from '@app/decorators/http-parse/current-user';
-import { JWTRefreshTokenPayloadType } from '../../../common/domain/types/types';
+import { JWTRefreshTokenPayloadType } from '../../auth/domain/types';
 
 @ApiTags('Security Devices')
 @ApiBearerAuth('refresh-token')

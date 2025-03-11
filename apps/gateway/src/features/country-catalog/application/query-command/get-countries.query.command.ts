@@ -9,6 +9,7 @@ import {
   PrismaClient as GatewayPrismaClient,
   CountryCatalog,
 } from '@prisma/gateway';
+import { LoggerService } from '@app/logger';
 
 export class GetCountriesQueryCommand {
   constructor() {}
@@ -23,9 +24,13 @@ export class GetCountriesQueryCommandHandler
       TransactionalAdapterPrisma<GatewayPrismaClient>
     >,
     private readonly countryOutputDtoMapper: CountryOutputDtoMapper,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    this.logger.setContext(GetCountriesQueryCommandHandler.name);
+  }
 
   async execute(query: GetCountriesQueryCommand): Promise<CountryOutputDto[]> {
+    this.logger.debug('Execute: get countries command', this.execute.name);
     const countries: CountryCatalog[] | [] =
       await this.txHost.tx.countryCatalog.findMany({});
 

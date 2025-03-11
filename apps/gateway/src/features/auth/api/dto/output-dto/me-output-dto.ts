@@ -1,15 +1,18 @@
 import { User } from '@prisma/gateway';
+import { UserEntity } from '../../../../users/domain/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class MeOutputDto {
+  @ApiProperty()
   userId: string;
+  @ApiProperty()
   userName: string;
+  @ApiProperty()
   email: string;
-}
 
-export const userMapper = (user: User): MeOutputDto => {
-  const outputUser = new MeOutputDto();
-  outputUser.email = user.email;
-  outputUser.userName = user.username;
-  outputUser.userId = user.id;
-  return outputUser;
-};
+  constructor(user: UserEntity | User) {
+    this.userId = user.id;
+    this.userName = user.username;
+    this.email = user.email;
+  }
+}

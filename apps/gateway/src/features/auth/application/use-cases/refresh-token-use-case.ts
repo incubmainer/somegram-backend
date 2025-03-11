@@ -1,27 +1,28 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { AuthService } from '../auth.service';
 import { SecurityDevicesRepository } from '../../../security-devices/infrastructure/security-devices.repository';
-import { CreateTokensCommand } from './create-token.use-case';
-import { CheckRefreshTokenCommand } from './check-refresh-token';
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import {
-  JWTRefreshTokenPayloadType,
-  JWTTokensType,
-} from '../../../../common/domain/types/types';
+import { JWTRefreshTokenPayloadType, TokensPairType } from '../../domain/types';
+
 export class RenewTokensCommand {
-  constructor(public refreshToken: string) {}
+  constructor(public user: JWTRefreshTokenPayloadType) {}
 }
 @CommandHandler(RenewTokensCommand)
-export class RenewTokensUseCase implements ICommandHandler<RenewTokensCommand> {
+export class RenewTokensUseCase
+  implements
+    ICommandHandler<
+      RenewTokensCommand,
+      AppNotificationResultType<TokensPairType, null>
+    >
+{
   constructor(
     private authService: AuthService,
     private securityDevicesRepository: SecurityDevicesRepository,
-    private readonly commandBus: CommandBus,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
   ) {
@@ -29,30 +30,25 @@ export class RenewTokensUseCase implements ICommandHandler<RenewTokensCommand> {
   }
   async execute(
     command: RenewTokensCommand,
-  ): Promise<AppNotificationResultType<JWTTokensType>> {
+  ): Promise<AppNotificationResultType<TokensPairType, null>> {
     this.logger.debug('Execute: renew tokens', this.execute.name);
-
+    const { deviceId, userId } = command.user;
     try {
-      const refreshTokenPayload: JWTRefreshTokenPayloadType | null =
-        await this.commandBus.execute(
-          new CheckRefreshTokenCommand(command.refreshToken),
-        );
-      if (!refreshTokenPayload) return this.appNotification.unauthorized();
+      const session =
+        await this.securityDevicesRepository.getDeviceById(deviceId);
+      if (!session) return this.appNotification.unauthorized();
 
-      const tokens: JWTTokensType = await this.commandBus.execute(
-        new CreateTokensCommand(
-          refreshTokenPayload.userId,
-          refreshTokenPayload.deviceId,
-        ),
+      const accessToken = await this.authService.generateAccessToken(userId);
+      const refreshToken = await this.authService.generateRefreshToken(
+        userId,
+        deviceId,
       );
-      const lastActiveDate = new Date(
-        refreshTokenPayload.iat * 1000,
-      ).toISOString();
-      await this.securityDevicesRepository.updateLastActiveDate(
-        refreshTokenPayload.deviceId,
-        lastActiveDate,
-      );
-      return this.appNotification.success(tokens);
+      const { iat } = await this.authService.verifyRefreshToken(refreshToken);
+
+      session.renewSession(new Date(iat * 1000));
+
+      await this.securityDevicesRepository.updateLastActiveDate(session);
+      return this.appNotification.success({ accessToken, refreshToken });
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

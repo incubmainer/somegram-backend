@@ -9,7 +9,7 @@ import {
   CreateNotificationUseCaseHandler,
   CreateNotificationUseCases,
 } from './create-notification.use-cases';
-import { Notification, User } from '@prisma/gateway';
+import { Notification } from '@prisma/gateway';
 import {
   MarkNotificationAsReadUseCaseHandler,
   MarkNotificationAsReadUseCases,
@@ -17,31 +17,42 @@ import {
 import { GatewayModule } from '../../../../gateway.module';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { AccountType } from '../../../../../../../libs/common/enums/payments';
+import { NotificationEntity } from '../../domain/notification.entity';
+import { CreateNotificationDto } from '../../domain/types';
 
 const notification1Id = 'notification-1';
 const userId = 'user-1';
 const message = 'message for notification';
 
 class NotificationRepoMock extends NotificationRepository {
-  async create(newNotification: Notification): Promise<string> {
-    return notification1Id;
+  async create(
+    notificationDto: CreateNotificationDto,
+  ): Promise<NotificationEntity> {
+    return new NotificationEntity({
+      id: notification1Id,
+      message: message,
+      userId: userId,
+      isRead: true,
+      updateAt: new Date(),
+      createdAt: new Date(),
+    });
   }
 
-  async update(notification: Notification): Promise<void> {
+  async readNotification(notification: Notification): Promise<void> {
     return;
   }
 
   async getNotificationById(
     notificationId: string,
-  ): Promise<Notification | null> {
-    return {
+  ): Promise<NotificationEntity | null> {
+    return new NotificationEntity({
       id: notification1Id,
       message: message,
       userId: userId,
-      isRead: false,
+      isRead: true,
       updateAt: new Date(),
       createdAt: new Date(),
-    };
+    });
   }
 }
 
@@ -130,22 +141,35 @@ describe('Notification', () => {
   });
 
   it('should mark notification as read', async () => {
-    const updateSpy = jest.spyOn(notificationRepository, 'update');
-    const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
+    const updateSpy = jest.spyOn(notificationRepository, 'readNotification');
+    const getSpy = jest
+      .spyOn(notificationRepository, 'getNotificationById')
+      .mockResolvedValue(
+        new NotificationEntity({
+          id: notification1Id,
+          message: message,
+          userId: userId,
+          isRead: false,
+          updateAt: new Date(),
+          createdAt: new Date(),
+        }),
+      );
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
       new MarkNotificationAsReadUseCases(userId, notification1Id),
     );
 
     expect(getSpy).toHaveBeenCalledWith(notification1Id);
-    expect(updateSpy).toHaveBeenCalledWith({
-      id: notification1Id,
-      userId: userId,
-      message: message,
-      isRead: true,
-      createdAt: expect.any(Date),
-      updateAt: expect.any(Date),
-    });
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: notification1Id,
+        userId: userId,
+        message: message,
+        isRead: true,
+        createdAt: expect.any(Date),
+        updateAt: expect.any(Date),
+      }),
+    );
 
     expect(result.appResult).toEqual(AppNotificationResultEnum.Success);
     updateSpy.mockRestore();
@@ -153,7 +177,7 @@ describe('Notification', () => {
   });
 
   it('should not mark notification as read, notification not found', async () => {
-    const updateSpy = jest.spyOn(notificationRepository, 'update');
+    const updateSpy = jest.spyOn(notificationRepository, 'readNotification');
     const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
 
     getSpy.mockResolvedValueOnce(null);
@@ -171,7 +195,7 @@ describe('Notification', () => {
   });
 
   it('should not mark notification as read, forbidden', async () => {
-    const updateSpy = jest.spyOn(notificationRepository, 'update');
+    const updateSpy = jest.spyOn(notificationRepository, 'readNotification');
     const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
@@ -187,16 +211,18 @@ describe('Notification', () => {
   });
 
   it('should not mark notification as read, notification has already read', async () => {
-    const updateSpy = jest.spyOn(notificationRepository, 'update');
+    const updateSpy = jest.spyOn(notificationRepository, 'readNotification');
     const getSpy = jest.spyOn(notificationRepository, 'getNotificationById');
-    getSpy.mockResolvedValueOnce({
-      id: notification1Id,
-      message: message,
-      userId: userId,
-      isRead: true,
-      updateAt: new Date(),
-      createdAt: new Date(),
-    });
+    getSpy.mockResolvedValueOnce(
+      new NotificationEntity({
+        id: notification1Id,
+        message: message,
+        userId: userId,
+        isRead: true,
+        updateAt: new Date(),
+        createdAt: new Date(),
+      }),
+    );
 
     const result: AppNotificationResultType<null> = await commandBus.execute(
       new MarkNotificationAsReadUseCases(userId, notification1Id),

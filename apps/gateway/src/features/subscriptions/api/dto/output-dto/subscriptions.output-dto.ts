@@ -5,6 +5,7 @@ import {
   SubscriptionType,
   TransactionStatuses,
 } from '../../../../../../../../libs/common/enums/payments';
+import { Pagination } from '@app/paginator';
 
 export class MyPaymentsOutputDto {
   @ApiProperty({
@@ -88,4 +89,12 @@ export class PaymentCreatedOutputDto {
     required: true,
   })
   url: string;
+}
+
+export class SwaggerMyPaymentsDto extends Pagination<MyPaymentsOutputDto> {
+  @ApiProperty({
+    type: MyPaymentsOutputDto,
+    isArray: true,
+  })
+  items: MyPaymentsOutputDto;
 }
