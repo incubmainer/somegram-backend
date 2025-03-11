@@ -16,7 +16,6 @@ COPY --chown=node:node package.json yarn.lock /usr/src/app/
 COPY --chown=node:node --from=development /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --chown=node:node . .
 RUN yarn build:gateway && \
-  yarn add bcrypt --force && \
   yarn install --production --frozen-lockfile && \
   yarn prisma:gen:gateway && \
   yarn cache clean
