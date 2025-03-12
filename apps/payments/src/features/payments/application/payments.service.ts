@@ -43,7 +43,7 @@ export class PaymentService {
     this.disableSubscription();
   }
 
-  @Cron('0 0 * * *')
+  @Cron('0 0 0 * * *')
   private async execute12Am(): Promise<void> {
     this.logger.debug('Execute payment service crone', this.execute12Am.name);
     this.checkAndNotifySubscriptionEnd();
