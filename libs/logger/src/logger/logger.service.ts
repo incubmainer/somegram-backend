@@ -5,8 +5,8 @@ import {
   Scope,
 } from '@nestjs/common';
 import { WinstonService } from '@app/logger/winston/winston.service';
-import { REQUEST_ID_KEY } from '@app/als';
 import { AsyncLocalStorageService } from '@app/logger/als/als.service';
+import { REQUEST_ID_KEY } from '@app/logger/request-middleware/request-context.middleware';
 
 /*
  Scope.TRANSIENT indicates that the LoggerService instance

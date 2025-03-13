@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -15,33 +14,20 @@ export enum EnvState {
 }
 export type EnvVariableType = { [key: string]: string | undefined };
 
-// TODO merge with decorators ADD TRIM
-// Сделать декоратор трнсформации в число
-
 export class EnvSettings {
   @IsEnum(EnvState)
   public readonly ENV: EnvState;
-  //@Trim()
-  @IsNotEmpty()
   @IsNumber()
   public readonly PORT: number;
-
-  @IsOptional()
   @IsString()
   public readonly GLOBAL_PREFIX: string;
-
-  @IsNotEmpty()
   @IsBoolean()
   public readonly SWAGGER_ENABLED: boolean;
-
   @IsNotEmpty()
   @IsString()
   public readonly GATEWAY_DATABASE_URL: string;
-  // ========
-  @IsNotEmpty()
   @IsNumber()
   public readonly RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS: number;
-  @IsNotEmpty()
   @IsNumber()
   public readonly EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS: number;
   @IsNotEmpty()
@@ -57,8 +43,6 @@ export class EnvSettings {
   @IsString()
   public readonly RMQ_CONNECTION_STRING: string;
 
-  /// --------
-
   @IsNotEmpty()
   @IsString()
   public readonly EMAIL_SERVICE: string;
@@ -69,16 +53,13 @@ export class EnvSettings {
   @IsString()
   public readonly EMAIL_PASSWORD: string;
 
-  ////--------
-
   @IsNotEmpty()
   @IsString()
   public readonly PHOTO_SERVICE_HOST: string;
   @IsNotEmpty()
-  //@IsNumber()
-  public readonly PHOTO_SERVICE_PORT: string;
+  @IsNumber()
+  public readonly PHOTO_SERVICE_PORT: number;
 
-  ///-------
   @IsNotEmpty()
   @IsString()
   public readonly GITHUB_CLIENT_SECRET: string;
@@ -89,7 +70,6 @@ export class EnvSettings {
   @IsString()
   public readonly GITHUB_CALLBACK_URL: string;
 
-  ///-------
   @IsNotEmpty()
   @IsString()
   public readonly GOOGLE_CLIENT_ID: string;
@@ -100,19 +80,39 @@ export class EnvSettings {
   @IsString()
   public readonly GOOGLE_CLIENT_SECRET: string;
 
+  @IsNotEmpty()
+  @IsString()
+  public readonly JWT_SECRET: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public readonly JWT_ACCESS_EXPIRED_TIME: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public readonly JWT_REFRESH_EXPIRED_TIME: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  public readonly SALT_ROUND: number;
+
   constructor(envVariable: EnvVariableType) {
     this.ENV = (envVariable.NODE_ENV as EnvState) || EnvState.DEVELOPMENT;
     this.PORT = this.getNumberOrDefaultValue(envVariable.PORT, 3000);
     this.GLOBAL_PREFIX = envVariable.GLOBAL_PREFIX || '';
     this.SWAGGER_ENABLED = envVariable.SWAGGER_ENABLED === 'true' || true;
 
-    // TODO сделать трансормацию и валидацию параметра
     this.RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS =
-      +envVariable.RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS;
+      this.getNumberOrDefaultValue(
+        envVariable.RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS,
+        300000,
+      );
 
-    // TODO сделать трансормацию и валидацию параметра
     this.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS =
-      +envVariable.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS;
+      this.getNumberOrDefaultValue(
+        envVariable.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS,
+        300000,
+      );
 
     this.RECAPTCHA_SECRET_KEY = envVariable.RECAPTCHA_SECRET_KEY;
     this.RECAPTCHA_SITE_KEY = envVariable.RECAPTCHA_SITE_KEY;
@@ -125,8 +125,10 @@ export class EnvSettings {
     this.EMAIL_PASSWORD = envVariable.EMAIL_PASSWORD;
 
     this.PHOTO_SERVICE_HOST = envVariable.PHOTO_SERVICE_HOST;
-    // TODO сделать трансормацию и валидацию параметра и значение по умолчанию
-    this.PHOTO_SERVICE_PORT = envVariable.PHOTO_SERVICE_PORT;
+    this.PHOTO_SERVICE_PORT = this.getNumberOrDefaultValue(
+      envVariable.PHOTO_SERVICE_PORT,
+      3002,
+    );
 
     this.GITHUB_CLIENT_SECRET = envVariable.GITHUB_CLIENT_SECRET;
     this.GITHUB_CLIENT_ID = envVariable.GITHUB_CLIENT_ID;
@@ -136,7 +138,26 @@ export class EnvSettings {
     this.GOOGLE_REDIRECT_URI = envVariable.GOOGLE_REDIRECT_URI;
     this.GOOGLE_CLIENT_SECRET = envVariable.GOOGLE_CLIENT_SECRET;
 
-    //console.log('this.GATEWAY_DATABASE_URL', this);
+    this.PORT = this.getNumberOrDefaultValue(envVariable.PORT, 3000);
+    this.RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS =
+      this.getNumberOrDefaultValue(
+        envVariable.RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS,
+        300000,
+      );
+    this.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS =
+      this.getNumberOrDefaultValue(
+        envVariable.EMAIL_CONFIRMATION_TOKEN_EXPIRE_AFTER_MILISECONDS,
+        300000,
+      );
+    this.PHOTO_SERVICE_PORT = this.getNumberOrDefaultValue(
+      envVariable.PHOTO_SERVICE_PORT,
+      3001,
+    );
+
+    this.JWT_SECRET = envVariable.JWT_SECRET;
+    this.JWT_ACCESS_EXPIRED_TIME = envVariable.JWT_ACCESS_EXPIRED_TIME;
+    this.JWT_REFRESH_EXPIRED_TIME = envVariable.JWT_REFRESH_EXPIRED_TIME;
+    this.SALT_ROUND = this.getNumberOrDefaultValue(envVariable.SALT_ROUND, 10);
   }
 
   getEnvState(): EnvState {

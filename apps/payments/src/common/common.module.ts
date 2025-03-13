@@ -21,6 +21,7 @@ import { configModule } from '../settings/configuration/config.module';
 import { LoggerModule } from '@app/logger';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConvertDateUtil } from './utils/convert-date.util';
+import { PaginatorModule } from '@app/paginator';
 
 const paypalClient = {
   provide: PAYPAL_CLIENT,
@@ -108,6 +109,7 @@ const paypalClient = {
     LoggerModule.forRoot('Payments'),
     CommonModule,
     ScheduleModule.forRoot(),
+    PaginatorModule,
   ],
   controllers: [],
   providers: [
@@ -126,6 +128,7 @@ const paypalClient = {
     PaymentManager,
     GatewayServiceClientAdapter,
     ConvertDateUtil,
+    PaginatorModule,
   ],
 })
 export class CommonModule {}

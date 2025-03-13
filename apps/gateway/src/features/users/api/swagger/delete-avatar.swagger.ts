@@ -1,9 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiNoContentResponse,
-  ApiNotFoundResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiNoContentResponse } from '@nestjs/swagger';
 
 export function DeleteAvatarSwagger() {
   return applyDecorators(
@@ -11,6 +7,5 @@ export function DeleteAvatarSwagger() {
     ApiNoContentResponse({
       description: 'Success deleted avatar',
     }),
-    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }

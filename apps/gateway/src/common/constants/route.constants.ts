@@ -42,3 +42,29 @@ export const NOTIFICATION_ROUTE = {
   MARK_AS_READ: 'read',
   TESTING: 'testing',
 };
+
+export const POST_PUBLIC_ROUTE = {
+  MAIN: 'public-posts',
+  ALL: 'all',
+};
+
+export const POST_ROUTE = {
+  MAIN: 'posts',
+};
+
+export const AUTH_ROUTE = {
+  MAIN: 'auth',
+  REGISTRATION: 'registration',
+  REGISTRATION_CONFIRMATION: 'registration-confirmation',
+  REGISTRATION_EMAIL_RESENDING: 'registration-email-resending',
+  GOOGLE: 'google',
+  GITHUB: 'github',
+  CALLBACK: 'callback',
+  LOGIN: 'login',
+  LOGOUT: 'logout',
+  UPDATE_TOKENS: 'refresh-token',
+  ME: 'me',
+  RESTORE_PASSWORD: 'restore-password',
+  RESTORE_PASSWORD_CONFIRM: 'restore-password-confirmation',
+  RECAPTCHA_SITE_KEY: 'recaptcha-site-key',
+};

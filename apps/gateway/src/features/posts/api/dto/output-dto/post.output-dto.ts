@@ -1,4 +1,77 @@
-import { User, UserPost } from '@prisma/gateway';
+import { ApiProperty } from '@nestjs/swagger';
+import { Pagination } from '@app/paginator';
+import { UserEntity } from '../../../../users/domain/user.entity';
+import { PostEntity } from '../../../domain/post.entity';
+
+export class PostOwnerOutputDtoModel {
+  @ApiProperty({
+    description: 'User id',
+    example: '2ffjk-fmrjc3nf-fn2',
+    type: String,
+  })
+  userId: string;
+  @ApiProperty({
+    description: 'User name',
+    example: 'Name',
+    type: String,
+  })
+  username: string;
+  @ApiProperty({
+    description: 'User avatar url',
+    example: 'https://avatar.com/',
+    type: String,
+  })
+  avatarUrl: string;
+}
+export class PostOutputDtoModel {
+  @ApiProperty({
+    description: 'Post id',
+    example: '223-4ffkr-321-f',
+    type: String,
+  })
+  id: string;
+  @ApiProperty({
+    description: 'Post description',
+    example: 'Some description',
+    type: String,
+    required: false,
+    nullable: true,
+  })
+  description: string | null;
+  @ApiProperty({
+    description: 'Post created At',
+    example: '2024-12-20 09:39:14',
+    type: String,
+  })
+  createdAt: string;
+  @ApiProperty({
+    description: 'Post update At',
+    example: '2024-12-20 09:39:14',
+    type: String,
+    required: false,
+    nullable: true,
+  })
+  updatedAt: string | null;
+  @ApiProperty({
+    description: 'Post images',
+    example: ['https://image.com/'],
+    type: String,
+    isArray: true,
+  })
+  images: string[];
+  @ApiProperty({
+    type: PostOwnerOutputDtoModel,
+  })
+  postOwnerInfo: PostOwnerOutputDtoModel;
+}
+
+export class PostOutputDtoWithPaginationModel extends Pagination<PostOutputDtoModel> {
+  @ApiProperty({
+    type: PostOutputDtoModel,
+    isArray: true,
+  })
+  items: PostOutputDtoModel;
+}
 
 export class PostOutputDto {
   id: string;
@@ -18,14 +91,8 @@ export class PostOutputDto {
 }
 
 export const postToOutputMapper = (
-  post: {
-    id: UserPost['id'];
-    userId: UserPost['userId'];
-    createdAt: UserPost['createdAt'];
-    updatedAt: UserPost['updatedAt'] | null;
-    description?: UserPost['description'] | null;
-  },
-  user: User,
+  post: PostEntity,
+  user: UserEntity,
   avatarUrl: string,
   images: string[],
 ): PostOutputDto => {

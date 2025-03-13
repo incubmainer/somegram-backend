@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength } from 'class-validator';
+import {  IsOptional, IsString, MaxLength } from 'class-validator';
 import { POST_CONSTRAINTS } from './add-post.dto';
+import { Trim } from '@app/decorators';
 
 export class UpdatePostDto {
   @ApiProperty({
@@ -10,6 +11,8 @@ export class UpdatePostDto {
     required: false,
     nullable: true,
   })
+  @IsOptional()
+  @Trim()
   @IsString()
   @MaxLength(POST_CONSTRAINTS.DESCRIPTION_MAX_LENGTH)
   description?: string;

@@ -1,55 +1,42 @@
-import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'crypto';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { IsEmail, IsString, validateSync } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { EmailAuthService } from '../../infrastructure/email-auth.service';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
-import { RecapchaService } from '../../../../common/utils/recapcha.service';
-import { NotificationObject } from '../../../../common/domain/notification';
-
-export const RestorePasswordCodes = {
-  Success: Symbol('success'),
-  UserNotFound: Symbol('user_not_found'),
-  InvalidRecaptcha: Symbol('Invalid_recaptcha'),
-  TransactionError: Symbol('transaction_error'),
-};
+import {
+  ApplicationNotification,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { LoggerService } from '@app/logger';
+import { UserEntity } from '../../../users/domain/user.entity';
+import { UserResetPasswordCreatedDto } from '../../domain/types';
+import { UserResetPasswordRepository } from '../../infrastructure/user-reset-password.repository';
 
 export class RestorePasswordCommand {
-  @IsEmail()
-  email: string;
-  @IsString()
-  recaptchaToken: string;
-  @IsString()
-  html: string;
-  constructor(email: string, recaptchaToken: string, html: string) {
-    this.email = email.toLowerCase();
-    this.recaptchaToken = recaptchaToken;
-    this.html = html;
-    const errors = validateSync(this);
-    if (errors.length) throw new Error('Validation failed');
-  }
+  constructor(
+    public email: string,
+    public html: string,
+  ) {}
 }
 
 @CommandHandler(RestorePasswordCommand)
-export class RestorePasswordUseCase {
+export class RestorePasswordUseCase
+  implements
+    ICommandHandler<
+      RestorePasswordCommand,
+      AppNotificationResultType<null, string>
+    >
+{
   private readonly expireAfterMiliseconds: number;
   constructor(
     private readonly userRepository: UsersRepository,
-    private readonly txHost: TransactionHost<
-      TransactionalAdapterPrisma<GatewayPrismaClient>
-    >,
-    private readonly emailAuthService: EmailAuthService,
-    //private readonly configService: ConfigService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    private readonly recapchaService: RecapchaService,
+    private readonly appNotification: ApplicationNotification,
+    private readonly publisher: EventPublisher,
+    private readonly logger: LoggerService,
+    private readonly userResetPasswordRepository: UserResetPasswordRepository,
   ) {
-    // const config = this.configService.get<AuthConfig>('auth');
-    // this.expireAfterMiliseconds =
-    //   config.restorePasswordCodeExpireAfterMiliseconds;
+    this.logger.setContext(RestorePasswordUseCase.name);
     this.expireAfterMiliseconds = this.configService.get('envSettings', {
       infer: true,
     }).RESTORE_PASSWORD_CODE_EXPIRE_AFTER_MILISECONDS;
@@ -57,43 +44,52 @@ export class RestorePasswordUseCase {
 
   public async execute(
     command: RestorePasswordCommand,
-  ): Promise<NotificationObject<void>> {
-    const notification = new NotificationObject(RestorePasswordCodes.Success);
-    const { email, recaptchaToken } = command;
-    const isValidRecaptcha =
-      await this.recapchaService.verifyRecaptchaToken(recaptchaToken);
-    if (!isValidRecaptcha) {
-      notification.setCode(RestorePasswordCodes.InvalidRecaptcha);
-      return notification;
-    }
-    try {
-      await this.txHost.withTransaction(async () => {
-        const currentDate = new Date();
-        const user = await this.userRepository.getUserByEmail(email);
-        if (!user) {
-          notification.setCode(RestorePasswordCodes.UserNotFound);
-          return notification;
-        }
-        const code = randomUUID().replaceAll('-', '');
-        await this.userRepository.updateRestorePasswordCode({
-          userId: user.id,
-          restorePasswordCode: code,
-          restorePasswordCodeCreatedAt: currentDate,
-          restorePasswordCodeExpiresAt: new Date(
-            currentDate.getTime() + this.expireAfterMiliseconds,
-          ),
-        });
-        await this.emailAuthService.sendRestorePasswordCode({
-          name: user.username,
-          email,
-          restorePasswordCode: code,
-          html: command.html,
-        });
-      });
-    } catch {
-      notification.setCode(RestorePasswordCodes.TransactionError);
-    }
+  ): Promise<AppNotificationResultType<null, string>> {
+    this.logger.debug('Execute: restore password command', this.execute.name);
+    const { email, html } = command;
 
-    return notification;
+    try {
+      const currentDate = new Date();
+      const user = await this.userRepository.getUserByEmail(email);
+      if (!user) return this.appNotification.notFound();
+      const resetPassword =
+        await this.userResetPasswordRepository.getResetPasswordByUserId(
+          user.id,
+        );
+
+      const code = randomUUID().replaceAll('-', '');
+      const expiredAt = new Date(
+        currentDate.getTime() + this.expireAfterMiliseconds,
+      );
+      if (resetPassword) {
+        const lastCode = resetPassword.code;
+        resetPassword.updateResetPassword(code, expiredAt);
+        await this.userResetPasswordRepository.updateResetPasswordByCode(
+          resetPassword,
+          lastCode,
+        );
+      } else {
+        const createdDto: UserResetPasswordCreatedDto = {
+          userId: user.id,
+          code: code,
+          createdAt: currentDate,
+          expiredAt: expiredAt,
+        };
+        await this.userResetPasswordRepository.create(createdDto);
+      }
+
+      this.publish(user, code, html);
+      return this.appNotification.success(null);
+    } catch (e) {
+      this.logger.error(e, this.execute.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  private publish(user: UserEntity, code: string, html: string): void {
+    const userWithEvents = this.publisher.mergeObjectContext(user);
+
+    userWithEvents.passwordRecoveryEvent(code, html);
+    userWithEvents.commit();
   }
 }

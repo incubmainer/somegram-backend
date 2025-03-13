@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Socket } from 'socket.io';
 import { WsUnauthorizedException } from '../../exception-filter/ws/exceptions/ws-unauthorized.exception';
-import { JWTAccessTokenPayloadType } from '../../domain/types/types';
+import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class WsJwtAuthGuard extends AuthGuard('ws-jwt') implements CanActivate {

@@ -24,10 +24,10 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
-import { CommandExecutorService } from '../../common/services/command-executor-service';
 import { CountryCityRepository } from './infrastructure/country-city.repository';
 import { PullCountryWithCityResponseType } from './domain/type/type';
 import { GatewayModule } from '../../gateway.module';
+import { CountryCatalogService } from './application/country-catalog.service';
 
 class CommandExecutorServiceMock implements OnApplicationBootstrap {
   constructor(private readonly commandBus: CommandBus) {}
@@ -83,7 +83,7 @@ describe('CountryCityCatalog', () => {
     });
 
     moduleBuilder
-      .overrideProvider(CommandExecutorService)
+      .overrideProvider(CountryCatalogService)
       .useClass(CommandExecutorServiceMock);
 
     const module: TestingModule = await moduleBuilder.compile();

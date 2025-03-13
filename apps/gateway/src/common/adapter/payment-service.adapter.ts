@@ -25,11 +25,11 @@ import {
   PayPalRawBodyPayloadType,
   StripeRawBodyPayloadType,
 } from '../../features/subscriptions/domain/types';
-import { Paginator } from '../domain/paginator';
 import {
   MyPaymentsOutputDto,
   SubscriptionInfoOutputDto,
 } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
+import { Pagination } from '@app/paginator';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -120,10 +120,10 @@ export class PaymentsServiceAdapter {
 
   async getPayments(
     payload: GetUserPaymentPayloadType,
-  ): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  ): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>
+        AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>
       > = this.paymentsServiceClient
         .send({ cmd: GET_PAYMENTS }, payload)
         .pipe(timeout(10000));
@@ -171,10 +171,10 @@ export class PaymentsServiceAdapter {
   async testingGetPayments(payload: {
     userId: string;
     queryString?: SearchQueryParametersType;
-  }): Promise<AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>> {
+  }): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<Paginator<MyPaymentsOutputDto[]>>
+        AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>
       > = this.paymentsServiceClient
         .send({ cmd: TESTING_GET_PAYMENTS }, payload)
         .pipe(timeout(10000));

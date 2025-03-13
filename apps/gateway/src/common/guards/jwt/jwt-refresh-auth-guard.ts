@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { JWTRefreshTokenPayloadType } from '../../../features/auth/domain/types';
 
 @Injectable()
 export class RefreshJWTAccessGuard extends AuthGuard('jwt-refresh-token') {
@@ -11,7 +12,10 @@ export class RefreshJWTAccessGuard extends AuthGuard('jwt-refresh-token') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
+  handleRequest<TUser = JWTRefreshTokenPayloadType>(
+    err: any,
+    user: TUser,
+  ): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }

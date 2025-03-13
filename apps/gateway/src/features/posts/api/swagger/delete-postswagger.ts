@@ -1,64 +1,28 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import {
-  ApiResponse,
   ApiOperation,
   ApiBearerAuth,
-  ApiTags,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 export function DeletePostSwagger() {
   return applyDecorators(
-    ApiTags('Posts'),
     ApiBearerAuth('access-token'),
     ApiOperation({ summary: 'Delete user post by id' }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
-      description: 'No Content',
+    ApiNoContentResponse({
+      description: 'Success',
     }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
-      description: 'Validation error',
-      schema: {
-        example: {
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'postId',
-              constraints: {
-                description: `postId must be a string`,
-              },
-            },
-          ],
-        },
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
+    ApiUnauthorizedResponse({
       description: 'User not found or not authorized',
     }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
+    ApiNotFoundResponse({
       description: 'Post not found',
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: 'If user not owner of post',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'delete_post_failed',
-              message: 'User not owner of post',
-            },
-          },
-        ],
-      },
-    }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
+    ApiForbiddenResponse({
+      description: 'User is not the owner of the post',
     }),
   );
 }

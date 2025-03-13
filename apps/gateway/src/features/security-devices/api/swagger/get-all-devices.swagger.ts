@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { SecurityDevicesOutputDto } from '../dto/output/security-devices.output-dto';
 
 export function GetAllDevicesSwagger() {
@@ -7,6 +7,7 @@ export function GetAllDevicesSwagger() {
     ApiOperation({
       summary: 'Get all active sessions of the current user',
     }),
+    ApiCookieAuth(),
     ApiOkResponse({
       description: 'Success',
       type: SecurityDevicesOutputDto,

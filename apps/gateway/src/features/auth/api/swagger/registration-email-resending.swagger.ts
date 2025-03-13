@@ -1,60 +1,35 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiNoContentResponse,
+  ApiBadRequestResponse,
+  ApiUnprocessableEntityResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import {
+  BadRequestExceptionDto,
+  UnprocessableExceptionDto,
+} from '@app/base-types-enum';
 
 export function RegistrationEmailResendingSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({
       summary: 'Resend confirmation registration Email if user exists',
     }),
-    ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+    ApiNoContentResponse({
       description:
         'A letter will be sent again to the email address you provided during registration.',
     }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
+    ApiBadRequestResponse({
       description: 'Email resending failed',
-      schema: {
-        oneOf: [
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'email_already_confirmated',
-              message: 'User with current email already confirmed',
-            },
-          },
-          {
-            example: {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'user_not_found',
-              message: 'Restore password failed due to user not found.',
-            },
-          },
-        ],
-      },
+      type: BadRequestExceptionDto,
     }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Transaction error',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+    ApiUnprocessableEntityResponse({
       description: 'Validation error',
-      schema: {
-        example: {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          message: 'Validation failed',
-          errors: [
-            {
-              property: 'token',
-              constraints: {
-                IsString: 'some message',
-              },
-            },
-          ],
-        },
-      },
+      type: UnprocessableExceptionDto,
+    }),
+    ApiNotFoundResponse({
+      description: 'Token or user not found',
     }),
   );
 }

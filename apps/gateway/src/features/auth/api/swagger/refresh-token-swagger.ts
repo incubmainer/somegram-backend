@@ -1,25 +1,25 @@
-import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { LoginOutputDto } from '../dto/output-dto/login-outptu.dto';
 
 export function RefreshTokenSwagger() {
   return applyDecorators(
-    ApiTags('Auth'),
     ApiOperation({
       summary:
         'Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing) ',
     }),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiCookieAuth(),
+    ApiOkResponse({
       description:
         'Returns JWT accessToken in body and JWT refreshToken in cookie.',
-      schema: {
-        example: {
-          accessToken: 'asdoifja3rfjl312r.aoifj23fl.jlwoif',
-        },
-      },
+      type: LoginOutputDto,
     }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
+    ApiUnauthorizedResponse({
       description: 'Token expired, user or user device not found',
     }),
   );

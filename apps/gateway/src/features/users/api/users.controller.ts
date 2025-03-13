@@ -7,9 +7,9 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
-  NotFoundException,
   Post,
   Put,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -22,7 +22,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UploadAvatarSwagger } from './swagger/upload-avatar.swagger';
-import { CurrentUserId } from '../../auth/api/decorators/current-user-id-param.decorator';
+import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FillProfileInputDto } from './dto/input-dto/fill-profile.input-dto';
 import { FillingUserProfileCommand } from '../application/use-cases/filling-user-profile.use-case';
@@ -31,7 +31,7 @@ import { ProfileInfoOutputDto } from './dto/output-dto/profile-info-output-dto';
 import { ProfileInfoSwagger } from './swagger/profile-info.swagger';
 import { DeleteAvatarSwagger } from './swagger/delete-avatar.swagger';
 import { DeleteAvatarCommand } from '../application/use-cases/delete-avatar.use-case';
-import { GetProfileInfoQuery } from '../application/use-cases/queryBus/get-profile-info.use-case';
+import { GetProfileInfoQuery } from '../application/queryBus/get-profile-info.use-case';
 import { LoggerService } from '@app/logger';
 import { USER_ROUTE } from '../../../common/constants/route.constants';
 import {
@@ -48,6 +48,7 @@ import {
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBearerAuth('access-token')
+@UseGuards(AuthGuard('jwt'))
 @Controller(USER_ROUTE.MAIN)
 export class UsersController {
   constructor(
@@ -60,7 +61,6 @@ export class UsersController {
 
   @Get(USER_ROUTE.PROFILE_INFO)
   @ProfileInfoSwagger()
-  @UseGuards(AuthGuard('jwt'))
   async gerProfileInfo(
     @CurrentUserId() userId: string,
   ): Promise<ProfileInfoOutputDto> {
@@ -78,14 +78,13 @@ export class UsersController {
         return result.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.gerProfileInfo.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
   }
 
   @Post(USER_ROUTE.PROFILE_UPLOAD_AVATAR)
-  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('file'))
   @UploadAvatarSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -109,14 +108,13 @@ export class UsersController {
         return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.uploadAvatar.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
   }
 
   @Put(USER_ROUTE.PROFILE_FILL_INFO)
-  @UseGuards(AuthGuard('jwt'))
   @ProfileFillInfoSwagger()
   @HttpCode(HttpStatus.OK)
   async fillProfile(
@@ -141,7 +139,7 @@ export class UsersController {
         return userProfile.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.fillProfile.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug(`Bad request`, this.fillProfile.name);
         throw new BadRequestException(result.errorField);
@@ -152,7 +150,6 @@ export class UsersController {
 
   @Delete(USER_ROUTE.PROFILE_DELETE_AVATAR)
   @DeleteAvatarSwagger()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUserAvatar(@CurrentUserId() userId: string): Promise<void> {
     this.logger.debug(
@@ -169,7 +166,7 @@ export class UsersController {
         return;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug(`Not found`, this.deleteUserAvatar.name);
-        throw new NotFoundException();
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }

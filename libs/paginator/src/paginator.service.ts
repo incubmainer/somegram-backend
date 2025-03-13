@@ -23,6 +23,7 @@ export class Pagination<T = []> {
   public totalCount: number;
   @ApiProperty({
     description: 'Array of elements',
+    isArray: true,
   })
   public items: T;
 }

@@ -8,6 +8,10 @@ export class UserCountOutputDto {
     type: Number,
   })
   totalCount: number;
+
+  constructor(count: number) {
+    this.totalCount = count;
+  }
 }
 
 class ProfileAvatarInfoOutputDtoModel {

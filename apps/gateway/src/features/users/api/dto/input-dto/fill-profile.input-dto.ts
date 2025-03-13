@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUsername } from '../../../../auth/application/decorators/is-username';
+import { IsUsername } from '../../../../../common/decorators/validation/is-username';
 import { IsFirstName } from '../../../../../common/decorators/validation/is-first-name';
 import { IsLastName } from '../../../../../common/decorators/validation/is-last-name';
 import { IsDateOfBirth } from '../../../../../common/decorators/validation/is-date-of-birth';

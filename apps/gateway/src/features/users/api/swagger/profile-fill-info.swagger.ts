@@ -4,7 +4,6 @@ import {
   ApiBadRequestResponse,
   ApiUnprocessableEntityResponse,
   ApiOkResponse,
-  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionDto,
@@ -28,6 +27,5 @@ export function ProfileFillInfoSwagger() {
         'Bad request, if the current username belongs to another user',
       type: BadRequestExceptionDto,
     }),
-    ApiNotFoundResponse({ description: 'User not found' }),
   );
 }
