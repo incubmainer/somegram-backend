@@ -32,6 +32,7 @@ model User {
   subscriptionExpireAt DateTime?
   Notification         Notification[]
   isDeleted            Boolean                @default(false)
+  userBanInfo       UserBanInfo?
 
   @@index([username])
   @@index([email])
@@ -125,4 +126,11 @@ model Notification {
   createdAt DateTime
   updateAt  DateTime?
   User      User      @relation(fields: [userId], references: [id])
+}
+
+model UserBanInfo {
+  userId    String   @unique()
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  banReason String
+  banDate   DateTime
 }

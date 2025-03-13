@@ -25,3 +25,19 @@ export type PaymentData = {
   subId?: string;
   currentSubDateEnd?: Date;
 };
+
+export type PaymentTransactionWithSubUserInfo = {
+  subscription: {
+    userId: string;
+    username: string;
+  };
+} & {
+  id: string;
+  dateOfPayment: Date;
+  endDateOfSubscription: Date | null;
+  paymentSystem: string;
+  status: string;
+  subscriptionType: string;
+  price: number;
+  subId: string;
+};

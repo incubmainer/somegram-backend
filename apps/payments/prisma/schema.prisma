@@ -11,6 +11,7 @@ datasource db {
 model Subscription {
   id                      String               @id @default(uuid())
   userId                  String
+  username                String
   createdAt               DateTime
   updatedAt               DateTime?
   dateOfPayment           DateTime?

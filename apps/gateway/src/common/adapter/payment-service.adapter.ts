@@ -5,7 +5,10 @@ import {
   CREATE_AUTO_PAYMENT,
   DISABLE_AUTO_RENEWAL,
   ENABLE_AUTO_RENEWAL,
+  GET_ALL_PAYMENTS_GQL,
   GET_PAYMENTS,
+  GET_PAYMENTS_BY_USERS_GQL,
+  GET_PAYMENTS_GQL,
   GET_SUBSCRIPTION_INFO,
   PAYPAL_WEBHOOK_HANDLER,
   STRIPE_WEBHOOK_HANDLER,
@@ -30,6 +33,7 @@ import {
   SubscriptionInfoOutputDto,
 } from '../../features/subscriptions/api/dto/output-dto/subscriptions.output-dto';
 import { Pagination } from '@app/paginator';
+import { PaginatedPaymentsModel } from '../../features/resolvers/payments/models/paginated-payments.model';
 
 @Injectable()
 export class PaymentsServiceAdapter {
@@ -198,6 +202,54 @@ export class PaymentsServiceAdapter {
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.testingSendNotification.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async getSubscriptionsByUserIds(payload: {
+    userIds: string[];
+  }): Promise<AppNotificationResultType<any>> {
+    try {
+      const responseOfService: Observable<any> = this.paymentsServiceClient
+        .send({ cmd: GET_PAYMENTS_BY_USERS_GQL }, payload)
+        .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+  async getPaymentsByUser(
+    payload: GetUserPaymentPayloadType,
+  ): Promise<AppNotificationResultType<PaginatedPaymentsModel>> {
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<PaginatedPaymentsModel>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_PAYMENTS_GQL }, payload)
+        .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async getAllPayments(payload: {
+    queryString?: SearchQueryParametersType;
+  }): Promise<AppNotificationResultType<PaginatedPaymentsModel>> {
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<PaginatedPaymentsModel>
+      > = this.paymentsServiceClient
+        .send({ cmd: GET_ALL_PAYMENTS_GQL }, payload)
+        .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getAllPayments.name);
       return this.appNotification.internalServerError();
     }
   }

@@ -4,6 +4,12 @@ import { ApiProperty } from '@nestjs/swagger';
 // Like a type
 export class Pagination<T = []> {
   @ApiProperty({
+    description: 'Current page',
+    example: 1,
+    type: Number,
+  })
+  public pageNumber: number;
+  @ApiProperty({
     description: 'Number of pages',
     example: 1,
     type: Number,
@@ -31,11 +37,13 @@ export class Pagination<T = []> {
 @Injectable()
 export class PaginatorService extends Pagination {
   public create<T = []>(
+    pageNumber: number,
     pageSize: number,
     totalCount: number,
     items: T,
   ): Pagination<T> {
     return {
+      pageNumber: pageNumber,
       pageSize: pageSize,
       totalCount: totalCount,
       pagesCount: Number(Math.ceil(totalCount / pageSize)),

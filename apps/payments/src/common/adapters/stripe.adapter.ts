@@ -58,7 +58,7 @@ export class StripeAdapter {
       const result: AppNotificationResultType<string> =
         await this.commandBus.execute(
           new StripeSubscriptionCreateCommand({
-            userId: payload.userInfo.userId,
+            userInfo: payload.userInfo,
             subscriptionType: payload.subscriptionType,
           }),
         );
@@ -162,7 +162,7 @@ export class StripeAdapter {
       const result: AppNotificationResultType<string> =
         await this.commandBus.execute(
           new StripeSubscriptionCreateCommand({
-            userId: payload.userInfo.userId,
+            userInfo: payload.userInfo,
             subscriptionType: payload.subscriptionType,
           }),
         );
