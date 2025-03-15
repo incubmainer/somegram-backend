@@ -10,6 +10,8 @@ import { UsersGraphqlRepository } from '../../../infrastructure/users.graphql-re
 import { PaginatedUserModel } from '../../../../resolvers/users/models/paginated-user.model';
 import { UserModel } from '../../../../resolvers/users/models/user.model';
 import { UsersQueryStringInput } from '../../../../resolvers/users/models/users-query-string-input';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 
 export class GetUsersQuery {
   constructor(public queryString: UsersQueryStringInput) {}
@@ -20,13 +22,19 @@ export class GetUsersUseCase
   implements
     IQueryHandler<GetUsersQuery, AppNotificationResultType<PaginatedUserModel>>
 {
+  private readonly frontProfileUrl: string;
   constructor(
     private usersGraphqlRepository: UsersGraphqlRepository,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly paginatorService: PaginatorService,
+    private readonly configService: ConfigService<ConfigurationType, true>,
   ) {
     this.logger.setContext(GetUsersUseCase.name);
+    const frontProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
+    this.frontProfileUrl = `${frontProvider}/public-user/profile`;
   }
   async execute(
     command: GetUsersQuery,
@@ -40,7 +48,7 @@ export class GetUsersUseCase
         command.queryString.pageNumber,
         command.queryString.pageSize,
         count,
-        UserModel.mapUsers(users),
+        UserModel.mapUsers(users, this.frontProfileUrl),
       );
 
       return this.appNotification.success(data);

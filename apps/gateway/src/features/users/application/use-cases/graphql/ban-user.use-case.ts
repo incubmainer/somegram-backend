@@ -37,7 +37,7 @@ export class BanUserUseCase
       if (user.userBanInfo) {
         return this.appNotification.success(null);
       }
-      this.usersGraphqlRepository.banUser(userId, banReason);
+      await this.usersGraphqlRepository.banUser(userId, banReason);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);

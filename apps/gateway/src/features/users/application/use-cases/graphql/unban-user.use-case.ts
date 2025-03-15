@@ -35,7 +35,7 @@ export class UnbanUserUseCase
       if (!user.userBanInfo) {
         return this.appNotification.success(null);
       }
-      this.usersGraphqlRepository.unbanUser(userId);
+      await this.usersGraphqlRepository.unbanUser(userId);
       return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);

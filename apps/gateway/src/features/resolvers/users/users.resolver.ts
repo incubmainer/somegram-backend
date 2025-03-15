@@ -52,6 +52,7 @@ export class UsersResolver {
     this.logger.debug('Execute: Get user', this.getUser.name);
     const result: AppNotificationResultType<UserModel> =
       await this.queryBus.execute(new GetUserQuery(id));
+
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.getUser.name);

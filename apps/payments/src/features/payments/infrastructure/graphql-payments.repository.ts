@@ -68,7 +68,7 @@ export class GraphqlPaymentsRepository {
       'Execute: get subscriptions by users',
       this.getSubscriptionsByUserIds.name,
     );
-    return await this.txHost.tx.subscription.findMany({
+    return this.txHost.tx.subscription.findMany({
       where: {
         userId: {
           in: userIds,

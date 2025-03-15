@@ -36,7 +36,6 @@ export class PaymentsResolver {
     queryString: PaymentsQueryStringInput,
     @Args('userId') userId: string,
   ): Promise<PaginatedPaymentsModel> {
-    console.log('resolver', queryString);
     this.logger.debug(
       'Execute: Get payments by user',
       this.getPaymentsByUser.name,

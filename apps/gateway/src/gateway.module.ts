@@ -17,7 +17,6 @@ import { PaginatorModule } from '@app/paginator';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GatewayResolver } from './gateway.resolver';
-import { AuthResolver } from './resolvers/auth/auth.resolver';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
 import { PaymentsLoader } from './common/data-loaders/payments-loader';
@@ -26,6 +25,7 @@ import { UserLoader } from './common/data-loaders/user-loader';
 import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
 import { UsersResolver } from './features/resolvers/users/users.resolver';
 import { PaymentsResolver } from './features/resolvers/payments/payments.resolver';
+import { AuthResolver } from './features/resolvers/auth/auth.resolver';
 
 const resolvers = [
   GatewayResolver,
@@ -59,6 +59,7 @@ const loaders = [
       installSubscriptionHandlers: true,
       autoSchemaFile: 'schema.gql',
       path: '/api/v1/graphql',
+      playground: true,
     }),
   ],
   controllers: [],

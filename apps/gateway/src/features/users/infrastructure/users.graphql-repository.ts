@@ -70,7 +70,7 @@ export class UsersGraphqlRepository {
 
   async findUsersByIds(ids: string[]) {
     this.logger.debug(`Get users by ids `, this.findUsersByIds.name);
-    return await this.txHost.tx.user.findMany({
+    return this.txHost.tx.user.findMany({
       where: {
         id: {
           in: ids,
@@ -85,10 +85,8 @@ export class UsersGraphqlRepository {
       where: { id: userId },
       data: { isDeleted: true },
     });
-    if (!res) {
-      return false;
-    }
-    return true;
+
+    return !!res;
   }
 
   async banUser(userId: string, reason: string): Promise<boolean> {

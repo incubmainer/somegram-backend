@@ -49,11 +49,11 @@ export class UserModel {
   @Field(() => UserBanInfo, { nullable: true })
   banInfo?: UserBanInfo;
 
-  static mapUser(user: UserWithBanInfo): UserModel {
+  static mapUser(user: UserWithBanInfo, profileUrl: string): UserModel {
     return {
       ...user,
       accountType: user.accountType as AccountType,
-      profileLink: `https://somegram.online/public-user/profile/${user.id}`,
+      profileLink: `${profileUrl}/${user.id}`,
       banInfo: user.userBanInfo
         ? {
             banDate: user.userBanInfo.banDate,
@@ -62,9 +62,9 @@ export class UserModel {
         : null,
     };
   }
-  static mapUsers(users: UserWithBanInfo[]): UserModel[] {
+  static mapUsers(users: UserWithBanInfo[], profileUrl: string): UserModel[] {
     return users.map((user) => {
-      return this.mapUser(user);
+      return this.mapUser(user, profileUrl);
     });
   }
 }
