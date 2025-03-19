@@ -100,7 +100,6 @@ type PostOwnerModel {
 }
 
 type Query {
-  sayHello: String!
   loginSa: String!
   getUser(id: String!): UserModel
   getUsers(queryString: UsersQueryStringInput): PaginatedUserModel!

@@ -15,7 +15,6 @@ import { SubscriptionsModule } from './features/subscriptions/subscriptions.modu
 import { NotificationModule } from './features/notification/notification.module';
 import { PaginatorModule } from '@app/paginator';
 import { GraphQLModule } from '@nestjs/graphql';
-import { GatewayResolver } from './gateway.resolver';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
 import { PaymentsLoader } from './common/data-loaders/payments-loader';
@@ -35,9 +34,10 @@ import {
   WsBasicGqlGuard,
 } from './common/guards/graphql/ws-basic-gql.guard';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from './settings/configuration/configuration';
 
 const resolvers = [
-  GatewayResolver,
   AuthResolver,
   UsersResolver,
   PaymentsResolver,
@@ -57,12 +57,14 @@ const gqlModule = GraphQLModule.forRootAsync<ApolloDriverConfig>({
   driver: ApolloDriver,
   useFactory: async (
     wsBasicGqlGuard: WsBasicGqlGuard,
+    configService: ConfigService<ConfigurationType, true>,
   ): Promise<ApolloDriverConfig> => {
+    const env = configService.get('envSettings', { infer: true });
     return {
       installSubscriptionHandlers: true,
       autoSchemaFile: 'schema.gql',
       path: '/api/v1/graphql',
-      playground: true,
+      playground: !env.isProductionState(),
       subscriptions: {
         'subscriptions-transport-ws': {
           onConnect: async (connectionParams: IWsBasicGqlParams) => {
@@ -72,7 +74,7 @@ const gqlModule = GraphQLModule.forRootAsync<ApolloDriverConfig>({
       },
     };
   },
-  inject: [WsBasicGqlGuard],
+  inject: [WsBasicGqlGuard, ConfigService],
 });
 
 @Module({
