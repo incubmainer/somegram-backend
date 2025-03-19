@@ -58,17 +58,16 @@ export class GetPublicPostsByUserUseCase
           const user = await this.usersQueryRepository.findUserById(
             post.userId,
           );
-          const avatarUrl: string = await this.photoServiceAdapter.getAvatar(
-            post.userId,
-          );
+          const avatar = await this.photoServiceAdapter.getAvatar(post.userId);
           const postPhotos = await this.photoServiceAdapter.getPostPhotos(
             post.id,
           );
-          return postToOutputMapper(post, user, avatarUrl, postPhotos);
+          return postToOutputMapper(post, user, avatar, postPhotos);
         }),
       );
 
       const result: Pagination<PostOutputDto[]> = this.paginatorService.create(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

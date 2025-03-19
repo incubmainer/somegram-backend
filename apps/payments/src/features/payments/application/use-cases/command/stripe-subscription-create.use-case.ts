@@ -13,10 +13,11 @@ import {
   SubscriptionInputDto,
 } from '../../../domain/subscription.entity';
 import { SubscriptionStatuses } from '../../../../../common/enum/subscription-types.enum';
+import { UserInfo } from '../../types/payment-data.type';
 
 export class StripeSubscriptionCreateCommand {
   constructor(
-    public inputModel: { userId: string; subscriptionType: string },
+    public inputModel: { userInfo: UserInfo; subscriptionType: string },
   ) {}
 }
 
@@ -42,9 +43,9 @@ export class StripeSubscriptionCreateUseCase
     command: StripeSubscriptionCreateCommand,
   ): Promise<AppNotificationResultType<string>> {
     this.logger.debug('Execute: create subscription', this.execute.name);
-    const { userId, subscriptionType } = command.inputModel;
+    const { userInfo, subscriptionType } = command.inputModel;
     try {
-      const data = this.generateCreateData(userId, subscriptionType);
+      const data = this.generateCreateData(userInfo, subscriptionType);
       const subscription: Subscription = this.subscriptionEntity.create(data);
       const newSubId = await this.paymentsRepository.createSub(subscription);
       return this.appNotification.success(newSubId);
@@ -55,11 +56,12 @@ export class StripeSubscriptionCreateUseCase
   }
 
   private generateCreateData(
-    userId: string,
+    userInfo: UserInfo,
     subscriptionType: string,
   ): SubscriptionInputDto {
     return {
-      userId: userId,
+      userId: userInfo.userId,
+      username: userInfo.userName,
       autoRenewal: true,
       status: SubscriptionStatuses.Pending,
       paymentSystem: PaymentSystem.STRIPE,

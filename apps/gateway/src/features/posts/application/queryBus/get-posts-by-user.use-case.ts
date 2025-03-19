@@ -72,6 +72,7 @@ export class GetPostsByUserUseCase
       );
 
       const result: Pagination<PostOutputDto[]> = this.paginatorService.create(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mappedPosts,

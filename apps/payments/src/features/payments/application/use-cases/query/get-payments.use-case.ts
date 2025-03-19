@@ -49,6 +49,7 @@ export class GetPaymentsQueryUseCase
 
       const mapPayments: MyPaymentsOutputDto[] = myPaymentsMapper(payments);
       const result = this.paginatorService.create(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mapPayments,

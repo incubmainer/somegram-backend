@@ -181,7 +181,7 @@ export class PayPalAdapter {
       const result: AppNotificationResultType<null> =
         await this.commandBus.execute(
           new PayPalSubscriptionCreateUseCase(
-            createSubscription,
+            { userInfo: userInfo, subId: createSubscription.id },
             subscriptionType,
           ),
         );

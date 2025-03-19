@@ -96,6 +96,14 @@ export class EnvSettings {
   @IsNumber()
   public readonly SALT_ROUND: number;
 
+  @IsNotEmpty()
+  @IsString()
+  public BASIC_AUTH_EMAIL: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public BASIC_AUTH_PASSWORD: string;
+
   constructor(envVariable: EnvVariableType) {
     this.ENV = (envVariable.NODE_ENV as EnvState) || EnvState.DEVELOPMENT;
     this.PORT = this.getNumberOrDefaultValue(envVariable.PORT, 3000);
@@ -158,6 +166,9 @@ export class EnvSettings {
     this.JWT_ACCESS_EXPIRED_TIME = envVariable.JWT_ACCESS_EXPIRED_TIME;
     this.JWT_REFRESH_EXPIRED_TIME = envVariable.JWT_REFRESH_EXPIRED_TIME;
     this.SALT_ROUND = this.getNumberOrDefaultValue(envVariable.SALT_ROUND, 10);
+
+    this.BASIC_AUTH_EMAIL = envVariable.BASIC_AUTH_EMAIL;
+    this.BASIC_AUTH_PASSWORD = envVariable.BASIC_AUTH_PASSWORD;
   }
 
   getEnvState(): EnvState {

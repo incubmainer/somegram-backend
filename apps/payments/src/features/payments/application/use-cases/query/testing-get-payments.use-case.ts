@@ -102,6 +102,7 @@ export class TestingGetPaymentsQueryUseCase
       const mapPayments: MyPaymentsOutputDto[] =
         myPaymentsMapper(paginatedPayments);
       const result = this.paginatorService.create(
+        sanitizationQuery.pageNumber,
         sanitizationQuery.pageSize,
         count,
         mapPayments,

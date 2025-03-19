@@ -24,6 +24,7 @@ export class UserEntity extends AggregateRoot implements User {
   country: string;
   accountType: $Enums.AccountType;
   subscriptionExpireAt: Date;
+  isDeleted: boolean;
 
   constructor(dto: User) {
     super();
@@ -42,6 +43,7 @@ export class UserEntity extends AggregateRoot implements User {
     this.country = dto.country;
     this.accountType = dto.accountType;
     this.subscriptionExpireAt = dto.subscriptionExpireAt;
+    this.isDeleted = dto.isDeleted;
   }
 
   registrationUserEvent(code: string, expiredAt: Date, html: string): void {

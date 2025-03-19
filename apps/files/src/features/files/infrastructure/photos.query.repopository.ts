@@ -12,12 +12,23 @@ export class PhotosQueryRepository {
     @InjectModel(Avatar.name) private readonly avatarModel: Model<Avatar>,
   ) {}
 
-  async findPostPhotos(postId: string) {
+  async findPostPhotos(postId: string): Promise<PostPhoto[] | null> {
     return this.postPhotoModel.find({ postId });
   }
 
   async findAvatar(ownerId: string): Promise<Avatar | null> {
     const avatar = await this.avatarModel.findOne({ ownerId });
     return avatar ? avatar : null;
+  }
+
+  async getUsersAvatar(ownerIds: string[]): Promise<Avatar[] | null> {
+    const avatars = await this.avatarModel.find({ ownerId: { $in: ownerIds } });
+    return avatars.length ? avatars : null;
+  }
+
+  async getPostsPhotosByOwnerIds(
+    ownerIds: string[],
+  ): Promise<PostPhoto[] | null> {
+    return this.postPhotoModel.find({ ownerId: { $in: ownerIds } });
   }
 }
