@@ -1,11 +1,12 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
-import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
+import { PrismaClient as GatewayPrismaClient, Prisma } from '@prisma/gateway';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
 import { PostEntity } from '../domain/post.entity';
 import { LoggerService } from '@app/logger';
+import { UserPostWithOwnerInfo } from '../domain/types';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -146,6 +147,36 @@ export class PostsQueryRepository {
       where,
       take: sanitizationQuery.pageSize,
     })) as PostEntity[];
+
+    const count = await this.txHost.tx.userPost.count({
+      where,
+    });
+
+    return {
+      posts,
+      count,
+    };
+  }
+
+  public async getAllPostsWithOwnerInfo(
+    where: Prisma.UserPostWhereInput,
+    orderBy: Prisma.UserPostOrderByWithRelationInput,
+    take: number,
+    skip: number,
+  ): Promise<{ posts: UserPostWithOwnerInfo[]; count: number }> {
+    this.logger.debug(
+      `Execute: get all posts`,
+      this.getAllPostsWithOwnerInfo.name,
+    );
+    const posts = (await this.txHost.tx.userPost.findMany({
+      where,
+      include: {
+        User: true,
+      },
+      skip,
+      take,
+      orderBy,
+    })) as UserPostWithOwnerInfo[];
 
     const count = await this.txHost.tx.userPost.count({
       where,

@@ -83,7 +83,7 @@ export class PostOutputDto {
   postOwnerInfo: {
     userId: string;
     username: string;
-    avatarUrl: string;
+    avatarUrl: string | null;
   };
 
   constructor(init: Partial<PostOutputDto>) {
@@ -106,7 +106,7 @@ export const postToOutputMapper = (
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
-      avatarUrl: avatar.url,
+      avatarUrl: avatar?.url || null,
     },
   });
 };

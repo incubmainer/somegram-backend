@@ -32,7 +32,7 @@ export class PhotosService {
   }
 
   photosMapper(photos: Avatar[] | PostPhoto[]): FileType[] {
-    return photos.map((photo) => {
+    return photos.map((photo: Avatar | PostPhoto) => {
       return this.photoMapper(photo);
     });
   }
@@ -45,12 +45,19 @@ export class PhotosService {
       size: +photo.size,
       url: this.s3Adapter.getFileUrl(photo.key),
       key: photo.key,
+      ...(photo && 'postId' in photo ? { postId: photo.postId } : {}),
     };
   }
 
   async getPostsPhotosByOwnerIds(ownerIds: string[]): Promise<FileType[]> {
     const photos =
       await this.fileQueryRepository.getPostsPhotosByOwnerIds(ownerIds);
+    return this.photosMapper(photos);
+  }
+
+  async getPostsPhotosByPostsIds(postIds: string[]): Promise<FileType[]> {
+    const photos =
+      await this.fileQueryRepository.getPostsPhotosByPostsIds(postIds);
     return this.photosMapper(photos);
   }
 }
