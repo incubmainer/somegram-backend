@@ -187,4 +187,20 @@ export class PostsQueryRepository {
       count,
     };
   }
+
+  public async getPostByIdWithOwnerInfo(
+    postId: string,
+  ): Promise<UserPostWithOwnerInfo | null> {
+    this.logger.debug(
+      `Execute: get post by id with owner info`,
+      this.getPostByIdWithOwnerInfo.name,
+    );
+
+    const result = await this.txHost.tx.userPost.findUnique({
+      where: { id: postId },
+      include: { User: true },
+    });
+
+    return result ? (result as UserPostWithOwnerInfo) : null;
+  }
 }

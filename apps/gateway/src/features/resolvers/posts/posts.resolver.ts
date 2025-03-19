@@ -1,11 +1,18 @@
-import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+  Subscription,
+} from '@nestjs/graphql';
 import { QueryBus } from '@nestjs/cqrs';
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { Pagination } from '@app/paginator';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, UseGuards } from '@nestjs/common';
 import { PaginatedPostsModel } from './models/paginated-posts.model';
 import { LoggerService } from '@app/logger';
 import { PostOwnerModel } from './models/post-owner.model';
@@ -19,6 +26,10 @@ import { PostModel } from './models/post.model';
 import { UserPostWithOwnerInfo } from '../../posts/domain/types';
 import { PostsPhotosLoaderByPost } from '../../../common/data-loaders/posts-photos-loader-by-post';
 import { PostsQueryStringInput } from './models/posts-query-string-input';
+import { PubSub } from 'graphql-subscriptions';
+import { BasicGqlGuard } from '../../../common/guards/graphql/basic-gql.guard';
+import { WS_NEW_POST_EVENT } from '../../../common/constants/ws-events.constants';
+import { PubSubAsyncIterableIterator } from 'graphql-subscriptions/dist/pubsub-async-iterable-iterator';
 
 @Resolver(() => PostModel)
 export class PostsResolver {
@@ -26,11 +37,13 @@ export class PostsResolver {
     private readonly queryBus: QueryBus,
     private readonly logger: LoggerService,
     private readonly postsPhotosLoader: PostsPhotosLoaderByPost,
+    private readonly pubSub: PubSub,
   ) {
     this.logger.setContext(PostsResolver.name);
   }
 
   @Query(() => PaginatedPostsModel)
+  @UseGuards(BasicGqlGuard)
   async getPosts(
     @Args('queryString', { type: () => PostsQueryStringInput, nullable: true })
     queryString?: PostsQueryStringInput,
@@ -52,6 +65,13 @@ export class PostsResolver {
     }
   }
 
+  @Subscription(() => PostModel, {
+    resolve: (result) => result,
+  })
+  async newPost(): Promise<PubSubAsyncIterableIterator<PostModel>> {
+    return this.pubSub.asyncIterableIterator(WS_NEW_POST_EVENT);
+  }
+
   @ResolveField(() => PostOwnerModel)
   async postOwnerInfo(
     @Parent() post: UserPostWithOwnerInfo,
@@ -63,7 +83,7 @@ export class PostsResolver {
   }
 
   @ResolveField(() => [FileModel], { nullable: true })
-  async getPostsPhotos(@Parent() post: PostModel) {
+  async getPostsPhotos(@Parent() post: PostModel): Promise<FileModel[]> {
     return await this.postsPhotosLoader.generateDataLoader().load(post.id);
   }
 }
@@ -84,7 +104,7 @@ export class PostOwnerResolver {
   }
 
   @ResolveField(() => FileModel, { nullable: true })
-  async getAvatar(@Parent() owner: PostOwnerModel) {
+  async getAvatar(@Parent() owner: PostOwnerModel): Promise<FileModel> {
     return await this.userImagesLoader.generateDataLoader().load(owner.userId);
   }
 }

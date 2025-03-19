@@ -37,7 +37,7 @@ export class GetAdminPostsByUserUseCase
   async execute(
     command: GetAdminPostsByUserQuery,
   ): Promise<AppNotificationResultType<Pagination<UserPostWithOwnerInfo[]>>> {
-    this.logger.debug('Execute: get public posts command', this.execute.name);
+    this.logger.debug('Execute: get posts by admin command', this.execute.name);
     const { queryString } = command;
 
     try {

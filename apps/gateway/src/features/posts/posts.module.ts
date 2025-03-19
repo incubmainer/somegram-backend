@@ -12,12 +12,14 @@ import { GetPublicPostsByUserUseCase } from './application/queryBus/get-public-p
 import { PostFileFactory } from './domain/files.factory';
 import { UsersModule } from '../users/users.module';
 import { GetAdminPostsByUserUseCase } from './application/queryBus/get-admin-posts.use-case';
+import { GetAdminPostsByIdUseCase } from './application/queryBus/get-admin-post-by-id.use-case';
 
 const queryHandlers = [
   GetPostUseCase,
   GetPostsByUserUseCase,
   GetPublicPostsByUserUseCase,
   GetAdminPostsByUserUseCase,
+  GetAdminPostsByIdUseCase,
 ];
 
 const handlers = [UpdatePostUseCase, DeletePostUseCase, AddPostUseCase];
