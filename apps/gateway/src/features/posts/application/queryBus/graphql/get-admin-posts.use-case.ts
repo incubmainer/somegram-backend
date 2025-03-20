@@ -4,15 +4,11 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
 import { Pagination, PaginatorService } from '@app/paginator';
-import { UserPostWithOwnerInfo } from '../../domain/types';
-import {
-  AdminPostsSortByEnum,
-  PostsQueryStringInput,
-} from '../../../resolvers/posts/models/posts-query-string-input';
+import { UserPostWithOwnerInfo } from '../../../domain/types';
+import { PostsQueryStringInput } from '../../../../resolvers/posts/models/posts-query-string-input';
 
-import { Prisma } from '@prisma/gateway';
+import { PostsGraphqlQueryRepository } from '../../../infrastructure/posts-graphql.query-repository';
 
 export class GetAdminPostsByUserQuery {
   constructor(public queryString?: PostsQueryStringInput) {}
@@ -28,7 +24,7 @@ export class GetAdminPostsByUserUseCase
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly postsQueryRepository: PostsQueryRepository,
+    private readonly postsQueryRepository: PostsGraphqlQueryRepository,
     private readonly appNotification: ApplicationNotification,
     private readonly paginatorService: PaginatorService,
   ) {
@@ -41,39 +37,10 @@ export class GetAdminPostsByUserUseCase
     const { queryString } = command;
 
     try {
-      const { pageSize, pageNumber, searchByUsername, sortBy, sortDirection } =
-        queryString;
-
-      let orderBy: Prisma.UserPostOrderByWithRelationInput;
-
-      if (sortBy === AdminPostsSortByEnum.username) {
-        orderBy = { User: { username: sortDirection } };
-      } else {
-        orderBy = { [sortBy]: sortDirection };
-      }
-
-      const where: Prisma.UserPostWhereInput = {
-        ...(searchByUsername
-          ? {
-              User: {
-                username: {
-                  contains: searchByUsername,
-                  mode: 'insensitive',
-                },
-              },
-            }
-          : {}),
-      };
-
-      const skip = (pageNumber - 1) * pageSize;
+      const { pageSize, pageNumber } = queryString;
 
       const { posts, count } =
-        await this.postsQueryRepository.getAllPostsWithOwnerInfo(
-          where,
-          orderBy,
-          pageSize,
-          skip,
-        );
+        await this.postsQueryRepository.getAllPostsWithOwnerInfo(queryString);
 
       const result: any = this.paginatorService.create(
         pageNumber,

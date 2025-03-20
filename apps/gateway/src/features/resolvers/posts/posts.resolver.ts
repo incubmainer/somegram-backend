@@ -18,7 +18,7 @@ import { LoggerService } from '@app/logger';
 import { PostOwnerModel } from './models/post-owner.model';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
-import { GetAdminPostsByUserQuery } from '../../posts/application/queryBus/get-admin-posts.use-case';
+import { GetAdminPostsByUserQuery } from '../../posts/application/queryBus/graphql/get-admin-posts.use-case';
 import { FileModel } from '../users/models/file-model';
 import { UserAvatarsLoader } from '../../../common/data-loaders/user-avatars-loader';
 

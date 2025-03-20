@@ -15,7 +15,7 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { CreatedPostDto, UserPostWithOwnerInfo } from '../../domain/types';
 import { PubSub } from 'graphql-subscriptions';
 import { WS_NEW_POST_EVENT } from '../../../../common/constants/ws-events.constants';
-import { GetAdminPostByIdQuery } from '../queryBus/get-admin-post-by-id.use-case';
+import { GetAdminPostByIdQuery } from '../queryBus/graphql/get-admin-post-by-id.use-case';
 
 export class AddPostCommand {
   constructor(

@@ -4,8 +4,8 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
-import { UserPostWithOwnerInfo } from '../../domain/types';
+import { UserPostWithOwnerInfo } from '../../../domain/types';
+import { PostsGraphqlQueryRepository } from '../../../infrastructure/posts-graphql.query-repository';
 
 export class GetAdminPostByIdQuery {
   constructor(public postId: string) {}
@@ -21,7 +21,7 @@ export class GetAdminPostsByIdUseCase
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly postsQueryRepository: PostsQueryRepository,
+    private readonly postsQueryRepository: PostsGraphqlQueryRepository,
     private readonly appNotification: ApplicationNotification,
   ) {
     this.logger.setContext(GetAdminPostsByIdUseCase.name);
