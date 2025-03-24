@@ -33,7 +33,7 @@ export class PhotosController {
   }
 
   @MessagePattern({ cmd: GET_USER_AVATAR })
-  async getAvatar({ userId }) {
+  async getAvatar({ userId }): Promise<FileType | null> {
     return this.filesService.getUserAvatar(userId);
   }
 
