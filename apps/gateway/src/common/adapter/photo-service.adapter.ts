@@ -49,11 +49,12 @@ export class PhotoServiceAdapter {
     }
   }
 
-  async getAvatar(userId: string): Promise<FileType> {
+  async getAvatar(userId: string): Promise<FileType | null> {
     try {
-      const responseOfService: Observable<FileType> = this.fileServiceClient
-        .send({ cmd: GET_USER_AVATAR }, { userId })
-        .pipe(timeout(10000));
+      const responseOfService: Observable<FileType | null> =
+        this.fileServiceClient
+          .send({ cmd: GET_USER_AVATAR }, { userId })
+          .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
     } catch (e) {

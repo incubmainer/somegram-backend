@@ -22,7 +22,7 @@ export class PostOwnerOutputDtoModel {
     example: 'https://avatar.com/',
     type: String,
   })
-  avatarUrl: string;
+  avatarUrl: string | null;
 }
 export class PostOutputDtoModel {
   @ApiProperty({
@@ -94,7 +94,7 @@ export class PostOutputDto {
 export const postToOutputMapper = (
   post: PostEntity,
   user: UserEntity,
-  avatar: FileType,
+  avatar: FileType | null,
   images: FileType[],
 ): PostOutputDto => {
   return new PostOutputDto({
@@ -106,7 +106,7 @@ export const postToOutputMapper = (
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
-      avatarUrl: avatar?.url || null,
+      avatarUrl: avatar ? avatar.url : null,
     },
   });
 };
