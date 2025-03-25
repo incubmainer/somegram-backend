@@ -7,6 +7,7 @@ export const GET_USERS_AVATAR = 'get_avatars';
 export const GET_POST_PHOTOS = 'get_post_photos';
 export const DELETE_POST_PHOTOS = 'delete_post_photos';
 export const GET_POSTS_PHOTOS = 'get_posts_photos';
+export const GET_POSTS_PHOTOS_BY_POST_ID = 'get_posts_photos_by_post_id';
 
 export const CREATE_AUTO_PAYMENT = 'create_auto_payment';
 export const STRIPE_WEBHOOK_HANDLER = 'stripe_webhook_handler';

@@ -1,7 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
-import { PrismaClient as GatewayPrismaClient, UserPost } from '@prisma/gateway';
+import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
 import { PostEntity } from '../domain/post.entity';

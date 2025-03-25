@@ -11,11 +11,16 @@ import { PublicPostsController } from './api/public-posts.controller';
 import { GetPublicPostsByUserUseCase } from './application/queryBus/get-public-posts.use-case';
 import { PostFileFactory } from './domain/files.factory';
 import { UsersModule } from '../users/users.module';
+import { GetAdminPostsByUserUseCase } from './application/queryBus/graphql/get-admin-posts.use-case';
+import { GetAdminPostsByIdUseCase } from './application/queryBus/graphql/get-admin-post-by-id.use-case';
+import { PostsGraphqlQueryRepository } from './infrastructure/posts-graphql.query-repository';
 
 const queryHandlers = [
   GetPostUseCase,
   GetPostsByUserUseCase,
   GetPublicPostsByUserUseCase,
+  GetAdminPostsByUserUseCase,
+  GetAdminPostsByIdUseCase,
 ];
 
 const handlers = [UpdatePostUseCase, DeletePostUseCase, AddPostUseCase];
@@ -34,6 +39,7 @@ const postFileFactoryProvider = {
     postFileFactoryProvider,
     PostsRepository,
     PostsQueryRepository,
+    PostsGraphqlQueryRepository,
   ],
   exports: [],
 })

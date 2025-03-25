@@ -18,6 +18,8 @@ import { ApplicationNotificationModule } from '@app/application-notification';
 import { paymentsServiceOptions } from '../settings/configuration/get-pyments-service.options';
 import { PaymentsServiceAdapter } from './adapter/payment-service.adapter';
 import { DateFormaterModule } from '@app/date-formater';
+import { PubSub } from 'graphql-subscriptions';
+import { WsBasicGqlGuard } from './guards/graphql/ws-basic-gql.guard';
 
 const strategy = [
   JwtStrategy,
@@ -45,14 +47,17 @@ const clientsModule = ClientsModule.registerAsync([
   ],
   controllers: [],
   providers: [
+    PubSub,
     PrismaService,
     ...strategy,
 
     PhotoServiceAdapter,
     JwtService,
     PaymentsServiceAdapter,
+    WsBasicGqlGuard,
   ],
   exports: [
+    PubSub,
     PrismaService,
     ...strategy,
     clientsModule,
@@ -62,6 +67,7 @@ const clientsModule = ClientsModule.registerAsync([
     JwtService,
     PaymentsServiceAdapter,
     DateFormaterModule,
+    WsBasicGqlGuard,
   ],
 })
 export class CommonModule {}
