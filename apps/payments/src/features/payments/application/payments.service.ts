@@ -6,7 +6,7 @@ import {
   ActiveSubscriptionDateType,
   SubscriptionEntity,
 } from '../domain/subscription.entity';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { GatewayServiceClientAdapter } from '../../../common/adapters/gateway-service-client.adapter';
 import {
   PaymentSystem,
@@ -37,13 +37,13 @@ export class PaymentService {
     this.logger.setContext(PaymentService.name);
   }
 
-  @Cron('0 0 * * * *')
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private async execute(): Promise<void> {
     this.logger.debug('Execute payment service crone', this.execute.name);
     this.disableSubscription();
   }
 
-  @Cron('0 0 0 * * *')
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private async execute12Am(): Promise<void> {
     this.logger.debug('Execute payment service crone', this.execute12Am.name);
     this.checkAndNotifySubscriptionEnd();

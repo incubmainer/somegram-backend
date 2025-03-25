@@ -7,7 +7,9 @@ import {
   DELETE_AVATAR,
   DELETE_POST_PHOTOS,
   GET_POST_PHOTOS,
+  GET_POSTS_PHOTOS,
   GET_USER_AVATAR,
+  GET_USERS_AVATAR,
   UPLOAD_AVATAR,
   UPLOAD_POST_PHOTO,
 } from '../../../../../gateway/src/common/constants/service.constants';
@@ -16,6 +18,7 @@ import { UploadAvatarCommand } from './applications/use-cases/upload-avatar.useC
 import { SavePostPhotoCommand } from './applications/use-cases/save-post-photo.useCase';
 import { DeleteAvatarCommand } from './applications/use-cases/delete-avatar.useCase';
 import { DeletePostPhotosCommand } from './applications/use-cases/delete-post-photos.useCase';
+import { FileType } from '../../../../../../libs/common/enums/file-type.enum';
 
 @Controller('files')
 export class PhotosController {
@@ -30,7 +33,7 @@ export class PhotosController {
   }
 
   @MessagePattern({ cmd: GET_USER_AVATAR })
-  async getAvatar({ userId }) {
+  async getAvatar({ userId }): Promise<FileType | null> {
     return this.filesService.getUserAvatar(userId);
   }
 
@@ -56,5 +59,15 @@ export class PhotosController {
     file: FileDto;
   }) {
     return this.commandBus.execute(new SavePostPhotoCommand(payload));
+  }
+
+  @MessagePattern({ cmd: GET_USERS_AVATAR })
+  async getUsersAvatar({ userIds }): Promise<FileType[]> {
+    return this.filesService.getUsersAvatar(userIds);
+  }
+
+  @MessagePattern({ cmd: GET_POSTS_PHOTOS })
+  async getPostsPhotos({ ownerIds }): Promise<FileType[]> {
+    return this.filesService.getPostsPhotosByOwnerIds(ownerIds);
   }
 }

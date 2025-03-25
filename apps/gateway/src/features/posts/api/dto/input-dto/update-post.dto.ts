@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {  IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { POST_CONSTRAINTS } from './add-post.dto';
 import { Trim } from '@app/decorators';
 

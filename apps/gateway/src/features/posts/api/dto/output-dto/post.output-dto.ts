@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { UserEntity } from '../../../../users/domain/user.entity';
 import { PostEntity } from '../../../domain/post.entity';
+import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 
 export class PostOwnerOutputDtoModel {
   @ApiProperty({
@@ -21,7 +22,7 @@ export class PostOwnerOutputDtoModel {
     example: 'https://avatar.com/',
     type: String,
   })
-  avatarUrl: string;
+  avatarUrl: string | null;
 }
 export class PostOutputDtoModel {
   @ApiProperty({
@@ -82,7 +83,7 @@ export class PostOutputDto {
   postOwnerInfo: {
     userId: string;
     username: string;
-    avatarUrl: string;
+    avatarUrl: string | null;
   };
 
   constructor(init: Partial<PostOutputDto>) {
@@ -93,19 +94,19 @@ export class PostOutputDto {
 export const postToOutputMapper = (
   post: PostEntity,
   user: UserEntity,
-  avatarUrl: string,
-  images: string[],
+  avatar: FileType | null,
+  images: FileType[],
 ): PostOutputDto => {
   return new PostOutputDto({
     id: post.id,
     description: post.description ?? null,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt ? post.updatedAt.toISOString() : null,
-    images: images,
+    images: images.map((i) => i.url),
     postOwnerInfo: {
       userId: user.id,
       username: user.username,
-      avatarUrl: avatarUrl,
+      avatarUrl: avatar ? avatar.url : null,
     },
   });
 };

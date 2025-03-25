@@ -7,6 +7,7 @@ export class SubscriptionEntity implements Subscription {
   subscriptionType: string;
   id: string;
   userId: string;
+  username: string;
   createdAt: Date;
   updatedAt: Date | null;
   dateOfPayment: Date | null;
@@ -20,6 +21,7 @@ export class SubscriptionEntity implements Subscription {
   static create(inputDto: SubscriptionInputDto): SubscriptionEntity {
     const {
       userId,
+      username,
       status,
       createdAt,
       autoRenewal,
@@ -30,6 +32,7 @@ export class SubscriptionEntity implements Subscription {
 
     const subscription = new this();
     subscription.userId = userId;
+    subscription.username = username;
     subscription.createdAt = createdAt;
     subscription.paymentSystem = paymentSystem;
     subscription.paymentSystemSubId = paymentSystemSubId;
@@ -100,6 +103,7 @@ export class SubscriptionEntity implements Subscription {
 
 export type SubscriptionInputDto = {
   userId: string;
+  username: string;
   createdAt: Date;
   paymentSystem: string;
   status: string;

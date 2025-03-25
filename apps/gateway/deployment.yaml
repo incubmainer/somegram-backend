@@ -157,6 +157,16 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: JWT_REFRESH_EXPIRED_TIME
+             - name: BASIC_AUTH_EMAIL
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: BASIC_AUTH_EMAIL
+             - name: BASIC_AUTH_PASSWORD
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: BASIC_AUTH_PASSWORD
              - name: PORT
                valueFrom:
                  secretKeyRef:
