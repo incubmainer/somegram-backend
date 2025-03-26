@@ -2,7 +2,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
-import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { SearchQueryParameters } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
 import { PostEntity } from '../domain/post.entity';
 import { LoggerService } from '@app/logger';
@@ -34,7 +34,7 @@ export class PostsQueryRepository {
 
   public async getPostsByUser(
     userId: string,
-    queryString?: SearchQueryParametersType,
+    queryString?: SearchQueryParameters,
     endCursorPostId?: string,
   ): Promise<{ posts: PostEntity[]; count: number }> {
     this.logger.debug(
@@ -98,7 +98,7 @@ export class PostsQueryRepository {
   }
 
   public async getAllPosts(
-    queryString?: SearchQueryParametersType,
+    queryString?: SearchQueryParameters,
     endCursorPostId?: string,
   ): Promise<{ posts: PostEntity[]; count: number }> {
     this.logger.debug(`Execute: get all posts`, this.getAllPosts.name);

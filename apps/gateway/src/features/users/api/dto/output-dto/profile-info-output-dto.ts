@@ -1,5 +1,7 @@
 import { User } from '@prisma/gateway';
 import { ApiProperty } from '@nestjs/swagger';
+import { Pagination } from '@app/paginator';
+
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 
 export class UserCountOutputDto {
@@ -165,3 +167,13 @@ export const userPublicProfileInfoMapper = (
     },
   });
 };
+
+export class SearchUsersOutputDtoWithPaginationModel extends Pagination<
+  ProfilePublicInfoOutputDtoModel[]
+> {
+  @ApiProperty({
+    type: ProfilePublicInfoOutputDtoModel,
+    isArray: true,
+  })
+  items: ProfilePublicInfoOutputDtoModel[];
+}

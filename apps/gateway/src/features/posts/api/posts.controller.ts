@@ -38,7 +38,7 @@ import { GetPostQuery } from '../application/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPostsSwagger } from './swagger/get-user-posts.swagger';
 import { GetPostsByUserQuery } from '../application/queryBus/get-posts-by-user.use-case';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from 'apps/gateway/src/common/domain/query.types';
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
@@ -160,7 +160,7 @@ export class PostsController {
   async getPostsByUser(
     @Param('userId') userId: string,
     @Param('endCursorPostId') endCursorPostId?: string,
-    @Query() query?: SearchQueryParametersType,
+    @Query() query?: SearchQueryParameters,
   ): Promise<Pagination<PostOutputDto[]>> {
     this.logger.debug(
       'Execute: get posts by user id',

@@ -4,6 +4,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
 import { UserEntity } from '../domain/user.entity';
+import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -40,5 +41,54 @@ export class UsersQueryRepository {
     this.logger.debug(`Get total users count`, this.getTotalCountUsers.name);
 
     return this.txHost.tx.user.count();
+  }
+  public async searchUsers(
+    userId: string,
+    queryString?: SearchQueryParametersWithoutSorting,
+    cursorUserId?: string,
+  ): Promise<{ users: UserEntity[]; count: number }> {
+    this.logger.debug('Get users profiles by search', this.searchUsers.name);
+
+    const skip = queryString.pageSize * (queryString.pageNumber - 1);
+    const where: any = {
+      isDeleted: false,
+      isConfirmed: true,
+      userBanInfo: {
+        is: null,
+      },
+      id: {
+        not: userId,
+      },
+    };
+
+    if (queryString.search && queryString.search.trim() !== '') {
+      where.username = {
+        contains: queryString.search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (cursorUserId) {
+      where.id = {
+        gt: cursorUserId,
+      };
+    }
+
+    const users = await this.txHost.tx.user.findMany({
+      where,
+      skip,
+      take: queryString.pageSize,
+    });
+
+    const count = await this.txHost.tx.user.count({
+      where: {
+        ...where,
+      },
+    });
+
+    return {
+      users: users as UserEntity[],
+      count,
+    };
   }
 }

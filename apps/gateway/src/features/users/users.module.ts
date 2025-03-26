@@ -16,11 +16,14 @@ import { BanUserUseCase } from './application/use-cases/graphql/ban-user.use-cas
 import { RemoveUserUseCase } from './application/use-cases/graphql/remove-user.use-case';
 import { UnbanUserUseCase } from './application/use-cases/graphql/unban-user.use-case';
 import { UsersGraphqlRepository } from './infrastructure/users.graphql-repository';
+import { SearchProfilesUseCase } from './application/queryBus/get-profiles-by-search.use-case';
+import { FollowingUsersController } from './api/following.users.controller';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
   GetPublicProfileInfoUseCase,
   GetTotalRegisteredUserQueryHandler,
+  SearchProfilesUseCase,
 ];
 
 const handlers = [
@@ -46,7 +49,11 @@ const repositories = [
 
 @Module({
   imports: [],
-  controllers: [UsersController, PublicUsersController],
+  controllers: [
+    UsersController,
+    PublicUsersController,
+    FollowingUsersController,
+  ],
   providers: [
     ...handlers,
     ...queryHandlers,

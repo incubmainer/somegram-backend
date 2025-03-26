@@ -32,7 +32,7 @@ model User {
   subscriptionExpireAt DateTime?
   Notification         Notification[]
   isDeleted            Boolean                @default(false)
-  userBanInfo       UserBanInfo?
+  userBanInfo          UserBanInfo?
 
   @@index([username])
   @@index([email])

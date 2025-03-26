@@ -7,7 +7,7 @@ import {
 
 import { Pagination, PaginatorService } from '@app/paginator';
 import { LoggerService } from '@app/logger';
-import { SearchQueryParametersType } from '../../../../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../../../../gateway/src/common/domain/query.types';
 import { GraphqlPaymentsRepository } from '../../../../infrastructure/graphql-payments.repository';
 import {
   paymentsWithUserInfoMapper,
@@ -17,7 +17,7 @@ import {
 export class GetPaymentsByUserQuery {
   constructor(
     public userId: string,
-    public queryString?: SearchQueryParametersType,
+    public queryString?: SearchQueryParameters,
   ) {}
 }
 

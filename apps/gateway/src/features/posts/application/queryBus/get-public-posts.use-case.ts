@@ -7,7 +7,7 @@ import {
 import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
-import { SearchQueryParametersType } from '../../../../common/domain/query.types';
+import { SearchQueryParameters } from '../../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../../common/utils/query-params.sanitizator';
 import {
   ApplicationNotification,
@@ -17,7 +17,7 @@ import { Pagination, PaginatorService } from '@app/paginator';
 
 export class GetPublicPostsByUserQuery {
   constructor(
-    public queryString?: SearchQueryParametersType,
+    public queryString?: SearchQueryParameters,
     public endCursorPostId?: string,
   ) {}
 }

@@ -21,7 +21,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { SearchQueryParametersType } from '../domain/query.types';
+import { SearchQueryParameters } from '../domain/query.types';
 import {
   CreatePaymentDto,
   GetUserPaymentPayloadType,
@@ -174,7 +174,7 @@ export class PaymentsServiceAdapter {
 
   async testingGetPayments(payload: {
     userId: string;
-    queryString?: SearchQueryParametersType;
+    queryString?: SearchQueryParameters;
   }): Promise<AppNotificationResultType<Pagination<MyPaymentsOutputDto[]>>> {
     try {
       const responseOfService: Observable<
@@ -238,7 +238,7 @@ export class PaymentsServiceAdapter {
   }
 
   async getAllPayments(payload: {
-    queryString?: SearchQueryParametersType;
+    queryString?: SearchQueryParameters;
   }): Promise<AppNotificationResultType<PaginatedPaymentsModel>> {
     try {
       const responseOfService: Observable<

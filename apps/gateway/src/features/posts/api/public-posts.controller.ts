@@ -14,7 +14,7 @@ import { GetPostQuery } from '../application/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPublicPostSwagger } from './swagger/get-public-post.swagger';
 import { GetPublicPostsByUserQuery } from '../application/queryBus/get-public-posts.use-case';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from 'apps/gateway/src/common/domain/query.types';
 import { GetPublicPostsSwagger } from './swagger/get-public-posts.swagger';
 import { POST_PUBLIC_ROUTE } from '../../../common/constants/route.constants';
 import {
@@ -38,7 +38,7 @@ export class PublicPostsController {
   @GetPublicPostsSwagger()
   @HttpCode(HttpStatus.OK)
   async getPublicPosts(
-    @Query() query?: SearchQueryParametersType,
+    @Query() query?: SearchQueryParameters,
     @Param('endCursorPostId') endCursorPostId?: string,
   ): Promise<Pagination<PostOutputDto[]>> {
     this.logger.debug('Execute: get posts', this.getPublicPosts.name);

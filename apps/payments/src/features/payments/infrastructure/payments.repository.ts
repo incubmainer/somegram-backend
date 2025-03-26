@@ -7,7 +7,7 @@ import {
   PaymentTransaction,
 } from '@prisma/payments';
 import { TransactionEntity } from '../domain/transaction.entity';
-import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../gateway/src/common/domain/query.types';
 import { LoggerService } from '@app/logger';
 import { SubscriptionStatuses } from '../../../common/enum/subscription-types.enum';
 
@@ -25,7 +25,7 @@ export class PaymentsRepository {
 
   public async getPaymentsByUserId(
     userId: string,
-    queryString: SearchQueryParametersType,
+    queryString: SearchQueryParameters,
   ) {
     const { pageSize, pageNumber } = queryString;
 
