@@ -1,8 +1,13 @@
 import {
+  BadRequestException,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -25,6 +30,8 @@ import { SearchQueryParametersWithoutSorting } from '../../../common/domain/quer
 import { SearchProfilesQuery } from '../application/queryBus/get-profiles-by-search.use-case';
 import { ProfilePublicInfoOutputDtoModel } from './dto/output-dto/profile-info-output-dto';
 import { SearchUsersSwagger as SearchUsersSwagger } from './swagger/search-users.swagger';
+import { FollowToUserCommand } from '../application/use-cases/follow-to-user.use-case';
+import { FollowToUserSwagger } from './swagger/follow-to-user.swagger';
 
 @ApiTags('Users-following and followers')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -58,6 +65,35 @@ export class FollowingUsersController {
       case AppNotificationResultEnum.Success:
         this.logger.debug(`Success`, this.searchUsers.name);
         return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`${USER_ROUTE.FOLLOW}/:followeeId`)
+  @FollowToUserSwagger()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async followToUser(
+    @CurrentUserId() userId: string,
+    @Param('followeeId') followeeId: string,
+  ): Promise<null> {
+    this.logger.debug(`Execute: Follow to user:`, this.followToUser.name);
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new FollowToUserCommand(userId, followeeId),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.followToUser.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.followToUser.name);
+        throw new NotFoundException();
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug(`Bad request`, this.followToUser.name);
+        throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();
     }

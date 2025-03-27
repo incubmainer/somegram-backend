@@ -15,6 +15,7 @@ export const USER_ROUTE = {
   PROFILE_UPLOAD_AVATAR: 'profile-upload-avatar',
   PROFILE_FILL_INFO: 'profile-fill-info',
   PROFILE_DELETE_AVATAR: 'profile-delete-avatar',
+  FOLLOW: 'follow',
 };
 
 export const USER_PUBLIC_ROUTE = {

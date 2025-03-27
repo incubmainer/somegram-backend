@@ -33,6 +33,8 @@ model User {
   Notification         Notification[]
   isDeleted            Boolean                @default(false)
   userBanInfo          UserBanInfo?
+  followers            UserFollow[] @relation("UserFollowAsFollowee")
+  following            UserFollow[] @relation("UserFollowAsFollower")
 
   @@index([username])
   @@index([email])
@@ -133,4 +135,16 @@ model UserBanInfo {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   banReason String
   banDate   DateTime
+}
+
+model UserFollow {
+  id          String   @id @default(uuid())
+  follower    User     @relation("UserFollowAsFollowee", fields: [followerId], references: [id])
+  followerId  String
+  followee    User     @relation("UserFollowAsFollower", fields: [followeeId], references: [id])
+  followeeId  String
+  createdAt   DateTime
+
+  @@unique([followerId, followeeId], name: "unique_follow")
+  @@index([followeeId])
 }

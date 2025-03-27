@@ -18,6 +18,8 @@ import { UnbanUserUseCase } from './application/use-cases/graphql/unban-user.use
 import { UsersGraphqlRepository } from './infrastructure/users.graphql-repository';
 import { SearchProfilesUseCase } from './application/queryBus/get-profiles-by-search.use-case';
 import { FollowingUsersController } from './api/following.users.controller';
+import { UsersFollowRepository } from './infrastructure/users-follow.repository';
+import { FollowToUserUseCase } from './application/use-cases/follow-to-user.use-case';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
@@ -30,6 +32,7 @@ const handlers = [
   UploadAvatarUseCase,
   FillingUserProfileUseCase,
   DeleteAvatarUseCase,
+  FollowToUserUseCase,
 ];
 
 const useCasesGraphql = [
@@ -45,6 +48,7 @@ const repositories = [
   UsersRepository,
   UsersQueryRepository,
   UsersGraphqlRepository,
+  UsersFollowRepository,
 ];
 
 @Module({
