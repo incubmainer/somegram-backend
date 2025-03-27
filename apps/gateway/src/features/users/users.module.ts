@@ -20,6 +20,7 @@ import { SearchProfilesUseCase } from './application/queryBus/get-profiles-by-se
 import { FollowingUsersController } from './api/following.users.controller';
 import { UsersFollowRepository } from './infrastructure/users-follow.repository';
 import { FollowToUserUseCase } from './application/use-cases/follow-to-user.use-case';
+import { UnfollowToUserUseCase } from './application/use-cases/unfollow-to-user.use-case';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
@@ -33,6 +34,7 @@ const handlers = [
   FillingUserProfileUseCase,
   DeleteAvatarUseCase,
   FollowToUserUseCase,
+  UnfollowToUserUseCase,
 ];
 
 const useCasesGraphql = [

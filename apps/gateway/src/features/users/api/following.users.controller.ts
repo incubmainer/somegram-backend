@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -32,6 +33,8 @@ import { ProfilePublicInfoOutputDtoModel } from './dto/output-dto/profile-info-o
 import { SearchUsersSwagger as SearchUsersSwagger } from './swagger/search-users.swagger';
 import { FollowToUserCommand } from '../application/use-cases/follow-to-user.use-case';
 import { FollowToUserSwagger } from './swagger/follow-to-user.swagger';
+import { UnfollowToUserCommand } from '../application/use-cases/unfollow-to-user.use-case';
+import { UnfollowToUserSwagger } from './swagger/unfollow-to-user.swagger';
 
 @ApiTags('Users-following and followers')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -93,6 +96,35 @@ export class FollowingUsersController {
         throw new NotFoundException();
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug(`Bad request`, this.followToUser.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Delete(`${USER_ROUTE.UNFOLLOW}/:followeeId`)
+  @UnfollowToUserSwagger()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unfollowToUser(
+    @CurrentUserId() userId: string,
+    @Param('followeeId') followeeId: string,
+  ): Promise<null> {
+    this.logger.debug(`Execute: Unfollow to user`, this.unfollowToUser.name);
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new UnfollowToUserCommand(userId, followeeId),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.unfollowToUser.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.unfollowToUser.name);
+        throw new NotFoundException();
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug(`Bad request`, this.unfollowToUser.name);
         throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();

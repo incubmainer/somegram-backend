@@ -41,4 +41,29 @@ export class UsersFollowRepository {
     });
     return true;
   }
+
+  async unfollowToUser(userId: string, followeeId: string): Promise<boolean> {
+    this.logger.debug(
+      `Execute: ${userId} unfollow to user ${followeeId}`,
+      this.unfollowToUser.name,
+    );
+
+    const existingFollow = await this.txHost.tx.userFollow.findUnique({
+      where: {
+        unique_follow: { followerId: userId, followeeId: followeeId },
+      },
+    });
+
+    if (!existingFollow) {
+      this.logger.debug(`User ${userId} does not follow ${followeeId}`);
+      return false;
+    }
+
+    await this.txHost.tx.userFollow.delete({
+      where: {
+        unique_follow: { followerId: userId, followeeId: followeeId },
+      },
+    });
+    return true;
+  }
 }
