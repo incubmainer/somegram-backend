@@ -21,6 +21,7 @@ import { FollowingUsersController } from './api/following.users.controller';
 import { UsersFollowRepository } from './infrastructure/users-follow.repository';
 import { FollowToUserUseCase } from './application/use-cases/follow-to-user.use-case';
 import { UnfollowToUserUseCase } from './application/use-cases/unfollow-to-user.use-case';
+import { DeleteFollowerUseCase } from './application/use-cases/delete-follower.use-case';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
@@ -35,6 +36,7 @@ const handlers = [
   DeleteAvatarUseCase,
   FollowToUserUseCase,
   UnfollowToUserUseCase,
+  DeleteFollowerUseCase,
 ];
 
 const useCasesGraphql = [

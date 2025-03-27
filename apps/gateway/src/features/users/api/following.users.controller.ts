@@ -35,6 +35,8 @@ import { FollowToUserCommand } from '../application/use-cases/follow-to-user.use
 import { FollowToUserSwagger } from './swagger/follow-to-user.swagger';
 import { UnfollowToUserCommand } from '../application/use-cases/unfollow-to-user.use-case';
 import { UnfollowToUserSwagger } from './swagger/unfollow-to-user.swagger';
+import { DeleteFollowerCommand } from '../application/use-cases/delete-follower.use-case';
+import { DeleteFollowerSwagger } from './swagger/delete-follower.swagger';
 
 @ApiTags('Users-following and followers')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -102,7 +104,7 @@ export class FollowingUsersController {
     }
   }
 
-  @Delete(`${USER_ROUTE.UNFOLLOW}/:followeeId`)
+  @Post(`${USER_ROUTE.UNFOLLOW}/:followeeId`)
   @UnfollowToUserSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
   async unfollowToUser(
@@ -125,6 +127,38 @@ export class FollowingUsersController {
         throw new NotFoundException();
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug(`Bad request`, this.unfollowToUser.name);
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Delete(`${USER_ROUTE.UNFOLLOW}/:followerId`)
+  @DeleteFollowerSwagger()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFollower(
+    @CurrentUserId() userId: string,
+    @Param('followerId') followerId: string,
+  ): Promise<null> {
+    this.logger.debug(
+      `Execute: Remove follower ${followerId}`,
+      this.unfollowToUser.name,
+    );
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new DeleteFollowerCommand(userId, followerId),
+      );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.deleteFollower.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.deleteFollower.name);
+        throw new NotFoundException();
+      case AppNotificationResultEnum.BadRequest:
+        this.logger.debug(`Bad request`, this.deleteFollower.name);
         throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();

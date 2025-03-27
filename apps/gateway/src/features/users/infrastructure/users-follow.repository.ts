@@ -15,53 +15,56 @@ export class UsersFollowRepository {
     this.logger.setContext(UsersFollowRepository.name);
   }
 
-  async followToUser(userId: string, followeeId: string): Promise<boolean> {
+  async followToUser(followerId: string, followeeId: string): Promise<boolean> {
     this.logger.debug(
-      `Execute: ${userId} follow to user ${followeeId}`,
+      `Execute: ${followerId} follow to user ${followeeId}`,
       this.followToUser.name,
     );
 
     const existingFollow = await this.txHost.tx.userFollow.findUnique({
       where: {
-        unique_follow: { followerId: userId, followeeId: followeeId },
+        unique_follow: { followerId, followeeId },
       },
     });
 
     if (existingFollow) {
-      this.logger.debug(`User ${userId} already follows ${followeeId}`);
+      this.logger.debug(`User ${followerId} already follows ${followeeId}`);
       return false;
     }
 
     await this.txHost.tx.userFollow.create({
       data: {
-        followerId: userId,
-        followeeId: followeeId,
+        followerId,
+        followeeId,
         createdAt: new Date(),
       },
     });
     return true;
   }
 
-  async unfollowToUser(userId: string, followeeId: string): Promise<boolean> {
+  async unfollowToUser(
+    followerId: string,
+    followeeId: string,
+  ): Promise<boolean> {
     this.logger.debug(
-      `Execute: ${userId} unfollow to user ${followeeId}`,
+      `Execute: ${followerId} unfollow to user ${followeeId}`,
       this.unfollowToUser.name,
     );
 
     const existingFollow = await this.txHost.tx.userFollow.findUnique({
       where: {
-        unique_follow: { followerId: userId, followeeId: followeeId },
+        unique_follow: { followerId, followeeId },
       },
     });
 
     if (!existingFollow) {
-      this.logger.debug(`User ${userId} does not follow ${followeeId}`);
+      this.logger.debug(`User ${followerId} does not follow ${followeeId}`);
       return false;
     }
 
     await this.txHost.tx.userFollow.delete({
       where: {
-        unique_follow: { followerId: userId, followeeId: followeeId },
+        unique_follow: { followerId, followeeId },
       },
     });
     return true;
