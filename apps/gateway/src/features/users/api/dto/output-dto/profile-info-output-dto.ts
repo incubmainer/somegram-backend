@@ -177,3 +177,45 @@ export class SearchUsersOutputDtoWithPaginationModel extends Pagination<
   })
   items: ProfilePublicInfoOutputDtoModel[];
 }
+
+export class ProfileInfoWithCountsInfosOutputDtoModel extends ProfilePublicInfoOutputDtoModel {
+  @ApiProperty({
+    description: 'Indicates if the current user is following this profile',
+    example: true,
+    type: Boolean,
+  })
+  isFollowing: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if this profile is following the current user',
+    example: false,
+    type: Boolean,
+  })
+  isFollowedBy: boolean;
+
+  @ApiProperty({
+    description: 'Count of users that the profile is following',
+    example: 0,
+    type: Number,
+  })
+  followingCount: number;
+
+  @ApiProperty({
+    description: 'Count of users that are following this profile',
+    example: 2,
+    type: Number,
+  })
+  followersCount: number;
+
+  @ApiProperty({
+    description: 'Count of publications made by the user',
+    example: 3,
+    type: Number,
+  })
+  publicationsCount: number;
+
+  constructor(data?: Partial<ProfileInfoWithCountsInfosOutputDtoModel>) {
+    super(data);
+    Object.assign(this, data);
+  }
+}

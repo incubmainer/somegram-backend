@@ -57,9 +57,9 @@ export class SearchProfilesUseCase
         cursorUserId,
       );
 
-      const userIds = users.map((user) => user.id);
-
-      const avatars = await this.photoServiceAdapter.getUsersAvatar(userIds);
+      const avatars = await this.photoServiceAdapter.getUsersAvatar(
+        users.map((user) => user.id),
+      );
 
       const mappedUsers = users.map((user) =>
         userPublicProfileInfoMapper(

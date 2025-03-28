@@ -3,6 +3,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
+
 import { UserEntity } from '../domain/user.entity';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
 
@@ -16,6 +17,7 @@ export class UsersQueryRepository {
   ) {
     this.logger.setContext(UsersQueryRepository.name);
   }
+
   async findUserById(id?: string): Promise<UserEntity | null> {
     this.logger.debug(`Execute: get user by id: ${id}`, this.findUserById.name);
 
@@ -25,23 +27,12 @@ export class UsersQueryRepository {
     return user ? new UserEntity(user) : null;
   }
 
-  async getProfileInfo(userId: string): Promise<UserEntity | null> {
-    this.logger.debug(
-      `Execute: get profile info by user id: ${userId}`,
-      this.getProfileInfo.name,
-    );
-
-    const user = await this.txHost.tx.user.findFirst({
-      where: { id: userId },
-    });
-    return user ? new UserEntity(user) : null;
-  }
-
   public async getTotalCountUsers(): Promise<number> {
     this.logger.debug(`Get total users count`, this.getTotalCountUsers.name);
 
     return this.txHost.tx.user.count();
   }
+
   public async searchUsers(
     userId: string,
     queryString?: SearchQueryParametersWithoutSorting,
@@ -89,6 +80,49 @@ export class UsersQueryRepository {
     return {
       users: users as UserEntity[],
       count,
+    };
+  }
+
+  async findUserWithPostsCounts(userId: string): Promise<{
+    user: UserEntity;
+    publicationsCount: number;
+    followersCount: number;
+    followingCount: number;
+  } | null> {
+    this.logger.debug(
+      `Execute: find user by id: ${userId}  with posts count and followee/wers counts query`,
+      this.findUserWithPostsCounts.name,
+    );
+
+    const where: any = {
+      id: userId,
+      isDeleted: false,
+      isConfirmed: true,
+      userBanInfo: {
+        is: null,
+      },
+    };
+
+    const user = await this.txHost.tx.user.findFirst({
+      where,
+      include: {
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            UserPost: true,
+          },
+        },
+      },
+    });
+
+    if (!user) return null;
+
+    return {
+      user: new UserEntity(user),
+      publicationsCount: user._count.UserPost,
+      followersCount: user._count.followers,
+      followingCount: user._count.following,
     };
   }
 }

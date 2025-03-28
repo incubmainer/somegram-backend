@@ -28,8 +28,11 @@ import {
 import { USER_ROUTE } from '../../../common/constants/route.constants';
 import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
-import { SearchProfilesQuery } from '../application/queryBus/get-profiles-by-search.use-case';
-import { ProfilePublicInfoOutputDtoModel } from './dto/output-dto/profile-info-output-dto';
+import { SearchProfilesQuery } from '../application/queryBus/search-profiles.use-case';
+import {
+  ProfileInfoWithCountsInfosOutputDtoModel,
+  ProfilePublicInfoOutputDtoModel,
+} from './dto/output-dto/profile-info-output-dto';
 import { SearchUsersSwagger as SearchUsersSwagger } from './swagger/search-users.swagger';
 import { FollowToUserCommand } from '../application/use-cases/follow-to-user.use-case';
 import { FollowToUserSwagger } from './swagger/follow-to-user.swagger';
@@ -37,6 +40,9 @@ import { UnfollowToUserCommand } from '../application/use-cases/unfollow-to-user
 import { UnfollowToUserSwagger } from './swagger/unfollow-to-user.swagger';
 import { DeleteFollowerCommand } from '../application/use-cases/delete-follower.use-case';
 import { DeleteFollowerSwagger } from './swagger/delete-follower.swagger';
+import { GetUserProfileWithCountsInfosQuery } from '../application/queryBus/get-profile-with-counts-infos.use-case';
+import { UsersQueryRepository } from '../infrastructure/users.query-repository';
+import { ProfileInfoWithCountsInfoSwagger } from './swagger/profile-info-with-counts-info.swagger';
 
 @ApiTags('Users-following and followers')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -48,11 +54,12 @@ export class FollowingUsersController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly logger: LoggerService,
+    private usersQueryRepository: UsersQueryRepository,
   ) {
     this.logger.setContext(FollowingUsersController.name);
   }
 
-  @Get(':cursorUserId?')
+  @Get(`${USER_ROUTE.FOLLOW_SEARCH}/:cursorUserId?`)
   @SearchUsersSwagger()
   async searchUsers(
     @CurrentUserId() userId: string,
@@ -160,6 +167,34 @@ export class FollowingUsersController {
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug(`Bad request`, this.deleteFollower.name);
         throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Get(':userId')
+  @ProfileInfoWithCountsInfoSwagger()
+  async getProfile(
+    @CurrentUserId() currentUserId: string,
+    @Param('userId') userId: string,
+  ): Promise<ProfileInfoWithCountsInfosOutputDtoModel> {
+    this.logger.debug(
+      `Execute: Get profile for user ${userId}`,
+      this.getProfile.name,
+    );
+
+    const result = await this.queryBus.execute(
+      new GetUserProfileWithCountsInfosQuery(currentUserId, userId),
+    );
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getProfile.name);
+        return result.data;
+
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug(`Not found`, this.getProfile.name);
+        throw new NotFoundException();
       default:
         throw new InternalServerErrorException();
     }

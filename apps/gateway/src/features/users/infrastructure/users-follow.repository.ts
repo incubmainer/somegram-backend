@@ -69,4 +69,20 @@ export class UsersFollowRepository {
     });
     return true;
   }
+
+  async isFollowing(followerId: string, followeeId: string): Promise<boolean> {
+    const follow = await this.txHost.tx.userFollow.findUnique({
+      where: {
+        unique_follow: {
+          followerId,
+          followeeId,
+        },
+      },
+    });
+    return !!follow;
+  }
+
+  async isFollowedBy(followeeId: string, followerId: string): Promise<boolean> {
+    return this.isFollowing(followerId, followeeId);
+  }
 }

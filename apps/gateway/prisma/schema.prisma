@@ -33,7 +33,9 @@ model User {
   Notification         Notification[]
   isDeleted            Boolean                @default(false)
   userBanInfo          UserBanInfo?
+  // Подписчики (кто подписан на этого пользователя)
   followers            UserFollow[] @relation("UserFollowAsFollowee")
+  // Подписки (на кого подписан этот пользователь)
   following            UserFollow[] @relation("UserFollowAsFollower")
 
   @@index([username])
@@ -139,12 +141,12 @@ model UserBanInfo {
 
 model UserFollow {
   id          String   @id @default(uuid())
-  follower    User     @relation("UserFollowAsFollowee", fields: [followerId], references: [id])
+  follower    User     @relation("UserFollowAsFollower", fields: [followerId], references: [id])
   followerId  String
-  followee    User     @relation("UserFollowAsFollower", fields: [followeeId], references: [id])
+  followee    User     @relation("UserFollowAsFollowee", fields: [followeeId], references: [id])
   followeeId  String
   createdAt   DateTime
 
   @@unique([followerId, followeeId], name: "unique_follow")
-  @@index([followeeId])
+  @@index([followeeId, followerId])
 }
