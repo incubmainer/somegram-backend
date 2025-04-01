@@ -32,7 +32,10 @@ model User {
   subscriptionExpireAt DateTime?
   Notification         Notification[]
   isDeleted            Boolean                @default(false)
-  userBanInfo       UserBanInfo?
+  userBanInfo          UserBanInfo?
+  PostComment          PostComment[]
+  LikesComment         LikesComment[]
+  LikesPost            LikesPost[]
 
   @@index([username])
   @@index([email])
@@ -86,12 +89,14 @@ model SecurityDevices {
 }
 
 model UserPost {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   userId      String
-  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime
   updatedAt   DateTime?
   description String?
+  PostComment PostComment[]
+  LikesPost   LikesPost[]
 }
 
 model UserGoogleInfo {
@@ -133,4 +138,40 @@ model UserBanInfo {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   banReason String
   banDate   DateTime
+}
+
+model PostComment {
+  id                 String         @id @default(uuid())
+  text               String
+  commentatorId      String
+  postId             String
+  UserPost           UserPost       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User               User           @relation(fields: [commentatorId], references: [id], onDelete: Cascade)
+  answerForCommentId String?
+  answerForComment   PostComment?   @relation(name: "CommentReplies", fields: [answerForCommentId], references: [id])
+  replies            PostComment[]  @relation(name: "CommentReplies")
+  createdAt          DateTime
+  LikesComment       LikesComment[]
+}
+
+model LikesComment {
+  id          String      @id @default(uuid())
+  status      String
+  commentId   String
+  PostComment PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId      String
+  User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime
+  updatedAt   DateTime
+}
+
+model LikesPost {
+  id        String   @id @default(uuid())
+  status    String
+  postId    String
+  UserPost  UserPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime
+  updatedAt DateTime
 }

@@ -46,6 +46,7 @@ export const NOTIFICATION_ROUTE = {
 export const POST_PUBLIC_ROUTE = {
   MAIN: 'public-posts',
   ALL: 'all',
+  COMMENTS: 'comments',
 };
 
 export const POST_ROUTE = {
@@ -67,4 +68,10 @@ export const AUTH_ROUTE = {
   RESTORE_PASSWORD: 'restore-password',
   RESTORE_PASSWORD_CONFIRM: 'restore-password-confirmation',
   RECAPTCHA_SITE_KEY: 'recaptcha-site-key',
+};
+
+export const POST_COMMENT_ROUTE = {
+  MAIN: 'posts/comments',
+  ANSWER_FOR_COMMENT: 'answer-comment',
+  LIKE: 'like',
 };
