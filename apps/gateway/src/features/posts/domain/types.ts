@@ -55,3 +55,11 @@ export class CreatePostCommentLikeDto {
   updatedAt: Date;
   commentId: string;
 }
+
+export class CreatePostLikeDto {
+  userId: string;
+  status: LikeStatusEnum;
+  createdAt: Date;
+  updatedAt: Date;
+  postId: string;
+}

@@ -51,6 +51,7 @@ export const POST_PUBLIC_ROUTE = {
 
 export const POST_ROUTE = {
   MAIN: 'posts',
+  LIKE: 'like',
 };
 
 export const AUTH_ROUTE = {
