@@ -17,10 +17,10 @@ export function SearchUsersSwagger() {
       type: String,
     }),
     ApiParam({
-      name: 'cursorUserId',
+      name: 'endCursorUserId',
       required: false,
       description:
-        'ID of the last user. If cursorUserId not provided, the first set of users is returned.',
+        'ID of the last user. If endCursorUserId not provided, the first set of users is returned.',
       type: String,
     }),
     ApiQuery({

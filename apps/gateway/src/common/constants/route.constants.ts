@@ -71,3 +71,8 @@ export const AUTH_ROUTE = {
   RESTORE_PASSWORD_CONFIRM: 'restore-password-confirmation',
   RECAPTCHA_SITE_KEY: 'recaptcha-site-key',
 };
+
+export const FOLLOWING_POST_ROUTE = {
+  POSTS: 'posts',
+  MAIN: 'following',
+};

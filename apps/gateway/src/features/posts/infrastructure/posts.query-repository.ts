@@ -156,4 +156,59 @@ export class PostsQueryRepository {
       count,
     };
   }
+
+  public async getPostsByUserIds(
+    userIds: string[],
+    queryString?: SearchQueryParameters,
+    endCursorPostId?: string,
+  ): Promise<{ posts: PostEntity[]; count: number }> {
+    this.logger.debug(
+      'Execute: get posts by userIds:',
+      this.getPostsByUserIds.name,
+    );
+
+    const sanitizationQuery = getSanitizationQuery(queryString);
+
+    let cursorCondition = {};
+    if (endCursorPostId) {
+      const endCursorPost = await this.txHost.tx.userPost.findUnique({
+        where: { id: endCursorPostId },
+        select: { createdAt: true, updatedAt: true },
+      });
+
+      if (endCursorPost) {
+        const cursorField =
+          sanitizationQuery.sortBy === 'createdAt' ? 'createdAt' : 'updatedAt';
+
+        cursorCondition = {
+          [cursorField]: {
+            [sanitizationQuery.sortDirection === 'asc' ? 'gt' : 'lt']:
+              endCursorPost[cursorField],
+          },
+        };
+      }
+    }
+
+    const where = {
+      userId: { in: userIds },
+      ...cursorCondition,
+    };
+
+    const [posts, count] = await Promise.all([
+      this.txHost.tx.userPost.findMany({
+        where,
+        orderBy: {
+          [sanitizationQuery.sortBy]: sanitizationQuery.sortDirection,
+        },
+        take: sanitizationQuery.pageSize,
+        ...(endCursorPostId && { skip: 1 }),
+      }),
+      this.txHost.tx.userPost.count({ where }),
+    ]);
+
+    return {
+      posts: posts as PostEntity[],
+      count,
+    };
+  }
 }

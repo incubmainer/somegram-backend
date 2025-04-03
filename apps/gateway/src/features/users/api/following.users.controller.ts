@@ -59,18 +59,18 @@ export class FollowingUsersController {
     this.logger.setContext(FollowingUsersController.name);
   }
 
-  @Get(`${USER_ROUTE.FOLLOW_SEARCH}/:cursorUserId?`)
+  @Get(`${USER_ROUTE.FOLLOW_SEARCH}/:endCursorUserId?`)
   @SearchUsersSwagger()
   async searchUsers(
     @CurrentUserId() userId: string,
     @Query() query?: SearchQueryParametersWithoutSorting,
-    @Param('cursorUserId') cursorUserId?: string,
+    @Param('endCursorUserId') endCursorUserId?: string,
   ): Promise<ProfilePublicInfoOutputDtoModel[]> {
     this.logger.debug(`Execute: Search users:`, this.searchUsers.name);
 
     const result: AppNotificationResultType<ProfilePublicInfoOutputDtoModel[]> =
       await this.queryBus.execute(
-        new SearchProfilesQuery(userId, query, cursorUserId),
+        new SearchProfilesQuery(userId, query, endCursorUserId),
       );
 
     switch (result.appResult) {

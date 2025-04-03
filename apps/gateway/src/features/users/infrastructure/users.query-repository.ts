@@ -125,4 +125,20 @@ export class UsersQueryRepository {
       followingCount: user._count.following,
     };
   }
+
+  async getFollowingToInfo(userId: string): Promise<UserEntity[] | null> {
+    this.logger.debug(
+      `Execute: get following to: ${userId}`,
+      this.getFollowingToInfo.name,
+    );
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id: userId },
+      include: {
+        following: {
+          include: { followee: true },
+        },
+      },
+    });
+    return user.following.map((f) => new UserEntity(f.followee));
+  }
 }
