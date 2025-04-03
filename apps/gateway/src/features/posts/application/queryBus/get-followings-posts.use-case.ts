@@ -68,7 +68,9 @@ export class GetFollowingsPostsUseCase
           return postToOutputMapper(
             post,
             followingUsersInfo.find((user) => user.id === post.userId),
-            usersAvatar.find((ava) => ava.ownerId === post.userId),
+            usersAvatar
+              ? usersAvatar.find((ava) => ava.ownerId === post.userId)
+              : null,
             await this.photoServiceAdapter.getPostPhotos(post.id),
           );
         }),
