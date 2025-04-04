@@ -4,7 +4,7 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { ProfileInfoWithCountsInfosOutputDtoModel } from '../dto/output-dto/profile-info-output-dto';
+import { ProfileInfoWithFullCountsInfosOutputDtoModel } from '../dto/output-dto/profile-info-output-dto';
 
 export function ProfileInfoWithCountsInfoSwagger() {
   return applyDecorators(
@@ -16,7 +16,7 @@ export function ProfileInfoWithCountsInfoSwagger() {
     }),
     ApiOkResponse({
       description: 'Success',
-      type: ProfileInfoWithCountsInfosOutputDtoModel,
+      type: ProfileInfoWithFullCountsInfosOutputDtoModel,
     }),
   );
 }

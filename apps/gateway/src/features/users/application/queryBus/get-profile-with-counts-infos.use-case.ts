@@ -6,7 +6,7 @@ import {
 } from '@app/application-notification';
 
 import {
-  ProfileInfoWithCountsInfosOutputDtoModel,
+  ProfileInfoWithFullCountsInfosOutputDtoModel,
   userPublicProfileInfoMapper,
 } from '../../api/dto/output-dto/profile-info-output-dto';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
@@ -26,7 +26,7 @@ export class GetUserProfileWithCountsInfosUseCase
     IQueryHandler<
       GetUserProfileWithCountsInfosQuery,
       AppNotificationResultType<
-        ProfileInfoWithCountsInfosOutputDtoModel,
+        ProfileInfoWithFullCountsInfosOutputDtoModel,
         string
       >
     >
@@ -43,7 +43,10 @@ export class GetUserProfileWithCountsInfosUseCase
   async execute(
     command: GetUserProfileWithCountsInfosQuery,
   ): Promise<
-    AppNotificationResultType<ProfileInfoWithCountsInfosOutputDtoModel, string>
+    AppNotificationResultType<
+      ProfileInfoWithFullCountsInfosOutputDtoModel,
+      string
+    >
   > {
     this.logger.debug(
       'Execute: get user profile with posts count and followee/wers counts query',

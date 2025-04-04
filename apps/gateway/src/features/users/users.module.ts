@@ -23,6 +23,8 @@ import { FollowToUserUseCase } from './application/use-cases/follow-to-user.use-
 import { UnfollowToUserUseCase } from './application/use-cases/unfollow-to-user.use-case';
 import { DeleteFollowerUseCase } from './application/use-cases/delete-follower.use-case';
 import { GetUserProfileWithCountsInfosUseCase } from './application/queryBus/get-profile-with-counts-infos.use-case';
+import { GetFollowersUseCase } from './application/queryBus/get-followers.use-case';
+import { GetFollowingUseCase } from './application/queryBus/get-following.use-case';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
@@ -30,6 +32,8 @@ const queryHandlers = [
   GetTotalRegisteredUserQueryHandler,
   SearchProfilesUseCase,
   GetUserProfileWithCountsInfosUseCase,
+  GetFollowersUseCase,
+  GetFollowingUseCase,
 ];
 
 const handlers = [

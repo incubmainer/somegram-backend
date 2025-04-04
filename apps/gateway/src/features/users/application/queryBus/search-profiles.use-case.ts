@@ -7,7 +7,7 @@ import {
 import { Pagination, PaginatorService } from '@app/paginator';
 
 import {
-  ProfilePublicInfoOutputDtoModel,
+  ProfilePublicInfoWithAboutOutputDtoModel,
   userPublicProfileInfoMapper,
 } from '../../api/dto/output-dto/profile-info-output-dto';
 import { SearchQueryParametersWithoutSorting } from '../../../../common/domain/query.types';
@@ -27,7 +27,9 @@ export class SearchProfilesUseCase
   implements
     IQueryHandler<
       SearchProfilesQuery,
-      AppNotificationResultType<Pagination<ProfilePublicInfoOutputDtoModel[]>>
+      AppNotificationResultType<
+        Pagination<ProfilePublicInfoWithAboutOutputDtoModel[]>
+      >
     >
 {
   constructor(
@@ -42,7 +44,9 @@ export class SearchProfilesUseCase
   async execute(
     command: SearchProfilesQuery,
   ): Promise<
-    AppNotificationResultType<Pagination<ProfilePublicInfoOutputDtoModel[]>>
+    AppNotificationResultType<
+      Pagination<ProfilePublicInfoWithAboutOutputDtoModel[]>
+    >
   > {
     this.logger.debug(
       'Execute: search users by username command',
@@ -68,7 +72,7 @@ export class SearchProfilesUseCase
         ),
       );
 
-      const result: Pagination<ProfilePublicInfoOutputDtoModel[]> =
+      const result: Pagination<ProfilePublicInfoWithAboutOutputDtoModel[]> =
         this.paginatorService.create(
           queryString.pageNumber,
           queryString.pageSize,

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as GatewayPrismaClient } from '@prisma/gateway';
+import { PrismaClient as GatewayPrismaClient, Prisma } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
 
 import { UserEntity } from '../domain/user.entity';
@@ -40,8 +40,7 @@ export class UsersQueryRepository {
   ): Promise<{ users: UserEntity[]; count: number }> {
     this.logger.debug('Get users profiles by search', this.searchUsers.name);
 
-    const skip = queryString.pageSize * (queryString.pageNumber - 1);
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       isDeleted: false,
       isConfirmed: true,
       userBanInfo: {
@@ -62,19 +61,18 @@ export class UsersQueryRepository {
     if (cursorUserId) {
       where.id = {
         gt: cursorUserId,
+        not: userId,
       };
     }
 
     const users = await this.txHost.tx.user.findMany({
       where,
-      skip,
       take: queryString.pageSize,
+      orderBy: { id: 'asc' },
     });
 
     const count = await this.txHost.tx.user.count({
-      where: {
-        ...where,
-      },
+      where,
     });
 
     return {
@@ -94,7 +92,7 @@ export class UsersQueryRepository {
       this.findUserWithPostsCounts.name,
     );
 
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       id: userId,
       isDeleted: false,
       isConfirmed: true,
@@ -140,5 +138,96 @@ export class UsersQueryRepository {
       },
     });
     return user.following.map((f) => new UserEntity(f.followee));
+  }
+
+  public async getFollowers(
+    userId: string,
+    queryString?: SearchQueryParametersWithoutSorting,
+    cursorUserId?: string,
+  ): Promise<{ users: UserEntity[]; count: number }> {
+    const where: Prisma.UserWhereInput = {
+      following: {
+        some: {
+          followeeId: userId,
+        },
+      },
+      isDeleted: false,
+      isConfirmed: true,
+      userBanInfo: {
+        is: null,
+      },
+    };
+
+    if (queryString.search && queryString.search.trim() !== '') {
+      where.username = {
+        contains: queryString.search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (cursorUserId) {
+      where.id = {
+        gt: cursorUserId,
+      };
+    }
+
+    const [users, count] = await Promise.all([
+      this.txHost.tx.user.findMany({
+        where,
+        take: queryString.pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.txHost.tx.user.count({ where }),
+    ]);
+
+    return {
+      users: users as UserEntity[],
+      count,
+    };
+  }
+  public async getFollowing(
+    userId: string,
+    queryString?: SearchQueryParametersWithoutSorting,
+    cursorUserId?: string,
+  ): Promise<{ users: UserEntity[]; count: number }> {
+    const where: Prisma.UserWhereInput = {
+      followers: {
+        some: {
+          followerId: userId,
+        },
+      },
+      isDeleted: false,
+      isConfirmed: true,
+      userBanInfo: {
+        is: null,
+      },
+    };
+
+    if (queryString.search && queryString.search.trim() !== '') {
+      where.username = {
+        contains: queryString.search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (cursorUserId) {
+      where.id = {
+        gt: cursorUserId,
+      };
+    }
+
+    const [users, count] = await Promise.all([
+      this.txHost.tx.user.findMany({
+        where,
+        take: queryString.pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.txHost.tx.user.count({ where }),
+    ]);
+
+    return {
+      users: users as UserEntity[],
+      count,
+    };
   }
 }

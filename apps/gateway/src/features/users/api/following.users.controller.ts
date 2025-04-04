@@ -24,14 +24,16 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { Pagination } from '@app/paginator';
 
-import { USER_ROUTE } from '../../../common/constants/route.constants';
+import { FOLLOWING_USER_ROUTE } from '../../../common/constants/route.constants';
 import { CurrentUserId } from '../../../common/decorators/http-parse/current-user-id-param.decorator';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
 import { SearchProfilesQuery } from '../application/queryBus/search-profiles.use-case';
 import {
-  ProfileInfoWithCountsInfosOutputDtoModel,
-  ProfilePublicInfoOutputDtoModel,
+  FollowingProfileOutputDtoModel,
+  ProfileInfoWithFullCountsInfosOutputDtoModel,
+  ProfilePublicInfoWithAboutOutputDtoModel,
 } from './dto/output-dto/profile-info-output-dto';
 import { SearchUsersSwagger as SearchUsersSwagger } from './swagger/search-users.swagger';
 import { FollowToUserCommand } from '../application/use-cases/follow-to-user.use-case';
@@ -41,37 +43,40 @@ import { UnfollowToUserSwagger } from './swagger/unfollow-to-user.swagger';
 import { DeleteFollowerCommand } from '../application/use-cases/delete-follower.use-case';
 import { DeleteFollowerSwagger } from './swagger/delete-follower.swagger';
 import { GetUserProfileWithCountsInfosQuery } from '../application/queryBus/get-profile-with-counts-infos.use-case';
-import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { ProfileInfoWithCountsInfoSwagger } from './swagger/profile-info-with-counts-info.swagger';
+import { GetFollowersQuery } from '../application/queryBus/get-followers.use-case';
+import { GetFollowingQuery } from '../application/queryBus/get-following.use-case';
+import { GetFollowersSwagger } from './swagger/get-followers.swagger';
+import { GetFollowingSwagger } from './swagger/get-following.swagger';
 
 @ApiTags('Users-following and followers')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'))
-@Controller(USER_ROUTE.MAIN)
+@Controller(FOLLOWING_USER_ROUTE.MAIN)
 export class FollowingUsersController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly logger: LoggerService,
-    private usersQueryRepository: UsersQueryRepository,
   ) {
     this.logger.setContext(FollowingUsersController.name);
   }
 
-  @Get(`${USER_ROUTE.FOLLOW_SEARCH}/:endCursorUserId?`)
+  @Get(':endCursorUserId?')
   @SearchUsersSwagger()
   async searchUsers(
     @CurrentUserId() userId: string,
     @Query() query?: SearchQueryParametersWithoutSorting,
     @Param('endCursorUserId') endCursorUserId?: string,
-  ): Promise<ProfilePublicInfoOutputDtoModel[]> {
+  ): Promise<Pagination<ProfilePublicInfoWithAboutOutputDtoModel[]>> {
     this.logger.debug(`Execute: Search users:`, this.searchUsers.name);
 
-    const result: AppNotificationResultType<ProfilePublicInfoOutputDtoModel[]> =
-      await this.queryBus.execute(
-        new SearchProfilesQuery(userId, query, endCursorUserId),
-      );
+    const result: AppNotificationResultType<
+      Pagination<ProfilePublicInfoWithAboutOutputDtoModel[]>
+    > = await this.queryBus.execute(
+      new SearchProfilesQuery(userId, query, endCursorUserId),
+    );
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
@@ -82,7 +87,7 @@ export class FollowingUsersController {
     }
   }
 
-  @Post(`${USER_ROUTE.FOLLOW}/:followeeId`)
+  @Post(`${FOLLOWING_USER_ROUTE.FOLLOW}/:followeeId`)
   @FollowToUserSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
   async followToUser(
@@ -111,7 +116,7 @@ export class FollowingUsersController {
     }
   }
 
-  @Post(`${USER_ROUTE.UNFOLLOW}/:followeeId`)
+  @Post(`${FOLLOWING_USER_ROUTE.UNFOLLOW}/:followeeId`)
   @UnfollowToUserSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
   async unfollowToUser(
@@ -140,7 +145,7 @@ export class FollowingUsersController {
     }
   }
 
-  @Delete(`${USER_ROUTE.UNFOLLOW}/:followerId`)
+  @Delete(`${FOLLOWING_USER_ROUTE.UNFOLLOW}/:followerId`)
   @DeleteFollowerSwagger()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFollower(
@@ -172,20 +177,21 @@ export class FollowingUsersController {
     }
   }
 
-  @Get(':userId')
+  @Get(`:userId/${FOLLOWING_USER_ROUTE.PROFILE}`)
   @ProfileInfoWithCountsInfoSwagger()
   async getProfile(
     @CurrentUserId() currentUserId: string,
     @Param('userId') userId: string,
-  ): Promise<ProfileInfoWithCountsInfosOutputDtoModel> {
+  ): Promise<ProfileInfoWithFullCountsInfosOutputDtoModel> {
     this.logger.debug(
       `Execute: Get profile for user ${userId}`,
       this.getProfile.name,
     );
 
-    const result = await this.queryBus.execute(
-      new GetUserProfileWithCountsInfosQuery(currentUserId, userId),
-    );
+    const result: AppNotificationResultType<ProfileInfoWithFullCountsInfosOutputDtoModel> =
+      await this.queryBus.execute(
+        new GetUserProfileWithCountsInfosQuery(currentUserId, userId),
+      );
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
@@ -198,5 +204,55 @@ export class FollowingUsersController {
       default:
         throw new InternalServerErrorException();
     }
+  }
+
+  @Get(`${FOLLOWING_USER_ROUTE.FOLLOWERS}/:userId/:endCursorUserId?`)
+  @GetFollowersSwagger()
+  async getFollowers(
+    @Param('userId') userId: string,
+    @CurrentUserId() currentUserId: string,
+    @Query() query?: SearchQueryParametersWithoutSorting,
+    @Param('endCursorUserId') endCursorUserId?: string,
+  ): Promise<Pagination<FollowingProfileOutputDtoModel[]>> {
+    this.logger.debug(
+      `Execute: Get followers for user ${userId}`,
+      this.getFollowers.name,
+    );
+
+    const result: AppNotificationResultType<
+      Pagination<FollowingProfileOutputDtoModel[]>
+    > = await this.queryBus.execute(
+      new GetFollowersQuery(userId, currentUserId, query, endCursorUserId),
+    );
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      return result.data;
+    }
+    throw new InternalServerErrorException();
+  }
+
+  @Get(`${FOLLOWING_USER_ROUTE.FOLLOWING}/:userId/:endCursorUserId?`)
+  @GetFollowingSwagger()
+  async getFollowing(
+    @Param('userId') userId: string,
+    @CurrentUserId() currentUserId: string,
+    @Query() query?: SearchQueryParametersWithoutSorting,
+    @Param('endCursorUserId') endCursorUserId?: string,
+  ): Promise<Pagination<FollowingProfileOutputDtoModel[]>> {
+    this.logger.debug(
+      `Execute: Get following for user ${userId}`,
+      this.getFollowing.name,
+    );
+
+    const result: AppNotificationResultType<
+      Pagination<FollowingProfileOutputDtoModel[]>
+    > = await this.queryBus.execute(
+      new GetFollowingQuery(userId, currentUserId, query, endCursorUserId),
+    );
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      return result.data;
+    }
+    throw new InternalServerErrorException();
   }
 }

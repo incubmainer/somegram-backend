@@ -15,9 +15,6 @@ export const USER_ROUTE = {
   PROFILE_UPLOAD_AVATAR: 'profile-upload-avatar',
   PROFILE_FILL_INFO: 'profile-fill-info',
   PROFILE_DELETE_AVATAR: 'profile-delete-avatar',
-  FOLLOW_SEARCH: 'search',
-  FOLLOW: 'follow',
-  UNFOLLOW: 'unfollow',
 };
 
 export const USER_PUBLIC_ROUTE = {
@@ -75,4 +72,13 @@ export const AUTH_ROUTE = {
 export const FOLLOWING_POST_ROUTE = {
   POSTS: 'posts',
   MAIN: 'following',
+};
+
+export const FOLLOWING_USER_ROUTE = {
+  MAIN: 'users',
+  PROFILE: 'profile',
+  FOLLOW: 'follow',
+  UNFOLLOW: 'unfollow',
+  FOLLOWERS: 'followers',
+  FOLLOWING: 'following',
 };
