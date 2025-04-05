@@ -95,3 +95,19 @@ export class PostWithLikeInfoModel {
   myStatus?: LikeStatusEnum;
   lastLikeUser?: PostLastLikeUserInfoModel[];
 }
+
+export class PostWithLikeInfoRawModel {
+  id: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date | null;
+  description: string | null;
+  username: string;
+  myStatus: LikeStatusEnum;
+  likes: number; // total like count for post
+  lastLikedUserIds: string[]; // last 3 likes user ids
+
+  ownerAvatarUrl?: string | null;
+  postImages?: FileType[];
+  lastLikeUser?: PostLastLikeUserInfoModel[];
+}

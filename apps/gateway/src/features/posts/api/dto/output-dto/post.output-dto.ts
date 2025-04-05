@@ -2,7 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { UserEntity } from '../../../../users/domain/user.entity';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
-import { LikeStatusEnum, PostWithLikeInfoModel } from '../../../domain/types';
+import {
+  LikeStatusEnum,
+  PostWithLikeInfoModel,
+  PostWithLikeInfoRawModel,
+} from '../../../domain/types';
+import { Injectable } from '@nestjs/common';
 
 export class PostOwnerOutputDtoModel {
   @ApiProperty({
@@ -146,3 +151,30 @@ export const postToOutputMapper = (
     },
   });
 };
+
+@Injectable()
+export class PostRawOutputModelMapper {
+  mapPost(post: PostWithLikeInfoRawModel): PostOutputDto {
+    return {
+      id: post.id,
+      description: post.description ?? null,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt ? post.updatedAt.toISOString() : null,
+      images: post.postImages.map((i) => i.url),
+      postOwnerInfo: {
+        userId: post.userId,
+        username: post.username,
+        avatarUrl: post.ownerAvatarUrl ? post.ownerAvatarUrl : null,
+      },
+      like: {
+        likeCount: post.likes || 0,
+        myStatus: post.myStatus || LikeStatusEnum.none,
+        lastLikeUser: post.lastLikeUser || [],
+      },
+    };
+  }
+
+  mapPosts(posts: PostWithLikeInfoRawModel[]): PostOutputDto[] {
+    return posts.map((post) => this.mapPost(post));
+  }
+}

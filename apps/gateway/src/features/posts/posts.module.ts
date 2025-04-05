@@ -27,6 +27,7 @@ import { CommentAnswersOutputDtoMapper } from './api/dto/output-dto/comment-answ
 import { GetCommentAnswersByCommentIdUseCase } from './application/queryBus/get-comment-answers-by-comment-id.use-case';
 import { PostsLikeRepository } from './infrastructure/posts-like.repository';
 import { AddLikePostUseCase } from './application/use-cases/add-like-post.use-case';
+import { PostRawOutputModelMapper } from './api/dto/output-dto/post.output-dto';
 
 const queryHandlers = [
   GetPostUseCase,
@@ -69,6 +70,7 @@ const postFileFactoryProvider = {
     PostsLikeCommentRepository,
     CommentAnswersOutputDtoMapper,
     PostsLikeRepository,
+    PostRawOutputModelMapper,
   ],
   exports: [],
 })

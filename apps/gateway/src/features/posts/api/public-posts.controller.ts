@@ -42,17 +42,23 @@ export class PublicPostsController {
     this.logger.setContext(PublicPostsController.name);
   }
 
+  @UseGuards(RefreshJWTVerifyUserGuard)
   @Get(`${POST_PUBLIC_ROUTE.ALL}/:endCursorPostId?`)
   @GetPublicPostsSwagger()
   @HttpCode(HttpStatus.OK)
   async getPublicPosts(
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
     @Query() query?: SearchQueryParametersType,
     @Param('endCursorPostId') endCursorPostId?: string,
   ): Promise<Pagination<PostOutputDto[]>> {
     this.logger.debug('Execute: get posts', this.getPublicPosts.name);
     const result: AppNotificationResultType<Pagination<PostOutputDto[]>> =
       await this.queryBus.execute(
-        new GetPublicPostsByUserQuery(query, endCursorPostId),
+        new GetPublicPostsByUserQuery(
+          user?.userId || null,
+          query,
+          endCursorPostId,
+        ),
       );
 
     switch (result.appResult) {
