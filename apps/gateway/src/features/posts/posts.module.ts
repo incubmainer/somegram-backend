@@ -26,7 +26,7 @@ import { PostsLikeCommentRepository } from './infrastructure/posts-like-comment.
 import { CommentAnswersOutputDtoMapper } from './api/dto/output-dto/comment-answers.output-dto';
 import { GetCommentAnswersByCommentIdUseCase } from './application/queryBus/get-comment-answers-by-comment-id.use-case';
 import { PostsLikeRepository } from './infrastructure/posts-like.repository';
-import { AddLikeDislikePostUseCase } from './application/use-cases/add-like-dislike-post.use-case';
+import { AddLikePostUseCase } from './application/use-cases/add-like-post.use-case';
 
 const queryHandlers = [
   GetPostUseCase,
@@ -45,7 +45,7 @@ const handlers = [
   AddPostCommentUseCase,
   AddAnswerForCommentUseCase,
   AddLikeDislikeCommentUseCase,
-  AddLikeDislikePostUseCase,
+  AddLikePostUseCase,
 ];
 
 const postFileFactoryProvider = {

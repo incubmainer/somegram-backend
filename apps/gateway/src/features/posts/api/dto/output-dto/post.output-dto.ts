@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { UserEntity } from '../../../../users/domain/user.entity';
-import { PostEntity } from '../../../domain/post.entity';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
+import { LikeStatusEnum, PostWithLikeInfoModel } from '../../../domain/types';
 
 export class PostOwnerOutputDtoModel {
   @ApiProperty({
@@ -24,6 +24,26 @@ export class PostOwnerOutputDtoModel {
   })
   avatarUrl: string | null;
 }
+
+class PostLastLikeOutputDtoModel {
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty({ nullable: true })
+  avatarUrl: string | null;
+}
+
+class PostLikeOutputDtoModel {
+  @ApiProperty()
+  likeCount: number;
+
+  @ApiProperty({ enum: [LikeStatusEnum.like, LikeStatusEnum.none] })
+  myStatus: LikeStatusEnum;
+
+  @ApiProperty({ type: PostLastLikeOutputDtoModel, isArray: true })
+  lastLikeUser: PostLastLikeOutputDtoModel[];
+}
+
 export class PostOutputDtoModel {
   @ApiProperty({
     description: 'Post id',
@@ -64,6 +84,9 @@ export class PostOutputDtoModel {
     type: PostOwnerOutputDtoModel,
   })
   postOwnerInfo: PostOwnerOutputDtoModel;
+
+  @ApiProperty({ type: PostLikeOutputDtoModel })
+  like: PostLikeOutputDtoModel;
 }
 
 export class PostOutputDtoWithPaginationModel extends Pagination<PostOutputDtoModel> {
@@ -85,6 +108,14 @@ export class PostOutputDto {
     username: string;
     avatarUrl: string | null;
   };
+  like: {
+    likeCount: number;
+    myStatus: LikeStatusEnum;
+    lastLikeUser: {
+      userId: string;
+      avatarUrl: string | null;
+    }[];
+  };
 
   constructor(init: Partial<PostOutputDto>) {
     Object.assign(this, init);
@@ -92,7 +123,7 @@ export class PostOutputDto {
 }
 
 export const postToOutputMapper = (
-  post: PostEntity,
+  post: PostWithLikeInfoModel,
   user: UserEntity,
   avatar: FileType | null,
   images: FileType[],
@@ -107,6 +138,11 @@ export const postToOutputMapper = (
       userId: user.id,
       username: user.username,
       avatarUrl: avatar ? avatar.url : null,
+    },
+    like: {
+      likeCount: post._count?.LikesPost || 0,
+      myStatus: post.myStatus || LikeStatusEnum.none,
+      lastLikeUser: post.lastLikeUser || [],
     },
   });
 };

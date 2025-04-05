@@ -6,6 +6,7 @@ import { SearchQueryParametersType } from '../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../common/utils/query-params.sanitizator';
 import { PostEntity } from '../domain/post.entity';
 import { LoggerService } from '@app/logger';
+import { LikeStatusEnum, PostWithLikeInfoModel } from '../domain/types';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -18,18 +19,83 @@ export class PostsQueryRepository {
     this.logger.setContext(PostsQueryRepository.name);
   }
 
-  public async getPostById(postId: string): Promise<PostEntity | null> {
+  public async getPostById(
+    postId: string,
+    userId: string | null,
+  ): Promise<PostWithLikeInfoModel | null> {
     this.logger.debug(
       `Execute: get post by id: ${postId}`,
       this.getPostById.name,
     );
-    const post = await this.txHost.tx.userPost.findFirst({
-      where: {
-        id: postId,
-      },
-    });
 
-    return post ? new PostEntity(post) : null;
+    const post: PostWithLikeInfoModel =
+      await this.txHost.tx.userPost.findUnique({
+        where: {
+          id: postId,
+          User: {
+            userBanInfo: {
+              is: null,
+            },
+          },
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          description: true,
+          userId: true,
+          User: {
+            select: {
+              username: true,
+            },
+          },
+          LikesPost: {
+            where: {
+              status: LikeStatusEnum.like,
+              User: {
+                userBanInfo: {
+                  is: null,
+                },
+              },
+            },
+            select: {
+              userId: true,
+            },
+            orderBy: {
+              updatedAt: 'desc',
+            },
+            take: 3,
+          },
+          _count: {
+            select: {
+              LikesPost: {
+                where: {
+                  status: LikeStatusEnum.like,
+                  User: {
+                    userBanInfo: {
+                      is: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+    let myStatusLike: LikeStatusEnum = LikeStatusEnum.none;
+    if (userId) {
+      const myLike = await this.txHost.tx.likesPost.findFirst({
+        where: {
+          postId,
+          userId,
+        },
+      });
+      myStatusLike = (myLike?.status as LikeStatusEnum) || LikeStatusEnum.none;
+    }
+
+    post ? (post.myStatus = myStatusLike) : null;
+    return post;
   }
 
   public async getPostsByUser(

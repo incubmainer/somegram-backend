@@ -4,24 +4,22 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { AddLikeDislikePostDto } from '../../api/dto/input-dto/add-like-dislike-post.dto';
 import { CreatePostLikeDto, LikeStatusEnum } from '../../domain/types';
 import { LikePostEntity } from '../../domain/like.entity';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { PostsLikeRepository } from '../../infrastructure/posts-like.repository';
 
-export class AddLikeDislikePostCommand {
+export class AddLikePostCommand {
   constructor(
     public userId: string,
     public postId: string,
-    public inputModel: AddLikeDislikePostDto,
   ) {}
 }
 
-@CommandHandler(AddLikeDislikePostCommand)
-export class AddLikeDislikePostUseCase
+@CommandHandler(AddLikePostCommand)
+export class AddLikePostUseCase
   implements
-    ICommandHandler<AddLikeDislikePostCommand, AppNotificationResultType<null>>
+    ICommandHandler<AddLikePostCommand, AppNotificationResultType<null>>
 {
   constructor(
     private readonly logger: LoggerService,
@@ -29,17 +27,16 @@ export class AddLikeDislikePostUseCase
     private readonly postsRepository: PostsRepository,
     private readonly postsLikeRepository: PostsLikeRepository,
   ) {
-    this.logger.setContext(AddLikeDislikePostUseCase.name);
+    this.logger.setContext(AddLikePostUseCase.name);
   }
   async execute(
-    command: AddLikeDislikePostCommand,
+    command: AddLikePostCommand,
   ): Promise<AppNotificationResultType<null>> {
     this.logger.debug(
-      'Execute: add like/dislike for post command',
+      'Execute: add like/unlike for post command',
       this.execute.name,
     );
-    const { userId, postId, inputModel } = command;
-    const { status } = inputModel;
+    const { userId, postId } = command;
     try {
       const [post, userLike] = await Promise.all([
         this.postsRepository.getPostById(postId),
@@ -49,9 +46,9 @@ export class AddLikeDislikePostUseCase
       if (!post) return this.appNotification.notFound();
 
       if (!userLike) {
-        await this.createNewLike(postId, userId, status);
+        await this.createNewLike(postId, userId);
       } else {
-        await this.updateCurrentLike(userLike, status);
+        await this.updateCurrentLike(userLike);
       }
 
       return this.appNotification.success(null);
@@ -61,11 +58,7 @@ export class AddLikeDislikePostUseCase
     }
   }
 
-  private async createNewLike(
-    postId: string,
-    userId: string,
-    status: LikeStatusEnum,
-  ): Promise<void> {
+  private async createNewLike(postId: string, userId: string): Promise<void> {
     const currentDate = new Date();
 
     const createdCommentDto: CreatePostLikeDto = {
@@ -73,17 +66,20 @@ export class AddLikeDislikePostUseCase
       updatedAt: currentDate,
       postId: postId,
       userId: userId,
-      status: status,
+      status: LikeStatusEnum.like,
     };
 
     await this.postsLikeRepository.addLike(createdCommentDto);
   }
 
-  private async updateCurrentLike(
-    like: LikePostEntity,
-    status: LikeStatusEnum,
-  ): Promise<void> {
-    if (like.status === status) return;
+  private async updateCurrentLike(like: LikePostEntity): Promise<void> {
+    let status: LikeStatusEnum;
+
+    if (like.status === LikeStatusEnum.like) {
+      status = LikeStatusEnum.none;
+    } else {
+      status = LikeStatusEnum.like;
+    }
 
     like.updateLike(status);
 

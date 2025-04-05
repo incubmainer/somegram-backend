@@ -47,9 +47,8 @@ import { Pagination } from '@app/paginator';
 import { LoggerService } from '@app/logger';
 import { POST_ROUTE } from '../../../common/constants/route.constants';
 import { filesValidationPipe } from '../../../common/pipe/validation/validation-file.pipe';
-import { AddLikeDislikePostCommand } from '../application/use-cases/add-like-dislike-post.use-case';
-import { AddLikeDislikePostDto } from './dto/input-dto/add-like-dislike-post.dto';
 import { AddLikeDislikeForPostSwagger } from './swagger/add-like-dislike-for-post.swagger';
+import { AddLikePostCommand } from '../application/use-cases/add-like-post.use-case';
 
 @ApiTags('Posts')
 @Controller(POST_ROUTE.MAIN)
@@ -88,7 +87,7 @@ export class PostsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         const post: AppNotificationResultType<PostOutputDto> =
-          await this.queryBus.execute(new GetPostQuery(result.data));
+          await this.queryBus.execute(new GetPostQuery(result.data, userId));
         this.logger.debug('Success', this.addPost.name);
         return post.data;
       case AppNotificationResultEnum.NotFound:
@@ -193,13 +192,10 @@ export class PostsController {
   async likePost(
     @CurrentUserId() userId: string,
     @Param('postId') postId: string,
-    @Body() body: AddLikeDislikePostDto,
   ): Promise<void> {
-    this.logger.debug('Execute: add like/dislike for', this.likePost.name);
+    this.logger.debug('Execute: add like/unlike for post', this.likePost.name);
     const result: AppNotificationResultType<null> =
-      await this.commandBus.execute(
-        new AddLikeDislikePostCommand(userId, postId, body),
-      );
+      await this.commandBus.execute(new AddLikePostCommand(userId, postId));
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:

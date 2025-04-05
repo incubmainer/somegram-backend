@@ -13,7 +13,10 @@ import {
 } from '@app/application-notification';
 
 export class GetPostQuery {
-  constructor(public postId: string) {}
+  constructor(
+    public postId: string,
+    public userId: string | null,
+  ) {}
 }
 
 @QueryHandler(GetPostQuery)
@@ -34,10 +37,10 @@ export class GetPostUseCase
     command: GetPostQuery,
   ): Promise<AppNotificationResultType<PostOutputDto>> {
     this.logger.debug('Execute: get post by id command', this.execute.name);
-    const { postId } = command;
+    const { postId, userId } = command;
 
     try {
-      const post = await this.postsQueryRepository.getPostById(postId);
+      const post = await this.postsQueryRepository.getPostById(postId, userId);
       if (!post) return this.appNotification.notFound();
 
       const [postOwner, ownerAvatarUrl, postPhotos] = await Promise.all([
@@ -45,6 +48,20 @@ export class GetPostUseCase
         this.photoServiceAdapter.getAvatar(post.userId),
         this.photoServiceAdapter.getPostPhotos(post.id),
       ]);
+
+      if (post.LikesPost.length > 0) {
+        post.lastLikeUser = [];
+        const promises = post.LikesPost.map(async (u) => {
+          const avatar = await this.photoServiceAdapter.getAvatar(u.userId);
+
+          post.lastLikeUser.push({
+            userId: u.userId,
+            avatarUrl: avatar?.url || null,
+          });
+        });
+
+        await Promise.all(promises);
+      }
 
       const result: PostOutputDto = postToOutputMapper(
         post,

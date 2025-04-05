@@ -6,13 +6,13 @@ import {
 import { LoggerService } from '@app/logger';
 import { Pagination, PaginatorService } from '@app/paginator';
 import { PostsCommentQueryRepository } from '../../infrastructure/posts-comment.query-repository';
-import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
 import {
   CommentPostOutputDto,
   CommentPostOutputDtoMapper,
 } from '../../api/dto/output-dto/comment-post.output-dto';
 import { GetCommentsForPostQueryDto } from '../../api/dto/input-dto/get-comments-for-post.query.dto';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
+import { PostsRepository } from '../../infrastructure/posts.repository';
 
 export class GetPostCommentsByPostIdQuery {
   constructor(
@@ -35,7 +35,7 @@ export class GetPostCommentsByPostIdUseCase
     private readonly paginatorService: PaginatorService,
     private readonly appNotification: ApplicationNotification,
     private readonly postsCommentQueryRepository: PostsCommentQueryRepository,
-    private readonly postsQueryRepository: PostsQueryRepository,
+    private readonly postsRepository: PostsRepository,
     private readonly commentPostOutputDtoMapper: CommentPostOutputDtoMapper,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
   ) {
@@ -53,7 +53,7 @@ export class GetPostCommentsByPostIdUseCase
     try {
       const skip = (pageNumber - 1) * pageSize;
 
-      const post = await this.postsQueryRepository.getPostById(postId);
+      const post = await this.postsRepository.getPostById(postId);
 
       if (!post) return this.appNotification.notFound();
 

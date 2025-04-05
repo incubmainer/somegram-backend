@@ -63,3 +63,35 @@ export class CreatePostLikeDto {
   updatedAt: Date;
   postId: string;
 }
+
+class PostWithLikeInfoUserModel {
+  username: string;
+}
+
+class PostWithLikeInfoLastLikeModel {
+  userId: string;
+}
+
+class PostWithLikeInfoLastLikeCountModel {
+  LikesPost: number;
+}
+
+class PostLastLikeUserInfoModel {
+  userId: string;
+  avatarUrl: string | null;
+}
+
+export class PostWithLikeInfoModel {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date | null;
+  description: string | null;
+  userId: string;
+  User: PostWithLikeInfoUserModel; // post owner
+  LikesPost: PostWithLikeInfoLastLikeModel[]; // last 3 likes user ids
+  _count: PostWithLikeInfoLastLikeCountModel; // total like count for post
+
+  ownerAvatarUrl?: string | null;
+  myStatus?: LikeStatusEnum;
+  lastLikeUser?: PostLastLikeUserInfoModel[];
+}

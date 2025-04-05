@@ -11,7 +11,7 @@ import { UnprocessableExceptionDto } from '@app/base-types-enum';
 
 export function AddLikeDislikeForPostSwagger() {
   return applyDecorators(
-    ApiOperation({ summary: 'Add like/dislike for post' }),
+    ApiOperation({ summary: 'Add like/unlike for post' }),
     ApiBearerAuth('access-token'),
     ApiNoContentResponse({
       description: 'Success',

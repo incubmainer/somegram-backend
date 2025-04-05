@@ -64,14 +64,20 @@ export class PublicPostsController {
     }
   }
 
+  @UseGuards(RefreshJWTVerifyUserGuard)
   @Get(':postId')
   @GetPublicPostSwagger()
   @HttpCode(HttpStatus.OK)
-  async getPublicPost(@Param('postId') postId: string): Promise<PostOutputDto> {
+  async getPublicPost(
+    @Param('postId') postId: string,
+    @CurrentUser() user: JWTRefreshTokenPayloadType,
+  ): Promise<PostOutputDto> {
     this.logger.debug('Execute: get post by id', this.getPublicPost.name);
 
     const result: AppNotificationResultType<PostOutputDto> =
-      await this.queryBus.execute(new GetPostQuery(postId));
+      await this.queryBus.execute(
+        new GetPostQuery(postId, user?.userId || null),
+      );
 
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
