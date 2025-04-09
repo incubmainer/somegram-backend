@@ -35,6 +35,9 @@ export class CommentPostOutputDto {
   @ApiProperty()
   createdAt: Date;
 
+  @ApiProperty()
+  answersCount: number;
+
   @ApiProperty({ type: CommentPostUserOutputDto })
   user: CommentPostUserOutputDto;
 
@@ -56,6 +59,7 @@ export class CommentPostOutputDtoMapper {
     return {
       id: comment.id,
       body: comment.text,
+      answersCount: comment.answersCount || 0,
       like: {
         likesCount: comment.likes || 0,
         dislikeCount: comment.dislikes || 0,

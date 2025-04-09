@@ -110,6 +110,36 @@ type PostLikeModel {
   lastLike: [PostLastLikeModel!]!
 }
 
+type CommentModel {
+  id: String!
+  text: String!
+  answerForCommentId: String
+  answersCount: Float!
+  createdAt: DateTime!
+  commentOwnerInfo: CommentOwnerModel!
+  likeInfo: CommentLikeModel!
+}
+
+type PaginatedCommentModel {
+  totalCount: Int!
+  pageNumber: Int!
+  pagesCount: Int!
+  pageSize: Int!
+  items: [CommentModel!]!
+}
+
+type CommentOwnerModel {
+  id: String!
+  username: String!
+  profileUrl: String
+  getAvatar: FileModel
+}
+
+type CommentLikeModel {
+  like: Float!
+  dislike: Float!
+}
+
 type Query {
   loginSa: String!
   getUser(id: String!): UserModel
@@ -117,6 +147,8 @@ type Query {
   getPaymentsByUser(queryString: PaymentsQueryStringInput!, userId: String!): PaginatedPaymentsModel!
   getAllPayments(queryString: PaymentsQueryStringInputWithSearch): PaginatedPaymentsModel!
   getPosts(queryString: PostsQueryStringInput): PaginatedPostsModel!
+  getCommentsForPost(queryString: CommentsQueryStringInput, postId: String!): PaginatedCommentModel!
+  getAnswersForComment(queryString: CommentsQueryStringInput, commentId: String!): PaginatedCommentModel!
 }
 
 input UsersQueryStringInput {
@@ -159,6 +191,13 @@ input PostsQueryStringInput {
   pageSize: Int! = 8
   sortDirection: SortDirection! = ASC
   searchByUsername: String
+  sortBy: String! = "createdAt"
+}
+
+input CommentsQueryStringInput {
+  pageNumber: Int! = 1
+  pageSize: Int! = 8
+  sortDirection: SortDirection! = ASC
   sortBy: String! = "createdAt"
 }
 

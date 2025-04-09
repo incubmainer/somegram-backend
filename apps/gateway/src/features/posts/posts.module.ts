@@ -28,6 +28,9 @@ import { GetCommentAnswersByCommentIdUseCase } from './application/queryBus/get-
 import { PostsLikeRepository } from './infrastructure/posts-like.repository';
 import { AddLikePostUseCase } from './application/use-cases/add-like-post.use-case';
 import { PostRawOutputModelMapper } from './api/dto/output-dto/post.output-dto';
+import { GetAdminPostCommentsUseCase } from './application/queryBus/graphql/get-admin-post-comments.use-case';
+import { PostsCommentGraphqlQueryRepository } from './infrastructure/posts-comment-graphql.query-repository';
+import { GetAdminPostCommentAnswersUseCase } from './application/queryBus/graphql/get-admin-post-comment-answers.use-case';
 
 const queryHandlers = [
   GetPostUseCase,
@@ -37,6 +40,8 @@ const queryHandlers = [
   GetAdminPostsByIdUseCase,
   GetPostCommentsByPostIdUseCase,
   GetCommentAnswersByCommentIdUseCase,
+  GetAdminPostCommentsUseCase,
+  GetAdminPostCommentAnswersUseCase,
 ];
 
 const handlers = [
@@ -71,6 +76,7 @@ const postFileFactoryProvider = {
     CommentAnswersOutputDtoMapper,
     PostsLikeRepository,
     PostRawOutputModelMapper,
+    PostsCommentGraphqlQueryRepository,
   ],
   exports: [],
 })

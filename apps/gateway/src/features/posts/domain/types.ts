@@ -121,3 +121,20 @@ export class PostWithLikeInfoRawModel {
   postImages?: FileType[];
   lastLikeUser?: PostLastLikeUserInfoModel[];
 }
+
+export class AdminPostCommentRawModel {
+  id: string;
+  text: string;
+  commentatorId: string;
+  postId: string;
+  createdAt: Date;
+  username: string;
+  likes: number;
+  dislikes: number;
+  answersCount: number;
+  avatar: FileType | null;
+}
+
+export class AdminCommentAnswerRawModel extends AdminPostCommentRawModel {
+  answerForCommentId: string;
+}

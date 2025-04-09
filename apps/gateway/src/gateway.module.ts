@@ -37,7 +37,10 @@ import {
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from './settings/configuration/configuration';
-import { CommentsResolver } from './features/resolvers/comments/comments.resolver';
+import {
+  CommentOwnerResolver,
+  CommentsResolver,
+} from './features/resolvers/comments/comments.resolver';
 
 const resolvers = [
   AuthResolver,
@@ -45,6 +48,7 @@ const resolvers = [
   PaymentsResolver,
   PostsResolver,
   PostOwnerResolver,
+  CommentOwnerResolver,
   CommentsResolver,
   PostLastLikeResolver,
 ];
