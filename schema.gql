@@ -102,6 +102,7 @@ type PostOwnerModel {
 
 type PostLastLikeModel {
   userId: String!
+  profileUrl: String
   getAvatar: FileModel
 }
 

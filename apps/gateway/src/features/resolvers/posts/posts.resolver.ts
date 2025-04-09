@@ -126,7 +126,18 @@ export class PostOwnerResolver {
 
 @Resolver(() => PostLastLikeModel)
 export class PostLastLikeResolver {
-  constructor(private readonly userImagesLoader: UserAvatarsLoader) {}
+  constructor(
+    private readonly userImagesLoader: UserAvatarsLoader,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {}
+
+  @ResolveField(() => String, { nullable: true })
+  profileUrl(@Parent() lastLike: PostLastLikeModel): string {
+    const frontProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
+    return `${frontProvider}/public-user/profile/${lastLike.userId}`;
+  }
 
   @ResolveField(() => FileModel, { nullable: true })
   async getAvatar(@Parent() lastLike: PostLastLikeModel): Promise<FileModel> {
