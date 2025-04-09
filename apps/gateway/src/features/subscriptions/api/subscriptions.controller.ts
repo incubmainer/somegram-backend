@@ -44,7 +44,7 @@ import {
   SubscriptionInfoOutputDto,
 } from './dto/output-dto/subscriptions.output-dto';
 import { SubscriptionInfoSwagger } from './swagger/subscription-info.swagger';
-import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { SearchQueryParameters } from '../../../common/domain/query.types';
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
@@ -100,7 +100,7 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   async geyPayments(
     @CurrentUserId() userId: string,
-    @Query() queryString?: SearchQueryParametersType,
+    @Query() queryString?: SearchQueryParameters,
   ): Promise<Pagination<MyPaymentsOutputDto[]>> {
     this.logger.debug(
       'Execute: Current user payments info',
@@ -253,7 +253,7 @@ export class SubscriptionsController {
   @UseGuards(JwtAuthGuard)
   async testingGetPayments(
     @CurrentUserId() userId: string,
-    @Query() queryString?: SearchQueryParametersType,
+    @Query() queryString?: SearchQueryParameters,
   ): Promise<Pagination<MyPaymentsOutputDto[]>> {
     this.logger.debug(
       `Execute: get payments (Testing)`,

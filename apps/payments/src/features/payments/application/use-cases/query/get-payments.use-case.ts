@@ -9,7 +9,7 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../../../gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
 import { LoggerService } from '@app/logger';
 import { Pagination, PaginatorService } from '@app/paginator';
@@ -17,7 +17,7 @@ import { Pagination, PaginatorService } from '@app/paginator';
 export class GetPaymentsQuery {
   constructor(
     public userId: string,
-    public queryString?: SearchQueryParametersType,
+    public queryString?: SearchQueryParameters,
   ) {}
 }
 

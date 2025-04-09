@@ -31,6 +31,8 @@ import { PostRawOutputModelMapper } from './api/dto/output-dto/post.output-dto';
 import { GetAdminPostCommentsUseCase } from './application/queryBus/graphql/get-admin-post-comments.use-case';
 import { PostsCommentGraphqlQueryRepository } from './infrastructure/posts-comment-graphql.query-repository';
 import { GetAdminPostCommentAnswersUseCase } from './application/queryBus/graphql/get-admin-post-comment-answers.use-case';
+import { GetFollowingsPostsUseCase } from './application/queryBus/get-followings-posts.use-case';
+import { FollowingPostsController } from './api/following.posts.controller';
 
 const queryHandlers = [
   GetPostUseCase,
@@ -42,6 +44,7 @@ const queryHandlers = [
   GetCommentAnswersByCommentIdUseCase,
   GetAdminPostCommentsUseCase,
   GetAdminPostCommentAnswersUseCase,
+  GetFollowingsPostsUseCase,
 ];
 
 const handlers = [
@@ -61,7 +64,7 @@ const postFileFactoryProvider = {
 
 @Module({
   imports: [UsersModule],
-  controllers: [PostsController, PublicPostsController, PostCommentController],
+  controllers: [PostsController, PublicPostsController, PostCommentController, FollowingPostsController],
   providers: [
     ...queryHandlers,
     ...handlers,

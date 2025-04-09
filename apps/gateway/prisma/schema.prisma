@@ -36,6 +36,10 @@ model User {
   PostComment          PostComment[]
   LikesComment         LikesComment[]
   LikesPost            LikesPost[]
+  // Подписчики (кто подписан на этого пользователя)
+  followers            UserFollow[] @relation("UserFollowAsFollowee")
+  // Подписки (на кого подписан этот пользователь)
+  following            UserFollow[] @relation("UserFollowAsFollower")
 
   @@index([username])
   @@index([email])
@@ -174,4 +178,16 @@ model LikesPost {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime
   updatedAt DateTime
+}
+
+model UserFollow {
+  id          String   @id @default(uuid())
+  follower    User     @relation("UserFollowAsFollower", fields: [followerId], references: [id])
+  followerId  String
+  followee    User     @relation("UserFollowAsFollowee", fields: [followeeId], references: [id])
+  followeeId  String
+  createdAt   DateTime
+
+  @@unique([followerId, followeeId], name: "unique_follow")
+  @@index([followeeId, followerId])
 }

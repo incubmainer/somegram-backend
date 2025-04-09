@@ -76,3 +76,17 @@ export const POST_COMMENT_ROUTE = {
   ANSWER_FOR_COMMENT: 'answer-comment',
   LIKE: 'like',
 };
+
+export const FOLLOWING_POST_ROUTE = {
+  POSTS: 'posts',
+  MAIN: 'following',
+};
+
+export const FOLLOWING_USER_ROUTE = {
+  MAIN: 'users',
+  PROFILE: 'profile',
+  FOLLOW: 'follow',
+  UNFOLLOW: 'unfollow',
+  FOLLOWERS: 'followers',
+  FOLLOWING: 'following',
+};
