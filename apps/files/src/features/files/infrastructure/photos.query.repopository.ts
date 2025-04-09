@@ -31,4 +31,10 @@ export class PhotosQueryRepository {
   ): Promise<PostPhoto[] | null> {
     return this.postPhotoModel.find({ ownerId: { $in: ownerIds } });
   }
+
+  async getPostsPhotosByPostsIds(
+    postsIds: string[],
+  ): Promise<PostPhoto[] | null> {
+    return this.postPhotoModel.find({ postId: { $in: postsIds } });
+  }
 }

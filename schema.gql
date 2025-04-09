@@ -75,13 +75,37 @@ type PaginatedPaymentsModel {
   items: [PaymentsModel!]!
 }
 
+type PostModel {
+  id: String!
+  description: String
+  createdAt: DateTime!
+  updatedAt: DateTime
+  postOwnerInfo: PostOwnerModel!
+  getPostsPhotos: [FileModel!]
+}
+
+type PaginatedPostsModel {
+  totalCount: Int!
+  pageNumber: Int!
+  pagesCount: Int!
+  pageSize: Int!
+  items: [PostModel!]!
+}
+
+type PostOwnerModel {
+  userId: String!
+  username: String!
+  profileUrl: String
+  getAvatar: FileModel
+}
+
 type Query {
-  sayHello: String!
   loginSa: String!
   getUser(id: String!): UserModel
   getUsers(queryString: UsersQueryStringInput): PaginatedUserModel!
   getPaymentsByUser(queryString: PaymentsQueryStringInput!, userId: String!): PaginatedPaymentsModel!
   getAllPayments(queryString: PaymentsQueryStringInputWithSearch): PaginatedPaymentsModel!
+  getPosts(queryString: PostsQueryStringInput): PaginatedPostsModel!
 }
 
 input UsersQueryStringInput {
@@ -119,6 +143,14 @@ input PaymentsQueryStringInputWithSearch {
   search: String
 }
 
+input PostsQueryStringInput {
+  pageNumber: Int! = 1
+  pageSize: Int! = 8
+  sortDirection: SortDirection! = ASC
+  searchByUsername: String
+  sortBy: String! = "createdAt"
+}
+
 type Mutation {
   authorizeSuperAdmin(loginInput: LoginInput!): String!
   deleteUser(userId: String!): Boolean!
@@ -134,4 +166,8 @@ input LoginInput {
 input BanUserInput {
   banReason: String!
   userId: String!
+}
+
+type Subscription {
+  newPost: PostModel!
 }

@@ -15,8 +15,6 @@ import { SubscriptionsModule } from './features/subscriptions/subscriptions.modu
 import { NotificationModule } from './features/notification/notification.module';
 import { PaginatorModule } from '@app/paginator';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { GatewayResolver } from './gateway.resolver';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserAvatarsLoader } from './common/data-loaders/user-avatars-loader';
 import { PaymentsLoader } from './common/data-loaders/payments-loader';
@@ -26,12 +24,25 @@ import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
 import { UsersResolver } from './features/resolvers/users/users.resolver';
 import { PaymentsResolver } from './features/resolvers/payments/payments.resolver';
 import { AuthResolver } from './features/resolvers/auth/auth.resolver';
+import {
+  PostOwnerResolver,
+  PostsResolver,
+} from './features/resolvers/posts/posts.resolver';
+import { PostsPhotosLoaderByPost } from './common/data-loaders/posts-photos-loader-by-post';
+import {
+  IWsBasicGqlParams,
+  WsBasicGqlGuard,
+} from './common/guards/graphql/ws-basic-gql.guard';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from './settings/configuration/configuration';
 
 const resolvers = [
-  GatewayResolver,
   AuthResolver,
   UsersResolver,
   PaymentsResolver,
+  PostsResolver,
+  PostOwnerResolver,
 ];
 
 const loaders = [
@@ -39,7 +50,32 @@ const loaders = [
   UserLoader,
   PostsPhotosLoader,
   PaymentsLoader,
+  PostsPhotosLoaderByPost,
 ];
+
+const gqlModule = GraphQLModule.forRootAsync<ApolloDriverConfig>({
+  driver: ApolloDriver,
+  useFactory: async (
+    wsBasicGqlGuard: WsBasicGqlGuard,
+    configService: ConfigService<ConfigurationType, true>,
+  ): Promise<ApolloDriverConfig> => {
+    const env = configService.get('envSettings', { infer: true });
+    return {
+      installSubscriptionHandlers: true,
+      autoSchemaFile: 'schema.gql',
+      path: '/api/v1/graphql',
+      playground: !env.isProductionState(),
+      subscriptions: {
+        'subscriptions-transport-ws': {
+          onConnect: async (connectionParams: IWsBasicGqlParams) => {
+            return wsBasicGqlGuard.auth(connectionParams);
+          },
+        },
+      },
+    };
+  },
+  inject: [WsBasicGqlGuard, ConfigService],
+});
 
 @Module({
   imports: [
@@ -54,13 +90,7 @@ const loaders = [
     LoggerModule.forRoot('Gateway'),
     NotificationModule,
     PaginatorModule,
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      installSubscriptionHandlers: true,
-      autoSchemaFile: 'schema.gql',
-      path: '/api/v1/graphql',
-      playground: true,
-    }),
+    gqlModule,
   ],
   controllers: [],
   providers: [

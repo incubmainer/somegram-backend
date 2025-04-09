@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, Observable, timeout } from 'rxjs';
-import { ConfigService } from '@nestjs/config';
 import {
   DELETE_AVATAR,
   DELETE_POST_PHOTOS,
   GET_POST_PHOTOS,
   GET_POSTS_PHOTOS,
+  GET_POSTS_PHOTOS_BY_POST_ID,
   GET_USER_AVATAR,
   GET_USERS_AVATAR,
   UPLOAD_AVATAR,
@@ -23,13 +23,24 @@ import { FileType } from '../../../../../libs/common/enums/file-type.enum';
 export class PhotoServiceAdapter {
   constructor(
     @Inject('PHOTO_SERVICE') private readonly fileServiceClient: ClientProxy,
-    private readonly configService: ConfigService,
   ) {}
 
   async getPostPhotos(postId: string): Promise<FileType[]> {
     try {
       const responseOfService: Observable<FileType[]> = this.fileServiceClient
         .send({ cmd: GET_POST_PHOTOS }, { postId })
+        .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPostsPhotos(postIds: string[]): Promise<FileType[]> {
+    try {
+      const responseOfService: Observable<FileType[]> = this.fileServiceClient
+        .send({ cmd: GET_POSTS_PHOTOS_BY_POST_ID }, { postIds })
         .pipe(timeout(10000));
 
       return await firstValueFrom(responseOfService);
