@@ -82,6 +82,7 @@ type PostModel {
   updatedAt: DateTime
   postOwnerInfo: PostOwnerModel!
   getPostsPhotos: [FileModel!]
+  likeInfo: PostLikeModel!
 }
 
 type PaginatedPostsModel {
@@ -97,6 +98,16 @@ type PostOwnerModel {
   username: String!
   profileUrl: String
   getAvatar: FileModel
+}
+
+type PostLastLikeModel {
+  userId: String!
+  getAvatar: FileModel
+}
+
+type PostLikeModel {
+  like: Float!
+  lastLike: [PostLastLikeModel!]!
 }
 
 type Query {

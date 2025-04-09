@@ -42,12 +42,8 @@ export class GetAdminPostsByUserUseCase
       const { posts, count } =
         await this.postsQueryRepository.getAllPostsWithOwnerInfo(queryString);
 
-      const result: any = this.paginatorService.create(
-        pageNumber,
-        pageSize,
-        count,
-        posts,
-      );
+      const result: Pagination<UserPostWithOwnerInfo[]> =
+        this.paginatorService.create(pageNumber, pageSize, count, posts);
 
       return this.appNotification.success(result);
     } catch (e) {

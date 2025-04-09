@@ -25,6 +25,7 @@ import { UsersResolver } from './features/resolvers/users/users.resolver';
 import { PaymentsResolver } from './features/resolvers/payments/payments.resolver';
 import { AuthResolver } from './features/resolvers/auth/auth.resolver';
 import {
+  PostLastLikeResolver,
   PostOwnerResolver,
   PostsResolver,
 } from './features/resolvers/posts/posts.resolver';
@@ -36,6 +37,7 @@ import {
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from './settings/configuration/configuration';
+import { CommentsResolver } from './features/resolvers/comments/comments.resolver';
 
 const resolvers = [
   AuthResolver,
@@ -43,6 +45,8 @@ const resolvers = [
   PaymentsResolver,
   PostsResolver,
   PostOwnerResolver,
+  CommentsResolver,
+  PostLastLikeResolver,
 ];
 
 const loaders = [

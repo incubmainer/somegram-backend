@@ -7,6 +7,14 @@ export class CreatedPostDto {
   description: string;
 }
 
+class PostLastLikeModel {
+  userId: string;
+}
+
+class PostLikeCountModel {
+  LikesPost: number;
+}
+
 export class UserPostWithOwnerInfo implements UserPost {
   id: string;
   userId: string;
@@ -14,6 +22,8 @@ export class UserPostWithOwnerInfo implements UserPost {
   updatedAt: Date;
   description: string;
   User: UserEntity;
+  LikesPost: PostLastLikeModel[]; // as Last likes
+  _count: PostLikeCountModel; // as count likes
 }
 
 export enum LikeStatusEnum {
