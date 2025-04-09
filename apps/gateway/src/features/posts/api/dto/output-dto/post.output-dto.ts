@@ -119,6 +119,7 @@ export class PostOutputDto {
     lastLikeUser: {
       userId: string;
       avatarUrl: string | null;
+      profileUrl: string;
     }[];
   };
 

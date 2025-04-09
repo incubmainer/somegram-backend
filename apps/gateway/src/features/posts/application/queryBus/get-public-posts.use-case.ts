@@ -6,18 +6,20 @@ import {
 import { PostsQueryRepository } from '../../infrastructure/posts.query-repository';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import { LoggerService } from '@app/logger';
-import { SearchQueryParametersType } from '../../../../common/domain/query.types';
+import { SearchQueryParameters } from '../../../../common/domain/query.types';
 import { getSanitizationQuery } from '../../../../common/utils/query-params.sanitizator';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { Pagination, PaginatorService } from '@app/paginator';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../../settings/configuration/configuration';
 
 export class GetPublicPostsByUserQuery {
   constructor(
     public userId: string | null,
-    public queryString?: SearchQueryParametersType,
+    public queryString?: SearchQueryParameters,
     public endCursorPostId?: string,
   ) {}
 }
@@ -30,6 +32,8 @@ export class GetPublicPostsByUserUseCase
       AppNotificationResultType<Pagination<PostOutputDto[]>>
     >
 {
+  private readonly frontUrl: string;
+
   constructor(
     private readonly logger: LoggerService,
     private readonly postsQueryRepository: PostsQueryRepository,
@@ -37,8 +41,13 @@ export class GetPublicPostsByUserUseCase
     private readonly appNotification: ApplicationNotification,
     private readonly paginatorService: PaginatorService,
     private readonly postRawOutputModelMapper: PostRawOutputModelMapper,
+    private readonly configService: ConfigService<ConfigurationType, true>,
   ) {
     this.logger.setContext(GetPublicPostsByUserUseCase.name);
+    const frontProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
+    this.frontUrl = `${frontProvider}/public-user/profile`;
   }
   async execute(
     command: GetPublicPostsByUserQuery,
@@ -77,6 +86,7 @@ export class GetPublicPostsByUserUseCase
           post.lastLikeUser.push({
             userId,
             avatarUrl: avatar?.url || null,
+            profileUrl: `${this.frontUrl}/${userId}`,
           });
         });
 

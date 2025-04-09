@@ -11,6 +11,8 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../../settings/configuration/configuration';
 
 export class GetPostQuery {
   constructor(
@@ -24,14 +26,20 @@ export class GetPostUseCase
   implements
     IQueryHandler<GetPostQuery, AppNotificationResultType<PostOutputDto>>
 {
+  private readonly frontUrl: string;
   constructor(
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly photoServiceAdapter: PhotoServiceAdapter,
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
+    private readonly configService: ConfigService<ConfigurationType, true>,
   ) {
     this.logger.setContext(GetPostUseCase.name);
+    const frontProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
+    this.frontUrl = `${frontProvider}/public-user/profile`;
   }
   async execute(
     command: GetPostQuery,
@@ -57,6 +65,7 @@ export class GetPostUseCase
           post.lastLikeUser.push({
             userId: u.userId,
             avatarUrl: avatar?.url || null,
+            profileUrl: `${this.frontUrl}/${u.userId}`,
           });
         });
 

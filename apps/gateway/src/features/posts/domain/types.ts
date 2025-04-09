@@ -89,6 +89,7 @@ class PostWithLikeInfoLastLikeCountModel {
 class PostLastLikeUserInfoModel {
   userId: string;
   avatarUrl: string | null;
+  profileUrl: string;
 }
 
 export class PostWithLikeInfoModel {
