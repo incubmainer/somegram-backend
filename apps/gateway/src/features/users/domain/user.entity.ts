@@ -1,4 +1,4 @@
-import { $Enums, User } from '@prisma/gateway';
+import { $Enums, User, UserBanInfo } from '@prisma/gateway';
 import { AggregateRoot } from '@nestjs/cqrs';
 import { RegisteredUserEvent } from '../../auth/application/events/registred-user.envent';
 import { RegistrationUserSuccessEvent } from '../../auth/application/events/registration-user-success.envent';
@@ -7,6 +7,7 @@ import { FillProfileInputDto } from '../api/dto/input-dto/fill-profile.input-dto
 import { AccountType } from '../../../../../../libs/common/enums/payments';
 import { SendEmailNotificationSubscriptionActivatedEvent } from '../../notification/application/event/send-email-notification-subscription-activated.event';
 import { SendEmailNotificationSubscriptionDisabledEvent } from '../../notification/application/event/send-email-notification-subscription-disabled.event';
+import { UserBanInfoEntity } from './user-ban-info.entity';
 
 export class UserEntity extends AggregateRoot implements User {
   id: string;
@@ -26,7 +27,9 @@ export class UserEntity extends AggregateRoot implements User {
   subscriptionExpireAt: Date;
   isDeleted: boolean;
 
-  constructor(dto: User) {
+  userBanInfo: UserBanInfoEntity | null;
+
+  constructor(dto: User, banInfo?: UserBanInfo) {
     super();
     this.id = dto.id;
     this.username = dto.username;
@@ -44,6 +47,8 @@ export class UserEntity extends AggregateRoot implements User {
     this.accountType = dto.accountType;
     this.subscriptionExpireAt = dto.subscriptionExpireAt;
     this.isDeleted = dto.isDeleted;
+
+    this.userBanInfo = banInfo ? new UserBanInfoEntity(banInfo) : null;
   }
 
   registrationUserEvent(code: string, expiredAt: Date, html: string): void {

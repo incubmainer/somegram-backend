@@ -33,6 +33,7 @@ export class JwtRefreshTokenVerifyUserStrategy extends PassportStrategy(
     const { userId } = payload;
     const user = await this.userRepository.getUserById(userId);
     if (!user) return null;
+    if (user.userBanInfo) return null;
 
     return payload;
   }

@@ -37,6 +37,7 @@ export class MeAccessTokenStrategy extends PassportStrategy(
     const user = await this.userRepository.getUserById(userId);
 
     if (!user) return null;
+    if (user.userBanInfo) return null;
 
     return new MeOutputDto(user);
   }

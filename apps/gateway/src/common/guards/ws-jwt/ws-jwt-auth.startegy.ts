@@ -40,6 +40,7 @@ export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
     const user = await this.usersRepository.getUserById(payload.userId);
 
     if (!user) throw new WsUnauthorizedException();
+    if (user.userBanInfo) throw new WsUnauthorizedException();
 
     return payload;
   }
