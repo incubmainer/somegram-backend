@@ -25,6 +25,9 @@ import { DeleteFollowerUseCase } from './application/use-cases/delete-follower.u
 import { GetUserProfileWithCountsInfosUseCase } from './application/queryBus/get-profile-with-counts-infos.use-case';
 import { GetFollowersUseCase } from './application/queryBus/get-followers.use-case';
 import { GetFollowingUseCase } from './application/queryBus/get-following.use-case';
+import { GetUserFollowersUseCase } from './application/queryBus/graphql/get-user-followers.use-case';
+import { UsersFollowGraphqlRepository } from './infrastructure/users-follow.graphql.repository';
+import { GetUserFollowingUseCase } from './application/queryBus/graphql/get-user-following.use-case';
 
 const queryHandlers = [
   GetProfileInfoUseCase,
@@ -52,6 +55,8 @@ const useCasesGraphql = [
   GetUserUseCase,
   GetUsersUseCase,
   GetUsersByIdsUseCase,
+  GetUserFollowersUseCase,
+  GetUserFollowingUseCase,
 ];
 
 const repositories = [
@@ -59,6 +64,7 @@ const repositories = [
   UsersQueryRepository,
   UsersGraphqlRepository,
   UsersFollowRepository,
+  UsersFollowGraphqlRepository,
 ];
 
 @Module({
