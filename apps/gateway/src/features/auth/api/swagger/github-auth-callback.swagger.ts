@@ -3,6 +3,7 @@ import {
   ApiOperation,
   ApiOkResponse,
   ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { BadRequestExceptionDto } from '@app/base-types-enum';
 
@@ -18,6 +19,9 @@ The accessToken set to the query parameter.`,
     ApiBadRequestResponse({
       description: 'Unknown IP address or useragent',
       type: BadRequestExceptionDto,
+    }),
+    ApiUnauthorizedResponse({
+      description: 'Unauthorized',
     }),
   );
 }

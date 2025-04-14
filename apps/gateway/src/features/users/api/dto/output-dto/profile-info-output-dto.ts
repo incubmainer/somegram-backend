@@ -1,5 +1,7 @@
 import { User } from '@prisma/gateway';
 import { ApiProperty } from '@nestjs/swagger';
+import { Pagination } from '@app/paginator';
+
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 
 export class UserCountOutputDto {
@@ -100,18 +102,26 @@ export class ProfilePublicInfoOutputDtoModel {
   })
   userName: string;
   @ApiProperty({
+    type: ProfileAvatarInfoOutputDtoModel,
+  })
+  avatar: ProfileAvatarInfoOutputDtoModel;
+
+  constructor(data?: Partial<ProfileInfoOutputDto>) {
+    Object.assign(this, data);
+  }
+}
+
+export class ProfilePublicInfoWithAboutOutputDtoModel extends ProfilePublicInfoOutputDtoModel {
+  @ApiProperty({
     description: 'User information',
     example: 'This is user',
     type: String,
     nullable: true,
   })
   about: string | null;
-  @ApiProperty({
-    type: ProfileAvatarInfoOutputDtoModel,
-  })
-  avatar: ProfileAvatarInfoOutputDtoModel;
 
   constructor(data?: Partial<ProfileInfoOutputDto>) {
+    super();
     Object.assign(this, data);
   }
 }
@@ -155,8 +165,8 @@ export const userProfileInfoMapper = (
 export const userPublicProfileInfoMapper = (
   user: User,
   avatar?: FileType | null,
-): ProfilePublicInfoOutputDtoModel => {
-  return new ProfilePublicInfoOutputDtoModel({
+): ProfilePublicInfoWithAboutOutputDtoModel => {
+  return new ProfilePublicInfoWithAboutOutputDtoModel({
     id: user.id,
     userName: user.username,
     about: user.about ?? null,
@@ -165,3 +175,89 @@ export const userPublicProfileInfoMapper = (
     },
   });
 };
+
+export class SearchUsersOutputDtoWithPaginationModel extends Pagination<
+  ProfilePublicInfoWithAboutOutputDtoModel[]
+> {
+  @ApiProperty({
+    type: ProfilePublicInfoWithAboutOutputDtoModel,
+    isArray: true,
+  })
+  items: ProfilePublicInfoWithAboutOutputDtoModel[];
+}
+
+export class FollowingProfileOutputDtoModel extends ProfilePublicInfoOutputDtoModel {
+  @ApiProperty({
+    description: 'Indicates if the current user is following this profile',
+    example: true,
+    type: Boolean,
+  })
+  isFollowing: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if this profile is following the current user',
+    example: false,
+    type: Boolean,
+  })
+  isFollowedBy: boolean;
+
+  constructor(data?: Partial<FollowingProfileOutputDtoModel>) {
+    super(data);
+    Object.assign(this, data);
+  }
+}
+
+export class ProfileInfoWithFullCountsInfosOutputDtoModel extends FollowingProfileOutputDtoModel {
+  @ApiProperty({
+    description: 'Count of users that the profile is following',
+    example: 0,
+    type: Number,
+  })
+  followingCount: number;
+
+  @ApiProperty({
+    description: 'Count of users that are following this profile',
+    example: 2,
+    type: Number,
+  })
+  followersCount: number;
+
+  @ApiProperty({
+    description: 'Count of publications made by the user',
+    example: 3,
+    type: Number,
+  })
+  publicationsCount: number;
+
+  constructor(data?: Partial<ProfileInfoWithFullCountsInfosOutputDtoModel>) {
+    super(data);
+    Object.assign(this, data);
+  }
+}
+
+export const userFollowingProfileInfoMapper = (
+  user: User,
+  isFollowing: boolean,
+  isFollowedBy: boolean,
+  avatar?: FileType | null,
+): FollowingProfileOutputDtoModel => {
+  return new FollowingProfileOutputDtoModel({
+    id: user.id,
+    userName: user.username,
+    avatar: {
+      url: avatar ? avatar.url : null,
+    },
+    isFollowing,
+    isFollowedBy,
+  });
+};
+
+export class SearchFollowingProfileOutputDtoWithPaginationModel extends Pagination<
+  FollowingProfileOutputDtoModel[]
+> {
+  @ApiProperty({
+    type: FollowingProfileOutputDtoModel,
+    isArray: true,
+  })
+  items: FollowingProfileOutputDtoModel[];
+}

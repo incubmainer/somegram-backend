@@ -5,6 +5,7 @@ import {
   ApiBadRequestResponse,
   ApiUnprocessableEntityResponse,
   ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionDto,
@@ -30,6 +31,9 @@ export function RegistrationEmailResendingSwagger() {
     }),
     ApiNotFoundResponse({
       description: 'Token or user not found',
+    }),
+    ApiUnauthorizedResponse({
+      description: 'Unauthorized',
     }),
   );
 }

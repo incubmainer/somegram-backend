@@ -65,6 +65,9 @@ export class LoginByGoogleUseCase
       ]);
 
       if (userGoogleInfo) {
+        if (userGoogleInfo.userBanInfo)
+          return this.appNotification.unauthorized();
+
         const result = await this.createSession(
           userGoogleInfo.id,
           userAgent,
@@ -75,6 +78,9 @@ export class LoginByGoogleUseCase
 
       if (userWithGoogleInfo?.user && userWithGoogleInfo?.googleInfo)
         return this.appNotification.badRequest('User already exist');
+
+      if (userWithGoogleInfo?.user?.userBanInfo)
+        return this.appNotification.unauthorized();
 
       const createdGoogleInfoDto: UserGoogleInfoCreatedDto = {
         userId: userWithGoogleInfo?.user.id ?? null,

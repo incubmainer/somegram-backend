@@ -5,6 +5,7 @@ import {
   ApiBadRequestResponse,
   ApiUnprocessableEntityResponse,
   ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionDto,
@@ -27,6 +28,9 @@ export function RestorePasswordSwagger() {
     }),
     ApiNotFoundResponse({
       description: 'User not found',
+    }),
+    ApiUnauthorizedResponse({
+      description: 'Unauthorized',
     }),
   );
 }

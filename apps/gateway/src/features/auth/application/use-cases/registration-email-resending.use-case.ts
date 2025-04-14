@@ -56,6 +56,7 @@ export class RegistrationEmailResendingUseCase
       const result = await this.userRepository.getUserByToken(token);
       if (!result) return this.appNotification.notFound();
       const { user, confirmation } = result;
+      if (user.userBanInfo) return this.appNotification.unauthorized();
       if (user.isConfirmed || !confirmation)
         return this.appNotification.badRequest('The user is confirmed');
 

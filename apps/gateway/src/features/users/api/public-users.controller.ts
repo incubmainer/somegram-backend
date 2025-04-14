@@ -8,7 +8,7 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 import {
-  ProfilePublicInfoOutputDtoModel,
+  ProfilePublicInfoWithAboutOutputDtoModel,
   UserCountOutputDto,
 } from './dto/output-dto/profile-info-output-dto';
 import { PublicProfileInfoSwagger } from './swagger/public-profile-info.swagger';
@@ -36,13 +36,13 @@ export class PublicUsersController {
   @PublicProfileInfoSwagger()
   async gerProfileInfo(
     @Param('userId') userId: string,
-  ): Promise<ProfilePublicInfoOutputDtoModel> {
+  ): Promise<ProfilePublicInfoWithAboutOutputDtoModel> {
     this.logger.debug(
       `Execute: Get profile info, user id: ${userId}`,
       this.gerProfileInfo.name,
     );
 
-    const result: AppNotificationResultType<ProfilePublicInfoOutputDtoModel> =
+    const result: AppNotificationResultType<ProfilePublicInfoWithAboutOutputDtoModel> =
       await this.queryBus.execute(new GetPublicProfileInfoQuery(userId));
 
     switch (result.appResult) {

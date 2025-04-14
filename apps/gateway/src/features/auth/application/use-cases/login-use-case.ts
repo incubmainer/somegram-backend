@@ -46,6 +46,7 @@ export class LoginUserUseCase
       const user = await this.userRepository.getUserByEmail(email);
 
       if (!user) return this.appNotification.unauthorized();
+      if (user.userBanInfo) return this.appNotification.unauthorized();
       if (!user.isConfirmed) return this.appNotification.unauthorized();
       if (!user.hashPassword) return this.appNotification.unauthorized();
 

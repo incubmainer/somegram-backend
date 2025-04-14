@@ -1,6 +1,9 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { AccountType } from '../../../../../../../libs/common/enums/payments';
-import { UserWithBanInfo } from '../../../users/domain/user.interfaces';
+import {
+  UserFollowInfo,
+  UserWithBanInfo,
+} from '../../../users/domain/user.interfaces';
 import { UserBanInfo } from './ban-info.user.model';
 
 registerEnumType(AccountType, { name: 'AccountType' });
@@ -65,6 +68,43 @@ export class UserModel {
   static mapUsers(users: UserWithBanInfo[], profileUrl: string): UserModel[] {
     return users.map((user) => {
       return this.mapUser(user, profileUrl);
+    });
+  }
+}
+
+@ObjectType()
+export class FollowerModel extends UserModel {
+  @Field()
+  subscriptionDate?: Date;
+
+  static mapUserFollow(
+    user: UserWithBanInfo,
+    profileUrl: string,
+    subscriptionDate: Date,
+  ): FollowerModel {
+    const baseUser = super.mapUser(user, profileUrl);
+
+    return {
+      ...baseUser,
+      subscriptionDate,
+    } as FollowerModel;
+  }
+
+  static mapFollowingInfo(
+    userFollowInfo: UserFollowInfo[],
+    profileUrl: string,
+  ): FollowerModel[] {
+    return userFollowInfo.map((info) => {
+      return this.mapUserFollow(info.followee, profileUrl, info.createdAt);
+    });
+  }
+
+  static mapFollowersInfo(
+    userFollowInfo: UserFollowInfo[],
+    profileUrl: string,
+  ): FollowerModel[] {
+    return userFollowInfo.map((info) => {
+      return this.mapUserFollow(info.follower, profileUrl, info.createdAt);
     });
   }
 }

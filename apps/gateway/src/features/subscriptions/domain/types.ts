@@ -1,5 +1,5 @@
 import { CreateSubscriptionDto } from '../api/dto/input-dto/subscriptions.dto';
-import { SearchQueryParametersType } from '../../../common/domain/query.types';
+import { SearchQueryParameters } from '../../../common/domain/query.types';
 
 export type UserInfoModel = {
   userId: string;
@@ -29,5 +29,5 @@ export type SubscriptionInfoGatewayType = {
 
 export type GetUserPaymentPayloadType = {
   userId: string;
-  queryString?: SearchQueryParametersType;
+  queryString?: SearchQueryParameters;
 };

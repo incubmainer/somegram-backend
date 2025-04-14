@@ -20,6 +20,7 @@ import { PaymentsServiceAdapter } from './adapter/payment-service.adapter';
 import { DateFormaterModule } from '@app/date-formater';
 import { PubSub } from 'graphql-subscriptions';
 import { WsBasicGqlGuard } from './guards/graphql/ws-basic-gql.guard';
+import { JwtRefreshTokenVerifyUserStrategy } from './guards/jwt/jwt-refresh-verify-user-strategy';
 
 const strategy = [
   JwtStrategy,
@@ -28,6 +29,7 @@ const strategy = [
   MeAccessTokenStrategy,
   JwtRefreshTokenStrategyStrategy,
   WsJwtStrategy,
+  JwtRefreshTokenVerifyUserStrategy,
 ];
 const clientsModule = ClientsModule.registerAsync([
   photoServiceOptions(),
@@ -50,7 +52,6 @@ const clientsModule = ClientsModule.registerAsync([
     PubSub,
     PrismaService,
     ...strategy,
-
     PhotoServiceAdapter,
     JwtService,
     PaymentsServiceAdapter,

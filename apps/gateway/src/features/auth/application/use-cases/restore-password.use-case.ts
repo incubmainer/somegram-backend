@@ -52,6 +52,7 @@ export class RestorePasswordUseCase
       const currentDate = new Date();
       const user = await this.userRepository.getUserByEmail(email);
       if (!user) return this.appNotification.notFound();
+      if (user.userBanInfo) return this.appNotification.unauthorized();
       const resetPassword =
         await this.userResetPasswordRepository.getResetPasswordByUserId(
           user.id,

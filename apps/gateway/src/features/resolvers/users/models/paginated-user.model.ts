@@ -1,6 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
-import { UserModel } from './user.model';
+import { FollowerModel, UserModel } from './user.model';
 
 @ObjectType()
 export class PaginatedUserModel {
@@ -18,4 +18,22 @@ export class PaginatedUserModel {
 
   @Field(() => [UserModel])
   items: UserModel[];
+}
+
+@ObjectType()
+export class PaginatedFollowerModel {
+  @Field(() => Int)
+  pageNumber: number;
+
+  @Field(() => Int)
+  pageSize: number;
+
+  @Field(() => Int)
+  pagesCount: number;
+
+  @Field(() => Int)
+  totalCount: number;
+
+  @Field(() => [FollowerModel])
+  items: FollowerModel[];
 }

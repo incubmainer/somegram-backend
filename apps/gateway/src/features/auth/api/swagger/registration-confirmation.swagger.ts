@@ -5,6 +5,7 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiUnprocessableEntityResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionDto,
@@ -27,6 +28,9 @@ export function RegistrationConfirmationSwagger() {
     ApiUnprocessableEntityResponse({
       description: 'Validation error',
       type: UnprocessableExceptionDto,
+    }),
+    ApiUnauthorizedResponse({
+      description: 'Unauthorized',
     }),
   );
 }

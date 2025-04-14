@@ -1,4 +1,4 @@
-import { UserPostWithOwnerInfo } from '../domain/types';
+import { LikeStatusEnum, UserPostWithOwnerInfo } from '../domain/types';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { LoggerService } from '@app/logger';
@@ -32,7 +32,6 @@ export class PostsGraphqlQueryRepository {
       query;
 
     let orderBy: Prisma.UserPostOrderByWithRelationInput;
-
     if (sortBy === AdminPostsSortByEnum.username) {
       orderBy = { User: { username: sortDirection } };
     } else {
@@ -40,36 +39,69 @@ export class PostsGraphqlQueryRepository {
     }
 
     const where: Prisma.UserPostWhereInput = {
-      ...(searchByUsername
-        ? {
-            User: {
+      User: {
+        ...(searchByUsername
+          ? {
               username: {
                 contains: searchByUsername,
                 mode: 'insensitive',
               },
-            },
-          }
-        : {}),
+            }
+          : {}),
+        userBanInfo: {
+          is: null,
+        },
+      },
     };
 
     const skip = (pageNumber - 1) * pageSize;
 
-    const posts = (await this.txHost.tx.userPost.findMany({
-      where,
-      include: {
-        User: true,
-      },
-      skip,
-      take: pageSize,
-      orderBy,
-    })) as UserPostWithOwnerInfo[];
-
-    const count = await this.txHost.tx.userPost.count({
-      where,
-    });
+    const [posts, count] = await Promise.all([
+      this.txHost.tx.userPost.findMany({
+        where,
+        include: {
+          User: true,
+          LikesPost: {
+            where: {
+              status: LikeStatusEnum.like,
+              User: {
+                userBanInfo: {
+                  is: null,
+                },
+              },
+            },
+            orderBy: {
+              updatedAt: 'desc',
+            },
+            take: 3,
+            select: {
+              userId: true,
+            },
+          },
+          _count: {
+            select: {
+              LikesPost: {
+                where: {
+                  status: LikeStatusEnum.like,
+                  User: {
+                    userBanInfo: {
+                      is: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        skip,
+        take: pageSize,
+        orderBy,
+      }),
+      this.txHost.tx.userPost.count({ where }),
+    ]);
 
     return {
-      posts,
+      posts: posts as UserPostWithOwnerInfo[],
       count,
     };
   }
@@ -84,7 +116,40 @@ export class PostsGraphqlQueryRepository {
 
     const result = await this.txHost.tx.userPost.findUnique({
       where: { id: postId },
-      include: { User: true },
+      include: {
+        User: true,
+        LikesPost: {
+          where: {
+            status: LikeStatusEnum.like,
+            User: {
+              userBanInfo: {
+                is: null,
+              },
+            },
+          },
+          orderBy: {
+            updatedAt: 'desc',
+          },
+          take: 3,
+          select: {
+            userId: true,
+          },
+        },
+        _count: {
+          select: {
+            LikesPost: {
+              where: {
+                status: LikeStatusEnum.like,
+                User: {
+                  userBanInfo: {
+                    is: null,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     return result ? (result as UserPostWithOwnerInfo) : null;

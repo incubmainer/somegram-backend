@@ -4,14 +4,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { ProfilePublicInfoOutputDtoModel } from '../dto/output-dto/profile-info-output-dto';
+import { ProfilePublicInfoWithAboutOutputDtoModel } from '../dto/output-dto/profile-info-output-dto';
 
 export function PublicProfileInfoSwagger() {
   return applyDecorators(
     ApiOperation({ summary: 'Get public profile info for user by id' }),
     ApiOkResponse({
       description: 'Success',
-      type: ProfilePublicInfoOutputDtoModel,
+      type: ProfilePublicInfoWithAboutOutputDtoModel,
     }),
     ApiNotFoundResponse({
       description: 'User not found',

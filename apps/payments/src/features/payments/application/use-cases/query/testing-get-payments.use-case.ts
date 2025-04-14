@@ -8,7 +8,7 @@ import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { SearchQueryParametersType } from '../../../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../../../gateway/src/common/domain/query.types';
 import { getSanitizationQuery } from '../../../../../../../gateway/src/common/utils/query-params.sanitizator';
 import { SubscriptionType } from '../../../../../../../../libs/common/enums/payments';
 import { TransactionStatuses } from '../../../../../common/enum/transaction-statuses.enum';
@@ -62,7 +62,7 @@ const data = [];
 export class TestingGetPaymentsQuery {
   constructor(
     public userId: string,
-    public queryString?: SearchQueryParametersType,
+    public queryString?: SearchQueryParameters,
   ) {}
 }
 

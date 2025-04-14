@@ -5,7 +5,7 @@ import {
   PrismaClient as PaymentsPrismaClient,
   Subscription,
 } from '@prisma/payments';
-import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../gateway/src/common/domain/query.types';
 import { LoggerService } from '@app/logger';
 import { PaymentTransactionWithSubUserInfo } from '../application/types/payment-data.type';
 
@@ -22,7 +22,7 @@ export class GraphqlPaymentsRepository {
 
   public async getPaymentsByUserId(
     userId: string,
-    queryString: SearchQueryParametersType,
+    queryString: SearchQueryParameters,
   ): Promise<{
     payments: PaymentTransactionWithSubUserInfo[];
     count: number;
@@ -80,7 +80,7 @@ export class GraphqlPaymentsRepository {
     });
   }
 
-  async getAllPayments(queryString: SearchQueryParametersType): Promise<{
+  async getAllPayments(queryString: SearchQueryParameters): Promise<{
     payments: PaymentTransactionWithSubUserInfo[];
     count: number;
   }> {

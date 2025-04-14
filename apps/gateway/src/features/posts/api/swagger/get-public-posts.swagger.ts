@@ -9,7 +9,12 @@ import { PostOutputDtoWithPaginationModel } from '../dto/output-dto/post.output-
 
 export function GetPublicPostsSwagger() {
   return applyDecorators(
-    ApiOperation({ summary: 'Get public posts' }),
+    ApiOperation({
+      summary: 'Get public posts',
+      description: `You can pass the \`refreshToken\` in the request to \`get the like status\` for each post related to the \`currently authorized user\` or none like status if user not authorized. 
+        \n Posts that belong to the current authorized are the first to be displayed.
+      `,
+    }),
     ApiParam({
       name: 'endCursorPostId',
       required: false,

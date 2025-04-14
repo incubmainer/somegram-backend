@@ -52,7 +52,7 @@ export class RestorePasswordConfirmationUseCase
           'Restore password confirmation failed due to Invalid code.',
         );
       const { user, resetPassword } = result;
-
+      if (user.userBanInfo) return this.appNotification.unauthorized();
       if (resetPassword.expiredAt < currentDate)
         return this.appNotification.badRequest(
           'Restore password confirmation failed due to expired code.',

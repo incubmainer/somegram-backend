@@ -15,6 +15,7 @@ import { UserGoogleAccount } from '../domain/user-google-account.entity';
 import { UserConfirmationEntity } from '../../auth/domain/user-confirmation.entity';
 import { UserResetPasswordEntity } from '../../auth/domain/user-reset-password.entity';
 import { UserGithubAccountEntity } from '../domain/user-github-account.entity';
+import { UserBanInfoEntity } from '../domain/user-ban-info.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -33,8 +34,9 @@ export class UsersRepository {
       where: {
         email,
       },
+      include: { userBanInfo: true },
     });
-    return user ? new UserEntity(user) : null;
+    return user ? new UserEntity(user, user.userBanInfo) : null;
   }
 
   public async getUsersByIds(ids: string[]): Promise<UserEntity[] | null> {
@@ -164,12 +166,13 @@ export class UsersRepository {
       },
       include: {
         googleInfo: true,
+        userBanInfo: true,
       },
     });
 
     if (!result) return null;
 
-    const user = new UserEntity(result);
+    const user = new UserEntity(result, result.userBanInfo);
 
     if (!result.googleInfo) return { user, googleInfo: null };
 
@@ -237,8 +240,9 @@ export class UsersRepository {
           sub: sub,
         },
       },
+      include: { userBanInfo: true },
     });
-    return user ? new UserEntity(user) : null;
+    return user ? new UserEntity(user, user.userBanInfo) : null;
   }
 
   public async getUserByToken(token: string): Promise<{
@@ -258,12 +262,13 @@ export class UsersRepository {
       },
       include: {
         confirmationToken: true,
+        userBanInfo: true,
       },
     });
 
     if (!result) return null;
 
-    const user = new UserEntity(result);
+    const user = new UserEntity(result, result.userBanInfo);
     let confirmation: UserConfirmationEntity | null = null;
     if (result.confirmationToken)
       confirmation = new UserConfirmationEntity(result.confirmationToken);
@@ -287,12 +292,13 @@ export class UsersRepository {
       },
       include: {
         resetPasswordCode: true,
+        userBanInfo: true,
       },
     });
 
     if (!result) return null;
 
-    const user = new UserEntity(result);
+    const user = new UserEntity(result, result.userBanInfo);
     let resetPassword: UserResetPasswordEntity | null = null;
     if (result.resetPasswordCode)
       resetPassword = new UserResetPasswordEntity(result.resetPasswordCode);
@@ -303,8 +309,9 @@ export class UsersRepository {
     this.logger.debug(`Execute: get user by id ${id}`, this.getUserById.name);
     const user = await this.txHost.tx.user.findUnique({
       where: { id },
+      include: { userBanInfo: true },
     });
-    return user ? new UserEntity(user) : null;
+    return user ? new UserEntity(user, user.userBanInfo) : null;
   }
 
   public async getUserByGithubId(githubId: string): Promise<UserEntity | null> {
@@ -318,8 +325,9 @@ export class UsersRepository {
           githubId: githubId,
         },
       },
+      include: { userBanInfo: true },
     });
-    return user ? new UserEntity(user) : null;
+    return user ? new UserEntity(user, user.userBanInfo) : null;
   }
 
   public async getUserByEmailWithGithubInfo(email: string): Promise<{
@@ -335,12 +343,12 @@ export class UsersRepository {
       where: {
         email: email,
       },
-      include: { userGithubInfo: true },
+      include: { userGithubInfo: true, userBanInfo: true },
     });
 
     if (!result) return null;
 
-    const user = new UserEntity(result);
+    const user = new UserEntity(result, result.userBanInfo);
     let githubInfo: UserGithubAccountEntity | null = null;
     if (result.userGithubInfo) githubInfo = result.userGithubInfo;
 

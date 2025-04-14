@@ -1,7 +1,4 @@
-import {
-  SearchQueryParametersType,
-  SortDirection,
-} from '../domain/query.types';
+import { SearchQueryParameters, SortDirection } from '../domain/query.types';
 
 const defaultSearchQueryParameters = {
   pageNumber: 1,
@@ -12,8 +9,8 @@ const defaultSearchQueryParameters = {
 };
 
 export const getSanitizationQuery = (
-  query?: SearchQueryParametersType,
-): SearchQueryParametersType => {
+  query?: SearchQueryParameters,
+): SearchQueryParameters => {
   return {
     pageNumber: !isNaN(query && query.pageNumber)
       ? +query.pageNumber

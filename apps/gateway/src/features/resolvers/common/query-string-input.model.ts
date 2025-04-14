@@ -15,7 +15,7 @@ export class QueryStringInput {
   pageSize: number = 8;
 
   @IsEnum(SortDirection, {
-    message: 'sortOrder must be either ASC or DESC',
+    message: 'sortDirection must be either ASC or DESC',
   })
   @Field(() => SortDirection, { defaultValue: SortDirection.ASC })
   sortDirection: SortDirection = SortDirection.ASC;

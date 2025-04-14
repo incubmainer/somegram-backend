@@ -39,6 +39,11 @@ export class PostsRepository {
     const post = await this.txHost.tx.userPost.findFirst({
       where: {
         id: postId,
+        User: {
+          userBanInfo: {
+            is: null,
+          },
+        },
       },
     });
     return post ? new PostEntity(post) : null;

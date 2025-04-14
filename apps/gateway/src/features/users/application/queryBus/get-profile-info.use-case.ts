@@ -40,9 +40,7 @@ export class GetProfileInfoUseCase
     );
 
     try {
-      const user = await this.usersQueryRepository.getProfileInfo(
-        command.userId,
-      );
+      const user = await this.usersQueryRepository.findUserById(command.userId);
       if (!user) return this.appNotification.notFound();
 
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);

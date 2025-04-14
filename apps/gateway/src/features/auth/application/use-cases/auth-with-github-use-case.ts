@@ -60,6 +60,9 @@ export class AuthWithGithubUseCase
       ]);
 
       if (userGitHubInfo) {
+        if (userGitHubInfo.userBanInfo)
+          return this.appNotification.unauthorized();
+
         const result = await this.createSession(
           userGitHubInfo.id,
           userAgent,
@@ -70,6 +73,9 @@ export class AuthWithGithubUseCase
 
       if (userWithGithubInfo?.user && userWithGithubInfo?.githubInfo)
         return this.appNotification.badRequest('User already exist');
+
+      if (userWithGithubInfo?.user?.userBanInfo)
+        return this.appNotification.unauthorized();
 
       const createdGithubInfoDto: UserGitHubInfoCreatedDto = {
         userId: userWithGithubInfo?.user.id ?? null,
