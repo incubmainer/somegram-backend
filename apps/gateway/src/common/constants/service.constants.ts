@@ -31,3 +31,5 @@ export const CREATE_NOTIFICATIONS = 'create_notifications';
 export const GET_PAYMENTS_BY_USERS_GQL = 'get_payments_by_users_gql';
 export const GET_PAYMENTS_GQL = 'get_payments_gql';
 export const GET_ALL_PAYMENTS_GQL = 'get_all_payments_gql';
+
+export const HELLO_MESSENGER = 'hello_messenger';

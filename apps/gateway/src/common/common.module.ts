@@ -21,6 +21,8 @@ import { DateFormaterModule } from '@app/date-formater';
 import { PubSub } from 'graphql-subscriptions';
 import { WsBasicGqlGuard } from './guards/graphql/ws-basic-gql.guard';
 import { JwtRefreshTokenVerifyUserStrategy } from './guards/jwt/jwt-refresh-verify-user-strategy';
+import { MessengerServiceAdapter } from './adapter/messenger-service.adapter';
+import { messengerServiceOptions } from '../settings/configuration/messenger-service.options';
 
 const strategy = [
   JwtStrategy,
@@ -34,6 +36,7 @@ const strategy = [
 const clientsModule = ClientsModule.registerAsync([
   photoServiceOptions(),
   paymentsServiceOptions(),
+  messengerServiceOptions(),
 ]);
 
 @Global()
@@ -56,6 +59,7 @@ const clientsModule = ClientsModule.registerAsync([
     JwtService,
     PaymentsServiceAdapter,
     WsBasicGqlGuard,
+    MessengerServiceAdapter,
   ],
   exports: [
     PubSub,
@@ -67,6 +71,7 @@ const clientsModule = ClientsModule.registerAsync([
     PhotoServiceAdapter,
     JwtService,
     PaymentsServiceAdapter,
+    MessengerServiceAdapter,
     DateFormaterModule,
     WsBasicGqlGuard,
   ],

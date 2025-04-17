@@ -44,6 +44,7 @@ import {
   CommentOwnerResolver,
   CommentsResolver,
 } from './features/resolvers/comments/comments.resolver';
+import { MessengerModule } from './features/messenger/messenger.module';
 
 const resolvers = [
   AuthResolver,
@@ -102,6 +103,7 @@ const gqlModule = GraphQLModule.forRootAsync<ApolloDriverConfig>({
     LoggerModule.forRoot('Gateway'),
     NotificationModule,
     PaginatorModule,
+    MessengerModule,
     gqlModule,
   ],
   controllers: [],

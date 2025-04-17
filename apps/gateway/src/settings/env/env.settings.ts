@@ -62,6 +62,20 @@ export class EnvSettings {
 
   @IsNotEmpty()
   @IsString()
+  public readonly PAYMENTS_SERVICE_HOST: string;
+  @IsNotEmpty()
+  @IsNumber()
+  public readonly PAYMENTS_SERVICE_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  public readonly MESSENGER_SERVICE_HOST: string;
+  @IsNotEmpty()
+  @IsNumber()
+  public readonly MESSENGER_SERVICE_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
   public readonly GITHUB_CLIENT_SECRET: string;
   @IsNotEmpty()
   @IsString()
@@ -136,6 +150,18 @@ export class EnvSettings {
     this.PHOTO_SERVICE_PORT = this.getNumberOrDefaultValue(
       envVariable.PHOTO_SERVICE_PORT,
       3002,
+    );
+
+    this.PAYMENTS_SERVICE_HOST = envVariable.PAYMENTS_SERVICE_HOST;
+    this.PAYMENTS_SERVICE_PORT = this.getNumberOrDefaultValue(
+      envVariable.PAYMENTS_SERVICE_PORT,
+      3006,
+    );
+
+    this.MESSENGER_SERVICE_HOST = envVariable.MESSENGER_SERVICE_HOST;
+    this.MESSENGER_SERVICE_PORT = this.getNumberOrDefaultValue(
+      envVariable.MESSENGER_SERVICE_PORT,
+      3006,
     );
 
     this.GITHUB_CLIENT_SECRET = envVariable.GITHUB_CLIENT_SECRET;
