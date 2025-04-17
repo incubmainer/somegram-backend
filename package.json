@@ -27,6 +27,7 @@
     "prisma:migrate-test:gateway": "dotenv -e ./apps/gateway/.env.test -- prisma migrate dev --schema apps/gateway/prisma/schema.prisma",
     "build:gateway": "yarn prisma:gen:gateway && nest build gateway",
     "start:dev:gateway": "cross-env NODE_ENV=development nest start gateway --watch",
+    "start:dev:messenger": "cross-env NODE_ENV=development nest start messenger --watch",
     "start:gateway": "NODE_ENV=production node dist/apps/gateway/main",
     "build:files": "nest build files",
     "start:dev:files": "cross-env NODE_ENV=development nest start files --watch",
