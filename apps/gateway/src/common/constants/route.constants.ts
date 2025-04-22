@@ -90,3 +90,8 @@ export const FOLLOWING_USER_ROUTE = {
   FOLLOWERS: 'followers',
   FOLLOWING: 'following',
 };
+
+export const MESSENGER_ROUTE = {
+  MAIN: 'messenger',
+  CHAT: 'chat',
+};

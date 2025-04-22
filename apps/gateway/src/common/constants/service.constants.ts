@@ -32,4 +32,5 @@ export const GET_PAYMENTS_BY_USERS_GQL = 'get_payments_by_users_gql';
 export const GET_PAYMENTS_GQL = 'get_payments_gql';
 export const GET_ALL_PAYMENTS_GQL = 'get_all_payments_gql';
 
-export const HELLO_MESSENGER = 'hello_messenger';
+export const GET_USERS_CHATS_MESSENGER = 'get_user_chats';
+export const SEND_MESSAGE_TO_CHAT = 'send_message_to_chat';

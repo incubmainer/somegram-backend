@@ -1,3 +1,5 @@
+import { User } from '@prisma/gateway';
+
 export class UserCreatedDto {
   username: string;
   email: string;
@@ -36,4 +38,9 @@ export class UserCreatedByGithubDto {
   createdAt: Date;
   isConfirmed: boolean;
   firstName: string;
+}
+
+export class UserInfoAndUserIsBan {
+  user: User;
+  isBan: boolean;
 }

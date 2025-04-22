@@ -1,18 +1,94 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import { MessengerServiceAdapter } from '../../../common/adapter/messenger-service.adapter';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { MESSENGER_ROUTE } from '../../../common/constants/route.constants';
+import { JWTAccessTokenPayloadType } from '../../auth/domain/types';
+import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
+import { CurrentUser } from '@app/decorators/http-parse/current-user';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApplicationNotification,
+  AppNotificationResultEnum,
+  AppNotificationResultType,
+} from '@app/application-notification';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { GetUserChatsQuery } from '../application/query-bus/get-user-chats.use-case';
+import { Pagination } from '@app/paginator';
+import { GetUserChatsOutputDto } from './dto/output-dto/get-user-chats.output.dto';
+import { SendMessageCommand } from '../application/use-case/send-message.use-case';
+import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
+import { SendMessageSwagger } from './swagger/send-message.swagger';
+import { GetUserChatsSwagger } from './swagger/get-user-chats.swagger';
 
-@Controller('messenger')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiTags('Messenger')
+@Controller(MESSENGER_ROUTE.MAIN)
 export class MessengerController {
   constructor(
     private readonly logger: LoggerService,
+    private readonly appNotification: ApplicationNotification,
     private readonly messengerServiceAdapter: MessengerServiceAdapter,
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
   ) {
     this.logger.setContext(MessengerController.name);
   }
 
-  @Get()
-  async hello() {
-    return this.messengerServiceAdapter.hello();
+  @Get(`${MESSENGER_ROUTE.CHAT}/:endCursorChatId?`)
+  @GetUserChatsSwagger()
+  async getUserChats(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Query() query: SearchQueryParametersWithoutSorting,
+    @Param('endCursorChatId') endCursorChatId?: string,
+  ): Promise<Pagination<GetUserChatsOutputDto[]>> {
+    this.logger.debug('Execute: get user chats', this.getUserChats.name);
+    const result: AppNotificationResultType<
+      Pagination<GetUserChatsOutputDto[]>
+    > = await this.queryBus.execute(
+      new GetUserChatsQuery(user.userId, query, endCursorChatId || null),
+    );
+
+    this.logger.debug(result.appResult, this.getUserChats.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success)
+      return result.data;
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post(`${MESSENGER_ROUTE.CHAT}/:participantId`)
+  @SendMessageSwagger()
+  async sendMessage(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Param('participantId') participantId: string,
+    @Body() body: SendMessageInputDto,
+  ): Promise<void> {
+    this.logger.debug('Execute: send new message', this.sendMessage.name);
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new SendMessageCommand(user.userId, participantId, body.message),
+      );
+
+    this.logger.debug(result.appResult, this.sendMessage.name);
+
+    this.appNotification.handleHttpResult(result);
   }
 }

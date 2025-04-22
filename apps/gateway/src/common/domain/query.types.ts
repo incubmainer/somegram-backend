@@ -1,6 +1,7 @@
 import { registerEnumType } from '@nestjs/graphql';
 import { IsOptional, Max, Min, IsString, IsEnum } from 'class-validator';
 import { TransformToNumber, Trim } from '../../../../../libs/decorators/src';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum SortDirection {
   ASC = 'asc',
@@ -16,6 +17,11 @@ const QUERY_PARAMETERS = {
 };
 
 export class SearchQueryParametersWithoutSorting {
+  @ApiProperty({
+    minimum: QUERY_PARAMETERS.pageNumber,
+    maximum: QUERY_PARAMETERS.maxPageSize,
+    default: QUERY_PARAMETERS.pageNumber,
+  })
   @TransformToNumber()
   @Min(QUERY_PARAMETERS.pageNumber, {
     message: `Page size must be greater than or equal to ${QUERY_PARAMETERS.pageNumber}`,
@@ -25,9 +31,11 @@ export class SearchQueryParametersWithoutSorting {
   })
   pageSize: number = QUERY_PARAMETERS.pageSize;
 
+  @ApiProperty({ default: QUERY_PARAMETERS.pageNumber })
   @TransformToNumber()
   pageNumber: number = QUERY_PARAMETERS.pageNumber;
 
+  @ApiPropertyOptional()
   @IsOptional()
   @Trim()
   @IsString()

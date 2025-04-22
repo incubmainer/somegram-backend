@@ -8,8 +8,29 @@ datasource db {
   url      = env("MESSENGER_DATABASE_URL")
 }
 
-model Test {
-  id String @id @default(uuid())
+model Chat {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
 
-  test String
+  Participants Participant[]
+  Messages     Message[]
+}
+
+model Participant {
+  id     String @id @default(uuid())
+  userId String
+
+  createdAt DateTime @default(now())
+  chatId    String
+  Chat      Chat     @relation(fields: [chatId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  chatId    String
+  createdAt DateTime @default(now())
+  userId    String
+
+  Chat Chat @relation(fields: [chatId], references: [id])
 }

@@ -6,6 +6,7 @@ import { LoggerService } from '@app/logger';
 
 import { UserEntity } from '../domain/user.entity';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
+import { UserInfoAndUserIsBan } from '../domain/types';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -229,5 +230,21 @@ export class UsersQueryRepository {
       users: users as UserEntity[],
       count,
     };
+  }
+
+  async getUserAndUserIsBan(
+    userId: string,
+  ): Promise<UserInfoAndUserIsBan | null> {
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id: userId },
+      include: { userBanInfo: true },
+    });
+
+    return user
+      ? {
+          user,
+          isBan: !!user.userBanInfo,
+        }
+      : null;
   }
 }

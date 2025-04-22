@@ -15,7 +15,6 @@ import { UserGoogleAccount } from '../domain/user-google-account.entity';
 import { UserConfirmationEntity } from '../../auth/domain/user-confirmation.entity';
 import { UserResetPasswordEntity } from '../../auth/domain/user-reset-password.entity';
 import { UserGithubAccountEntity } from '../domain/user-github-account.entity';
-import { UserBanInfoEntity } from '../domain/user-ban-info.entity';
 
 @Injectable()
 export class UsersRepository {
