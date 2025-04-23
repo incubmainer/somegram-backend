@@ -94,4 +94,5 @@ export const FOLLOWING_USER_ROUTE = {
 export const MESSENGER_ROUTE = {
   MAIN: 'messenger',
   CHAT: 'chat',
+  MESSAGES: 'messages',
 };

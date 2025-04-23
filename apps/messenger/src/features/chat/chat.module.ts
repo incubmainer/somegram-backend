@@ -16,6 +16,6 @@ const queryHandlers = [GetAllChatsForUserUseCase];
     ...queryHandlers,
     UserChatOutputDtoMapper,
   ],
-  exports: [ChatRepository],
+  exports: [ChatRepository, ChatQueryRepository],
 })
 export class ChatModule {}

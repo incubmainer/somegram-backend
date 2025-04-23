@@ -15,9 +15,17 @@ class LastChatMessageOutputDto {
 }
 
 class ParticipantOutputDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   avatarUrl: string | null;
+
+  @ApiProperty()
   isBan: boolean;
+
+  @ApiProperty()
+  username: string;
 }
 
 export class GetUserChatsOutputDto {
@@ -48,6 +56,7 @@ export class GetUserChatsOutputDtoMapper {
         id: chat.participantId,
         avatarUrl: chat.avatarUrl || null,
         isBan: chat.isBan || false,
+        username: chat.username || 'unknown',
       },
       lastMessage: chat.lastMessage,
     };

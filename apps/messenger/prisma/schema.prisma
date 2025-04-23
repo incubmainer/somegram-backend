@@ -20,7 +20,7 @@ model Participant {
   id     String @id @default(uuid())
   userId String
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
   chatId    String
   Chat      Chat     @relation(fields: [chatId], references: [id])
 }
@@ -29,7 +29,7 @@ model Message {
   id        String   @id @default(uuid())
   content   String
   chatId    String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
   userId    String
 
   Chat Chat @relation(fields: [chatId], references: [id])

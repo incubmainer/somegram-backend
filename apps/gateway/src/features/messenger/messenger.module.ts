@@ -4,15 +4,22 @@ import { GetUserChatsOutputDtoMapper } from './api/dto/output-dto/get-user-chats
 import { GetUserChatsQueryUseCase } from './application/query-bus/get-user-chats.use-case';
 import { UsersModule } from '../users/users.module';
 import { SendMessageUseCase } from './application/use-case/send-message.use-case';
+import { GetChatMessagesQueryUseCase } from './application/query-bus/get-chat-messages.use-case';
+import { ChatMessagesOutputDtoMapper } from './api/dto/output-dto/get-chat-messages.output.dto';
 
-const queryHandlers = [GetUserChatsQueryUseCase];
+const queryHandlers = [GetUserChatsQueryUseCase, GetChatMessagesQueryUseCase];
 
 const handlers = [SendMessageUseCase];
 
 @Module({
   imports: [UsersModule],
   controllers: [MessengerController],
-  providers: [GetUserChatsOutputDtoMapper, ...queryHandlers, ...handlers],
+  providers: [
+    GetUserChatsOutputDtoMapper,
+    ...queryHandlers,
+    ...handlers,
+    ChatMessagesOutputDtoMapper,
+  ],
   exports: [],
 })
 export class MessengerModule {}

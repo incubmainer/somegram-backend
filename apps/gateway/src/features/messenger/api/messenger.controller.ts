@@ -34,6 +34,10 @@ import { SendMessageCommand } from '../application/use-case/send-message.use-cas
 import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
 import { SendMessageSwagger } from './swagger/send-message.swagger';
 import { GetUserChatsSwagger } from './swagger/get-user-chats.swagger';
+import { GetChatMessagesQuery } from '../application/query-bus/get-chat-messages.use-case';
+import { GetChatMessagesSwagger } from './swagger/get-chat-messages.swagger';
+import { GetChatMessagesQueryParams } from './dto/input-dto/get-chat-messages.query.params';
+import { ChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
@@ -88,6 +92,36 @@ export class MessengerController {
       );
 
     this.logger.debug(result.appResult, this.sendMessage.name);
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @Get(
+    `${MESSENGER_ROUTE.CHAT}/:chatId/${MESSENGER_ROUTE.MESSAGES}/:endCursorMessageId?`,
+  )
+  @GetChatMessagesSwagger()
+  async getChatMessages(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Query() query: GetChatMessagesQueryParams,
+    @Param('chatId') chatId: string,
+    @Param('endCursorMessageId') endCursorMessageId?: string,
+  ): Promise<Pagination<ChatMessagesOutputDto[]>> {
+    this.logger.debug('Execute: get chat messages', this.getChatMessages.name);
+    const result: AppNotificationResultType<
+      Pagination<ChatMessagesOutputDto[]>
+    > = await this.queryBus.execute(
+      new GetChatMessagesQuery(
+        user.userId,
+        chatId,
+        endCursorMessageId || null,
+        query,
+      ),
+    );
+
+    this.logger.debug(result.appResult, this.getChatMessages.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success)
+      return result.data;
 
     this.appNotification.handleHttpResult(result);
   }

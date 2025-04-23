@@ -8,7 +8,7 @@ export enum SortDirection {
   DESC = 'desc',
 }
 
-const QUERY_PARAMETERS = {
+export const QUERY_PARAMETERS = {
   pageNumber: 1,
   pageSize: 8,
   maxPageSize: 100,

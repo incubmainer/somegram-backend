@@ -1,4 +1,4 @@
-import { User } from '@prisma/gateway';
+import { User, UserBanInfo } from '@prisma/gateway';
 
 export class UserCreatedDto {
   username: string;
@@ -44,3 +44,5 @@ export class UserInfoAndUserIsBan {
   user: User;
   isBan: boolean;
 }
+
+export type UserAndUserBanInfoType = User & { userBanInfo: UserBanInfo | null };

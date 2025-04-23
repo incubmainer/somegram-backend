@@ -4,6 +4,8 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import {
   PrismaClient as MessengerPrismaClient,
   Prisma,
+  Chat,
+  Participant,
 } from '@prisma/messenger';
 import { LoggerService } from '@app/logger';
 import { ChatRawDto } from '../domain/types';
@@ -119,5 +121,29 @@ export class ChatQueryRepository {
       items,
       total,
     };
+  }
+
+  async getChatAndParticipantsByChatId(
+    chatId: string,
+  ): Promise<{ chat: Chat; participants: Participant[] } | null> {
+    this.logger.debug(
+      'Execute: get chat by chat id with participants info',
+      this.getChatAndParticipantsByChatId.name,
+    );
+    const result = await this.txHost.tx.chat.findUnique({
+      where: {
+        id: chatId,
+      },
+      include: {
+        Participants: true,
+      },
+    });
+
+    return result
+      ? {
+          chat: result,
+          participants: result.Participants,
+        }
+      : null;
   }
 }
