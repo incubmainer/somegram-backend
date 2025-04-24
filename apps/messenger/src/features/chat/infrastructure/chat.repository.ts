@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as MessengerPrismaClient, Chat } from '@prisma/messenger';
+import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
 import { LoggerService } from '@app/logger';
 import { CreateChatDto } from '../domain/types';
 import { MessageEntity } from '../../message/domain/message.entity';
@@ -69,12 +69,12 @@ export class ChatRepository {
   async getChatByUserIds(
     currentUserId: string,
     participantId: string,
-  ): Promise<Chat | null> {
+  ): Promise<ChatEntity | null> {
     this.logger.debug(
       'Execute: get chat by participants id',
       this.getChatByUserIds.name,
     );
-    return this.txHost.tx.chat.findFirst({
+    const result = await this.txHost.tx.chat.findFirst({
       where: {
         AND: [
           {
@@ -90,5 +90,7 @@ export class ChatRepository {
         ],
       },
     });
+
+    return result ? new ChatEntity(result) : null;
   }
 }

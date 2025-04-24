@@ -9,6 +9,7 @@ import { GetChatMessagesOutputDtoMapper } from './api/dto/output-dto/get-chat-me
 import { ReadMessageUseCase } from './application/use-case/read-message.use-case';
 import { GetMessageByIdUseCase } from './application/query-bus/get-message-by-id.use-case';
 import { NewMessageEventHandler } from './application/events/new-message.event';
+import { SendMessageOutputDtoMapper } from './api/dto/output-dto/send-message.output.dto';
 
 const handlers = [SendMessageUseCase, ReadMessageUseCase];
 const queryHandlers = [GetChatMessagesUseCase, GetMessageByIdUseCase];
@@ -24,6 +25,7 @@ const events = [NewMessageEventHandler];
     MessageRepository,
     MessageQueryRepository,
     GetChatMessagesOutputDtoMapper,
+    SendMessageOutputDtoMapper,
   ],
   exports: [],
 })

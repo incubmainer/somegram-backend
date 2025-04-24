@@ -45,6 +45,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { NEW_MESSAGE } from '../../../common/constants/service.constants';
 import { NewMessageGatewayDto } from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
+import { SendMessageOutputDto } from '../../../../../messenger/src/features/message/api/dto/output-dto/send-message.output.dto';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -85,21 +86,23 @@ export class MessengerController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Post(`${MESSENGER_ROUTE.CHAT}/:participantId`)
   @SendMessageSwagger()
   async sendMessage(
     @CurrentUser() user: JWTAccessTokenPayloadType,
     @Param('participantId') participantId: string,
     @Body() body: SendMessageInputDto,
-  ): Promise<void> {
+  ): Promise<SendMessageOutputDto | void> {
     this.logger.debug('Execute: send new message', this.sendMessage.name);
-    const result: AppNotificationResultType<null> =
+    const result: AppNotificationResultType<SendMessageOutputDto> =
       await this.commandBus.execute(
         new SendMessageCommand(user.userId, participantId, body.message),
       );
 
     this.logger.debug(result.appResult, this.sendMessage.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success)
+      return result.data;
 
     this.appNotification.handleHttpResult(result);
   }

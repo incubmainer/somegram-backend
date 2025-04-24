@@ -15,6 +15,11 @@ import { CreateChatDto } from '../../../chat/domain/types';
 import { CreateNewMessageDto } from '../../domain/types';
 import { SendMessageInputDto } from '../../api/dto/input-dto/send-message.input.dto';
 import { MessageEntity } from '../../domain/message.entity';
+import {
+  SendMessageOutputDto,
+  SendMessageOutputDtoMapper,
+} from '../../api/dto/output-dto/send-message.output.dto';
+import { ChatEntity } from '../../../chat/domain/chat.entity';
 
 export class SendMessageCommand implements ICommand {
   constructor(public inputDto: SendMessageInputDto) {}
@@ -23,7 +28,10 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<SendMessageCommand, AppNotificationResultType<null>>
+    ICommandHandler<
+      SendMessageCommand,
+      AppNotificationResultType<SendMessageOutputDto>
+    >
 {
   constructor(
     private readonly logger: LoggerService,
@@ -31,13 +39,14 @@ export class SendMessageUseCase
     private readonly messageRepository: MessageRepository,
     private readonly chatRepository: ChatRepository,
     private readonly publisher: EventPublisher,
+    private readonly sendMessageOutputDtoMapper: SendMessageOutputDtoMapper,
   ) {
     this.logger.setContext(SendMessageUseCase.name);
   }
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<SendMessageOutputDto>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentParticipantId, participantId, message } = command.inputDto;
     try {
@@ -47,12 +56,15 @@ export class SendMessageUseCase
       );
 
       let newMessage: MessageEntity;
+      let newChat: ChatEntity | null = null;
       if (!chat) {
-        newMessage = await this.handleNewChat(
+        const result = await this.handleNewChat(
           currentParticipantId,
           participantId,
           message,
         );
+        newMessage = result.message;
+        newChat = result.chat;
       } else {
         newMessage = await this.handleCurrentChat(
           currentParticipantId,
@@ -63,7 +75,9 @@ export class SendMessageUseCase
 
       this.publish(newMessage, participantId);
 
-      return this.appNotification.success(null);
+      return this.appNotification.success(
+        this.sendMessageOutputDtoMapper.map(newMessage, newChat || chat),
+      );
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
@@ -74,7 +88,7 @@ export class SendMessageUseCase
     currentParticipantId: string,
     participantId: string,
     message: string,
-  ): Promise<MessageEntity> {
+  ): Promise<{ chat: ChatEntity; message: MessageEntity }> {
     const data: CreateChatDto = {
       message,
       currentParticipantId,
@@ -82,9 +96,7 @@ export class SendMessageUseCase
       createdAt: new Date(),
     };
 
-    const result = await this.chatRepository.createChatWithParticipants(data);
-
-    return result.message;
+    return await this.chatRepository.createChatWithParticipants(data);
   }
 
   private async handleCurrentChat(
