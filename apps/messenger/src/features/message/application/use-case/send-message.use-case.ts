@@ -1,4 +1,9 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import {
+  CommandHandler,
+  EventPublisher,
+  ICommand,
+  ICommandHandler,
+} from '@nestjs/cqrs';
 import {
   ApplicationNotification,
   AppNotificationResultType,
@@ -9,6 +14,7 @@ import { ChatRepository } from '../../../chat/infrastructure/chat.repository';
 import { CreateChatDto } from '../../../chat/domain/types';
 import { CreateNewMessageDto } from '../../domain/types';
 import { SendMessageInputDto } from '../../api/dto/input-dto/send-message.input.dto';
+import { MessageEntity } from '../../domain/message.entity';
 
 export class SendMessageCommand implements ICommand {
   constructor(public inputDto: SendMessageInputDto) {}
@@ -24,6 +30,7 @@ export class SendMessageUseCase
     private readonly appNotification: ApplicationNotification,
     private readonly messageRepository: MessageRepository,
     private readonly chatRepository: ChatRepository,
+    private readonly publisher: EventPublisher,
   ) {
     this.logger.setContext(SendMessageUseCase.name);
   }
@@ -39,11 +46,22 @@ export class SendMessageUseCase
         participantId,
       );
 
+      let newMessage: MessageEntity;
       if (!chat) {
-        await this.handleNewChat(currentParticipantId, participantId, message);
+        newMessage = await this.handleNewChat(
+          currentParticipantId,
+          participantId,
+          message,
+        );
       } else {
-        await this.handleCurrentChat(currentParticipantId, message, chat.id);
+        newMessage = await this.handleCurrentChat(
+          currentParticipantId,
+          message,
+          chat.id,
+        );
       }
+
+      this.publish(newMessage, participantId);
 
       return this.appNotification.success(null);
     } catch (e) {
@@ -56,7 +74,7 @@ export class SendMessageUseCase
     currentParticipantId: string,
     participantId: string,
     message: string,
-  ): Promise<void> {
+  ): Promise<MessageEntity> {
     const data: CreateChatDto = {
       message,
       currentParticipantId,
@@ -64,14 +82,16 @@ export class SendMessageUseCase
       createdAt: new Date(),
     };
 
-    await this.chatRepository.createChatWithParticipants(data);
+    const result = await this.chatRepository.createChatWithParticipants(data);
+
+    return result.message;
   }
 
   private async handleCurrentChat(
     currentParticipantId: string,
     message: string,
     chatId: string,
-  ): Promise<void> {
+  ): Promise<MessageEntity> {
     const data: CreateNewMessageDto = {
       message,
       chatId: chatId,
@@ -79,6 +99,13 @@ export class SendMessageUseCase
       createdAt: new Date(),
     };
 
-    await this.messageRepository.createMessage(data);
+    return await this.messageRepository.createMessage(data);
+  }
+
+  private publish(message: MessageEntity, participantId: string): void {
+    const messageWithEvent = this.publisher.mergeObjectContext(message);
+
+    messageWithEvent.newMessageEvent(participantId);
+    messageWithEvent.commit();
   }
 }

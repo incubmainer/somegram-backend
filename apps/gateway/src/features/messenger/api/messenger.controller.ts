@@ -13,6 +13,7 @@ import {
 import { LoggerService } from '@app/logger';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -26,7 +27,7 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserChatsQuery } from '../application/query-bus/get-user-chats.use-case';
 import { Pagination } from '@app/paginator';
 import { GetUserChatsOutputDto } from './dto/output-dto/get-user-chats.output.dto';
@@ -40,8 +41,11 @@ import { GetChatMessagesQueryParams } from './dto/input-dto/get-chat-messages.qu
 import { ChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
 import { ReadMessageSwagger } from './swagger/read-message.swagger';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { NEW_MESSAGE } from '../../../common/constants/service.constants';
+import { NewMessageGatewayDto } from '../domain/types';
+import { NewMessageEvent } from '../application/events/new-message.event';
 
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiTags('Messenger')
@@ -52,10 +56,12 @@ export class MessengerController {
     private readonly appNotification: ApplicationNotification,
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
+    private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(MessengerController.name);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(`${MESSENGER_ROUTE.CHAT}/:endCursorChatId?`)
   @GetUserChatsSwagger()
   async getUserChats(
@@ -78,6 +84,7 @@ export class MessengerController {
     this.appNotification.handleHttpResult(result);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post(`${MESSENGER_ROUTE.CHAT}/:participantId`)
   @SendMessageSwagger()
@@ -97,6 +104,7 @@ export class MessengerController {
     this.appNotification.handleHttpResult(result);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(
     `${MESSENGER_ROUTE.CHAT}/:chatId/${MESSENGER_ROUTE.MESSAGES}/:endCursorMessageId?`,
   )
@@ -127,6 +135,7 @@ export class MessengerController {
     this.appNotification.handleHttpResult(result);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   @Put(`${MESSENGER_ROUTE.CHAT}/:messageId/${MESSENGER_ROUTE.MESSAGES}`)
   @ReadMessageSwagger()
@@ -143,5 +152,19 @@ export class MessengerController {
     this.logger.debug(result.appResult, this.readMessage.name);
 
     this.appNotification.handleHttpResult(result);
+  }
+
+  @ApiExcludeEndpoint()
+  @MessagePattern({ cmd: NEW_MESSAGE })
+  async createNewMessageNotification(
+    @Payload() payload: NewMessageGatewayDto,
+  ): Promise<void> {
+    this.logger.debug(
+      'Execute: create new message notification',
+      this.createNewMessageNotification.name,
+    );
+    await this.eventBus.publish(
+      new NewMessageEvent(payload.message, payload.participantId),
+    );
   }
 }

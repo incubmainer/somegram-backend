@@ -7,9 +7,12 @@ import { GetChatMessagesUseCase } from './application/query-bus/get-chat-message
 import { MessageQueryRepository } from './infrastructure/message.query-repository';
 import { GetChatMessagesOutputDtoMapper } from './api/dto/output-dto/get-chat-messages.output.dto';
 import { ReadMessageUseCase } from './application/use-case/read-message.use-case';
+import { GetMessageByIdUseCase } from './application/query-bus/get-message-by-id.use-case';
+import { NewMessageEventHandler } from './application/events/new-message.event';
 
 const handlers = [SendMessageUseCase, ReadMessageUseCase];
-const queryHandlers = [GetChatMessagesUseCase];
+const queryHandlers = [GetChatMessagesUseCase, GetMessageByIdUseCase];
+const events = [NewMessageEventHandler];
 
 @Module({
   imports: [ChatModule],
@@ -17,6 +20,7 @@ const queryHandlers = [GetChatMessagesUseCase];
   providers: [
     ...handlers,
     ...queryHandlers,
+    ...events,
     MessageRepository,
     MessageQueryRepository,
     GetChatMessagesOutputDtoMapper,

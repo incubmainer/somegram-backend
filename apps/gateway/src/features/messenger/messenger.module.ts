@@ -7,10 +7,14 @@ import { SendMessageUseCase } from './application/use-case/send-message.use-case
 import { GetChatMessagesQueryUseCase } from './application/query-bus/get-chat-messages.use-case';
 import { ChatMessagesOutputDtoMapper } from './api/dto/output-dto/get-chat-messages.output.dto';
 import { ReadMessageUseCase } from './application/use-case/read-message.use-case';
+import { MessengerWsGateway } from './api/messenger.ws-gateway';
+import { NewMessageEventHandler } from './application/events/new-message.event';
 
 const queryHandlers = [GetUserChatsQueryUseCase, GetChatMessagesQueryUseCase];
 
 const handlers = [SendMessageUseCase, ReadMessageUseCase];
+
+const events = [NewMessageEventHandler];
 
 @Module({
   imports: [UsersModule],
@@ -19,7 +23,9 @@ const handlers = [SendMessageUseCase, ReadMessageUseCase];
     GetUserChatsOutputDtoMapper,
     ...queryHandlers,
     ...handlers,
+    ...events,
     ChatMessagesOutputDtoMapper,
+    MessengerWsGateway,
   ],
   exports: [],
 })

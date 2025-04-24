@@ -3,7 +3,10 @@ import { LoggerService } from '@app/logger';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
-import { MessageWithReadStatusType } from '../domain/types';
+import {
+  MessageWithReadStatusAndParticipantsType,
+  MessageWithReadStatusType,
+} from '../domain/types';
 
 @Injectable()
 export class MessageQueryRepository {
@@ -69,5 +72,26 @@ export class MessageQueryRepository {
       items: messages || [],
       total: totalCount || 0,
     };
+  }
+
+  async getMessageByIdWithChatParticipant(
+    messageId: string,
+  ): Promise<MessageWithReadStatusAndParticipantsType | null> {
+    this.logger.debug(
+      'Execute: get message by id with participant info',
+      this.getMessageByIdWithChatParticipant.name,
+    );
+
+    return this.txHost.tx.message.findUnique({
+      where: {
+        id: messageId,
+      },
+      include: {
+        Chat: {
+          select: { Participants: true },
+        },
+        MessageReadStatus: true,
+      },
+    });
   }
 }

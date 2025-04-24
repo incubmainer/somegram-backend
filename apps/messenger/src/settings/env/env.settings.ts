@@ -24,9 +24,14 @@ export class EnvSettings {
   @IsString()
   public readonly MESSENGER_DATABASE_URL: string;
 
+  @IsNotEmpty()
+  @IsString()
+  public readonly RMQ_CONNECTION_STRING: string;
+
   constructor(envVariable: EnvVariableType) {
     this.ENV = (envVariable.NODE_ENV as EnvState) || EnvState.DEVELOPMENT;
     this.MESSENGER_DATABASE_URL = envVariable.MESSENGER_DATABASE_URL;
+    this.RMQ_CONNECTION_STRING = envVariable.RMQ_CONNECTION_STRING;
 
     this.MESSENGER_SERVICE_PORT = this.getNumberOrDefaultValue(
       envVariable.MESSENGER_SERVICE_PORT,

@@ -6,6 +6,7 @@ export class GetChatMessagesOutputDto {
   content: string;
   createdAt: Date;
   senderId: string;
+  chatId: string;
   isMine: boolean;
   myReadStatus: boolean;
   myReadAt: Date | null;
@@ -31,6 +32,7 @@ export class GetChatMessagesOutputDtoMapper {
       content: message.content,
       createdAt: message.createdAt,
       senderId: message.userId,
+      chatId: message.chatId,
       isMine: message.userId === currentUserId,
       myReadStatus: Boolean(myStatus),
       participantReadStatus: Boolean(participantStatus),

@@ -37,6 +37,8 @@ export const SUBSCRIPTIONS_ROUTE = {
 
 export const NOTIFICATION_NAME_SPACE = 'notification';
 
+export const MESSENGER_NAME_SPACE = 'messenger';
+
 export const NOTIFICATION_ROUTE = {
   MAIN: 'notifications',
   MARK_AS_READ: 'read',

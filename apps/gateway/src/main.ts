@@ -36,6 +36,16 @@ async function bootstrap() {
       },
     },
   });
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [envSettings.RMQ_CONNECTION_STRING],
+      queue: 'messenger_queue',
+      queueOptions: {
+        durable: false,
+      },
+    },
+  });
 
   await app.startAllMicroservices();
   await app.listen(envSettings.PORT);

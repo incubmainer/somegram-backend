@@ -4,6 +4,8 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { PrismaClient as MessengerPrismaClient, Chat } from '@prisma/messenger';
 import { LoggerService } from '@app/logger';
 import { CreateChatDto } from '../domain/types';
+import { MessageEntity } from '../../message/domain/message.entity';
+import { ChatEntity } from '../domain/chat.entity';
 
 @Injectable()
 export class ChatRepository {
@@ -16,14 +18,16 @@ export class ChatRepository {
     this.logger.setContext(ChatRepository.name);
   }
 
-  async createChatWithParticipants(createDto: CreateChatDto): Promise<void> {
+  async createChatWithParticipants(
+    createDto: CreateChatDto,
+  ): Promise<{ chat: ChatEntity; message: MessageEntity }> {
     this.logger.debug(
       'Execute: create chat with participants',
       this.createChatWithParticipants.name,
     );
     const { createdAt, participantId, currentParticipantId, message } =
       createDto;
-    await this.txHost.tx.chat.create({
+    const result = await this.txHost.tx.chat.create({
       data: {
         createdAt,
         Participants: {
@@ -48,7 +52,18 @@ export class ChatRepository {
           },
         },
       },
+      include: {
+        Messages: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
+
+    return {
+      chat: new ChatEntity(result),
+      message: new MessageEntity(result.Messages[0]),
+    };
   }
 
   async getChatByUserIds(
