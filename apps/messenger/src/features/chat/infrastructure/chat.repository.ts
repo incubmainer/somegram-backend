@@ -39,6 +39,12 @@ export class ChatRepository {
             createdAt,
             userId: currentParticipantId,
             content: message,
+            MessageReadStatus: {
+              create: {
+                createdAt,
+                userId: currentParticipantId,
+              },
+            },
           },
         },
       },

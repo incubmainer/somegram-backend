@@ -29,6 +29,18 @@ export class ChatMessagesOutputDto {
 
   @ApiProperty()
   username: string;
+
+  @ApiProperty()
+  myReadStatus: boolean;
+
+  @ApiProperty()
+  participantReadStatus: boolean;
+
+  @ApiProperty()
+  myReadAt: Date | null;
+
+  @ApiProperty()
+  participantReadAt: Date | null;
 }
 
 export class ChatMessagesOutputPaginationDto extends Pagination<ChatMessagesOutputDto> {
@@ -63,6 +75,10 @@ export class ChatMessagesOutputDtoMapper {
       avatarUrl: isBan ? null : avatar,
       username,
       isBan,
+      myReadStatus: message.myReadStatus,
+      myReadAt: message.myReadAt,
+      participantReadStatus: message.participantReadStatus,
+      participantReadAt: message.participantReadAt,
     };
   }
 

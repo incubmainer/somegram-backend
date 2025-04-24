@@ -12,6 +12,9 @@ class LastChatMessageOutputDto {
 
   @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
+  myReadStatus: boolean;
 }
 
 class ParticipantOutputDto {

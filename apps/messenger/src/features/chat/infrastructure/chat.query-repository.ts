@@ -90,7 +90,22 @@ export class ChatQueryRepository {
           where m."chatId" = c."id"
           order by m."createdAt" desc
           limit 1
-        ) as "isMine"
+        ) as "isMine",
+
+        (
+          select exists (
+            select 1
+            from "MessageReadStatus" as mrs
+            where mrs."userId" = ${userId}
+              and mrs."messageId" = (
+                select m2."id"
+                from "Message" as m2
+                where m2."chatId" = c."id"
+                order by m2."createdAt" desc
+                limit 1
+              )
+          )
+        ) as "isMyRead"
 
       from "Chat" as c
       inner join "Participant" as p on p."chatId" = c."id"

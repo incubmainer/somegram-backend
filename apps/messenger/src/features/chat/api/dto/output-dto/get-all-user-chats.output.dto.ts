@@ -5,6 +5,7 @@ class LastChatMessageOutputDto {
   isMine: boolean;
   content: string;
   createdAt: Date;
+  myReadStatus: boolean;
 }
 
 export class GetAllUserChatsOutputDto {
@@ -27,6 +28,7 @@ export class UserChatOutputDtoMapper {
         createdAt: chat.lastMessage.createdAt,
         content: chat.lastMessage.content,
         isMine: chat.isMine,
+        myReadStatus: chat.isMyRead,
       },
     };
   }

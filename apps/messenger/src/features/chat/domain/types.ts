@@ -12,6 +12,7 @@ export class ChatRawDto {
   participantId: string; // The second participant of the chat
   lastMessage: ChatLastMessageRawDto;
   isMine: boolean; // My last message in chat or not
+  isMyRead: boolean;
 }
 
 export class CreateChatDto {
