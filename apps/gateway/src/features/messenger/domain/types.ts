@@ -3,3 +3,8 @@ export class CreateMessageDto {
   participantId: string;
   message: string;
 }
+
+export class ReadMessageDto {
+  userId: string;
+  messageId: string;
+}

@@ -4,6 +4,7 @@ import { firstValueFrom, Observable, timeout } from 'rxjs';
 import {
   GET_CHAT_MESSAGES,
   GET_USERS_CHATS_MESSENGER,
+  READ_MESSAGE,
   SEND_MESSAGE_TO_CHAT,
 } from '../constants/service.constants';
 import {
@@ -14,7 +15,10 @@ import { LoggerService } from '@app/logger';
 import { SearchQueryParametersWithoutSorting } from '../domain/query.types';
 import { Pagination } from '@app/paginator';
 import { GetAllUserChatsOutputDto } from '../../../../messenger/src/features/chat/api/dto/output-dto/get-all-user-chats.output.dto';
-import { CreateMessageDto } from '../../features/messenger/domain/types';
+import {
+  CreateMessageDto,
+  ReadMessageDto,
+} from '../../features/messenger/domain/types';
 import { GetChatMessagesOutputDto } from '../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
 import { GetChatMessagesQueryParams } from '../../features/messenger/api/dto/input-dto/get-chat-messages.query.params';
 
@@ -61,6 +65,21 @@ export class MessengerServiceAdapter {
       const responseOfService: Observable<AppNotificationResultType<null>> =
         this.messengerServiceClient
           .send({ cmd: SEND_MESSAGE_TO_CHAT }, body)
+          .pipe(timeout(20000));
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getUserChats.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async readMessage(
+    body: ReadMessageDto,
+  ): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.messengerServiceClient
+          .send({ cmd: READ_MESSAGE }, body)
           .pipe(timeout(20000));
       return await firstValueFrom(responseOfService);
     } catch (e) {

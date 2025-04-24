@@ -5,6 +5,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
   GET_CHAT_MESSAGES,
+  READ_MESSAGE,
   SEND_MESSAGE_TO_CHAT,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
@@ -13,6 +14,8 @@ import { GetChatMessagesQuery } from '../application/query-bus/get-chat-messages
 import { GetChatMessagesInputDto } from './dto/input-dto/get-chat-messages.input.dto';
 import { Pagination } from '@app/paginator';
 import { GetChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
+import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
+import { ReadMessageInputDto } from './dto/input-dto/read-message.input.dto';
 
 @Controller()
 export class MessageController {
@@ -51,6 +54,20 @@ export class MessageController {
     > = await this.queryBus.execute(new GetChatMessagesQuery(body));
 
     this.logger.debug(result.appResult, this.getChatMessages.name);
+
+    return result;
+  }
+
+  @MessagePattern({ cmd: READ_MESSAGE })
+  async readMessage(
+    body: ReadMessageInputDto,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: read message', this.readMessage.name);
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(new ReadMessageCommand(body));
+
+    this.logger.debug(result.appResult, this.readMessage.name);
 
     return result;
   }

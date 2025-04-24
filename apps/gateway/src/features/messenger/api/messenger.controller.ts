@@ -6,11 +6,11 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { LoggerService } from '@app/logger';
-import { MessengerServiceAdapter } from '../../../common/adapter/messenger-service.adapter';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -38,6 +38,8 @@ import { GetChatMessagesQuery } from '../application/query-bus/get-chat-messages
 import { GetChatMessagesSwagger } from './swagger/get-chat-messages.swagger';
 import { GetChatMessagesQueryParams } from './dto/input-dto/get-chat-messages.query.params';
 import { ChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
+import { ReadMessageSwagger } from './swagger/read-message.swagger';
+import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
@@ -48,7 +50,6 @@ export class MessengerController {
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
-    private readonly messengerServiceAdapter: MessengerServiceAdapter,
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
   ) {
@@ -122,6 +123,24 @@ export class MessengerController {
 
     if (result.appResult === AppNotificationResultEnum.Success)
       return result.data;
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Put(`${MESSENGER_ROUTE.CHAT}/:messageId/${MESSENGER_ROUTE.MESSAGES}`)
+  @ReadMessageSwagger()
+  async readMessage(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Param('messageId') messageId: string,
+  ): Promise<void> {
+    this.logger.debug('Execute: read message', this.readMessage.name);
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new ReadMessageCommand(user.userId, messageId),
+      );
+
+    this.logger.debug(result.appResult, this.readMessage.name);
 
     this.appNotification.handleHttpResult(result);
   }

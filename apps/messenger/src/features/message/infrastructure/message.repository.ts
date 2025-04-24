@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@app/logger';
-import { CreateNewMessageDto } from '../domain/types';
+import {
+  CreateMessageReadDto,
+  CreateNewMessageDto,
+  MessageWithReadStatusType,
+} from '../domain/types';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
@@ -26,6 +30,41 @@ export class MessageRepository {
         chatId,
         content: message,
         userId: senderId,
+      },
+    });
+  }
+
+  async createMessageReadStatus(
+    createDto: CreateMessageReadDto,
+  ): Promise<void> {
+    this.logger.debug(
+      'Execute: save new message read status',
+      this.createMessageReadStatus.name,
+    );
+    const { createdAt, messageId, userId } = createDto;
+
+    await this.txHost.tx.messageReadStatus.create({
+      data: {
+        createdAt,
+        messageId,
+        userId,
+      },
+    });
+  }
+
+  async getMessageByIdWithReadStatus(
+    id: string,
+  ): Promise<MessageWithReadStatusType | null> {
+    this.logger.debug(
+      'Execute: get message by id with read status',
+      this.getMessageByIdWithReadStatus.name,
+    );
+    return this.txHost.tx.message.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        MessageReadStatus: true,
       },
     });
   }

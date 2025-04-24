@@ -35,3 +35,4 @@ export const GET_ALL_PAYMENTS_GQL = 'get_all_payments_gql';
 export const GET_USERS_CHATS_MESSENGER = 'get_user_chats';
 export const SEND_MESSAGE_TO_CHAT = 'send_message_to_chat';
 export const GET_CHAT_MESSAGES = 'get_chat_messages';
+export const READ_MESSAGE = 'read_message';
