@@ -18,6 +18,7 @@ import { EnvSettings } from '../../../settings/env/env.settings';
 import { JwtService } from '@nestjs/jwt';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
 import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
+import { WS_ERROR_EVENT } from '../../constants/ws-events.constants';
 
 export abstract class WsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -107,16 +108,15 @@ export abstract class WsGateway
       this.forceDisconnect.name,
     );
     this.clearClient(client);
-    client.emit('error', payload);
+    client.emit(WS_ERROR_EVENT, payload);
     client.disconnect();
   }
 
   async handleConnection(client: Socket): Promise<void> {
     this.logger.debug(
-      `Client connected: ${client.id}`,
+      `Trying to connect: ${client.id}`,
       this.handleConnection.name,
     );
-
     const userId = await this.authConnection(client);
     if (!userId) return;
 
@@ -127,6 +127,11 @@ export abstract class WsGateway
     }
 
     this.userSockets.get(userId)!.add(client);
+
+    this.logger.debug(
+      `Client connected: ${client.id}`,
+      this.handleConnection.name,
+    );
   }
 
   handleDisconnect(client: Socket): void {

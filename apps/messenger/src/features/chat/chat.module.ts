@@ -4,8 +4,10 @@ import { GetAllChatsForUserUseCase } from './application/query-bus/get-all-chats
 import { ChatController } from './api/chat.controller';
 import { UserChatOutputDtoMapper } from './api/dto/output-dto/get-all-user-chats.output.dto';
 import { ChatRepository } from './infrastructure/chat.repository';
+import { GetChatByIdQueryUseCase } from './application/query-bus/get-chat-by-id.use-case';
+import { ChatOutputDtoMapper } from './api/dto/output-dto/get-chat-by-id.output.dto';
 
-const queryHandlers = [GetAllChatsForUserUseCase];
+const queryHandlers = [GetAllChatsForUserUseCase, GetChatByIdQueryUseCase];
 
 @Module({
   imports: [],
@@ -15,6 +17,7 @@ const queryHandlers = [GetAllChatsForUserUseCase];
     ChatRepository,
     ...queryHandlers,
     UserChatOutputDtoMapper,
+    ChatOutputDtoMapper,
   ],
   exports: [ChatRepository, ChatQueryRepository],
 })

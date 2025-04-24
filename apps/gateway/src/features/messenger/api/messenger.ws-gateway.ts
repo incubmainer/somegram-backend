@@ -11,6 +11,8 @@ import { MESSENGER_NAME_SPACE } from '../../../common/constants/route.constants'
 import { LoggerService } from '@app/logger';
 import {
   ApplicationNotification,
+  AppNotificationResultEnum,
+  AppNotificationResultType,
   WsNotification,
 } from '@app/application-notification';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
@@ -34,8 +36,13 @@ import { WsValidationPipeOption } from '../../../common/pipe/validation/ws-valid
 import { WS_JOIN_CHAT } from '../../../common/constants/ws-events.constants';
 import { JoinChatInputDto } from './dto/input-dto/join-chat.input.dto';
 import { WsJwtAuthGuard } from '../../../common/guards/ws-jwt/ws-jwt-auth.guard';
+import { QueryBus } from '@nestjs/cqrs';
+import { GetChatByIdQuery } from '../application/query-bus/get-chat-by-id.use-case';
+import { WsCurrentUserId } from '../../../common/decorators/ws-parse/ws-current-user-id';
+import { ChatOutputDto } from '../../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
+
 @UseFilters(WsExceptionFilter)
 @UsePipes(new ValidationPipe(new WsValidationPipeOption()))
 @WebSocketGateway({
@@ -57,6 +64,7 @@ export class MessengerWsGateway
     jwtService: JwtService,
     usersRepository: UsersRepository,
     wsNotification: WsNotification,
+    private readonly queryBus: QueryBus,
   ) {
     super(
       logger,
@@ -77,9 +85,18 @@ export class MessengerWsGateway
 
     @ConnectedSocket()
     client: Socket,
+
+    @WsCurrentUserId()
+    userId: string,
   ): Promise<void> {
     const { chatId } = payload;
 
-    this.joinRoom(client, WS_CHAT_ROOM_NAME, chatId);
+    const result: AppNotificationResultType<ChatOutputDto> =
+      await this.queryBus.execute(new GetChatByIdQuery(chatId, userId));
+
+    if (result.appResult === AppNotificationResultEnum.Success)
+      this.joinRoom(client, WS_CHAT_ROOM_NAME, chatId);
+
+    this.appNotification.handleWsResult(result);
   }
 }
