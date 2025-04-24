@@ -35,7 +35,8 @@ export class ReadMessageUseCase
         await this.messageRepository.getMessageByIdWithReadStatus(messageId);
 
       if (!message) return this.appNotification.notFound();
-      if (message.userId !== userId) return this.appNotification.forbidden();
+      if (!message.Chat.Participants.some((p) => p.userId === userId))
+        return this.appNotification.forbidden();
 
       const isReadByUser = message.MessageReadStatus.some(
         (u) => u.userId === userId,

@@ -3,7 +3,7 @@ import { LoggerService } from '@app/logger';
 import {
   CreateMessageReadDto,
   CreateNewMessageDto,
-  MessageWithReadStatusType,
+  MessageWithReadStatusAndParticipantsType,
 } from '../domain/types';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
@@ -60,7 +60,7 @@ export class MessageRepository {
 
   async getMessageByIdWithReadStatus(
     id: string,
-  ): Promise<MessageWithReadStatusType | null> {
+  ): Promise<MessageWithReadStatusAndParticipantsType | null> {
     this.logger.debug(
       'Execute: get message by id with read status',
       this.getMessageByIdWithReadStatus.name,
@@ -70,6 +70,11 @@ export class MessageRepository {
         id,
       },
       include: {
+        Chat: {
+          select: {
+            Participants: true,
+          },
+        },
         MessageReadStatus: true,
       },
     });

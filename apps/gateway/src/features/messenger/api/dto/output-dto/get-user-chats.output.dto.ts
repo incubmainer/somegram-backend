@@ -5,6 +5,9 @@ import { Pagination } from '@app/paginator';
 
 class LastChatMessageOutputDto {
   @ApiProperty()
+  id: string;
+
+  @ApiProperty()
   isMine: boolean;
 
   @ApiProperty()

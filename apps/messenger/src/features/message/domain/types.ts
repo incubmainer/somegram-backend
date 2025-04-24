@@ -1,4 +1,4 @@
-import { MessageReadStatus, Message } from '@prisma/messenger';
+import { MessageReadStatus, Message, Participant } from '@prisma/messenger';
 
 export class CreateNewMessageDto {
   message: string;
@@ -6,6 +6,11 @@ export class CreateNewMessageDto {
   createdAt: Date;
   senderId: string;
 }
+
+export type MessageWithReadStatusAndParticipantsType = Message & {
+  MessageReadStatus: MessageReadStatus[] | null;
+  Chat: { Participants: Participant[] };
+};
 
 export type MessageWithReadStatusType = Message & {
   MessageReadStatus: MessageReadStatus[] | null;
