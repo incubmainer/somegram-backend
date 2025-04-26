@@ -52,7 +52,7 @@ export class ReadMessageUseCase
 
       const secondParticipantId = participants.find(
         (p) => p.userId !== userId,
-      ).id;
+      ).userId;
 
       const readCreateDto: CreateMessageReadDto = {
         messageId,
