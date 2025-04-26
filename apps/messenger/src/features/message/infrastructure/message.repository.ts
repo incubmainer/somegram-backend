@@ -3,12 +3,14 @@ import { LoggerService } from '@app/logger';
 import {
   CreateMessageReadDto,
   CreateNewMessageDto,
-  MessageWithReadStatusAndParticipantsType,
+  MessageWithReadStatusAndParticipants,
 } from '../domain/types';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
 import { MessageEntity } from '../domain/message.entity';
+import { MessageReadEntity } from '../domain/message-read.entity';
+import { ParticipantEntity } from '../../chat/domain/participant.entity';
 
 @Injectable()
 export class MessageRepository {
@@ -63,12 +65,12 @@ export class MessageRepository {
 
   async getMessageByIdWithReadStatus(
     id: string,
-  ): Promise<MessageWithReadStatusAndParticipantsType | null> {
+  ): Promise<MessageWithReadStatusAndParticipants | null> {
     this.logger.debug(
       'Execute: get message by id with read status',
       this.getMessageByIdWithReadStatus.name,
     );
-    return this.txHost.tx.message.findUnique({
+    const result = await this.txHost.tx.message.findUnique({
       where: {
         id,
       },
@@ -81,5 +83,26 @@ export class MessageRepository {
         MessageReadStatus: true,
       },
     });
+
+    if (!result) return null;
+
+    const message = new MessageEntity(result);
+    const messageReadStatus: MessageReadEntity[] = [];
+
+    if (result.MessageReadStatus && result.MessageReadStatus.length > 0)
+      result.MessageReadStatus.map((m) =>
+        messageReadStatus.push(new MessageReadEntity(m)),
+      );
+
+    return {
+      message,
+      messageReadStatus:
+        messageReadStatus && messageReadStatus.length > 0
+          ? messageReadStatus
+          : null,
+      participants: result.Chat.Participants.map(
+        (p) => new ParticipantEntity(p),
+      ),
+    };
   }
 }

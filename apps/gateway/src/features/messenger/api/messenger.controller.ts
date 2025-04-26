@@ -42,10 +42,14 @@ import { ChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output
 import { ReadMessageSwagger } from './swagger/read-message.swagger';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { NEW_MESSAGE } from '../../../common/constants/service.constants';
+import {
+  MESSAGE_READ,
+  NEW_MESSAGE,
+} from '../../../common/constants/service.constants';
 import { NewMessageGatewayDto } from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
 import { SendMessageOutputDto } from '../../../../../messenger/src/features/message/api/dto/output-dto/send-message.output.dto';
+import { MessageReadEvent } from '../application/events/message-read.event';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -169,5 +173,17 @@ export class MessengerController {
     await this.eventBus.publish(
       new NewMessageEvent(payload.message, payload.participantId),
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @MessagePattern({ cmd: MESSAGE_READ })
+  async messageReadNotification(
+    @Payload() payload: NewMessageGatewayDto,
+  ): Promise<void> {
+    this.logger.debug(
+      'Execute: message read notification',
+      this.messageReadNotification.name,
+    );
+    await this.eventBus.publish(new MessageReadEvent(payload.message));
   }
 }

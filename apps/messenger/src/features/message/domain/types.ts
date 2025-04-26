@@ -1,4 +1,7 @@
 import { MessageReadStatus, Message, Participant } from '@prisma/messenger';
+import { MessageEntity } from './message.entity';
+import { MessageReadEntity } from './message-read.entity';
+import { ParticipantEntity } from '../../chat/domain/participant.entity';
 
 export class CreateNewMessageDto {
   message: string;
@@ -20,4 +23,10 @@ export class CreateMessageReadDto {
   userId: string;
   messageId: string;
   createdAt: Date;
+}
+
+export class MessageWithReadStatusAndParticipants {
+  message: MessageEntity;
+  messageReadStatus: MessageReadEntity[] | null;
+  participants: ParticipantEntity[];
 }

@@ -1,6 +1,7 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Message } from '@prisma/messenger';
 import { NewMessageEvent } from '../application/events/new-message.event';
+import { MessageReadEvent } from '../application/events/message-read.event';
 
 export class MessageEntity extends AggregateRoot implements Message {
   id: string;
@@ -22,5 +23,7 @@ export class MessageEntity extends AggregateRoot implements Message {
     this.apply(new NewMessageEvent(this.id, participantId));
   }
 
-  readMessageEvent(): void {}
+  readMessageEvent(participantId: string): void {
+    this.apply(new MessageReadEvent(this.id, participantId));
+  }
 }

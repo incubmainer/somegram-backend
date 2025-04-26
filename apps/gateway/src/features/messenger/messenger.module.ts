@@ -11,6 +11,7 @@ import { MessengerWsGateway } from './api/messenger.ws-gateway';
 import { NewMessageEventHandler } from './application/events/new-message.event';
 import { GetChatByIdQueryUseCase } from './application/query-bus/get-chat-by-id.use-case';
 import { MessengerSwaggerController } from './api/swagger/messanger-controller.swagger';
+import { MessageReadEventHandler } from './application/events/message-read.event';
 
 const queryHandlers = [
   GetUserChatsQueryUseCase,
@@ -20,7 +21,7 @@ const queryHandlers = [
 
 const handlers = [SendMessageUseCase, ReadMessageUseCase];
 
-const events = [NewMessageEventHandler];
+const events = [NewMessageEventHandler, MessageReadEventHandler];
 
 @Module({
   imports: [UsersModule],

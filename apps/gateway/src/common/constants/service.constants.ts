@@ -38,3 +38,4 @@ export const SEND_MESSAGE_TO_CHAT = 'send_message_to_chat';
 export const GET_CHAT_MESSAGES = 'get_chat_messages';
 export const READ_MESSAGE = 'read_message';
 export const NEW_MESSAGE = 'new_message';
+export const MESSAGE_READ = 'message_read';
