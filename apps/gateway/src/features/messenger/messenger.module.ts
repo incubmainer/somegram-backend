@@ -10,6 +10,7 @@ import { ReadMessageUseCase } from './application/use-case/read-message.use-case
 import { MessengerWsGateway } from './api/messenger.ws-gateway';
 import { NewMessageEventHandler } from './application/events/new-message.event';
 import { GetChatByIdQueryUseCase } from './application/query-bus/get-chat-by-id.use-case';
+import { MessengerSwaggerController } from './api/swagger/messanger-controller.swagger';
 
 const queryHandlers = [
   GetUserChatsQueryUseCase,
@@ -23,7 +24,7 @@ const events = [NewMessageEventHandler];
 
 @Module({
   imports: [UsersModule],
-  controllers: [MessengerController],
+  controllers: [MessengerController, MessengerSwaggerController],
   providers: [
     GetUserChatsOutputDtoMapper,
     ...queryHandlers,
