@@ -15,9 +15,11 @@ import { MESSENGER_NAME_SPACE } from '../../../../common/constants/route.constan
 import {
   WS_ERROR_EVENT,
   WS_JOIN_CHAT,
+  WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
-  WS_NEW_CHAT_MESSAGE,
-  WS_NEW_MESSAGE,
+  WS_LEAVE_ROOM_EVENT,
+  WS_NEW_CHAT_MESSAGE_EVENT,
+  WS_NEW_MESSAGE_EVENT,
 } from '../../../../common/constants/ws-events.constants';
 import {
   UnprocessableExceptionErrorDto,
@@ -96,7 +98,7 @@ export class MessengerSwaggerController {
     summary: `Connection and listen notifications`,
     description: `WebSocket server: \`wss://somegram.online/${MESSENGER_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.
-    \n To receive new messages: \`"${WS_NEW_MESSAGE}"\`, to receive new messages inside the chat: \`"${WS_NEW_CHAT_MESSAGE}"\``,
+    \n To receive new messages: \`"${WS_NEW_MESSAGE_EVENT}"\`, to receive new messages inside the chat: \`"${WS_NEW_CHAT_MESSAGE_EVENT}"\``,
   })
   @Get()
   @ApiOkResponse({
@@ -111,7 +113,9 @@ export class MessengerSwaggerController {
     summary: `Connect and disconnect chat`,
     description: `WebSocket server: \`wss://somegram.online/${MESSENGER_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.
-    \n To connect to a chat between two users: \`"${WS_JOIN_CHAT}"\`, to exit the chat: \`"${WS_LEAVE_CHAT}"\``,
+    \n To connect to a chat between two users: \`"${WS_JOIN_CHAT}"\`, to exit the chat: \`"${WS_LEAVE_CHAT}"\`
+    \n If the connection is successful, the event will return to the chat: \`"${WS_JOIN_ROOM_EVENT}\`"
+    \n If you successfully disconnect from the chat, the event will return: \`"${WS_LEAVE_ROOM_EVENT}\`"`,
   })
   @Post()
   @ApiOkResponse({

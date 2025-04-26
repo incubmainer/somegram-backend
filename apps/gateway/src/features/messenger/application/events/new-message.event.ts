@@ -1,8 +1,8 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { LoggerService } from '@app/logger';
 import {
-  WS_NEW_CHAT_MESSAGE,
-  WS_NEW_MESSAGE,
+  WS_NEW_CHAT_MESSAGE_EVENT,
+  WS_NEW_MESSAGE_EVENT,
 } from '../../../../common/constants/ws-events.constants';
 import {
   MessengerWsGateway,
@@ -31,13 +31,13 @@ export class NewMessageEventHandler implements IEventHandler<NewMessageEvent> {
     try {
       this.messengerWsGateway.emitMessageByUserId(
         participantId,
-        WS_NEW_MESSAGE,
+        WS_NEW_MESSAGE_EVENT,
         message,
       );
       this.messengerWsGateway.emitToRoom(
         WS_CHAT_ROOM_NAME,
         message.chatId,
-        WS_NEW_CHAT_MESSAGE,
+        WS_NEW_CHAT_MESSAGE_EVENT,
         message,
       );
       this.logger.debug('Success', this.handle.name);

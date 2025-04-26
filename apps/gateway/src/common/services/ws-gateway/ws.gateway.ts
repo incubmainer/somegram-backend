@@ -19,7 +19,12 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersRepository } from '../../../features/users/infrastructure/users.repository';
 import { JWTAccessTokenPayloadType } from '../../../features/auth/domain/types';
 import { WS_ERROR_EVENT } from '../../constants/ws-events.constants';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { WsExceptionFilter } from '../../exception-filter/ws/ws.exception-filter';
+import { WsValidationPipeOption } from '../../pipe/validation/ws-validation-options.pipe';
 
+@UseFilters(WsExceptionFilter)
+@UsePipes(new ValidationPipe(new WsValidationPipeOption()))
 export abstract class WsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -195,5 +200,11 @@ export abstract class WsGateway
       `Emit event '${event}' to room: ${room}_${id}`,
       this.emitToRoom.name,
     );
+  }
+
+  public isJoined(client: Socket, roomName: string): boolean {
+    const rooms = client.rooms;
+
+    return rooms.has(roomName);
   }
 }
