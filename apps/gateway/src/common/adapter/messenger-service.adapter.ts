@@ -22,7 +22,6 @@ import {
 } from '../../features/messenger/domain/types';
 import { GetChatMessagesOutputDto } from '../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
 import { GetChatMessagesQueryParams } from '../../features/messenger/api/dto/input-dto/get-chat-messages.query.params';
-import { SendMessageOutputDto } from '../../../../messenger/src/features/message/api/dto/output-dto/send-message.output.dto';
 import { ChatOutputDto } from '../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
 
 @Injectable()
@@ -63,10 +62,10 @@ export class MessengerServiceAdapter {
 
   async sendMessage(
     body: CreateMessageDto,
-  ): Promise<AppNotificationResultType<SendMessageOutputDto>> {
+  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<SendMessageOutputDto>
+        AppNotificationResultType<GetChatMessagesOutputDto>
       > = this.messengerServiceClient
         .send({ cmd: SEND_MESSAGE_TO_CHAT }, body)
         .pipe(timeout(20000));

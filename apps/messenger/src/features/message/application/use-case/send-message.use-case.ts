@@ -3,6 +3,7 @@ import {
   EventPublisher,
   ICommand,
   ICommandHandler,
+  QueryBus,
 } from '@nestjs/cqrs';
 import {
   ApplicationNotification,
@@ -15,11 +16,9 @@ import { CreateChatDto } from '../../../chat/domain/types';
 import { CreateNewMessageDto } from '../../domain/types';
 import { SendMessageInputDto } from '../../api/dto/input-dto/send-message.input.dto';
 import { MessageEntity } from '../../domain/message.entity';
-import {
-  SendMessageOutputDto,
-  SendMessageOutputDtoMapper,
-} from '../../api/dto/output-dto/send-message.output.dto';
 import { ChatEntity } from '../../../chat/domain/chat.entity';
+import { GetMessageByIdQuery } from '../query-bus/get-message-by-id.use-case';
+import { GetChatMessagesOutputDto } from '../../api/dto/output-dto/get-chat-messages.output.dto';
 
 export class SendMessageCommand implements ICommand {
   constructor(public inputDto: SendMessageInputDto) {}
@@ -30,7 +29,7 @@ export class SendMessageUseCase
   implements
     ICommandHandler<
       SendMessageCommand,
-      AppNotificationResultType<SendMessageOutputDto>
+      AppNotificationResultType<GetChatMessagesOutputDto>
     >
 {
   constructor(
@@ -39,14 +38,14 @@ export class SendMessageUseCase
     private readonly messageRepository: MessageRepository,
     private readonly chatRepository: ChatRepository,
     private readonly publisher: EventPublisher,
-    private readonly sendMessageOutputDtoMapper: SendMessageOutputDtoMapper,
+    private readonly queryBus: QueryBus,
   ) {
     this.logger.setContext(SendMessageUseCase.name);
   }
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<SendMessageOutputDto>> {
+  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentParticipantId, participantId, message } = command.inputDto;
     try {
@@ -56,7 +55,6 @@ export class SendMessageUseCase
       );
 
       let newMessage: MessageEntity;
-      let newChat: ChatEntity | null = null;
       if (!chat) {
         const result = await this.handleNewChat(
           currentParticipantId,
@@ -64,7 +62,6 @@ export class SendMessageUseCase
           message,
         );
         newMessage = result.message;
-        newChat = result.chat;
       } else {
         newMessage = await this.handleCurrentChat(
           currentParticipantId,
@@ -73,11 +70,13 @@ export class SendMessageUseCase
         );
       }
 
+      const newMessageOutputResult: AppNotificationResultType<GetChatMessagesOutputDto> =
+        await this.queryBus.execute(
+          new GetMessageByIdQuery(newMessage.id, currentParticipantId),
+        );
       this.publish(newMessage, participantId);
 
-      return this.appNotification.success(
-        this.sendMessageOutputDtoMapper.map(newMessage, newChat || chat),
-      );
+      return this.appNotification.success(newMessageOutputResult.data);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

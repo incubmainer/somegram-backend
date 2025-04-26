@@ -48,7 +48,6 @@ import {
 } from '../../../common/constants/service.constants';
 import { NewMessageGatewayDto } from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
-import { SendMessageOutputDto } from '../../../../../messenger/src/features/message/api/dto/output-dto/send-message.output.dto';
 import { MessageReadEvent } from '../application/events/message-read.event';
 
 @ApiBearerAuth('access-token')
@@ -96,9 +95,9 @@ export class MessengerController {
     @CurrentUser() user: JWTAccessTokenPayloadType,
     @Param('participantId') participantId: string,
     @Body() body: SendMessageInputDto,
-  ): Promise<SendMessageOutputDto | void> {
+  ): Promise<ChatMessagesOutputDto | void> {
     this.logger.debug('Execute: send new message', this.sendMessage.name);
-    const result: AppNotificationResultType<SendMessageOutputDto> =
+    const result: AppNotificationResultType<ChatMessagesOutputDto> =
       await this.commandBus.execute(
         new SendMessageCommand(user.userId, participantId, body.message),
       );
