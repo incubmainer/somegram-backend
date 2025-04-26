@@ -35,6 +35,15 @@ class WsNewMessageEventResponse extends WsResponseDto<ChatMessagesOutputDto> {
   payload: ChatMessagesOutputDto;
 }
 
+class ConnectedOrDisconnectedChatResponse extends WsResponseDto<null> {
+  @ApiProperty({
+    description: 'Connected/Disconnected',
+    example: AppNotificationResultEnum.Success,
+    enum: AppNotificationResultEnum,
+  })
+  status: AppNotificationResultEnum.Success;
+}
+
 class UnauthorizedResponse extends WsResponseDto<null> {
   @ApiProperty({
     description: 'Unauthorized',
@@ -120,6 +129,7 @@ export class MessengerSwaggerController {
   @Post()
   @ApiOkResponse({
     description: 'Connect to chat',
+    type: ConnectedOrDisconnectedChatResponse,
   })
   @ApiNotFoundResponse({
     description: 'Chat not found',
