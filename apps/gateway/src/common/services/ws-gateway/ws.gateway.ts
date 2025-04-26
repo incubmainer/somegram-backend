@@ -202,9 +202,9 @@ export abstract class WsGateway
     );
   }
 
-  public isJoined(client: Socket, roomName: string): boolean {
+  public isJoined(client: Socket, room: string, id: string): boolean {
     const rooms = client.rooms;
 
-    return rooms.has(roomName);
+    return rooms.has(`${room}_${id}`);
   }
 }

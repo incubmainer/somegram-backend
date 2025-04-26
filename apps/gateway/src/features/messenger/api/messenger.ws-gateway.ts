@@ -104,7 +104,7 @@ export class MessengerWsGateway
     );
     const { chatId } = payload;
 
-    const isJoined = this.isJoined(client, `${WS_CHAT_ROOM_NAME}_${chatId}`);
+    const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, chatId);
 
     if (isJoined) {
       client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
@@ -143,7 +143,7 @@ export class MessengerWsGateway
     );
     const { chatId } = payload;
 
-    const isJoined = this.isJoined(client, `${WS_CHAT_ROOM_NAME}_${chatId}`);
+    const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, chatId);
 
     if (!isJoined) {
       client.emit(WS_LEAVE_ROOM_EVENT, this.leaveFromChatResponse);
