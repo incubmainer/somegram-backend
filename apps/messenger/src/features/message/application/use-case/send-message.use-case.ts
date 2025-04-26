@@ -118,6 +118,7 @@ export class SendMessageUseCase
     const messageWithEvent = this.publisher.mergeObjectContext(message);
 
     messageWithEvent.newMessageEvent(participantId);
+    messageWithEvent.readMessageEvent(participantId);
     messageWithEvent.commit();
   }
 }
