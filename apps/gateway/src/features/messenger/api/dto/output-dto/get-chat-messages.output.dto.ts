@@ -16,6 +16,9 @@ export class ChatMessagesOutputDto {
   content: string;
 
   @ApiProperty()
+  chatId: string;
+
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()
@@ -70,6 +73,7 @@ export class ChatMessagesOutputDtoMapper {
       id: message.id,
       content: message.content,
       createdAt: message.createdAt,
+      chatId: message.chatId,
       isMine: message.isMine,
       senderId: message.senderId,
       avatarUrl: isBan ? null : avatar,
