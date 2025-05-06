@@ -4,6 +4,7 @@ import {
   ApiNoContentResponse,
   ApiBadRequestResponse,
   ApiUnprocessableEntityResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionDto,
@@ -23,6 +24,9 @@ export function RestorePasswordConfirmationSwagger() {
     ApiUnprocessableEntityResponse({
       description: 'Validation error',
       type: UnprocessableExceptionDto,
+    }),
+    ApiUnauthorizedResponse({
+      description: 'Unauthorized',
     }),
   );
 }

@@ -21,10 +21,14 @@ import { PaymentsLoader } from './common/data-loaders/payments-loader';
 import { PostsPhotosLoader } from './common/data-loaders/posts-photos-loader';
 import { UserLoader } from './common/data-loaders/user-loader';
 import { DataLoaderInterceptor } from 'nestjs-dataloader/dist';
-import { UsersResolver } from './features/resolvers/users/users.resolver';
+import {
+  UserFollowingResolver,
+  UsersResolver,
+} from './features/resolvers/users/users.resolver';
 import { PaymentsResolver } from './features/resolvers/payments/payments.resolver';
 import { AuthResolver } from './features/resolvers/auth/auth.resolver';
 import {
+  PostLastLikeResolver,
   PostOwnerResolver,
   PostsResolver,
 } from './features/resolvers/posts/posts.resolver';
@@ -36,6 +40,10 @@ import {
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from './settings/configuration/configuration';
+import {
+  CommentOwnerResolver,
+  CommentsResolver,
+} from './features/resolvers/comments/comments.resolver';
 
 const resolvers = [
   AuthResolver,
@@ -43,6 +51,10 @@ const resolvers = [
   PaymentsResolver,
   PostsResolver,
   PostOwnerResolver,
+  CommentOwnerResolver,
+  CommentsResolver,
+  PostLastLikeResolver,
+  UserFollowingResolver,
 ];
 
 const loaders = [

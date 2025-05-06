@@ -7,7 +7,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import {
-  ProfilePublicInfoOutputDtoModel,
+  ProfilePublicInfoWithAboutOutputDtoModel,
   userPublicProfileInfoMapper,
 } from '../../api/dto/output-dto/profile-info-output-dto';
 
@@ -20,7 +20,7 @@ export class GetPublicProfileInfoUseCase
   implements
     IQueryHandler<
       GetPublicProfileInfoQuery,
-      AppNotificationResultType<ProfilePublicInfoOutputDtoModel>
+      AppNotificationResultType<ProfilePublicInfoWithAboutOutputDtoModel>
     >
 {
   constructor(
@@ -33,14 +33,16 @@ export class GetPublicProfileInfoUseCase
   }
   async execute(
     command: GetPublicProfileInfoQuery,
-  ): Promise<AppNotificationResultType<ProfilePublicInfoOutputDtoModel>> {
+  ): Promise<
+    AppNotificationResultType<ProfilePublicInfoWithAboutOutputDtoModel>
+  > {
     this.logger.debug(
       'Execute: get public user profile info command',
       this.execute.name,
     );
     const { userId } = command;
     try {
-      const user = await this.usersQueryRepository.getProfileInfo(userId);
+      const user = await this.usersQueryRepository.findUserById(userId);
       if (!user) return this.appNotification.notFound();
 
       const avatarUrl = await this.photoServiceAdapter.getAvatar(user.id);

@@ -14,6 +14,25 @@ import { UsersModule } from '../users/users.module';
 import { GetAdminPostsByUserUseCase } from './application/queryBus/graphql/get-admin-posts.use-case';
 import { GetAdminPostsByIdUseCase } from './application/queryBus/graphql/get-admin-post-by-id.use-case';
 import { PostsGraphqlQueryRepository } from './infrastructure/posts-graphql.query-repository';
+import { PostCommentController } from './api/post-comment.controller';
+import { AddPostCommentUseCase } from './application/use-cases/add-comment.use-case';
+import { PostsCommentRepository } from './infrastructure/posts-comment.repository';
+import { PostsCommentQueryRepository } from './infrastructure/posts-comment.query-repository';
+import { AddAnswerForCommentUseCase } from './application/use-cases/add-answer-for-comment.use-case';
+import { GetPostCommentsByPostIdUseCase } from './application/queryBus/get-post-comments-by-post-id.use-case';
+import { CommentPostOutputDtoMapper } from './api/dto/output-dto/comment-post.output-dto';
+import { AddLikeDislikeCommentUseCase } from './application/use-cases/add-like-dislike-comment.use-case';
+import { PostsLikeCommentRepository } from './infrastructure/posts-like-comment.repository';
+import { CommentAnswersOutputDtoMapper } from './api/dto/output-dto/comment-answers.output-dto';
+import { GetCommentAnswersByCommentIdUseCase } from './application/queryBus/get-comment-answers-by-comment-id.use-case';
+import { PostsLikeRepository } from './infrastructure/posts-like.repository';
+import { AddLikePostUseCase } from './application/use-cases/add-like-post.use-case';
+import { PostRawOutputModelMapper } from './api/dto/output-dto/post.output-dto';
+import { GetAdminPostCommentsUseCase } from './application/queryBus/graphql/get-admin-post-comments.use-case';
+import { PostsCommentGraphqlQueryRepository } from './infrastructure/posts-comment-graphql.query-repository';
+import { GetAdminPostCommentAnswersUseCase } from './application/queryBus/graphql/get-admin-post-comment-answers.use-case';
+import { GetFollowingsPostsUseCase } from './application/queryBus/get-followings-posts.use-case';
+import { FollowingPostsController } from './api/following.posts.controller';
 
 const queryHandlers = [
   GetPostUseCase,
@@ -21,9 +40,22 @@ const queryHandlers = [
   GetPublicPostsByUserUseCase,
   GetAdminPostsByUserUseCase,
   GetAdminPostsByIdUseCase,
+  GetPostCommentsByPostIdUseCase,
+  GetCommentAnswersByCommentIdUseCase,
+  GetAdminPostCommentsUseCase,
+  GetAdminPostCommentAnswersUseCase,
+  GetFollowingsPostsUseCase,
 ];
 
-const handlers = [UpdatePostUseCase, DeletePostUseCase, AddPostUseCase];
+const handlers = [
+  UpdatePostUseCase,
+  DeletePostUseCase,
+  AddPostUseCase,
+  AddPostCommentUseCase,
+  AddAnswerForCommentUseCase,
+  AddLikeDislikeCommentUseCase,
+  AddLikePostUseCase,
+];
 
 const postFileFactoryProvider = {
   provide: 'PostFileFactory',
@@ -32,7 +64,7 @@ const postFileFactoryProvider = {
 
 @Module({
   imports: [UsersModule],
-  controllers: [PostsController, PublicPostsController],
+  controllers: [PostsController, PublicPostsController, PostCommentController, FollowingPostsController],
   providers: [
     ...queryHandlers,
     ...handlers,
@@ -40,6 +72,14 @@ const postFileFactoryProvider = {
     PostsRepository,
     PostsQueryRepository,
     PostsGraphqlQueryRepository,
+    PostsCommentRepository,
+    PostsCommentQueryRepository,
+    CommentPostOutputDtoMapper,
+    PostsLikeCommentRepository,
+    CommentAnswersOutputDtoMapper,
+    PostsLikeRepository,
+    PostRawOutputModelMapper,
+    PostsCommentGraphqlQueryRepository,
   ],
   exports: [],
 })

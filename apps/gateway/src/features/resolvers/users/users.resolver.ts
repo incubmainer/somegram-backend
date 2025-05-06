@@ -26,12 +26,18 @@ import { GetUserQuery } from '../../users/application/queryBus/graphql/get-user.
 import { GetUsersQuery } from '../../users/application/queryBus/graphql/get-users.use-case';
 import { BanUserInput } from './models/ban-user-input';
 import { FileModel } from './models/file-model';
-import { PaginatedUserModel } from './models/paginated-user.model';
-import { UserModel } from './models/user.model';
+import {
+  PaginatedFollowerModel,
+  PaginatedUserModel,
+} from './models/paginated-user.model';
+import { FollowerModel, UserModel } from './models/user.model';
 import { UsersQueryStringInput } from './models/users-query-string-input';
 import { BanUserCommand } from '../../users/application/use-cases/graphql/ban-user.use-case';
 import { RemoveUserCommand } from '../../users/application/use-cases/graphql/remove-user.use-case';
 import { UnbanUserCommand } from '../../users/application/use-cases/graphql/unban-user.use-case';
+import { QueryStringInput } from '../common/query-string-input.model';
+import { GetUserFollowersQuery } from '../../users/application/queryBus/graphql/get-user-followers.use-case';
+import { GetUserFollowingQuery } from '../../users/application/queryBus/graphql/get-user-following.use-case';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -158,4 +164,68 @@ export class UsersResolver {
   // async getPayments(@Parent() user: UserModel) {
   //   return await this.paymentsLoader.generateDataLoader().load(user.id);
   // }
+}
+
+@Resolver(() => FollowerModel)
+export class UserFollowingResolver {
+  constructor(
+    private readonly userImagesLoader: UserAvatarsLoader,
+    private readonly logger: LoggerService,
+    private readonly queryBus: QueryBus,
+  ) {
+    this.logger.setContext(FollowerModel.name);
+  }
+
+  @Query(() => PaginatedFollowerModel)
+  @UseGuards(BasicGqlGuard)
+  async getFollowers(
+    @Args('userId') userId: string,
+    @Args('queryString', { type: () => QueryStringInput, nullable: true })
+    queryString: QueryStringInput,
+  ): Promise<PaginatedFollowerModel> {
+    this.logger.debug(
+      'Execute: Get followers for user',
+      this.getFollowers.name,
+    );
+    const result: AppNotificationResultType<PaginatedFollowerModel> =
+      await this.queryBus.execute(
+        new GetUserFollowersQuery(userId, queryString),
+      );
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getFollowers.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Query(() => PaginatedFollowerModel)
+  @UseGuards(BasicGqlGuard)
+  async getFollowing(
+    @Args('userId') userId: string,
+    @Args('queryString', { type: () => QueryStringInput, nullable: true })
+    queryString: QueryStringInput,
+  ): Promise<PaginatedFollowerModel> {
+    this.logger.debug(
+      'Execute: Get following for user',
+      this.getFollowing.name,
+    );
+    const result: AppNotificationResultType<PaginatedFollowerModel> =
+      await this.queryBus.execute(
+        new GetUserFollowingQuery(userId, queryString),
+      );
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug(`Success`, this.getFollowing.name);
+        return result.data;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @ResolveField(() => FileModel, { nullable: true })
+  async getAvatar(@Parent() user: FollowerModel) {
+    return await this.userImagesLoader.generateDataLoader().load(user.id);
+  }
 }

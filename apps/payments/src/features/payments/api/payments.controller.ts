@@ -42,7 +42,7 @@ import {
 import { PaymentService } from '../application/payments.service';
 import { Pagination } from '@app/paginator';
 import { Subscription } from 'rxjs';
-import { SearchQueryParametersType } from '../../../../../gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from '../../../../../gateway/src/common/domain/query.types';
 import { GetAllPaymentsQuery } from '../application/use-cases/query/graphql/get-all-payments.use-case';
 import { GetPaymentsByUsersQuery } from '../application/use-cases/query/graphql/get-payments-by-users.use-case';
 import { GetPaymentsByUserQuery } from '../application/use-cases/query/graphql/get-payments.use-case';
@@ -191,7 +191,7 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: GET_ALL_PAYMENTS_GQL })
   async getAllPayments(payload: {
-    queryString?: SearchQueryParametersType;
+    queryString?: SearchQueryParameters;
   }): Promise<
     AppNotificationResultType<Pagination<PaymentsWithUserInfoOutputDto[]>>
   > {

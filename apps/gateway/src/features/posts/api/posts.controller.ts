@@ -38,7 +38,7 @@ import { GetPostQuery } from '../application/queryBus/get-public-post.use-case';
 import { PostOutputDto } from './dto/output-dto/post.output-dto';
 import { GetPostsSwagger } from './swagger/get-user-posts.swagger';
 import { GetPostsByUserQuery } from '../application/queryBus/get-posts-by-user.use-case';
-import { SearchQueryParametersType } from 'apps/gateway/src/common/domain/query.types';
+import { SearchQueryParameters } from 'apps/gateway/src/common/domain/query.types';
 import {
   AppNotificationResultEnum,
   AppNotificationResultType,
@@ -47,6 +47,8 @@ import { Pagination } from '@app/paginator';
 import { LoggerService } from '@app/logger';
 import { POST_ROUTE } from '../../../common/constants/route.constants';
 import { filesValidationPipe } from '../../../common/pipe/validation/validation-file.pipe';
+import { AddLikeDislikeForPostSwagger } from './swagger/add-like-dislike-for-post.swagger';
+import { AddLikePostCommand } from '../application/use-cases/add-like-post.use-case';
 
 @ApiTags('Posts')
 @Controller(POST_ROUTE.MAIN)
@@ -85,7 +87,7 @@ export class PostsController {
     switch (result.appResult) {
       case AppNotificationResultEnum.Success:
         const post: AppNotificationResultType<PostOutputDto> =
-          await this.queryBus.execute(new GetPostQuery(result.data));
+          await this.queryBus.execute(new GetPostQuery(result.data, userId));
         this.logger.debug('Success', this.addPost.name);
         return post.data;
       case AppNotificationResultEnum.NotFound:
@@ -160,7 +162,7 @@ export class PostsController {
   async getPostsByUser(
     @Param('userId') userId: string,
     @Param('endCursorPostId') endCursorPostId?: string,
-    @Query() query?: SearchQueryParametersType,
+    @Query() query?: SearchQueryParameters,
   ): Promise<Pagination<PostOutputDto[]>> {
     this.logger.debug(
       'Execute: get posts by user id',
@@ -177,6 +179,30 @@ export class PostsController {
         return result.data;
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not found', this.getPostsByUser.name);
+        throw new NotFoundException();
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Put(`${POST_ROUTE.LIKE}/:postId`)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AddLikeDislikeForPostSwagger()
+  @UseGuards(JwtAuthGuard)
+  async likePost(
+    @CurrentUserId() userId: string,
+    @Param('postId') postId: string,
+  ): Promise<void> {
+    this.logger.debug('Execute: add like/unlike for post', this.likePost.name);
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(new AddLikePostCommand(userId, postId));
+
+    switch (result.appResult) {
+      case AppNotificationResultEnum.Success:
+        this.logger.debug('Success', this.likePost.name);
+        return;
+      case AppNotificationResultEnum.NotFound:
+        this.logger.debug('Not found', this.likePost.name);
         throw new NotFoundException();
       default:
         throw new InternalServerErrorException();

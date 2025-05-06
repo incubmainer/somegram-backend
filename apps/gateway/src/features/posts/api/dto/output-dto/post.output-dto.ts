@@ -1,8 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { UserEntity } from '../../../../users/domain/user.entity';
-import { PostEntity } from '../../../domain/post.entity';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
+import {
+  LikeStatusEnum,
+  PostWithLikeInfoModel,
+  PostWithLikeInfoRawModel,
+} from '../../../domain/types';
+import { Injectable } from '@nestjs/common';
 
 export class PostOwnerOutputDtoModel {
   @ApiProperty({
@@ -24,6 +29,26 @@ export class PostOwnerOutputDtoModel {
   })
   avatarUrl: string | null;
 }
+
+class PostLastLikeOutputDtoModel {
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty({ nullable: true })
+  avatarUrl: string | null;
+}
+
+class PostLikeOutputDtoModel {
+  @ApiProperty()
+  likeCount: number;
+
+  @ApiProperty({ enum: [LikeStatusEnum.like, LikeStatusEnum.none] })
+  myStatus: LikeStatusEnum;
+
+  @ApiProperty({ type: PostLastLikeOutputDtoModel, isArray: true })
+  lastLikeUser: PostLastLikeOutputDtoModel[];
+}
+
 export class PostOutputDtoModel {
   @ApiProperty({
     description: 'Post id',
@@ -64,6 +89,9 @@ export class PostOutputDtoModel {
     type: PostOwnerOutputDtoModel,
   })
   postOwnerInfo: PostOwnerOutputDtoModel;
+
+  @ApiProperty({ type: PostLikeOutputDtoModel })
+  like: PostLikeOutputDtoModel;
 }
 
 export class PostOutputDtoWithPaginationModel extends Pagination<PostOutputDtoModel> {
@@ -85,6 +113,15 @@ export class PostOutputDto {
     username: string;
     avatarUrl: string | null;
   };
+  like: {
+    likeCount: number;
+    myStatus: LikeStatusEnum;
+    lastLikeUser: {
+      userId: string;
+      avatarUrl: string | null;
+      profileUrl: string;
+    }[];
+  };
 
   constructor(init: Partial<PostOutputDto>) {
     Object.assign(this, init);
@@ -92,7 +129,7 @@ export class PostOutputDto {
 }
 
 export const postToOutputMapper = (
-  post: PostEntity,
+  post: PostWithLikeInfoModel,
   user: UserEntity,
   avatar: FileType | null,
   images: FileType[],
@@ -108,5 +145,37 @@ export const postToOutputMapper = (
       username: user.username,
       avatarUrl: avatar ? avatar.url : null,
     },
+    like: {
+      likeCount: post._count?.LikesPost || 0,
+      myStatus: post.myStatus || LikeStatusEnum.none,
+      lastLikeUser: post.lastLikeUser || [],
+    },
   });
 };
+
+@Injectable()
+export class PostRawOutputModelMapper {
+  mapPost(post: PostWithLikeInfoRawModel): PostOutputDto {
+    return {
+      id: post.id,
+      description: post.description ?? null,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt ? post.updatedAt.toISOString() : null,
+      images: post.postImages.map((i) => i.url),
+      postOwnerInfo: {
+        userId: post.userId,
+        username: post.username,
+        avatarUrl: post.ownerAvatarUrl ? post.ownerAvatarUrl : null,
+      },
+      like: {
+        likeCount: post.likes || 0,
+        myStatus: post.myStatus || LikeStatusEnum.none,
+        lastLikeUser: post.lastLikeUser || [],
+      },
+    };
+  }
+
+  mapPosts(posts: PostWithLikeInfoRawModel[]): PostOutputDto[] {
+    return posts.map((post) => this.mapPost(post));
+  }
+}

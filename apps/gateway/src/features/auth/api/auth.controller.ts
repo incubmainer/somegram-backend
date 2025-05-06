@@ -11,6 +11,7 @@ import {
   InternalServerErrorException,
   BadRequestException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
@@ -131,6 +132,9 @@ export class AuthController {
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not found', this.registrationConfirmation.name);
         throw new NotFoundException();
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.registrationConfirmation.name);
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -161,6 +165,9 @@ export class AuthController {
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not found', this.registrationEmailResending.name);
         throw new NotFoundException(result.errorField);
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.registrationEmailResending.name);
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -205,6 +212,9 @@ export class AuthController {
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug('Bad Request', this.googleAuthCallback.name);
         throw new BadRequestException(result.errorField);
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.googleAuthCallback.name);
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -244,6 +254,9 @@ export class AuthController {
       case AppNotificationResultEnum.NotFound:
         this.logger.debug('Not found', this.restorePassword.name);
         throw new NotFoundException(result.errorField);
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.restorePassword.name);
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -271,6 +284,12 @@ export class AuthController {
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug('Bad request', this.restorePasswordConfirmation.name);
         throw new BadRequestException(result.errorField);
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug(
+          'Unauthorized',
+          this.restorePasswordConfirmation.name,
+        );
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -402,6 +421,9 @@ export class AuthController {
       case AppNotificationResultEnum.BadRequest:
         this.logger.debug('Bad request', this.githubAuthCallback.name);
         throw new BadRequestException(result.errorField);
+      case AppNotificationResultEnum.Unauthorized:
+        this.logger.debug('Unauthorized', this.githubAuthCallback.name);
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }

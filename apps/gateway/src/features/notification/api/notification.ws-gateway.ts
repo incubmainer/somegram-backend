@@ -103,6 +103,10 @@ export class NotificationWsGateway
         this.forceDisconnect(client, unauthorizedPayload);
         return null;
       }
+      if (user.userBanInfo) {
+        this.forceDisconnect(client, unauthorizedPayload);
+        return null;
+      }
     } catch (e) {
       this.forceDisconnect(client, unauthorizedPayload);
       return null;

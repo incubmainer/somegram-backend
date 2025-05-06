@@ -30,6 +30,7 @@ import { PubSub } from 'graphql-subscriptions';
 import { BasicGqlGuard } from '../../../common/guards/graphql/basic-gql.guard';
 import { WS_NEW_POST_EVENT } from '../../../common/constants/ws-events.constants';
 import { PubSubAsyncIterableIterator } from 'graphql-subscriptions/dist/pubsub-async-iterable-iterator';
+import { PostLastLikeModel, PostLikeModel } from './models/post-like.model';
 
 @Resolver(() => PostModel)
 export class PostsResolver {
@@ -86,6 +87,20 @@ export class PostsResolver {
   async getPostsPhotos(@Parent() post: PostModel): Promise<FileModel[]> {
     return await this.postsPhotosLoader.generateDataLoader().load(post.id);
   }
+
+  @ResolveField(() => PostLikeModel)
+  async likeInfo(
+    @Parent() post: UserPostWithOwnerInfo,
+  ): Promise<PostLikeModel> {
+    return {
+      like: post._count.LikesPost,
+      lastLike: post.LikesPost.map((l) => {
+        return {
+          userId: l.userId,
+        };
+      }),
+    };
+  }
 }
 
 @Resolver(() => PostOwnerModel)
@@ -106,5 +121,28 @@ export class PostOwnerResolver {
   @ResolveField(() => FileModel, { nullable: true })
   async getAvatar(@Parent() owner: PostOwnerModel): Promise<FileModel> {
     return await this.userImagesLoader.generateDataLoader().load(owner.userId);
+  }
+}
+
+@Resolver(() => PostLastLikeModel)
+export class PostLastLikeResolver {
+  constructor(
+    private readonly userImagesLoader: UserAvatarsLoader,
+    private readonly configService: ConfigService<ConfigurationType, true>,
+  ) {}
+
+  @ResolveField(() => String, { nullable: true })
+  profileUrl(@Parent() lastLike: PostLastLikeModel): string {
+    const frontProvider = this.configService.get('envSettings', {
+      infer: true,
+    }).FRONTED_PROVIDER;
+    return `${frontProvider}/public-user/profile/${lastLike.userId}`;
+  }
+
+  @ResolveField(() => FileModel, { nullable: true })
+  async getAvatar(@Parent() lastLike: PostLastLikeModel): Promise<FileModel> {
+    return await this.userImagesLoader
+      .generateDataLoader()
+      .load(lastLike.userId);
   }
 }
