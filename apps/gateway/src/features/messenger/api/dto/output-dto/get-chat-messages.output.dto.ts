@@ -62,12 +62,12 @@ export class ChatMessagesOutputDtoMapper {
     users: UserAndUserBanInfoType[],
   ): ChatMessagesOutputDto {
     const avatar =
-      avatars.find((a) => a.ownerId === message.senderId)?.url || null;
+      avatars?.find((a) => a.ownerId === message.senderId)?.url || null;
 
-    const isBan = !!users.find((u) => u.id === message.senderId).userBanInfo;
+    const isBan = !!users?.find((u) => u.id === message.senderId).userBanInfo;
 
     const username =
-      users.find((u) => u.id == message.senderId)?.username || 'unknown';
+      users?.find((u) => u.id == message.senderId)?.username || 'unknown';
 
     return {
       id: message.id,
