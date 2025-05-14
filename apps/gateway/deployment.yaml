@@ -167,6 +167,16 @@ spec:
                  secretKeyRef:
                    name: somegram-backend-production-config-secret
                    key: BASIC_AUTH_PASSWORD
+             - name: MESSENGER_SERVICE_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: MESSENGER_SERVICE_HOST
+             - name: MESSENGER_SERVICE_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: somegram-backend-production-config-secret
+                   key: MESSENGER_SERVICE_PORT
              - name: PORT
                valueFrom:
                  secretKeyRef:
