@@ -8,11 +8,11 @@ import {
   MessengerWsGateway,
   WS_CHAT_ROOM_NAME,
 } from '../../api/messenger.ws-gateway';
-import { GetChatMessagesOutputDto } from '../../../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
+import { ChatMessagesDto } from '../../domain/types';
 
 export class NewMessageEvent {
   constructor(
-    public message: GetChatMessagesOutputDto,
+    public message: ChatMessagesDto,
     public participantId: string,
   ) {}
 }

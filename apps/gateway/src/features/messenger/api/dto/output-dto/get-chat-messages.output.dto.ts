@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
-import { GetChatMessagesOutputDto } from '../../../../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 import { UserAndUserBanInfoType } from '../../../../users/domain/types';
+import { ChatMessagesDto } from '../../../domain/types';
 
 export class ChatMessagesOutputDto {
   @ApiProperty()
@@ -57,7 +57,7 @@ export class ChatMessagesOutputPaginationDto extends Pagination<ChatMessagesOutp
 @Injectable()
 export class ChatMessagesOutputDtoMapper {
   mapMessage(
-    message: GetChatMessagesOutputDto,
+    message: ChatMessagesDto,
     avatars: FileType[],
     users: UserAndUserBanInfoType[],
   ): ChatMessagesOutputDto {
@@ -87,7 +87,7 @@ export class ChatMessagesOutputDtoMapper {
   }
 
   mapMessages(
-    messages: GetChatMessagesOutputDto[],
+    messages: ChatMessagesDto[],
     avatars: FileType[],
     users: UserAndUserBanInfoType[],
   ): ChatMessagesOutputDto[] {

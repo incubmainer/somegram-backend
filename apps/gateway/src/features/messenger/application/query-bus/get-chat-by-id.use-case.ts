@@ -6,7 +6,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
-import { ChatOutputDto } from '../../../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
+import { ChatDto } from '../../domain/types';
 
 export class GetChatByIdQuery implements IQuery {
   constructor(
@@ -18,7 +18,7 @@ export class GetChatByIdQuery implements IQuery {
 @QueryHandler(GetChatByIdQuery)
 export class GetChatByIdQueryUseCase
   implements
-    IQueryHandler<GetChatByIdQuery, AppNotificationResultType<ChatOutputDto>>
+    IQueryHandler<GetChatByIdQuery, AppNotificationResultType<ChatDto>>
 {
   constructor(
     private readonly logger: LoggerService,
@@ -30,7 +30,7 @@ export class GetChatByIdQueryUseCase
 
   async execute(
     query: GetChatByIdQuery,
-  ): Promise<AppNotificationResultType<ChatOutputDto>> {
+  ): Promise<AppNotificationResultType<ChatDto>> {
     this.logger.debug('Execute: get chat messages query', this.execute.name);
     const { chatId, participantId } = query;
     try {

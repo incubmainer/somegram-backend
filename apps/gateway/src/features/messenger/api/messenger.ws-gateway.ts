@@ -39,11 +39,11 @@ import { WsJwtAuthGuard } from '../../../common/guards/ws-jwt/ws-jwt-auth.guard'
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetChatByIdQuery } from '../application/query-bus/get-chat-by-id.use-case';
 import { WsCurrentUserId } from '../../../common/decorators/ws-parse/ws-current-user-id';
-import { ChatOutputDto } from '../../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
 import { WsResponseDto } from '@app/base-types-enum';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
+import { ChatDto } from '../domain/types';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
 
@@ -118,7 +118,7 @@ export class MessengerWsGateway
       return;
     }
 
-    const result: AppNotificationResultType<ChatOutputDto> =
+    const result: AppNotificationResultType<ChatDto> =
       await this.queryBus.execute(new GetChatByIdQuery(chatId, userId));
 
     if (result.appResult === AppNotificationResultEnum.Success) {
@@ -157,7 +157,7 @@ export class MessengerWsGateway
       return;
     }
 
-    const result: AppNotificationResultType<ChatOutputDto> =
+    const result: AppNotificationResultType<ChatDto> =
       await this.queryBus.execute(new GetChatByIdQuery(chatId, userId));
 
     if (result.appResult === AppNotificationResultEnum.Success) {

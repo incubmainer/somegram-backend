@@ -15,14 +15,14 @@ import {
 import { LoggerService } from '@app/logger';
 import { SearchQueryParametersWithoutSorting } from '../domain/query.types';
 import { Pagination } from '@app/paginator';
-import { GetAllUserChatsOutputDto } from '../../../../messenger/src/features/chat/api/dto/output-dto/get-all-user-chats.output.dto';
 import {
+  AllUserChatsDto,
+  ChatDto,
+  ChatMessagesDto,
   CreateMessageDto,
   ReadMessageDto,
 } from '../../features/messenger/domain/types';
-import { GetChatMessagesOutputDto } from '../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
 import { GetChatMessagesQueryParams } from '../../features/messenger/api/dto/input-dto/get-chat-messages.query.params';
-import { ChatOutputDto } from '../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
 
 @Injectable()
 export class MessengerServiceAdapter {
@@ -37,12 +37,10 @@ export class MessengerServiceAdapter {
     userId: string,
     query: SearchQueryParametersWithoutSorting,
     endCursorChatId: string | null,
-  ): Promise<
-    AppNotificationResultType<Pagination<GetAllUserChatsOutputDto[]>>
-  > {
+  ): Promise<AppNotificationResultType<Pagination<AllUserChatsDto[]>>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<Pagination<GetAllUserChatsOutputDto[]>>
+        AppNotificationResultType<Pagination<AllUserChatsDto[]>>
       > = this.messengerServiceClient
         .send(
           { cmd: GET_USERS_CHATS_MESSENGER },
@@ -95,12 +93,10 @@ export class MessengerServiceAdapter {
     chatId: string,
     query: GetChatMessagesQueryParams,
     endCursorMessageId: string | null,
-  ): Promise<
-    AppNotificationResultType<Pagination<GetChatMessagesOutputDto[]>>
-  > {
+  ): Promise<AppNotificationResultType<Pagination<ChatMessagesDto[]>>> {
     try {
       const responseOfService: Observable<
-        AppNotificationResultType<Pagination<GetChatMessagesOutputDto[]>>
+        AppNotificationResultType<Pagination<ChatMessagesDto[]>>
       > = this.messengerServiceClient
         .send(
           { cmd: GET_CHAT_MESSAGES },
@@ -122,19 +118,18 @@ export class MessengerServiceAdapter {
   async getChatById(
     chatId: string,
     participantId: string,
-  ): Promise<AppNotificationResultType<ChatOutputDto>> {
+  ): Promise<AppNotificationResultType<ChatDto>> {
     try {
-      const responseOfService: Observable<
-        AppNotificationResultType<ChatOutputDto>
-      > = this.messengerServiceClient
-        .send(
-          { cmd: GET_CHAT },
-          {
-            chatId,
-            participantId,
-          },
-        )
-        .pipe(timeout(20000));
+      const responseOfService: Observable<AppNotificationResultType<ChatDto>> =
+        this.messengerServiceClient
+          .send(
+            { cmd: GET_CHAT },
+            {
+              chatId,
+              participantId,
+            },
+          )
+          .pipe(timeout(20000));
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.getUserChats.name);

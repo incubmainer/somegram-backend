@@ -1,4 +1,37 @@
-import { GetChatMessagesOutputDto } from '../../../../../messenger/src/features/message/api/dto/output-dto/get-chat-messages.output.dto';
+export class ChatMessagesDto {
+  id: string;
+  content: string;
+  createdAt: Date;
+  senderId: string;
+  chatId: string;
+  isMine: boolean;
+  myReadStatus: boolean;
+  myReadAt: Date | null;
+  participantReadStatus: boolean;
+  participantReadAt: Date | null;
+}
+
+class LastChatMessageOutputDto {
+  id: string;
+  isMine: boolean;
+  content: string;
+  createdAt: Date;
+  myReadStatus: boolean;
+}
+
+export class AllUserChatsDto {
+  id: string;
+  participantId: string;
+  lastMessage: LastChatMessageOutputDto;
+  avatarUrl?: string | null;
+  isBan?: boolean;
+  username?: string;
+}
+
+export class ChatDto {
+  id: string;
+  createdAt: Date;
+}
 
 export class CreateMessageDto {
   currentParticipantId: string;
@@ -12,6 +45,6 @@ export class ReadMessageDto {
 }
 
 export class NewMessageGatewayDto {
-  message: GetChatMessagesOutputDto;
+  message: ChatMessagesDto;
   participantId: string;
 }

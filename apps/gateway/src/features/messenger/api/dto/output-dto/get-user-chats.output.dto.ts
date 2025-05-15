@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { GetAllUserChatsOutputDto } from '../../../../../../../messenger/src/features/chat/api/dto/output-dto/get-all-user-chats.output.dto';
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
+import { AllUserChatsDto } from '../../../domain/types';
 
 class LastChatMessageOutputDto {
   @ApiProperty()
@@ -55,7 +56,7 @@ export class GetUserChatsOutputPaginationDto extends Pagination<GetUserChatsOutp
 
 @Injectable()
 export class GetUserChatsOutputDtoMapper {
-  mapChat(chat: GetAllUserChatsOutputDto): GetUserChatsOutputDto {
+  mapChat(chat: AllUserChatsDto): GetUserChatsOutputDto {
     return {
       id: chat.id,
       participant: {
@@ -68,7 +69,7 @@ export class GetUserChatsOutputDtoMapper {
     };
   }
 
-  mapChats(chats: GetAllUserChatsOutputDto[]): GetUserChatsOutputDto[] {
+  mapChats(chats: AllUserChatsDto[]): GetUserChatsOutputDto[] {
     return chats.map((chat) => this.mapChat(chat));
   }
 }
