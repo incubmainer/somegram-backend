@@ -30,10 +30,10 @@ export class MessageController {
   @MessagePattern({ cmd: SEND_MESSAGE_TO_CHAT })
   async sendMessage(
     body: SendMessageInputDto,
-  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug('Execute: send message', this.sendMessage.name);
 
-    const result: AppNotificationResultType<GetChatMessagesOutputDto> =
+    const result: AppNotificationResultType<null> =
       await this.commandBus.execute(new SendMessageCommand(body));
 
     this.logger.debug(result.appResult, this.sendMessage.name);

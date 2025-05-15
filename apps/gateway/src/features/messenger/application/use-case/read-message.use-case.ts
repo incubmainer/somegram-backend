@@ -5,7 +5,7 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
-import { UsersRepository } from '../../../users/infrastructure/users.repository';
+
 import { ReadMessageDto } from '../../domain/types';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
 
@@ -24,7 +24,6 @@ export class ReadMessageUseCase
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
-    private readonly usersRepository: UsersRepository,
     private readonly messengerServiceAdapter: MessengerServiceAdapter,
   ) {
     this.logger.setContext(ReadMessageUseCase.name);

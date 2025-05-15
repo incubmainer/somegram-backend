@@ -8,4 +8,10 @@ export class SendMessageInputDto {
   @IsNotEmpty()
   @IsString()
   message: string;
+
+  @ApiProperty()
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  participantId: string;
 }

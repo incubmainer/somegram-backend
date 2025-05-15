@@ -62,13 +62,12 @@ export class MessengerServiceAdapter {
 
   async sendMessage(
     body: CreateMessageDto,
-  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
+  ): Promise<AppNotificationResultType<null>> {
     try {
-      const responseOfService: Observable<
-        AppNotificationResultType<GetChatMessagesOutputDto>
-      > = this.messengerServiceClient
-        .send({ cmd: SEND_MESSAGE_TO_CHAT }, body)
-        .pipe(timeout(20000));
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.messengerServiceClient
+          .send({ cmd: SEND_MESSAGE_TO_CHAT }, body)
+          .pipe(timeout(20000));
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.getUserChats.name);

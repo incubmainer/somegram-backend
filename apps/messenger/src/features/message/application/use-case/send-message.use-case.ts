@@ -3,13 +3,13 @@ import {
   EventPublisher,
   ICommand,
   ICommandHandler,
-  QueryBus,
 } from '@nestjs/cqrs';
 import {
   ApplicationNotification,
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
+
 import { MessageRepository } from '../../infrastructure/message.repository';
 import { ChatRepository } from '../../../chat/infrastructure/chat.repository';
 import { CreateChatDto } from '../../../chat/domain/types';
@@ -17,8 +17,6 @@ import { CreateNewMessageDto } from '../../domain/types';
 import { SendMessageInputDto } from '../../api/dto/input-dto/send-message.input.dto';
 import { MessageEntity } from '../../domain/message.entity';
 import { ChatEntity } from '../../../chat/domain/chat.entity';
-import { GetMessageByIdQuery } from '../query-bus/get-message-by-id.use-case';
-import { GetChatMessagesOutputDto } from '../../api/dto/output-dto/get-chat-messages.output.dto';
 
 export class SendMessageCommand implements ICommand {
   constructor(public inputDto: SendMessageInputDto) {}
@@ -27,10 +25,7 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<
-      SendMessageCommand,
-      AppNotificationResultType<GetChatMessagesOutputDto>
-    >
+    ICommandHandler<SendMessageCommand, AppNotificationResultType<null>>
 {
   constructor(
     private readonly logger: LoggerService,
@@ -38,14 +33,13 @@ export class SendMessageUseCase
     private readonly messageRepository: MessageRepository,
     private readonly chatRepository: ChatRepository,
     private readonly publisher: EventPublisher,
-    private readonly queryBus: QueryBus,
   ) {
     this.logger.setContext(SendMessageUseCase.name);
   }
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentParticipantId, participantId, message } = command.inputDto;
     try {
@@ -70,13 +64,9 @@ export class SendMessageUseCase
         );
       }
 
-      const newMessageOutputResult: AppNotificationResultType<GetChatMessagesOutputDto> =
-        await this.queryBus.execute(
-          new GetMessageByIdQuery(newMessage.id, currentParticipantId),
-        );
       this.publish(newMessage, participantId);
 
-      return this.appNotification.success(newMessageOutputResult.data);
+      return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

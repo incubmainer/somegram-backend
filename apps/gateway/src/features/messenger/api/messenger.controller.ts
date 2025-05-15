@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import {
   ApiBearerAuth,
@@ -27,21 +16,17 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
-import { GetUserChatsQuery } from '../application/query-bus/get-user-chats.use-case';
+import { EventBus, QueryBus } from '@nestjs/cqrs';
 import { Pagination } from '@app/paginator';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+
+import { GetUserChatsQuery } from '../application/query-bus/get-user-chats.use-case';
 import { GetUserChatsOutputDto } from './dto/output-dto/get-user-chats.output.dto';
-import { SendMessageCommand } from '../application/use-case/send-message.use-case';
-import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
-import { SendMessageSwagger } from './swagger/send-message.swagger';
 import { GetUserChatsSwagger } from './swagger/get-user-chats.swagger';
 import { GetChatMessagesQuery } from '../application/query-bus/get-chat-messages.use-case';
 import { GetChatMessagesSwagger } from './swagger/get-chat-messages.swagger';
 import { GetChatMessagesQueryParams } from './dto/input-dto/get-chat-messages.query.params';
 import { ChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
-import { ReadMessageSwagger } from './swagger/read-message.swagger';
-import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
-import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   MESSAGE_READ,
   NEW_MESSAGE,
@@ -59,7 +44,6 @@ export class MessengerController {
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly queryBus: QueryBus,
-    private readonly commandBus: CommandBus,
     private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(MessengerController.name);
@@ -81,28 +65,6 @@ export class MessengerController {
     );
 
     this.logger.debug(result.appResult, this.getUserChats.name);
-
-    if (result.appResult === AppNotificationResultEnum.Success)
-      return result.data;
-
-    this.appNotification.handleHttpResult(result);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Post(`${MESSENGER_ROUTE.CHAT}/:participantId`)
-  @SendMessageSwagger()
-  async sendMessage(
-    @CurrentUser() user: JWTAccessTokenPayloadType,
-    @Param('participantId') participantId: string,
-    @Body() body: SendMessageInputDto,
-  ): Promise<ChatMessagesOutputDto | void> {
-    this.logger.debug('Execute: send new message', this.sendMessage.name);
-    const result: AppNotificationResultType<ChatMessagesOutputDto> =
-      await this.commandBus.execute(
-        new SendMessageCommand(user.userId, participantId, body.message),
-      );
-
-    this.logger.debug(result.appResult, this.sendMessage.name);
 
     if (result.appResult === AppNotificationResultEnum.Success)
       return result.data;
@@ -137,25 +99,6 @@ export class MessengerController {
 
     if (result.appResult === AppNotificationResultEnum.Success)
       return result.data;
-
-    this.appNotification.handleHttpResult(result);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Put(`${MESSENGER_ROUTE.CHAT}/:messageId/${MESSENGER_ROUTE.MESSAGES}`)
-  @ReadMessageSwagger()
-  async readMessage(
-    @CurrentUser() user: JWTAccessTokenPayloadType,
-    @Param('messageId') messageId: string,
-  ): Promise<void> {
-    this.logger.debug('Execute: read message', this.readMessage.name);
-    const result: AppNotificationResultType<null> =
-      await this.commandBus.execute(
-        new ReadMessageCommand(user.userId, messageId),
-      );
-
-    this.logger.debug(result.appResult, this.readMessage.name);
 
     this.appNotification.handleHttpResult(result);
   }

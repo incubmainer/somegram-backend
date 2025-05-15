@@ -31,14 +31,19 @@ import {
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
+  WS_READ_MESSAGE,
+  WS_SEND_MESSAGE,
 } from '../../../common/constants/ws-events.constants';
 import { JoinChatInputDto } from './dto/input-dto/join-chat.input.dto';
 import { WsJwtAuthGuard } from '../../../common/guards/ws-jwt/ws-jwt-auth.guard';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetChatByIdQuery } from '../application/query-bus/get-chat-by-id.use-case';
 import { WsCurrentUserId } from '../../../common/decorators/ws-parse/ws-current-user-id';
 import { ChatOutputDto } from '../../../../../messenger/src/features/chat/api/dto/output-dto/get-chat-by-id.output.dto';
 import { WsResponseDto } from '@app/base-types-enum';
+import { SendMessageCommand } from '../application/use-case/send-message.use-case';
+import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
+import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
 
@@ -64,6 +69,7 @@ export class MessengerWsGateway
     usersRepository: UsersRepository,
     wsNotification: WsNotification,
     private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
   ) {
     super(
       logger,
@@ -161,6 +167,49 @@ export class MessengerWsGateway
 
     this.logger.debug(result.appResult, this.handleLeaveRoom.name);
 
+    this.appNotification.handleWsResult(result);
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage(WS_SEND_MESSAGE)
+  async handleSendMessage(
+    @MessageBody() body: SendMessageInputDto,
+
+    @ConnectedSocket()
+    client: Socket,
+
+    @WsCurrentUserId()
+    userId: string,
+  ) {
+    this.logger.debug(
+      'Handle send message via WS',
+      this.handleSendMessage.name,
+    );
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new SendMessageCommand(userId, body.participantId, body.message),
+      );
+    this.logger.debug(result.appResult, this.handleSendMessage.name);
+    this.appNotification.handleWsResult(result);
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage(WS_READ_MESSAGE)
+  async handleReadMessage(
+    @MessageBody() body: { messageId: string },
+
+    @ConnectedSocket()
+    client: Socket,
+
+    @WsCurrentUserId()
+    userId: string,
+  ) {
+    this.logger.debug('Handle read message via WS');
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new ReadMessageCommand(userId, body.messageId),
+      );
+    this.logger.debug(result.appResult, this.handleReadMessage.name);
     this.appNotification.handleWsResult(result);
   }
 }

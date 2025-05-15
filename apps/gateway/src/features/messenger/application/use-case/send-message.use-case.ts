@@ -5,16 +5,10 @@ import {
   AppNotificationResultType,
 } from '@app/application-notification';
 import { LoggerService } from '@app/logger';
+
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CreateMessageDto } from '../../domain/types';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
-import {
-  ChatMessagesOutputDto,
-  ChatMessagesOutputDtoMapper,
-} from '../../api/dto/output-dto/get-chat-messages.output.dto';
-import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
-
 export class SendMessageCommand implements ICommand {
   constructor(
     public currentUserId: string,
@@ -26,26 +20,20 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<
-      SendMessageCommand,
-      AppNotificationResultType<ChatMessagesOutputDto>
-    >
+    ICommandHandler<SendMessageCommand, AppNotificationResultType<null>>
 {
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly usersRepository: UsersRepository,
     private readonly messengerServiceAdapter: MessengerServiceAdapter,
-    private readonly photoServiceAdapter: PhotoServiceAdapter,
-    private readonly usersQueryRepository: UsersQueryRepository,
-    private readonly chatMessagesOutputDtoMapper: ChatMessagesOutputDtoMapper,
   ) {
     this.logger.setContext(SendMessageUseCase.name);
   }
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<ChatMessagesOutputDto>> {
+  ): Promise<AppNotificationResultType<null>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentUserId, message, participantId } = command;
     try {
@@ -61,22 +49,9 @@ export class SendMessageUseCase
 
       const result = await this.messengerServiceAdapter.sendMessage(data);
 
-      if (result.appResult !== AppNotificationResultEnum.Success)
-        return result as AppNotificationResultType<null>;
+      if (result.appResult !== AppNotificationResultEnum.Success) return result;
 
-      const ids = [currentUserId, participantId];
-
-      const avatars = await this.photoServiceAdapter.getUsersAvatar(ids);
-
-      const users = await this.usersQueryRepository.getUsersAndUsersIsBan(ids);
-
-      const messageResult = this.chatMessagesOutputDtoMapper.mapMessage(
-        result.data,
-        avatars,
-        users,
-      );
-
-      return this.appNotification.success(messageResult);
+      return this.appNotification.success(null);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();
