@@ -58,7 +58,7 @@ export class ChatController {
         new GetChatByIdQuery(body.chatId, body.participantId),
       );
 
-    this.logger.debug(result.appResult, this.getAllChatForUser.name);
+    this.logger.debug(result.appResult, this.getChatById.name);
 
     return result;
   }
