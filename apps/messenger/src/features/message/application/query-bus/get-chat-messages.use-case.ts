@@ -51,10 +51,11 @@ export class GetChatMessagesUseCase
     const { pageSize, pageNumber } = queryParams;
 
     try {
-      const { chat, participants } =
+      const chatAndParticipants =
         await this.chatQueryRepository.getChatAndParticipantsByChatId(chatId);
 
-      if (!chat) return this.appNotification.notFound();
+      if (!chatAndParticipants) return this.appNotification.notFound();
+      const { chat, participants } = chatAndParticipants;
       if (!participants?.some((p) => p.userId === currentParticipantId))
         return this.appNotification.forbidden();
 
