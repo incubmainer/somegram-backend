@@ -25,7 +25,7 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<SendMessageCommand, AppNotificationResultType<null>>
+    ICommandHandler<SendMessageCommand, AppNotificationResultType<string>>
 {
   constructor(
     private readonly logger: LoggerService,
@@ -39,7 +39,7 @@ export class SendMessageUseCase
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<string>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentParticipantId, participantId, message } = command.inputDto;
     try {
@@ -49,8 +49,9 @@ export class SendMessageUseCase
       );
 
       let newMessage: MessageEntity;
+      let result;
       if (!chat) {
-        const result = await this.handleNewChat(
+        result = await this.handleNewChat(
           currentParticipantId,
           participantId,
           message,
@@ -66,7 +67,7 @@ export class SendMessageUseCase
 
       this.publish(newMessage, participantId);
 
-      return this.appNotification.success(null);
+      return this.appNotification.success(result ? result.chat.id : chat.id);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

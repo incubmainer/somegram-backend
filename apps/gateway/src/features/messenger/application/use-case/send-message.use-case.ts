@@ -20,7 +20,7 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<SendMessageCommand, AppNotificationResultType<null>>
+    ICommandHandler<SendMessageCommand, AppNotificationResultType<string>>
 {
   constructor(
     private readonly logger: LoggerService,
@@ -33,7 +33,7 @@ export class SendMessageUseCase
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<string>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentUserId, message, participantId } = command;
     try {
@@ -51,7 +51,7 @@ export class SendMessageUseCase
 
       if (result.appResult !== AppNotificationResultEnum.Success) return result;
 
-      return this.appNotification.success(null);
+      return this.appNotification.success(result.data);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

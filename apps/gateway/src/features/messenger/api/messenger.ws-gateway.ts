@@ -185,11 +185,32 @@ export class MessengerWsGateway
       'Handle send message via WS',
       this.handleSendMessage.name,
     );
-    const result: AppNotificationResultType<null> =
+    const result: AppNotificationResultType<string> =
       await this.commandBus.execute(
         new SendMessageCommand(userId, body.participantId, body.message),
       );
-    this.logger.debug(result.appResult, this.handleSendMessage.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      this.logger.debug(result.appResult, this.handleSendMessage.name);
+
+      const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, result.data);
+      console.log(isJoined);
+      if (isJoined) {
+        client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
+        this.logger.debug('Client already joined', this.handleJoinRoom.name);
+      } else {
+        const chatResult: AppNotificationResultType<ChatDto> =
+          await this.queryBus.execute(
+            new GetChatByIdQuery(result.data, userId),
+          );
+
+        if (chatResult.appResult === AppNotificationResultEnum.Success) {
+          this.joinRoom(client, WS_CHAT_ROOM_NAME, result.data);
+          client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
+        }
+      }
+    }
+
     this.appNotification.handleWsResult(result);
   }
 

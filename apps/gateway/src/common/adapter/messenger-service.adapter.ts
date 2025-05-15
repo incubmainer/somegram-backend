@@ -60,9 +60,9 @@ export class MessengerServiceAdapter {
 
   async sendMessage(
     body: CreateMessageDto,
-  ): Promise<AppNotificationResultType<null>> {
+  ): Promise<AppNotificationResultType<string>> {
     try {
-      const responseOfService: Observable<AppNotificationResultType<null>> =
+      const responseOfService: Observable<AppNotificationResultType<string>> =
         this.messengerServiceClient
           .send({ cmd: SEND_MESSAGE_TO_CHAT }, body)
           .pipe(timeout(20000));
