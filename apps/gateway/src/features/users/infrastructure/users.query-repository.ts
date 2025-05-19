@@ -3,6 +3,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as GatewayPrismaClient, Prisma } from '@prisma/gateway';
 import { LoggerService } from '@app/logger';
+import { validate as isValidUUID } from 'uuid';
 
 import { UserEntity } from '../domain/user.entity';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
@@ -59,7 +60,7 @@ export class UsersQueryRepository {
       };
     }
 
-    if (cursorUserId) {
+    if (cursorUserId && isValidUUID(cursorUserId)) {
       where.id = {
         gt: cursorUserId,
         not: userId,

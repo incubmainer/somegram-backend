@@ -45,9 +45,9 @@ export class UsersGraphqlRepository {
     where.isDeleted = false;
 
     if (queryString.statusFilter === UserBlockStatus.BLOCKED) {
-      where.UserBanInfo = { isNot: null };
+      where.userBanInfo = { isNot: null };
     } else if (queryString.statusFilter === UserBlockStatus.UNBLOCKED) {
-      where.UserBanInfo = { is: null };
+      where.userBanInfo = { is: null };
     }
 
     const users = await this.txHost.tx.user.findMany({

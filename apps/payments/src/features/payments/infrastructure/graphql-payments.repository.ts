@@ -99,6 +99,16 @@ export class GraphqlPaymentsRepository {
       };
     }
 
+    const orderBy: any = {};
+
+    if (sortBy === 'username') {
+      orderBy.subscription = {
+        username: sortDirection,
+      };
+    } else {
+      orderBy[sortBy] = sortDirection;
+    }
+
     const payments = await this.txHost.tx.paymentTransaction.findMany({
       where,
       include: {
@@ -109,7 +119,7 @@ export class GraphqlPaymentsRepository {
           },
         },
       },
-      orderBy: { [sortBy]: sortDirection },
+      orderBy,
       take: pageSize,
       skip: skip,
     });
