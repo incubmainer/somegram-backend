@@ -16,7 +16,6 @@ import {
 import { MESSENGER_NAME_SPACE } from '../../../../common/constants/route.constants';
 import {
   WS_ERROR_EVENT,
-  WS_JOIN_CHAT,
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
@@ -128,12 +127,13 @@ export class MessengerSwaggerController {
     summary: `Connect and disconnect chat, send, read message`,
     description: `WebSocket server: \`wss://somegram.online/${MESSENGER_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.
-    \n To connect to a chat between two users event name: \`"${WS_JOIN_CHAT}"\` message:  {"chatId": "uuid"}, 
+    \n To send message to a chat event name: \`"${WS_SEND_MESSAGE}"\` message:  {"message": "string", "participantId": "uuid"}, 
+    \n after auto connect to a chat between two users,
     \n if the connection is successful, listen the event name: \`"${WS_JOIN_ROOM_EVENT}\`" will return message to the chat, 
+    \n To read message event name: \`"${WS_READ_MESSAGE}"\` message:  {"messageId": "uuid"}
     \n To exit the chat event name: \`"${WS_LEAVE_CHAT}"\` message:  {"chatId": "uuid"}, 
     \n if you successfully disconnect from the chat, listen the event name: \`"${WS_LEAVE_ROOM_EVENT}\`" will return message to the chat,
-    \n To send message to a chat event name: \`"${WS_SEND_MESSAGE}"\` message:  {"message": "string", "participantId": "uuid"}, 
-    \n To read message event name: \`"${WS_READ_MESSAGE}"\` message:  {"messageId": "uuid"}`,
+`,
   })
   @Post()
   @ApiOkResponse({

@@ -27,7 +27,6 @@ import {
 import { WsGateway } from '../../../common/services/ws-gateway/ws.gateway';
 import { UseGuards } from '@nestjs/common';
 import {
-  WS_JOIN_CHAT,
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
@@ -93,45 +92,6 @@ export class MessengerWsGateway
   }
 
   @UseGuards(WsJwtAuthGuard)
-  @SubscribeMessage(WS_JOIN_CHAT)
-  async handleJoinRoom(
-    @MessageBody()
-    payload: JoinChatInputDto,
-
-    @ConnectedSocket()
-    client: Socket,
-
-    @WsCurrentUserId()
-    userId: string,
-  ): Promise<void> {
-    this.logger.debug(
-      'Execute: user try to connect to chat',
-      this.handleJoinRoom.name,
-    );
-    const { chatId } = payload;
-
-    const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, chatId);
-
-    if (isJoined) {
-      client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
-      this.logger.debug('Client already joined', this.handleJoinRoom.name);
-      return;
-    }
-
-    const result: AppNotificationResultType<ChatDto> =
-      await this.queryBus.execute(new GetChatByIdQuery(chatId, userId));
-
-    if (result.appResult === AppNotificationResultEnum.Success) {
-      this.joinRoom(client, WS_CHAT_ROOM_NAME, chatId);
-      client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
-    }
-
-    this.logger.debug(result.appResult, this.handleJoinRoom.name);
-
-    this.appNotification.handleWsResult(result);
-  }
-
-  @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage(WS_LEAVE_CHAT)
   async handleLeaveRoom(
     @MessageBody()
@@ -194,10 +154,9 @@ export class MessengerWsGateway
       this.logger.debug(result.appResult, this.handleSendMessage.name);
 
       const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, result.data);
-      console.log(isJoined);
       if (isJoined) {
         client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
-        this.logger.debug('Client already joined', this.handleJoinRoom.name);
+        this.logger.debug('Client already joined', this.handleSendMessage.name);
       } else {
         const chatResult: AppNotificationResultType<ChatDto> =
           await this.queryBus.execute(
