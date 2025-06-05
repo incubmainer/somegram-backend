@@ -178,8 +178,8 @@ type Query {
   getPosts(queryString: PostsQueryStringInput): PaginatedPostsModel!
   getCommentsForPost(queryString: CommentsQueryStringInput, postId: String!): PaginatedCommentModel!
   getAnswersForComment(queryString: CommentsQueryStringInput, commentId: String!): PaginatedCommentModel!
-  getFollowers(userId: String!, queryString: QueryStringInput): PaginatedFollowerModel!
-  getFollowing(userId: String!, queryString: QueryStringInput): PaginatedFollowerModel!
+  getFollowers(userId: String!, queryString: FollowQueryStringInput): PaginatedFollowerModel!
+  getFollowing(userId: String!, queryString: FollowQueryStringInput): PaginatedFollowerModel!
 }
 
 input UsersQueryStringInput {
@@ -232,10 +232,11 @@ input CommentsQueryStringInput {
   sortBy: String! = "createdAt"
 }
 
-input QueryStringInput {
+input FollowQueryStringInput {
   pageNumber: Int! = 1
   pageSize: Int! = 8
   sortDirection: SortDirection! = ASC
+  sortBy: String! = "username"
 }
 
 type Mutation {
