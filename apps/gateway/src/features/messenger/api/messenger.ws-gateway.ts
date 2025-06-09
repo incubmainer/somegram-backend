@@ -43,7 +43,7 @@ import { WsResponseDto } from '@app/base-types-enum';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
-import { ChatDto } from '../domain/types';
+import { ChatDto, MessageTypeEnum } from '../domain/types';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
 
@@ -187,14 +187,18 @@ export class MessengerWsGateway
     );
     const result: AppNotificationResultType<string> =
       await this.commandBus.execute(
-        new SendMessageCommand(userId, body.participantId, body.message),
+        new SendMessageCommand(
+          userId,
+          body.participantId,
+          body.message,
+          MessageTypeEnum.TEXT,
+        ),
       );
 
     if (result.appResult === AppNotificationResultEnum.Success) {
       this.logger.debug(result.appResult, this.handleSendMessage.name);
 
       const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, result.data);
-      console.log(isJoined);
       if (isJoined) {
         client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
         this.logger.debug('Client already joined', this.handleJoinRoom.name);

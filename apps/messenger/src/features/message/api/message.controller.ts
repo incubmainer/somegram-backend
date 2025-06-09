@@ -16,6 +16,7 @@ import { Pagination } from '@app/paginator';
 import { GetChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { ReadMessageInputDto } from './dto/input-dto/read-message.input.dto';
+import { SendMessageOutputDto } from './dto/output-dto/send-message.output.dto';
 
 @Controller()
 export class MessageController {
@@ -30,10 +31,10 @@ export class MessageController {
   @MessagePattern({ cmd: SEND_MESSAGE_TO_CHAT })
   async sendMessage(
     body: SendMessageInputDto,
-  ): Promise<AppNotificationResultType<string>> {
+  ): Promise<AppNotificationResultType<SendMessageOutputDto>> {
     this.logger.debug('Execute: send message', this.sendMessage.name);
 
-    const result: AppNotificationResultType<string> =
+    const result: AppNotificationResultType<SendMessageOutputDto> =
       await this.commandBus.execute(new SendMessageCommand(body));
 
     this.logger.debug(result.appResult, this.sendMessage.name);

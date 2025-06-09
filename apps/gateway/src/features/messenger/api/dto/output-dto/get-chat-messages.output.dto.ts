@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 import { UserAndUserBanInfoType } from '../../../../users/domain/types';
-import { ChatMessagesDto } from '../../../domain/types';
+import { ChatMessagesDto, MessageTypeEnum } from '../../../domain/types';
 
 export class ChatMessagesOutputDto {
   @ApiProperty()
@@ -44,6 +44,12 @@ export class ChatMessagesOutputDto {
 
   @ApiProperty()
   participantReadAt: Date | null;
+
+  @ApiProperty({ enum: MessageTypeEnum })
+  messageType: MessageTypeEnum;
+
+  @ApiProperty()
+  duration: number | null;
 }
 
 export class ChatMessagesOutputPaginationDto extends Pagination<ChatMessagesOutputDto> {
@@ -83,6 +89,8 @@ export class ChatMessagesOutputDtoMapper {
       myReadAt: message.myReadAt,
       participantReadStatus: message.participantReadStatus,
       participantReadAt: message.participantReadAt,
+      messageType: message.messageType,
+      duration: message.duration || null,
     };
   }
 

@@ -25,7 +25,7 @@ export class MessageRepository {
 
   async createMessage(createDto: CreateNewMessageDto): Promise<MessageEntity> {
     this.logger.debug('Execute: save new message', this.createMessage.name);
-    const { createdAt, message, chatId, senderId } = createDto;
+    const { createdAt, messageType, message, chatId, senderId } = createDto;
 
     const result = await this.txHost.tx.message.create({
       data: {
@@ -33,6 +33,7 @@ export class MessageRepository {
         chatId,
         content: message,
         userId: senderId,
+        messageType,
         MessageReadStatus: {
           create: {
             createdAt,

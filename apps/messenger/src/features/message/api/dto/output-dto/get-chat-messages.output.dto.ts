@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { MessageWithReadStatusType } from '../../../domain/types';
+import {
+  MessageTypeEnum,
+  MessageWithReadStatusType,
+} from '../../../domain/types';
 
 export class GetChatMessagesOutputDto {
   id: string;
@@ -12,6 +15,7 @@ export class GetChatMessagesOutputDto {
   myReadAt: Date | null;
   participantReadStatus: boolean;
   participantReadAt: Date | null;
+  messageType: MessageTypeEnum;
 }
 
 @Injectable()
@@ -38,6 +42,7 @@ export class GetChatMessagesOutputDtoMapper {
       participantReadStatus: Boolean(participantStatus),
       myReadAt: myStatus?.createdAt ?? null,
       participantReadAt: participantStatus?.createdAt ?? null,
+      messageType: message.messageType as MessageTypeEnum,
     };
   }
 

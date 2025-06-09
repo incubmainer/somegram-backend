@@ -14,6 +14,12 @@ export enum MimeTypes {
   PNG = 'image/png',
 }
 
+export enum SoundMimeTypes {
+  MPEG = 'audio/mpeg',
+  WAV = 'audio/wav',
+  MP_4 = 'audio/mp4',
+}
+
 export const POST_CONSTRAINTS = {
   MIN_PHOTO_COUNT: 1,
   MAX_PHOTO_COUNT: 10,

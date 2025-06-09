@@ -4,6 +4,10 @@ export const GET_USER_AVATAR = 'get_avatar';
 export const DELETE_AVATAR = 'delete_avatar';
 export const GET_USERS_AVATAR = 'get_avatars';
 
+export const GET_SOUND_BY_ID = 'get_sound_by_id';
+export const UPLOAD_SOUND = 'upload_sound';
+export const DELETE_SOUND_BY_ID = 'delete_sound_by_id';
+
 export const GET_POST_PHOTOS = 'get_post_photos';
 export const DELETE_POST_PHOTOS = 'delete_post_photos';
 export const GET_POSTS_PHOTOS = 'get_posts_photos';

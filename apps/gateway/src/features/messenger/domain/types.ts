@@ -1,3 +1,5 @@
+import { FileDto } from '../../posts/api/dto/input-dto/add-post.dto';
+
 export class ChatMessagesDto {
   id: string;
   content: string;
@@ -9,6 +11,8 @@ export class ChatMessagesDto {
   myReadAt: Date | null;
   participantReadStatus: boolean;
   participantReadAt: Date | null;
+  messageType: MessageTypeEnum;
+  duration?: number;
 }
 
 class LastChatMessageOutputDto {
@@ -36,9 +40,21 @@ export class ChatDto {
 export class CreateMessageDto {
   currentParticipantId: string;
   participantId: string;
-  message: string;
+  message: string | null;
+  type: MessageTypeEnum;
 }
 
+export enum MessageTypeEnum {
+  TEXT = 'text',
+  VOICE = 'voice',
+  FILE = 'file',
+}
+
+export class CreteVoiceMessageDto {
+  message: Buffer;
+  currentParticipantId: string;
+  participantId: string;
+}
 export class ReadMessageDto {
   userId: string;
   messageId: string;
@@ -46,5 +62,18 @@ export class ReadMessageDto {
 
 export class NewMessageGatewayDto {
   message: ChatMessagesDto;
+  participantId: string;
+}
+
+export class SendMessageDto {
+  chatId: string;
+  messageId: string;
+}
+
+export class UploadVoiceDto {
+  messageId: string;
+  chatId: string;
+  message: FileDto;
+  ownerId: string;
   participantId: string;
 }

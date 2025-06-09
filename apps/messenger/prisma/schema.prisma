@@ -26,11 +26,12 @@ model Participant {
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  content   String
-  chatId    String
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  userId    String
+  id          String   @id @default(uuid())
+  content     String?
+  chatId      String
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  userId      String
+  messageType String
 
   Chat              Chat                @relation(fields: [chatId], references: [id])
   MessageReadStatus MessageReadStatus[]

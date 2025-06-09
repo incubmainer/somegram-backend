@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import {
   ApiBearerAuth,
@@ -16,7 +26,7 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { EventBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { Pagination } from '@app/paginator';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
@@ -31,9 +41,24 @@ import {
   MESSAGE_READ,
   NEW_MESSAGE,
 } from '../../../common/constants/service.constants';
-import { NewMessageGatewayDto } from '../domain/types';
+import { MessageTypeEnum, NewMessageGatewayDto } from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
 import { MessageReadEvent } from '../application/events/message-read.event';
+import { SendMessageCommand } from '../application/use-case/send-message.use-case';
+import {
+  filesValidationPipe,
+  fileValidationPipe,
+} from '../../../common/pipe/validation/validation-file.pipe';
+import {
+  MimeTypes,
+  POST_CONSTRAINTS,
+  SoundMimeTypes,
+} from '../../posts/api/dto/input-dto/add-post.dto';
+import {
+  VOICE_MESSAGE_MAX_SIZE,
+  VOICE_MESSAGE_PROPERTY_FILE_NAME,
+} from './dto/input-dto/send-message.input.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -44,6 +69,7 @@ export class MessengerController {
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
     private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(MessengerController.name);
@@ -99,6 +125,38 @@ export class MessengerController {
 
     if (result.appResult === AppNotificationResultEnum.Success)
       return result.data;
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @UseInterceptors(FilesInterceptor(VOICE_MESSAGE_PROPERTY_FILE_NAME))
+  @UseGuards(AuthGuard('jwt'))
+  @Post(`${MESSENGER_ROUTE.CHAT}/:participantId/${MESSENGER_ROUTE.VOICE}`)
+  async sendVoiceMessage(
+    @UploadedFiles(
+      fileValidationPipe(
+        [SoundMimeTypes.MP_4, SoundMimeTypes.WAV, SoundMimeTypes.MPEG],
+        VOICE_MESSAGE_MAX_SIZE,
+        VOICE_MESSAGE_PROPERTY_FILE_NAME,
+      ),
+    )
+    file: Express.Multer.File[],
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Param('participantId') participantId: string,
+  ): Promise<void> {
+    this.logger.debug('Execute: get chat messages', this.getChatMessages.name);
+    const result: AppNotificationResultType<
+      Pagination<ChatMessagesOutputDto[]>
+    > = await this.commandBus.execute(
+      new SendMessageCommand(
+        user.userId,
+        participantId,
+        file[0],
+        MessageTypeEnum.VOICE,
+      ),
+    );
+
+    this.logger.debug(result.appResult, this.getChatMessages.name);
 
     this.appNotification.handleHttpResult(result);
   }

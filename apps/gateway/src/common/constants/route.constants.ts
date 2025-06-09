@@ -97,4 +97,5 @@ export const MESSENGER_ROUTE = {
   MAIN: 'messenger',
   CHAT: 'chat',
   MESSAGES: 'messages',
+  VOICE: 'voice',
 };
