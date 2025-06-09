@@ -8,7 +8,7 @@ import { firstValueFrom, Observable, timeout } from 'rxjs';
 import {
   DELETE_AVATAR,
   DELETE_POST_PHOTOS,
-  DELETE_SOUND_BY_ID,
+  DELETE_SOUND_BY_IDS,
   GET_POST_PHOTOS,
   GET_POSTS_PHOTOS,
   GET_POSTS_PHOTOS_BY_POST_ID,
@@ -174,13 +174,13 @@ export class PhotoServiceAdapter {
     }
   }
 
-  async deleteVoiceMessage(voiceId: string): Promise<void> {
+  async deleteMessagesByIds(messagesIds: string[]): Promise<void> {
     try {
       const responseOfService: Observable<void> = this.fileServiceClient
-        .send({ cmd: DELETE_SOUND_BY_ID }, { voiceId })
+        .send({ cmd: DELETE_SOUND_BY_IDS }, { messagesIds })
         .pipe(timeout(10000));
 
-      return await firstValueFrom(responseOfService);
+      await firstValueFrom(responseOfService);
     } catch (e) {
       throw new InternalServerErrorException();
     }

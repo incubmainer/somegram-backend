@@ -6,6 +6,7 @@ import {
   GET_CHAT_MESSAGES,
   GET_USERS_CHATS_MESSENGER,
   READ_MESSAGE,
+  REMOVE_MESSAGES_BY_IDS,
   SEND_MESSAGE_TO_CHAT,
 } from '../constants/service.constants';
 import {
@@ -135,6 +136,22 @@ export class MessengerServiceAdapter {
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.getUserChats.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async removeMessagesByIds(
+    messageIds: string[],
+    currentUserId: string,
+  ): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.messengerServiceClient
+          .send({ cmd: REMOVE_MESSAGES_BY_IDS }, { messageIds, currentUserId })
+          .pipe(timeout(20000));
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.removeMessagesByIds.name);
       return this.appNotification.internalServerError();
     }
   }

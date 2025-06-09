@@ -7,7 +7,10 @@ import {
 } from '../domain/types';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
+import {
+  PrismaClient as MessengerPrismaClient,
+  Message,
+} from '@prisma/messenger';
 import { MessageEntity } from '../domain/message.entity';
 import { MessageReadEntity } from '../domain/message-read.entity';
 import { ParticipantEntity } from '../../chat/domain/participant.entity';
@@ -105,5 +108,23 @@ export class MessageRepository {
         (p) => new ParticipantEntity(p),
       ),
     };
+  }
+
+  async getMessagesByIds(messagesIds: string[]): Promise<Message[] | null> {
+    const messages = await this.txHost.tx.message.findMany({
+      where: {
+        id: { in: messagesIds },
+      },
+    });
+
+    return messages && messages.length > 0 ? messages : null;
+  }
+
+  async removeMessagesByIds(messagesIds: string[]): Promise<void> {
+    await this.txHost.tx.message.deleteMany({
+      where: {
+        id: { in: messagesIds },
+      },
+    });
   }
 }

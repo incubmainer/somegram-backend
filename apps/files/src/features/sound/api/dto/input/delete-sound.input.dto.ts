@@ -1,3 +1,3 @@
 export class DeleteSoundInputDto {
-  messageId: string;
+  messagesIds: string[];
 }

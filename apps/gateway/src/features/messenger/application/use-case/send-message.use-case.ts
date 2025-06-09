@@ -49,12 +49,6 @@ export class SendMessageUseCase
 
       if (!participant) return this.appNotification.notFound();
 
-      // const data: CreateMessageDto = {
-      //   message,
-      //   currentParticipantId: currentUserId,
-      //   participantId: participantId,
-      // };
-
       switch (messageType) {
         case MessageTypeEnum.TEXT:
           return await this.handleTextMessage(
@@ -71,12 +65,6 @@ export class SendMessageUseCase
         default:
           return this.appNotification.internalServerError();
       }
-
-      // const result = await this.messengerServiceAdapter.sendMessage(data);
-      //
-      // if (result.appResult !== AppNotificationResultEnum.Success) return result;
-      //
-      // return this.appNotification.success(result.data);
     } catch (e) {
       this.logger.error(e, this.execute.name);
       return this.appNotification.internalServerError();

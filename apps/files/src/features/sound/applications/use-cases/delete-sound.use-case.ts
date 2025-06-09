@@ -14,17 +14,21 @@ export class DeleteSoundUseCase implements ICommandHandler<DeleteSoundCommand> {
     private readonly soundRepository: SoundRepository,
   ) {}
 
-  async execute(command: DeleteSoundCommand) {
+  async execute(command: DeleteSoundCommand): Promise<null> {
+    const { messagesIds } = command.payload;
     try {
-      // const avatarInfo = await this.photosQueryRepository.findAvatar(
-      //   payload.userId,
-      // );
-      // if (!avatarInfo) return null;
-      // await this.s3Adapter.deleteImage(avatarInfo.key);
-      // return await this.photosRepository.deleteAvatar(payload.userId);
+      const messages = await this.soundRepository.getMessagesByIds(messagesIds);
+
+      if (!messages) return null;
+
+      await Promise.all([
+        messages.map((m) => this.s3Adapter.deleteImage(m.key)),
+        this.soundRepository.deleteByMessagesIds(messagesIds),
+      ]);
+      return null;
     } catch (e) {
       console.error('Delete sound error: ', e);
-      return null;
+      return;
     }
   }
 }

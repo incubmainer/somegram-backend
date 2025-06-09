@@ -15,7 +15,15 @@ export class SoundRepository {
     return newSound.save();
   }
 
-  async deleteByMessageId(messageId: string): Promise<void> {
-    await this.soundModel.deleteOne({ messageId });
+  async deleteByMessagesIds(messagesIds: string[]): Promise<void> {
+    await this.soundModel.deleteMany({ messageId: { $in: messagesIds } });
+  }
+
+  async getMessagesByIds(messagesIds: string[]): Promise<Sound[] | null> {
+    const messages = await this.soundModel.find({
+      messageId: { $in: messagesIds },
+    });
+
+    return messages && messages.length > 0 ? messages : null;
   }
 }

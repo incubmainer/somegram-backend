@@ -12,6 +12,7 @@ import { NewMessageEventHandler } from './application/events/new-message.event';
 import { GetChatByIdQueryUseCase } from './application/query-bus/get-chat-by-id.use-case';
 import { MessengerSwaggerController } from './api/swagger/messanger-controller.swagger';
 import { MessageReadEventHandler } from './application/events/message-read.event';
+import { RemoveMessagesUseCase } from './application/use-case/remove-messages.use-case';
 
 const queryHandlers = [
   GetUserChatsQueryUseCase,
@@ -19,7 +20,11 @@ const queryHandlers = [
   GetChatByIdQueryUseCase,
 ];
 
-const handlers = [SendMessageUseCase, ReadMessageUseCase];
+const handlers = [
+  SendMessageUseCase,
+  ReadMessageUseCase,
+  RemoveMessagesUseCase,
+];
 
 const events = [NewMessageEventHandler, MessageReadEventHandler];
 

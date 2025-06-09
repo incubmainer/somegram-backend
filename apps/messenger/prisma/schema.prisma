@@ -43,7 +43,7 @@ model MessageReadStatus {
   messageId String
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
-  Message Message @relation(fields: [messageId], references: [id])
+  Message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, messageId])
 }

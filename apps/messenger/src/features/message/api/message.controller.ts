@@ -6,6 +6,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import {
   GET_CHAT_MESSAGES,
   READ_MESSAGE,
+  REMOVE_MESSAGES_BY_IDS,
   SEND_MESSAGE_TO_CHAT,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
@@ -17,6 +18,8 @@ import { GetChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.out
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { ReadMessageInputDto } from './dto/input-dto/read-message.input.dto';
 import { SendMessageOutputDto } from './dto/output-dto/send-message.output.dto';
+import { RemoveMessagesInputDto } from './dto/input-dto/remove-messages.input.dto';
+import { RemoveMessagesCommand } from '../application/use-case/remove-messages.use-case';
 
 @Controller()
 export class MessageController {
@@ -69,6 +72,20 @@ export class MessageController {
       await this.commandBus.execute(new ReadMessageCommand(body));
 
     this.logger.debug(result.appResult, this.readMessage.name);
+
+    return result;
+  }
+
+  @MessagePattern({ cmd: REMOVE_MESSAGES_BY_IDS })
+  async removeMessages(
+    body: RemoveMessagesInputDto,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: remove messages', this.removeMessages.name);
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(new RemoveMessagesCommand(body));
+
+    this.logger.debug(result.appResult, this.removeMessages.name);
 
     return result;
   }

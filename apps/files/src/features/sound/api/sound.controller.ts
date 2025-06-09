@@ -5,7 +5,7 @@ import { GetSoundInputDto } from './dto/input/get-sound.input.dto';
 import { DeleteSoundInputDto } from './dto/input/delete-sound.input.dto';
 import { UploadSoundInputDto } from './dto/input/upload-sound.input.dto';
 import {
-  DELETE_SOUND_BY_ID,
+  DELETE_SOUND_BY_IDS,
   GET_SOUND_BY_ID,
   UPLOAD_SOUND,
 } from '../../../../../gateway/src/common/constants/service.constants';
@@ -31,7 +31,7 @@ export class SoundController {
     return this.commandBus.execute(new UploadSoundCommand(payload));
   }
 
-  @MessagePattern({ cmd: DELETE_SOUND_BY_ID })
+  @MessagePattern({ cmd: DELETE_SOUND_BY_IDS })
   async deleteSound(payload: DeleteSoundInputDto) {
     return this.commandBus.execute(new DeleteSoundCommand(payload));
   }
