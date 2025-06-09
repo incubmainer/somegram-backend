@@ -3,7 +3,6 @@ export const WS_NEW_NOTIFICATION_EVENT = 'new_notification';
 export const WS_NEW_POST_EVENT = 'new_post';
 export const WS_NEW_MESSAGE_EVENT = 'new_message';
 export const WS_NEW_CHAT_MESSAGE_EVENT = 'new_chat_message';
-export const WS_JOIN_CHAT = 'join_chat';
 export const WS_LEAVE_CHAT = 'leave_chat';
 export const WS_LEAVE_ROOM_EVENT = 'left';
 export const WS_JOIN_ROOM_EVENT = 'joined';

@@ -35,9 +35,9 @@ import { UsersQueryStringInput } from './models/users-query-string-input';
 import { BanUserCommand } from '../../users/application/use-cases/graphql/ban-user.use-case';
 import { RemoveUserCommand } from '../../users/application/use-cases/graphql/remove-user.use-case';
 import { UnbanUserCommand } from '../../users/application/use-cases/graphql/unban-user.use-case';
-import { QueryStringInput } from '../common/query-string-input.model';
 import { GetUserFollowersQuery } from '../../users/application/queryBus/graphql/get-user-followers.use-case';
 import { GetUserFollowingQuery } from '../../users/application/queryBus/graphql/get-user-following.use-case';
+import { FollowQueryStringInput } from './models/follow-query-string-input';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -180,8 +180,8 @@ export class UserFollowingResolver {
   @UseGuards(BasicGqlGuard)
   async getFollowers(
     @Args('userId') userId: string,
-    @Args('queryString', { type: () => QueryStringInput, nullable: true })
-    queryString: QueryStringInput,
+    @Args('queryString', { type: () => FollowQueryStringInput, nullable: true })
+    queryString: FollowQueryStringInput,
   ): Promise<PaginatedFollowerModel> {
     this.logger.debug(
       'Execute: Get followers for user',
@@ -204,8 +204,8 @@ export class UserFollowingResolver {
   @UseGuards(BasicGqlGuard)
   async getFollowing(
     @Args('userId') userId: string,
-    @Args('queryString', { type: () => QueryStringInput, nullable: true })
-    queryString: QueryStringInput,
+    @Args('queryString', { type: () => FollowQueryStringInput, nullable: true })
+    queryString: FollowQueryStringInput,
   ): Promise<PaginatedFollowerModel> {
     this.logger.debug(
       'Execute: Get following for user',

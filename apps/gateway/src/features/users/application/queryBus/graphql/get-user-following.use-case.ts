@@ -9,14 +9,14 @@ import { ConfigService } from '@nestjs/config';
 
 import { PaginatedUserModel } from '../../../../resolvers/users/models/paginated-user.model';
 import { FollowerModel } from '../../../../resolvers/users/models/user.model';
-import { QueryStringInput } from '../../../../resolvers/common/query-string-input.model';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { UsersFollowGraphqlRepository } from '../../../infrastructure/users-follow.graphql.repository';
+import { FollowQueryStringInput } from '../../../../resolvers/users/models/follow-query-string-input';
 
 export class GetUserFollowingQuery {
   constructor(
     public userId: string,
-    public queryString: QueryStringInput,
+    public queryString: FollowQueryStringInput,
   ) {}
 }
 
