@@ -1,14 +1,12 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Query,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -164,7 +162,7 @@ export class MessengerController {
       ),
     );
 
-    this.logger.debug(result.appResult, this.getChatMessages.name);
+    this.logger.debug(result.appResult, this.sendVoiceMessage.name);
 
     this.appNotification.handleHttpResult(result);
   }

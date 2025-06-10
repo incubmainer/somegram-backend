@@ -8,5 +8,4 @@ export const WS_LEAVE_ROOM_EVENT = 'left';
 export const WS_JOIN_ROOM_EVENT = 'joined';
 export const WS_MESSAGE_READ_EVENT = 'message_read';
 export const WS_SEND_MESSAGE = 'send_message';
-export const WS_SEND_VOICE_MESSAGE = 'send_voice_message';
 export const WS_READ_MESSAGE = 'read_message';

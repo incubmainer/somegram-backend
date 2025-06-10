@@ -12,7 +12,7 @@ class LastChatMessageOutputDto {
 export class GetAllUserChatsOutputDto {
   id: string;
   participantId: string;
-  lastMessage: LastChatMessageOutputDto;
+  lastMessage: LastChatMessageOutputDto | null;
 
   avatarUrl?: string | null;
   isBan?: boolean;
@@ -25,13 +25,15 @@ export class UserChatOutputDtoMapper {
     return {
       id: chat.id,
       participantId: chat.participantId,
-      lastMessage: {
-        id: chat.lastMessage.id,
-        createdAt: chat.lastMessage.createdAt,
-        content: chat.lastMessage.content,
-        isMine: chat.isMine,
-        myReadStatus: chat.isMyRead,
-      },
+      lastMessage: chat.lastMessage
+        ? {
+            id: chat.lastMessage.id,
+            createdAt: chat.lastMessage.createdAt,
+            content: chat.lastMessage.content,
+            isMine: chat.isMine,
+            myReadStatus: chat.isMyRead,
+          }
+        : null,
     };
   }
 

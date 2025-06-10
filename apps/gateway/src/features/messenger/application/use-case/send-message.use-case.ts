@@ -29,6 +29,9 @@ export class SendMessageUseCase
   implements
     ICommandHandler<SendMessageCommand, AppNotificationResultType<string>>
 {
+  private newMessageId: string | null = null;
+  private currentUserId: string | null = null;
+
   constructor(
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
@@ -45,6 +48,7 @@ export class SendMessageUseCase
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentUserId, message, participantId, messageType } = command;
     try {
+      this.currentUserId = currentUserId;
       const participant = await this.usersRepository.getUserById(participantId);
 
       if (!participant) return this.appNotification.notFound();
@@ -67,6 +71,20 @@ export class SendMessageUseCase
       }
     } catch (e) {
       this.logger.error(e, this.execute.name);
+
+      if (this.newMessageId && this.currentUserId) {
+        try {
+          await this.messengerServiceAdapter.removeMessagesByIds(
+            [this.newMessageId],
+            this.currentUserId,
+          );
+        } catch (e) {
+          this.logger.error(
+            `Catch remove new message error: ${e}`,
+            this.execute.name,
+          );
+        }
+      }
       return this.appNotification.internalServerError();
     }
   }
@@ -107,6 +125,8 @@ export class SendMessageUseCase
 
     if (result.appResult !== AppNotificationResultEnum.Success)
       return result as AppNotificationResultType<null>;
+
+    this.newMessageId = result.data.messageId;
 
     const file: FileDto = {
       buffer: message.buffer,
