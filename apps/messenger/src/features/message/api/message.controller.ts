@@ -5,6 +5,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
   GET_CHAT_MESSAGES,
+  GET_MESSAGE,
   READ_MESSAGE,
   REMOVE_MESSAGES_BY_IDS,
   SEND_MESSAGE_TO_CHAT,
@@ -20,6 +21,8 @@ import { ReadMessageInputDto } from './dto/input-dto/read-message.input.dto';
 import { SendMessageOutputDto } from './dto/output-dto/send-message.output.dto';
 import { RemoveMessagesInputDto } from './dto/input-dto/remove-messages.input.dto';
 import { RemoveMessagesCommand } from '../application/use-case/remove-messages.use-case';
+import { GetMessageByIdInputDto } from './dto/input-dto/get-message-by-id.input.dto';
+import { GetMessageByIdQuery } from '../application/query-bus/get-message-by-id.use-case';
 
 @Controller()
 export class MessageController {
@@ -58,6 +61,22 @@ export class MessageController {
     > = await this.queryBus.execute(new GetChatMessagesQuery(body));
 
     this.logger.debug(result.appResult, this.getChatMessages.name);
+
+    return result;
+  }
+
+  @MessagePattern({ cmd: GET_MESSAGE })
+  async getMessageById(
+    body: GetMessageByIdInputDto,
+  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
+    this.logger.debug('Execute: get message by id', this.getMessageById.name);
+
+    const result: AppNotificationResultType<GetChatMessagesOutputDto> =
+      await this.queryBus.execute(
+        new GetMessageByIdQuery(body.messageId, body.participantId),
+      );
+
+    this.logger.debug(result.appResult, this.getMessageById.name);
 
     return result;
   }

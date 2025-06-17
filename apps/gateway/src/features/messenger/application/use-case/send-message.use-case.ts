@@ -10,11 +10,13 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import {
   CreateMessageDto,
   MessageTypeEnum,
+  SendMessageDto,
   UploadVoiceDto,
 } from '../../domain/types';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
 import { FileDto } from '../../../posts/api/dto/input-dto/add-post.dto';
+
 export class SendMessageCommand implements ICommand {
   constructor(
     public currentUserId: string,
@@ -27,7 +29,10 @@ export class SendMessageCommand implements ICommand {
 @CommandHandler(SendMessageCommand)
 export class SendMessageUseCase
   implements
-    ICommandHandler<SendMessageCommand, AppNotificationResultType<string>>
+    ICommandHandler<
+      SendMessageCommand,
+      AppNotificationResultType<SendMessageDto>
+    >
 {
   private newMessageId: string | null = null;
   private currentUserId: string | null = null;
@@ -44,7 +49,7 @@ export class SendMessageUseCase
 
   async execute(
     command: SendMessageCommand,
-  ): Promise<AppNotificationResultType<string>> {
+  ): Promise<AppNotificationResultType<SendMessageDto>> {
     this.logger.debug('Execute: send message command', this.execute.name);
     const { currentUserId, message, participantId, messageType } = command;
     try {
@@ -93,7 +98,7 @@ export class SendMessageUseCase
     message: string,
     currentParticipantId: string,
     participantId: string,
-  ): Promise<AppNotificationResultType<string>> {
+  ): Promise<AppNotificationResultType<SendMessageDto>> {
     const data: CreateMessageDto = {
       message,
       currentParticipantId: currentParticipantId,
@@ -106,14 +111,14 @@ export class SendMessageUseCase
     if (result.appResult !== AppNotificationResultEnum.Success)
       return result as AppNotificationResultType<null>;
 
-    return this.appNotification.success(result.data.chatId);
+    return this.appNotification.success(result.data);
   }
 
   private async handleVoiceMessage(
     message: Express.Multer.File,
     currentParticipantId: string,
     participantId: string,
-  ): Promise<AppNotificationResultType<string>> {
+  ): Promise<AppNotificationResultType<SendMessageDto>> {
     const data: CreateMessageDto = {
       message: null,
       currentParticipantId: currentParticipantId,
@@ -144,6 +149,6 @@ export class SendMessageUseCase
     };
     await this.photoServiceAdapter.uploadVoiceMessage(uploadVoiceDto);
 
-    return this.appNotification.success(result.data.chatId);
+    return this.appNotification.success(result.data);
   }
 }

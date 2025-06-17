@@ -4,6 +4,7 @@ import { firstValueFrom, Observable, timeout } from 'rxjs';
 import {
   GET_CHAT,
   GET_CHAT_MESSAGES,
+  GET_MESSAGE,
   GET_USERS_CHATS_MESSENGER,
   READ_MESSAGE,
   REMOVE_MESSAGES_BY_IDS,
@@ -133,6 +134,29 @@ export class MessengerServiceAdapter {
             },
           )
           .pipe(timeout(20000));
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.getUserChats.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async getMessageById(
+    messageId: string,
+    participantId: string,
+  ): Promise<AppNotificationResultType<ChatMessagesDto>> {
+    try {
+      const responseOfService: Observable<
+        AppNotificationResultType<ChatMessagesDto>
+      > = this.messengerServiceClient
+        .send(
+          { cmd: GET_MESSAGE },
+          {
+            messageId,
+            participantId,
+          },
+        )
+        .pipe(timeout(20000));
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.getUserChats.name);

@@ -43,7 +43,11 @@ import {
   MESSAGE_READ,
   NEW_MESSAGE,
 } from '../../../common/constants/service.constants';
-import { MessageTypeEnum, NewMessageGatewayDto } from '../domain/types';
+import {
+  MessageTypeEnum,
+  NewMessageGatewayDto,
+  SendMessageDto,
+} from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
 import { MessageReadEvent } from '../application/events/message-read.event';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
@@ -59,6 +63,7 @@ import { RemoveMessagesInputDto } from './dto/input-dto/remove-messages.input.dt
 import { RemoveMessagesByIdsSwagger } from './swagger/remove-messages-by-ids.swagger';
 import { SendVoiceMessageSwagger } from './swagger/send-voice-message.swagger';
 import { SendVoiceMessageInputDto } from './dto/input-dto/send-voice-message.input.dto';
+import { GetMessageByIdQuery } from '../application/query-bus/get-message-by-id.use-case';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -129,7 +134,7 @@ export class MessengerController {
     this.appNotification.handleHttpResult(result);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor(VOICE_MESSAGE_PROPERTY_FILE_NAME))
   @UseGuards(AuthGuard('jwt'))
   @Post(`${MESSENGER_ROUTE.CHAT}/:participantId/${MESSENGER_ROUTE.VOICE}`)
@@ -146,23 +151,32 @@ export class MessengerController {
     @CurrentUser() user: JWTAccessTokenPayloadType,
     @Param('participantId') participantId: string,
     @Body() body: SendVoiceMessageInputDto,
-  ): Promise<void> {
+  ): Promise<ChatMessagesOutputDto | void> {
     this.logger.debug(
       'Execute: send voice message',
       this.sendVoiceMessage.name,
     );
-    const result: AppNotificationResultType<
-      Pagination<ChatMessagesOutputDto[]>
-    > = await this.commandBus.execute(
-      new SendMessageCommand(
-        user.userId,
-        participantId,
-        file[0],
-        MessageTypeEnum.VOICE,
-      ),
-    );
+    const result: AppNotificationResultType<SendMessageDto> =
+      await this.commandBus.execute(
+        new SendMessageCommand(
+          user.userId,
+          participantId,
+          file[0],
+          MessageTypeEnum.VOICE,
+        ),
+      );
 
     this.logger.debug(result.appResult, this.sendVoiceMessage.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      const { messageId } = result.data;
+      const messageResult: AppNotificationResultType<ChatMessagesOutputDto> =
+        await this.queryBus.execute(
+          new GetMessageByIdQuery(messageId, participantId),
+        );
+
+      return messageResult.data;
+    }
 
     this.appNotification.handleHttpResult(result);
   }

@@ -43,7 +43,7 @@ import { WsResponseDto } from '@app/base-types-enum';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
-import { ChatDto, MessageTypeEnum } from '../domain/types';
+import { ChatDto, MessageTypeEnum, SendMessageDto } from '../domain/types';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
 
@@ -146,7 +146,7 @@ export class MessengerWsGateway
       'Handle send message via WS',
       this.handleSendMessage.name,
     );
-    const result: AppNotificationResultType<string> =
+    const result: AppNotificationResultType<SendMessageDto> =
       await this.commandBus.execute(
         new SendMessageCommand(
           userId,
@@ -159,18 +159,22 @@ export class MessengerWsGateway
     if (result.appResult === AppNotificationResultEnum.Success) {
       this.logger.debug(result.appResult, this.handleSendMessage.name);
 
-      const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, result.data);
+      const isJoined = this.isJoined(
+        client,
+        WS_CHAT_ROOM_NAME,
+        result.data.chatId,
+      );
       if (isJoined) {
         client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
         this.logger.debug('Client already joined', this.handleSendMessage.name);
       } else {
         const chatResult: AppNotificationResultType<ChatDto> =
           await this.queryBus.execute(
-            new GetChatByIdQuery(result.data, userId),
+            new GetChatByIdQuery(result.data.chatId, userId),
           );
 
         if (chatResult.appResult === AppNotificationResultEnum.Success) {
-          this.joinRoom(client, WS_CHAT_ROOM_NAME, result.data);
+          this.joinRoom(client, WS_CHAT_ROOM_NAME, result.data.chatId);
           client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
         }
       }
