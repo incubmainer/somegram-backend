@@ -15,6 +15,7 @@ import {
   TESTING_CANCEL_SUBSCRIPTION,
   TESTING_GET_NOTIFICATION,
   TESTING_GET_PAYMENTS,
+  UPDATE_USERNAME_AFTER_CHANGE,
 } from '../constants/service.constants';
 import {
   ApplicationNotification,
@@ -250,6 +251,23 @@ export class PaymentsServiceAdapter {
       return await firstValueFrom(responseOfService);
     } catch (e) {
       this.logger.error(e, this.getAllPayments.name);
+      return this.appNotification.internalServerError();
+    }
+  }
+
+  async updateUsername(payload: {
+    userId: string;
+    newUsername: string;
+  }): Promise<AppNotificationResultType<null>> {
+    try {
+      const responseOfService: Observable<AppNotificationResultType<null>> =
+        this.paymentsServiceClient
+          .send({ cmd: UPDATE_USERNAME_AFTER_CHANGE }, payload)
+          .pipe(timeout(10000));
+
+      return await firstValueFrom(responseOfService);
+    } catch (e) {
+      this.logger.error(e, this.enableAutoRenewal.name);
       return this.appNotification.internalServerError();
     }
   }

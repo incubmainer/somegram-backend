@@ -32,6 +32,7 @@ import { GetAllPaymentsQueryUseCase } from './features/payments/application/use-
 import { GetPaymentsByUsersQueryUseCase } from './features/payments/application/use-cases/query/graphql/get-payments-by-users.use-case';
 import { GetPaymentsByUserQueryUseCase } from './features/payments/application/use-cases/query/graphql/get-payments.use-case';
 import { GraphqlPaymentsRepository } from './features/payments/infrastructure/graphql-payments.repository';
+import { UpdateUsernameAfterChangeUseCase } from './features/payments/application/use-cases/command/update-username-after-change.use-case';
 
 const useCases = [
   CreatePaymentUseCase,
@@ -44,6 +45,7 @@ const useCases = [
   TestingGetPaymentsQueryUseCase,
   TestingCancelSubscriptionUseCaseHandler,
   StripeSubscriptionCreateUseCase,
+  UpdateUsernameAfterChangeUseCase,
 ];
 
 const useCasesGraphql = [

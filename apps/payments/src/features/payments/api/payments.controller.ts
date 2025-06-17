@@ -15,6 +15,7 @@ import {
   GET_ALL_PAYMENTS_GQL,
   GET_PAYMENTS_BY_USERS_GQL,
   GET_PAYMENTS_GQL,
+  UPDATE_USERNAME_AFTER_CHANGE,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { GetSubscriptionInfoQuery } from '../application/use-cases/query/get-subscription-info.use-case';
 import { PaypalEventAdapter } from '../../../common/adapters/paypal-event.adapter';
@@ -46,6 +47,7 @@ import { SearchQueryParameters } from '../../../../../gateway/src/common/domain/
 import { GetAllPaymentsQuery } from '../application/use-cases/query/graphql/get-all-payments.use-case';
 import { GetPaymentsByUsersQuery } from '../application/use-cases/query/graphql/get-payments-by-users.use-case';
 import { GetPaymentsByUserQuery } from '../application/use-cases/query/graphql/get-payments.use-case';
+import { UpdateUsernameAfterChangeCommand } from '../application/use-cases/command/update-username-after-change.use-case';
 
 @Controller('payments')
 export class PaymentsController {
@@ -198,5 +200,16 @@ export class PaymentsController {
     this.logger.debug('Execute: get all payments', this.getPaymentsByUser.name);
 
     return this.queryBus.execute(new GetAllPaymentsQuery(payload.queryString));
+  }
+
+  @MessagePattern({ cmd: UPDATE_USERNAME_AFTER_CHANGE })
+  async updateUsername(payload: {
+    userId: string;
+    newUsername: string;
+  }): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: update username', this.updateUsername.name);
+    return this.commandBus.execute(
+      new UpdateUsernameAfterChangeCommand(payload.userId, payload.newUsername),
+    );
   }
 }
