@@ -19,6 +19,7 @@ import {
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
+  WS_MESSAGE_READ_EVENT,
   WS_NEW_CHAT_MESSAGE_EVENT,
   WS_NEW_MESSAGE_EVENT,
   WS_READ_MESSAGE,
@@ -112,7 +113,8 @@ export class MessengerSwaggerController {
     description: `WebSocket server: \`wss://somegram.online/${MESSENGER_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.
     \n To receive new messages listen the event name: \`"${WS_NEW_MESSAGE_EVENT}"\`  will return messages to the chat, , 
-    \n  To receive new messages inside the chat listen the event name: \`"${WS_NEW_CHAT_MESSAGE_EVENT}"\`  will return messages to the chat,`,
+    \n  To receive new messages inside the chat listen the event name: \`"${WS_NEW_CHAT_MESSAGE_EVENT}"\`  will return messages to the chat,
+    \n To receive a message about a read message: ${WS_MESSAGE_READ_EVENT} \`,`,
   })
   @Get()
   @ApiOkResponse({
