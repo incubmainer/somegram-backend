@@ -1,17 +1,19 @@
 import { FileDto } from '../../posts/api/dto/input-dto/add-post.dto';
 
+export class ChatMessagesDtoParticipantsDto {
+  userId: string;
+  readStatus: boolean;
+  readAt: Date | null;
+}
+
 export class ChatMessagesDto {
   id: string;
   content: string;
   createdAt: Date;
-  senderId: string;
   chatId: string;
-  isMine: boolean;
-  myReadStatus: boolean;
-  myReadAt: Date | null;
-  participantReadStatus: boolean;
-  participantReadAt: Date | null;
   messageType: MessageTypeEnum;
+  sender: ChatMessagesDtoParticipantsDto;
+  participant: ChatMessagesDtoParticipantsDto;
   duration?: number;
 }
 

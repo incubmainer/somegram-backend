@@ -46,16 +46,16 @@ export class NewMessageEventHandler implements IEventHandler<NewMessageEvent> {
       handledMessage = voiceMessage;
     }
 
-    const userIds = [message.senderId];
+    const userIds = [message.sender.userId, message.participant.userId];
 
-    const avatar = await this.photoServiceAdapter.getUsersAvatar(userIds);
-    const senderInfo =
+    const avatars = await this.photoServiceAdapter.getUsersAvatar(userIds);
+    const usersInfo =
       await this.usersQueryRepository.getUsersAndUsersIsBan(userIds);
 
     const mappedMessage = this.chatMessagesOutputDtoMapper.mapMessage(
       handledMessage,
-      avatar,
-      senderInfo,
+      avatars,
+      usersInfo,
     );
 
     try {

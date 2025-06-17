@@ -62,9 +62,19 @@ export class GetChatMessagesQueryUseCase
 
       const ids = [userId];
 
-      const secondParticipantId = resultMessages.data.items.find(
-        (i) => i.senderId !== userId,
-      )?.senderId;
+      const secondParticipantMessage = resultMessages.data.items.find(
+        (i) => i.participant.userId !== userId || i.sender.userId !== userId,
+      );
+
+      let secondParticipantId: string | null = null;
+
+      if (secondParticipantMessage) {
+        if (secondParticipantMessage.participant.userId !== userId) {
+          secondParticipantId = secondParticipantMessage.participant.userId;
+        } else if (secondParticipantMessage.sender.userId !== userId) {
+          secondParticipantId = secondParticipantMessage.sender.userId;
+        }
+      }
 
       if (secondParticipantId) {
         ids.push(secondParticipantId);

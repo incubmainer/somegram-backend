@@ -14,6 +14,7 @@ import {
 import { MESSENGER_NAME_SPACE } from '../../../../common/constants/route.constants';
 import {
   WS_ERROR_EVENT,
+  WS_JOIN_CHAT,
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
@@ -131,6 +132,7 @@ export class MessengerSwaggerController {
     \n after auto connect to a chat between two users,
     \n if the connection is successful, listen the event name: \`"${WS_JOIN_ROOM_EVENT}\`" will return message to the chat, 
     \n To read message event name: \`"${WS_READ_MESSAGE}"\` message:  {"messageId": "uuid"}
+    \n To join the chat event name: \`"${WS_JOIN_CHAT}"\` message:  {"chatId": "uuid"}, 
     \n To exit the chat event name: \`"${WS_LEAVE_CHAT}"\` message:  {"chatId": "uuid"}, 
     \n if you successfully disconnect from the chat, listen the event name: \`"${WS_LEAVE_ROOM_EVENT}\`" will return message to the chat,
 `,
