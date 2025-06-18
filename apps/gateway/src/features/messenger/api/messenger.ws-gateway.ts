@@ -27,6 +27,7 @@ import {
 import { WsGateway } from '../../../common/services/ws-gateway/ws.gateway';
 import { UseGuards } from '@nestjs/common';
 import {
+  WS_JOIN_CHAT,
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
@@ -42,7 +43,7 @@ import { WsResponseDto } from '@app/base-types-enum';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { SendMessageInputDto } from './dto/input-dto/send-message.input.dto';
-import { ChatDto } from '../domain/types';
+import { ChatDto, MessageTypeEnum, SendMessageDto } from '../domain/types';
 
 export const WS_CHAT_ROOM_NAME = 'chat';
 
@@ -145,26 +146,35 @@ export class MessengerWsGateway
       'Handle send message via WS',
       this.handleSendMessage.name,
     );
-    const result: AppNotificationResultType<string> =
+    const result: AppNotificationResultType<SendMessageDto> =
       await this.commandBus.execute(
-        new SendMessageCommand(userId, body.participantId, body.message),
+        new SendMessageCommand(
+          userId,
+          body.participantId,
+          body.message,
+          MessageTypeEnum.TEXT,
+        ),
       );
 
     if (result.appResult === AppNotificationResultEnum.Success) {
       this.logger.debug(result.appResult, this.handleSendMessage.name);
 
-      const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, result.data);
+      const isJoined = this.isJoined(
+        client,
+        WS_CHAT_ROOM_NAME,
+        result.data.chatId,
+      );
       if (isJoined) {
         client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
         this.logger.debug('Client already joined', this.handleSendMessage.name);
       } else {
         const chatResult: AppNotificationResultType<ChatDto> =
           await this.queryBus.execute(
-            new GetChatByIdQuery(result.data, userId),
+            new GetChatByIdQuery(result.data.chatId, userId),
           );
 
         if (chatResult.appResult === AppNotificationResultEnum.Success) {
-          this.joinRoom(client, WS_CHAT_ROOM_NAME, result.data);
+          this.joinRoom(client, WS_CHAT_ROOM_NAME, result.data.chatId);
           client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
         }
       }
@@ -191,5 +201,40 @@ export class MessengerWsGateway
       );
     this.logger.debug(result.appResult, this.handleReadMessage.name);
     this.appNotification.handleWsResult(result);
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage(WS_JOIN_CHAT)
+  async joinToChat(
+    @MessageBody() body: JoinChatInputDto,
+
+    @ConnectedSocket()
+    client: Socket,
+
+    @WsCurrentUserId()
+    userId: string,
+  ) {
+    this.logger.debug(
+      'Handle join client to chat via WS',
+      this.joinToChat.name,
+    );
+
+    const { chatId } = body;
+
+    const isJoined = this.isJoined(client, WS_CHAT_ROOM_NAME, chatId);
+    if (isJoined) {
+      client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
+      this.logger.debug('Client already joined', this.joinToChat.name);
+    } else {
+      const chatResult: AppNotificationResultType<ChatDto> =
+        await this.queryBus.execute(new GetChatByIdQuery(chatId, userId));
+
+      if (chatResult.appResult === AppNotificationResultEnum.Success) {
+        this.joinRoom(client, WS_CHAT_ROOM_NAME, chatId);
+        client.emit(WS_JOIN_ROOM_EVENT, this.joinToChatResponse);
+      } else {
+        this.appNotification.handleWsResult(chatResult);
+      }
+    }
   }
 }

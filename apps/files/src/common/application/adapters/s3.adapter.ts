@@ -90,6 +90,35 @@ export class S3Adapter {
     }
   }
 
+  async saveVoiceMessage(
+    chatId: string,
+    messageId: string,
+    file: FileDto,
+  ): Promise<{ key: string; url: string }> {
+    const fileExtension = file.mimetype.split('/')[1];
+    const key = `content/messenger/${chatId}/${messageId}.${fileExtension}`;
+    const extractedBuffer = Buffer.from(file.buffer);
+    const bucketParams = {
+      Bucket: this.bucketName,
+      Key: key,
+      Body: extractedBuffer,
+      ContentType: file.mimetype,
+      ACL: ObjectCannedACL.public_read,
+    };
+
+    const command = new PutObjectCommand(bucketParams);
+
+    try {
+      await this.s3Client.send(command);
+      return {
+        key,
+        url: this.getFileUrl(key),
+      };
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async deleteImage(key: string) {
     const bucketParams = { Bucket: this.bucketName, Key: key };
 

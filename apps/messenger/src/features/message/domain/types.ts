@@ -8,6 +8,7 @@ export class CreateNewMessageDto {
   chatId: string;
   createdAt: Date;
   senderId: string;
+  messageType: MessageTypeEnum;
 }
 
 export type MessageWithReadStatusAndParticipantsType = Message & {
@@ -29,4 +30,10 @@ export class MessageWithReadStatusAndParticipants {
   message: MessageEntity;
   messageReadStatus: MessageReadEntity[] | null;
   participants: ParticipantEntity[];
+}
+
+export enum MessageTypeEnum {
+  TEXT = 'text',
+  VOICE = 'voice',
+  FILE = 'file',
 }

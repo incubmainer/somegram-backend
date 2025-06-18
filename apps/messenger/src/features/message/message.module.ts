@@ -10,8 +10,13 @@ import { ReadMessageUseCase } from './application/use-case/read-message.use-case
 import { GetMessageByIdUseCase } from './application/query-bus/get-message-by-id.use-case';
 import { NewMessageEventHandler } from './application/events/new-message.event';
 import { MessageReadEventHandler } from './application/events/message-read.event';
+import { RemoveMessagesUseCase } from './application/use-case/remove-messages.use-case';
 
-const handlers = [SendMessageUseCase, ReadMessageUseCase];
+const handlers = [
+  SendMessageUseCase,
+  ReadMessageUseCase,
+  RemoveMessagesUseCase,
+];
 const queryHandlers = [GetChatMessagesUseCase, GetMessageByIdUseCase];
 const events = [NewMessageEventHandler, MessageReadEventHandler];
 

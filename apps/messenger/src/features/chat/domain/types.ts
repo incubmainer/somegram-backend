@@ -1,3 +1,5 @@
+import { MessageTypeEnum } from '../../message/domain/types';
+
 export class ChatLastMessageRawDto {
   id: string;
   content: string;
@@ -20,4 +22,5 @@ export class CreateChatDto {
   currentParticipantId: string;
   participantId: string;
   message: string;
+  messageType: MessageTypeEnum;
 }

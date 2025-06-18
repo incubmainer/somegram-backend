@@ -5,7 +5,9 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern } from '@nestjs/microservices';
 import {
   GET_CHAT_MESSAGES,
+  GET_MESSAGE,
   READ_MESSAGE,
+  REMOVE_MESSAGES_BY_IDS,
   SEND_MESSAGE_TO_CHAT,
 } from '../../../../../gateway/src/common/constants/service.constants';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
@@ -16,6 +18,11 @@ import { Pagination } from '@app/paginator';
 import { GetChatMessagesOutputDto } from './dto/output-dto/get-chat-messages.output.dto';
 import { ReadMessageCommand } from '../application/use-case/read-message.use-case';
 import { ReadMessageInputDto } from './dto/input-dto/read-message.input.dto';
+import { SendMessageOutputDto } from './dto/output-dto/send-message.output.dto';
+import { RemoveMessagesInputDto } from './dto/input-dto/remove-messages.input.dto';
+import { RemoveMessagesCommand } from '../application/use-case/remove-messages.use-case';
+import { GetMessageByIdInputDto } from './dto/input-dto/get-message-by-id.input.dto';
+import { GetMessageByIdQuery } from '../application/query-bus/get-message-by-id.use-case';
 
 @Controller()
 export class MessageController {
@@ -30,10 +37,10 @@ export class MessageController {
   @MessagePattern({ cmd: SEND_MESSAGE_TO_CHAT })
   async sendMessage(
     body: SendMessageInputDto,
-  ): Promise<AppNotificationResultType<string>> {
+  ): Promise<AppNotificationResultType<SendMessageOutputDto>> {
     this.logger.debug('Execute: send message', this.sendMessage.name);
 
-    const result: AppNotificationResultType<string> =
+    const result: AppNotificationResultType<SendMessageOutputDto> =
       await this.commandBus.execute(new SendMessageCommand(body));
 
     this.logger.debug(result.appResult, this.sendMessage.name);
@@ -58,6 +65,22 @@ export class MessageController {
     return result;
   }
 
+  @MessagePattern({ cmd: GET_MESSAGE })
+  async getMessageById(
+    body: GetMessageByIdInputDto,
+  ): Promise<AppNotificationResultType<GetChatMessagesOutputDto>> {
+    this.logger.debug('Execute: get message by id', this.getMessageById.name);
+
+    const result: AppNotificationResultType<GetChatMessagesOutputDto> =
+      await this.queryBus.execute(
+        new GetMessageByIdQuery(body.messageId, body.participantId),
+      );
+
+    this.logger.debug(result.appResult, this.getMessageById.name);
+
+    return result;
+  }
+
   @MessagePattern({ cmd: READ_MESSAGE })
   async readMessage(
     body: ReadMessageInputDto,
@@ -68,6 +91,20 @@ export class MessageController {
       await this.commandBus.execute(new ReadMessageCommand(body));
 
     this.logger.debug(result.appResult, this.readMessage.name);
+
+    return result;
+  }
+
+  @MessagePattern({ cmd: REMOVE_MESSAGES_BY_IDS })
+  async removeMessages(
+    body: RemoveMessagesInputDto,
+  ): Promise<AppNotificationResultType<null>> {
+    this.logger.debug('Execute: remove messages', this.removeMessages.name);
+
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(new RemoveMessagesCommand(body));
+
+    this.logger.debug(result.appResult, this.removeMessages.name);
 
     return result;
   }

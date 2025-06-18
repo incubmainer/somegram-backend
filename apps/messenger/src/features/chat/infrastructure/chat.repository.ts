@@ -25,8 +25,13 @@ export class ChatRepository {
       'Execute: create chat with participants',
       this.createChatWithParticipants.name,
     );
-    const { createdAt, participantId, currentParticipantId, message } =
-      createDto;
+    const {
+      createdAt,
+      participantId,
+      currentParticipantId,
+      message,
+      messageType,
+    } = createDto;
     const result = await this.txHost.tx.chat.create({
       data: {
         createdAt,
@@ -43,6 +48,7 @@ export class ChatRepository {
             createdAt,
             userId: currentParticipantId,
             content: message,
+            messageType,
             MessageReadStatus: {
               create: {
                 createdAt,

@@ -6,6 +6,7 @@ import {
   WS_CHAT_ROOM_NAME,
 } from '../../api/messenger.ws-gateway';
 import { ChatMessagesDto } from '../../domain/types';
+import { MessengerService } from '../messenger.service';
 
 export class MessageReadEvent {
   constructor(public message: ChatMessagesDto) {}
@@ -18,18 +19,22 @@ export class MessageReadEventHandler
   constructor(
     private readonly logger: LoggerService,
     private readonly messengerWsGateway: MessengerWsGateway,
+    private readonly messengerService: MessengerService,
   ) {
     this.logger.setContext(MessageReadEventHandler.name);
   }
   async handle(event: MessageReadEvent): Promise<void> {
     this.logger.debug('Publish message read notification', this.handle.name);
     const { message } = event;
+
+    const mappedMessage = await this.messengerService.handleMessage(message);
+
     try {
       this.messengerWsGateway.emitToRoom(
         WS_CHAT_ROOM_NAME,
         message.chatId,
         WS_MESSAGE_READ_EVENT,
-        message,
+        mappedMessage,
       );
       this.logger.debug('Success', this.handle.name);
     } catch (e) {

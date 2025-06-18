@@ -4,6 +4,10 @@ export const GET_USER_AVATAR = 'get_avatar';
 export const DELETE_AVATAR = 'delete_avatar';
 export const GET_USERS_AVATAR = 'get_avatars';
 
+export const GET_SOUND_BY_ID = 'get_sound_by_id';
+export const UPLOAD_SOUND = 'upload_sound';
+export const DELETE_SOUND_BY_IDS = 'delete_sound_by_ids';
+
 export const GET_POST_PHOTOS = 'get_post_photos';
 export const DELETE_POST_PHOTOS = 'delete_post_photos';
 export const GET_POSTS_PHOTOS = 'get_posts_photos';
@@ -35,8 +39,10 @@ export const GET_ALL_PAYMENTS_GQL = 'get_all_payments_gql';
 
 export const GET_USERS_CHATS_MESSENGER = 'get_user_chats';
 export const GET_CHAT = 'get_chat';
+export const GET_MESSAGE = 'get_message';
 export const SEND_MESSAGE_TO_CHAT = 'send_message_to_chat';
 export const GET_CHAT_MESSAGES = 'get_chat_messages';
+export const REMOVE_MESSAGES_BY_IDS = 'remove_messages_by_ids';
 export const READ_MESSAGE = 'read_message';
 export const NEW_MESSAGE = 'new_message';
 export const MESSAGE_READ = 'message_read';

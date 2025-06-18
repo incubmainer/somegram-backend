@@ -70,10 +70,7 @@ export class GetChatMessagesUseCase
         pageNumber,
         pageSize,
         total,
-        this.getChatMessagesOutputDtoMapper.mapMessages(
-          items,
-          currentParticipantId,
-        ),
+        this.getChatMessagesOutputDtoMapper.mapMessages(items),
       );
 
       return this.appNotification.success(result);

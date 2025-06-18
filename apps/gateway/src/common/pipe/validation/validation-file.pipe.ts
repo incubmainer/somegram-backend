@@ -5,6 +5,7 @@ import {
 
 const SIZE_TYPE: string = 'expected size is';
 const FILE_TYPE_TYPE: string = 'expected type is';
+const REQUIRED_FILE_TYPE: string = 'is required';
 export const fileValidationPipe = (
   allowedMimeTypes: string[],
   maxSize: number,
@@ -22,6 +23,7 @@ export const fileValidationPipe = (
     .build({
       exceptionFactory: (error: string) => {
         const errors = [];
+
         if (typeof error === 'string' && error.includes(FILE_TYPE_TYPE)) {
           errors.push({
             property: propertyName,
@@ -35,6 +37,15 @@ export const fileValidationPipe = (
             property: propertyName,
             constraints: {
               isFileSize: `The file is too large. Maximum size: ${maxSize} MB`,
+            },
+          });
+        }
+
+        if (typeof error === 'string' && error.includes(REQUIRED_FILE_TYPE)) {
+          errors.push({
+            property: propertyName,
+            constraints: {
+              [propertyName]: `The file is required.`,
             },
           });
         }
