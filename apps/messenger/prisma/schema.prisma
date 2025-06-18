@@ -31,7 +31,7 @@ model Message {
   chatId      String
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   userId      String
-  messageType String
+  messageType MessageType            @default(text)
 
   Chat              Chat                @relation(fields: [chatId], references: [id])
   MessageReadStatus MessageReadStatus[]
@@ -46,4 +46,10 @@ model MessageReadStatus {
   Message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, messageId])
+}
+
+enum MessageType {
+  text
+  voice
+  file
 }
