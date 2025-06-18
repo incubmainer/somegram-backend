@@ -37,6 +37,8 @@ export const SUBSCRIPTIONS_ROUTE = {
 
 export const NOTIFICATION_NAME_SPACE = 'notification';
 
+export const MESSENGER_NAME_SPACE = 'messenger';
+
 export const NOTIFICATION_ROUTE = {
   MAIN: 'notifications',
   MARK_AS_READ: 'read',
@@ -89,4 +91,10 @@ export const FOLLOWING_USER_ROUTE = {
   UNFOLLOW: 'unfollow',
   FOLLOWERS: 'followers',
   FOLLOWING: 'following',
+};
+
+export const MESSENGER_ROUTE = {
+  MAIN: 'messenger',
+  CHAT: 'chat',
+  MESSAGES: 'messages',
 };

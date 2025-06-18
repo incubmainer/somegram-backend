@@ -64,7 +64,12 @@ const postFileFactoryProvider = {
 
 @Module({
   imports: [UsersModule],
-  controllers: [PostsController, PublicPostsController, PostCommentController, FollowingPostsController],
+  controllers: [
+    PostsController,
+    PublicPostsController,
+    PostCommentController,
+    FollowingPostsController,
+  ],
   providers: [
     ...queryHandlers,
     ...handlers,

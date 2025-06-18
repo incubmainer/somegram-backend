@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Message" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMPTZ(6);
+
+-- AlterTable
+ALTER TABLE "Participant" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMPTZ(6);

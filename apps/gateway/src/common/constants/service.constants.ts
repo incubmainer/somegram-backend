@@ -14,6 +14,7 @@ export const STRIPE_WEBHOOK_HANDLER = 'stripe_webhook_handler';
 export const DISABLE_AUTO_RENEWAL = 'disable_auto_renewal';
 export const ENABLE_AUTO_RENEWAL = 'enable_auto_renewal';
 export const GET_PAYMENTS = 'get_payments';
+export const UPDATE_USERNAME_AFTER_CHANGE = 'update_username_after_change';
 
 export const SEND_SUBSCRIPTION_INFO = 'send_subscription_info';
 export const SEND_SUBSCRIPTIONS_INFO = 'send_subscriptions_info';
@@ -31,3 +32,11 @@ export const CREATE_NOTIFICATIONS = 'create_notifications';
 export const GET_PAYMENTS_BY_USERS_GQL = 'get_payments_by_users_gql';
 export const GET_PAYMENTS_GQL = 'get_payments_gql';
 export const GET_ALL_PAYMENTS_GQL = 'get_all_payments_gql';
+
+export const GET_USERS_CHATS_MESSENGER = 'get_user_chats';
+export const GET_CHAT = 'get_chat';
+export const SEND_MESSAGE_TO_CHAT = 'send_message_to_chat';
+export const GET_CHAT_MESSAGES = 'get_chat_messages';
+export const READ_MESSAGE = 'read_message';
+export const NEW_MESSAGE = 'new_message';
+export const MESSAGE_READ = 'message_read';

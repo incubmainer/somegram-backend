@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/messenger"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MESSENGER_DATABASE_URL")
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  Participants Participant[]
+  Messages     Message[]
+}
+
+model Participant {
+  id     String @id @default(uuid())
+  userId String
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  chatId    String
+  Chat      Chat     @relation(fields: [chatId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  chatId    String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  userId    String
+
+  Chat              Chat                @relation(fields: [chatId], references: [id])
+  MessageReadStatus MessageReadStatus[]
+}
+
+model MessageReadStatus {
+  id        String   @id @default(uuid())
+  userId    String
+  messageId String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  Message Message @relation(fields: [messageId], references: [id])
+
+  @@unique([userId, messageId])
+}

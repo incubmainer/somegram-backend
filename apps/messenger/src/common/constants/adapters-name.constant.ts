@@ -1,0 +1,1 @@
+export const GATEWAY_CLIENT_RMQ = 'GATEWAY_CLIENT_RMQ';

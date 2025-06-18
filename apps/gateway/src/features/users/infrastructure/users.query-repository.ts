@@ -7,6 +7,7 @@ import { validate as isValidUUID } from 'uuid';
 
 import { UserEntity } from '../domain/user.entity';
 import { SearchQueryParametersWithoutSorting } from '../../../common/domain/query.types';
+import { UserAndUserBanInfoType, UserInfoAndUserIsBan } from '../domain/types';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -146,6 +147,8 @@ export class UsersQueryRepository {
     queryString?: SearchQueryParametersWithoutSorting,
     cursorUserId?: string,
   ): Promise<{ users: UserEntity[]; count: number }> {
+    this.logger.debug('Execute: get followers', this.getFollowers.name);
+
     const where: Prisma.UserWhereInput = {
       following: {
         some: {
@@ -191,6 +194,8 @@ export class UsersQueryRepository {
     queryString?: SearchQueryParametersWithoutSorting,
     cursorUserId?: string,
   ): Promise<{ users: UserEntity[]; count: number }> {
+    this.logger.debug('Execute: get following', this.getFollowing.name);
+
     const where: Prisma.UserWhereInput = {
       followers: {
         some: {
@@ -230,5 +235,44 @@ export class UsersQueryRepository {
       users: users as UserEntity[],
       count,
     };
+  }
+
+  async getUserAndUserIsBan(
+    userId: string,
+  ): Promise<UserInfoAndUserIsBan | null> {
+    this.logger.debug(
+      'Execute: get user and user ban info',
+      this.getUserAndUserIsBan.name,
+    );
+    const user = await this.txHost.tx.user.findUnique({
+      where: { id: userId },
+      include: { userBanInfo: true },
+    });
+
+    return user
+      ? {
+          user,
+          isBan: !!user.userBanInfo,
+        }
+      : null;
+  }
+
+  async getUsersAndUsersIsBan(
+    userIds: string[],
+  ): Promise<UserAndUserBanInfoType[] | null> {
+    this.logger.debug(
+      'Execute: get users and users ban info',
+      this.getUsersAndUsersIsBan.name,
+    );
+    const result = await this.txHost.tx.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      include: { userBanInfo: true },
+    });
+
+    return result && result.length > 0 ? result : null;
   }
 }

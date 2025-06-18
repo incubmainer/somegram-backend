@@ -7,6 +7,7 @@ import {
 } from '@app/application-notification';
 import { FillProfileInputDto } from '../../api/dto/input-dto/fill-profile.input-dto';
 import { DateFormatter } from '@app/date-formater';
+import { PaymentsServiceAdapter } from '../../../../common/adapter/payment-service.adapter';
 
 export class FillingUserProfileCommand {
   constructor(
@@ -28,6 +29,7 @@ export class FillingUserProfileUseCase
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly dateFormatter: DateFormatter,
+    private readonly paymentsServiceAdapter: PaymentsServiceAdapter,
   ) {
     this.logger.setContext(FillingUserProfileUseCase.name);
   }
@@ -58,6 +60,10 @@ export class FillingUserProfileUseCase
 
       user.fillProfileInfo(command.fillProfileInputDto, birthday);
       await this.usersRepository.updateUserProfileInfo(user);
+      await this.paymentsServiceAdapter.updateUsername({
+        userId: userId,
+        newUsername: command.fillProfileInputDto.userName,
+      });
       return this.appNotification.success(userId);
     } catch (e) {
       this.logger.error(e, this.execute.name);
