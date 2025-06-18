@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -183,7 +184,7 @@ export class MessengerController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard('jwt'))
-  @Post(`${MESSENGER_ROUTE.CHAT}/${MESSENGER_ROUTE.REMOVE}`)
+  @Delete(`${MESSENGER_ROUTE.CHAT}/${MESSENGER_ROUTE.REMOVE}`)
   @RemoveMessagesByIdsSwagger()
   async removeMessages(
     @CurrentUser() user: JWTAccessTokenPayloadType,

@@ -10,7 +10,7 @@ import { ChatMessagesOutputDto } from '../dto/output-dto/get-chat-messages.outpu
 export function SendVoiceMessageSwagger() {
   return applyDecorators(
     ApiConsumes('multipart/form-data'),
-    ApiOperation({ summary: 'Remove messages by ids' }),
+    ApiOperation({ summary: 'Send voice message' }),
     ApiCreatedResponse({
       description: 'Success',
       type: ChatMessagesOutputDto,
