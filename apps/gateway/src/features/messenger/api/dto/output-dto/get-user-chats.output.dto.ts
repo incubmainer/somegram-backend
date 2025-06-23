@@ -11,8 +11,8 @@ class LastChatMessageOutputDto {
   @ApiProperty()
   isMine: boolean;
 
-  @ApiProperty()
-  content: string;
+  @ApiProperty({ nullable: true })
+  content: string | null;
 
   @ApiProperty()
   createdAt: Date;
