@@ -15,6 +15,7 @@ export class ChatMessagesDto {
   sender: ChatMessagesDtoParticipantsDto;
   participant: ChatMessagesDtoParticipantsDto;
   duration?: number;
+  fileUrl?: string;
 }
 
 class LastChatMessageOutputDto {
@@ -72,10 +73,21 @@ export class SendMessageDto {
   messageId: string;
 }
 
-export class UploadVoiceDto {
+export class UploadFileMessageDto {
   messageId: string;
   chatId: string;
   message: FileDto;
   ownerId: string;
   participantId: string;
+  type: MessageTypeEnum;
+}
+
+export class FileMessageOutputDto {
+  url: string;
+  ownerId: string;
+  size: number;
+  messageId: string;
+  chatId: string;
+  duration: number;
+  key: string;
 }

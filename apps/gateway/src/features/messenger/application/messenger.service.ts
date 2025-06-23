@@ -23,12 +23,15 @@ export class MessengerService {
     const { messageType } = message;
 
     let handledMessage = message;
-    if (messageType === MessageTypeEnum.VOICE) {
-      const voiceMessage = await this.getVoiceInfo(message);
+    if (
+      messageType === MessageTypeEnum.VOICE ||
+      messageType === MessageTypeEnum.FILE
+    ) {
+      const fileMessage = await this.getFileMessageInfo(message);
 
-      if (!voiceMessage) return;
+      if (!fileMessage) return;
 
-      handledMessage = voiceMessage;
+      handledMessage = fileMessage;
     }
 
     const userIds = [message.sender.userId, message.participant.userId];
@@ -44,25 +47,24 @@ export class MessengerService {
     );
   }
 
-  private async getVoiceInfo(
+  private async getFileMessageInfo(
     message: ChatMessagesDto,
     maxRetries = 5,
     delayMs = 2000,
   ): Promise<ChatMessagesDto | null> {
     const { id } = message;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      const voiceMessage =
-        await this.photoServiceAdapter.getVoiceMessageById(id);
+      const fileMessage = await this.photoServiceAdapter.getFileMessageById(id);
 
-      if (voiceMessage) {
-        message.content = voiceMessage.url;
-        message.duration = voiceMessage.duration;
+      if (fileMessage) {
+        message.fileUrl = fileMessage.url;
+        message.duration = fileMessage.duration;
         return message;
       }
 
       this.logger.warn(
-        `Voice message not available yet (attempt ${attempt}/${maxRetries})`,
-        this.getVoiceInfo.name,
+        `File message not available yet (attempt ${attempt}/${maxRetries})`,
+        this.getFileMessageInfo.name,
       );
 
       if (attempt < maxRetries) {
@@ -71,8 +73,8 @@ export class MessengerService {
     }
 
     this.logger.warn(
-      `Voice message not found after ${maxRetries} attempts`,
-      this.getVoiceInfo.name,
+      `File message not found after ${maxRetries} attempts`,
+      this.getFileMessageInfo.name,
     );
     return null;
   }

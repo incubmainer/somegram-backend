@@ -53,8 +53,13 @@ import { NewMessageEvent } from '../application/events/new-message.event';
 import { MessageReadEvent } from '../application/events/message-read.event';
 import { SendMessageCommand } from '../application/use-case/send-message.use-case';
 import { fileValidationPipe } from '../../../common/pipe/validation/validation-file.pipe';
-import { SoundMimeTypes } from '../../posts/api/dto/input-dto/add-post.dto';
 import {
+  MimeTypes,
+  SoundMimeTypes,
+} from '../../posts/api/dto/input-dto/add-post.dto';
+import {
+  FILE_MESSAGE_MAX_SIZE,
+  FILE_MESSAGE_PROPERTY_FILE_NAME,
   VOICE_MESSAGE_MAX_SIZE,
   VOICE_MESSAGE_PROPERTY_FILE_NAME,
 } from './dto/input-dto/send-message.input.dto';
@@ -65,6 +70,8 @@ import { RemoveMessagesByIdsSwagger } from './swagger/remove-messages-by-ids.swa
 import { SendVoiceMessageSwagger } from './swagger/send-voice-message.swagger';
 import { SendVoiceMessageInputDto } from './dto/input-dto/send-voice-message.input.dto';
 import { GetMessageByIdQuery } from '../application/query-bus/get-message-by-id.use-case';
+import { SendFileMessageInputDto } from './dto/input-dto/send-file-message.input.dto';
+import { SendFileMessageSwagger } from './swagger/send-file-message.swagger';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -168,6 +175,52 @@ export class MessengerController {
       );
 
     this.logger.debug(result.appResult, this.sendVoiceMessage.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      const { messageId } = result.data;
+      const messageResult: AppNotificationResultType<ChatMessagesOutputDto> =
+        await this.queryBus.execute(
+          new GetMessageByIdQuery(messageId, participantId),
+        );
+
+      return messageResult.data;
+    }
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FilesInterceptor(FILE_MESSAGE_PROPERTY_FILE_NAME))
+  @UseGuards(AuthGuard('jwt'))
+  @Post(`${MESSENGER_ROUTE.CHAT}/:participantId/${MESSENGER_ROUTE.FILE}`)
+  @SendFileMessageSwagger()
+  async sendFileMessage(
+    @UploadedFiles(
+      fileValidationPipe(
+        [MimeTypes.PNG, MimeTypes.JPEG],
+        FILE_MESSAGE_MAX_SIZE,
+        FILE_MESSAGE_PROPERTY_FILE_NAME,
+      ),
+    )
+    file: Express.Multer.File[],
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Param('participantId') participantId: string,
+    @Body() body: SendFileMessageInputDto,
+  ): Promise<ChatMessagesOutputDto | void> {
+    this.logger.debug('Execute: send file message', this.sendFileMessage.name);
+
+    const result: AppNotificationResultType<SendMessageDto> =
+      await this.commandBus.execute(
+        new SendMessageCommand(
+          user.userId,
+          participantId,
+          body.text,
+          MessageTypeEnum.FILE,
+          file[0],
+        ),
+      );
+
+    this.logger.debug(result.appResult, this.sendFileMessage.name);
 
     if (result.appResult === AppNotificationResultEnum.Success) {
       const { messageId } = result.data;

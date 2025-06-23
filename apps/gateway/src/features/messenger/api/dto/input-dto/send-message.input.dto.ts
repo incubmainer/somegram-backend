@@ -4,6 +4,8 @@ import { Trim } from '@app/decorators';
 
 export const VOICE_MESSAGE_MAX_SIZE = 3;
 export const VOICE_MESSAGE_PROPERTY_FILE_NAME = 'file';
+export const FILE_MESSAGE_MAX_SIZE = 1;
+export const FILE_MESSAGE_PROPERTY_FILE_NAME = 'file';
 export class SendMessageInputDto {
   @ApiProperty()
   @Trim()

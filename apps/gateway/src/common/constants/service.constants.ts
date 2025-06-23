@@ -4,9 +4,9 @@ export const GET_USER_AVATAR = 'get_avatar';
 export const DELETE_AVATAR = 'delete_avatar';
 export const GET_USERS_AVATAR = 'get_avatars';
 
-export const GET_SOUND_BY_ID = 'get_sound_by_id';
-export const UPLOAD_SOUND = 'upload_sound';
-export const DELETE_SOUND_BY_IDS = 'delete_sound_by_ids';
+export const GET_FILE_MESSAGE_BY_ID = 'get_file_message_by_id';
+export const UPLOAD_FILE_MESSAGE = 'upload_file_message';
+export const DELETE_FILE_MESSAGES_BY_IDS = 'delete_file_messages_by_ids';
 
 export const GET_POST_PHOTOS = 'get_post_photos';
 export const DELETE_POST_PHOTOS = 'delete_post_photos';

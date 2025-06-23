@@ -2,7 +2,7 @@ import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
-export class Sound extends Document {
+export class Message extends Document {
   @Prop({ required: true })
   ownerId: string;
 
@@ -12,8 +12,8 @@ export class Sound extends Document {
   @Prop({ required: true })
   size: number;
 
-  @Prop({ required: true })
-  duration: number; // Second
+  @Prop({ required: false, nullable: true, default: null })
+  duration: number | null; // Second
 
   @Prop({ required: false })
   createdAt: Date;
@@ -28,4 +28,4 @@ export class Sound extends Document {
   chatId: string;
 }
 
-export const SoundSchema = SchemaFactory.createForClass(Sound);
+export const MessageSchema = SchemaFactory.createForClass(Message);

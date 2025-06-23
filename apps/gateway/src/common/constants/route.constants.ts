@@ -98,5 +98,6 @@ export const MESSENGER_ROUTE = {
   CHAT: 'chat',
   MESSAGES: 'messages',
   VOICE: 'voice',
+  FILE: 'file',
   REMOVE: 'remove',
 };

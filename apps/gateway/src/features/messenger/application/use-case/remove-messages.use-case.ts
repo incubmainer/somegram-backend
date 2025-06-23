@@ -52,7 +52,7 @@ export class RemoveMessagesUseCase
 
       if (result.appResult !== AppNotificationResultEnum.Success) return result;
 
-      await this.photoServiceAdapter.deleteMessagesByIds(messagesIds);
+      await this.photoServiceAdapter.deleteFileMessagesByIds(messagesIds);
 
       return this.appNotification.success(null);
     } catch (e) {

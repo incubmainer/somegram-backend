@@ -90,7 +90,7 @@ export class S3Adapter {
     }
   }
 
-  async saveVoiceMessage(
+  async saveMessage(
     chatId: string,
     messageId: string,
     file: FileDto,
