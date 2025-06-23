@@ -14,6 +14,7 @@ import {
   ChatMessagesOutputDtoMapper,
 } from '../../api/dto/output-dto/get-chat-messages.output.dto';
 import { GetChatMessagesQueryParams } from '../../api/dto/input-dto/get-chat-messages.query.params';
+import { MessageTypeEnum } from '../../domain/types';
 
 export class GetChatMessagesQuery implements IQuery {
   constructor(
@@ -61,9 +62,19 @@ export class GetChatMessagesQueryUseCase
 
       const ids = [userId];
 
-      const secondParticipantId = resultMessages.data.items.find(
-        (i) => i.senderId !== userId,
-      )?.senderId;
+      const secondParticipantMessage = resultMessages.data.items.find(
+        (i) => i.participant.userId !== userId || i.sender.userId !== userId,
+      );
+
+      let secondParticipantId: string | null = null;
+
+      if (secondParticipantMessage) {
+        if (secondParticipantMessage.participant.userId !== userId) {
+          secondParticipantId = secondParticipantMessage.participant.userId;
+        } else if (secondParticipantMessage.sender.userId !== userId) {
+          secondParticipantId = secondParticipantMessage.sender.userId;
+        }
+      }
 
       if (secondParticipantId) {
         ids.push(secondParticipantId);
@@ -73,21 +84,39 @@ export class GetChatMessagesQueryUseCase
 
       const users = await this.usersQueryRepository.getUsersAndUsersIsBan(ids);
 
-      const { pagesCount, totalCount, pageNumber, pageSize, items } =
+      const promises = resultMessages.data.items.map(async (message) => {
+        const { messageType, id } = message;
+
+        switch (messageType) {
+          case MessageTypeEnum.VOICE:
+            const voiceMessage =
+              await this.photoServiceAdapter.getVoiceMessageById(id);
+
+            if (voiceMessage) {
+              message.content = voiceMessage.url;
+              message.duration = voiceMessage.duration;
+            }
+
+            break;
+        }
+
+        return this.chatMessagesOutputDtoMapper.mapMessage(
+          message,
+          avatars,
+          users,
+        );
+      });
+
+      const messages = await Promise.all(promises);
+
+      const { pagesCount, totalCount, pageNumber, pageSize } =
         resultMessages.data;
       const result: Pagination<ChatMessagesOutputDto[]> = {
         pagesCount,
         pageNumber,
         pageSize,
         totalCount,
-        items:
-          items && items.length > 0
-            ? this.chatMessagesOutputDtoMapper.mapMessages(
-                resultMessages.data.items,
-                avatars,
-                users,
-              )
-            : [],
+        items: messages && messages.length > 0 ? messages : [],
       };
 
       return this.appNotification.success(result);

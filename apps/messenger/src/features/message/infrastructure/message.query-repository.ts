@@ -3,10 +3,7 @@ import { LoggerService } from '@app/logger';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { PrismaClient as MessengerPrismaClient } from '@prisma/messenger';
-import {
-  MessageWithReadStatusAndParticipantsType,
-  MessageWithReadStatusType,
-} from '../domain/types';
+import { MessageWithReadStatusAndParticipantsType } from '../domain/types';
 
 @Injectable()
 export class MessageQueryRepository {
@@ -23,7 +20,10 @@ export class MessageQueryRepository {
     chatId: string,
     pageSize: number,
     endCursorMessageId: string,
-  ): Promise<{ items: MessageWithReadStatusType[]; total: number } | null> {
+  ): Promise<{
+    items: MessageWithReadStatusAndParticipantsType[];
+    total: number;
+  } | null> {
     this.logger.debug('Execute: get chat messages', this.getChatMessages.name);
 
     let endCursorCreatedAt: Date | undefined = undefined;
@@ -57,6 +57,11 @@ export class MessageQueryRepository {
           createdAt: 'desc',
         },
         include: {
+          Chat: {
+            select: {
+              Participants: true,
+            },
+          },
           MessageReadStatus: true,
         },
         take: pageSize,

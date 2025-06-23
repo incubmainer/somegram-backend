@@ -49,10 +49,7 @@ export class GetMessageByIdUseCase
       if (!message.Chat?.Participants?.some((p) => p.userId === participantId))
         return this.appNotification.forbidden();
 
-      const result = this.getChatMessagesOutputDtoMapper.mapMessage(
-        message,
-        participantId,
-      );
+      const result = this.getChatMessagesOutputDtoMapper.mapMessage(message);
 
       return this.appNotification.success(result);
     } catch (e) {

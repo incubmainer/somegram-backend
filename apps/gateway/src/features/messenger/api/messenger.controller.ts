@@ -1,4 +1,17 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { LoggerService } from '@app/logger';
 import {
   ApiBearerAuth,
@@ -16,7 +29,7 @@ import {
   AppNotificationResultEnum,
   AppNotificationResultType,
 } from '@app/application-notification';
-import { EventBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { Pagination } from '@app/paginator';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
@@ -31,9 +44,27 @@ import {
   MESSAGE_READ,
   NEW_MESSAGE,
 } from '../../../common/constants/service.constants';
-import { NewMessageGatewayDto } from '../domain/types';
+import {
+  MessageTypeEnum,
+  NewMessageGatewayDto,
+  SendMessageDto,
+} from '../domain/types';
 import { NewMessageEvent } from '../application/events/new-message.event';
 import { MessageReadEvent } from '../application/events/message-read.event';
+import { SendMessageCommand } from '../application/use-case/send-message.use-case';
+import { fileValidationPipe } from '../../../common/pipe/validation/validation-file.pipe';
+import { SoundMimeTypes } from '../../posts/api/dto/input-dto/add-post.dto';
+import {
+  VOICE_MESSAGE_MAX_SIZE,
+  VOICE_MESSAGE_PROPERTY_FILE_NAME,
+} from './dto/input-dto/send-message.input.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { RemoveMessagesCommand } from '../application/use-case/remove-messages.use-case';
+import { RemoveMessagesInputDto } from './dto/input-dto/remove-messages.input.dto';
+import { RemoveMessagesByIdsSwagger } from './swagger/remove-messages-by-ids.swagger';
+import { SendVoiceMessageSwagger } from './swagger/send-voice-message.swagger';
+import { SendVoiceMessageInputDto } from './dto/input-dto/send-voice-message.input.dto';
+import { GetMessageByIdQuery } from '../application/query-bus/get-message-by-id.use-case';
 
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -44,6 +75,7 @@ export class MessengerController {
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
     private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(MessengerController.name);
@@ -99,6 +131,75 @@ export class MessengerController {
 
     if (result.appResult === AppNotificationResultEnum.Success)
       return result.data;
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FilesInterceptor(VOICE_MESSAGE_PROPERTY_FILE_NAME))
+  @UseGuards(AuthGuard('jwt'))
+  @Post(`${MESSENGER_ROUTE.CHAT}/:participantId/${MESSENGER_ROUTE.VOICE}`)
+  @SendVoiceMessageSwagger()
+  async sendVoiceMessage(
+    @UploadedFiles(
+      fileValidationPipe(
+        [SoundMimeTypes.MP_4, SoundMimeTypes.WAV, SoundMimeTypes.MPEG],
+        VOICE_MESSAGE_MAX_SIZE,
+        VOICE_MESSAGE_PROPERTY_FILE_NAME,
+      ),
+    )
+    file: Express.Multer.File[],
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Param('participantId') participantId: string,
+    @Body() body: SendVoiceMessageInputDto,
+  ): Promise<ChatMessagesOutputDto | void> {
+    this.logger.debug(
+      'Execute: send voice message',
+      this.sendVoiceMessage.name,
+    );
+    const result: AppNotificationResultType<SendMessageDto> =
+      await this.commandBus.execute(
+        new SendMessageCommand(
+          user.userId,
+          participantId,
+          file[0],
+          MessageTypeEnum.VOICE,
+        ),
+      );
+
+    this.logger.debug(result.appResult, this.sendVoiceMessage.name);
+
+    if (result.appResult === AppNotificationResultEnum.Success) {
+      const { messageId } = result.data;
+      const messageResult: AppNotificationResultType<ChatMessagesOutputDto> =
+        await this.queryBus.execute(
+          new GetMessageByIdQuery(messageId, participantId),
+        );
+
+      return messageResult.data;
+    }
+
+    this.appNotification.handleHttpResult(result);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(`${MESSENGER_ROUTE.CHAT}/${MESSENGER_ROUTE.REMOVE}`)
+  @RemoveMessagesByIdsSwagger()
+  async removeMessages(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+    @Body() body: RemoveMessagesInputDto,
+  ): Promise<void> {
+    this.logger.debug(
+      'Execute: remove chat messages',
+      this.removeMessages.name,
+    );
+    const result: AppNotificationResultType<null> =
+      await this.commandBus.execute(
+        new RemoveMessagesCommand(user.userId, body.messagesIds),
+      );
+
+    this.logger.debug(result.appResult, this.removeMessages.name);
 
     this.appNotification.handleHttpResult(result);
   }

@@ -26,11 +26,12 @@ model Participant {
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  content   String
-  chatId    String
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  userId    String
+  id          String   @id @default(uuid())
+  content     String?
+  chatId      String
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  userId      String
+  messageType MessageType            @default(text)
 
   Chat              Chat                @relation(fields: [chatId], references: [id])
   MessageReadStatus MessageReadStatus[]
@@ -42,7 +43,13 @@ model MessageReadStatus {
   messageId String
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
-  Message Message @relation(fields: [messageId], references: [id])
+  Message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, messageId])
+}
+
+enum MessageType {
+  text
+  voice
+  file
 }

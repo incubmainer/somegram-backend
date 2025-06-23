@@ -1,8 +1,6 @@
 import { Controller, Delete, Get, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -16,9 +14,11 @@ import {
 import { MESSENGER_NAME_SPACE } from '../../../../common/constants/route.constants';
 import {
   WS_ERROR_EVENT,
+  WS_JOIN_CHAT,
   WS_JOIN_ROOM_EVENT,
   WS_LEAVE_CHAT,
   WS_LEAVE_ROOM_EVENT,
+  WS_MESSAGE_READ_EVENT,
   WS_NEW_CHAT_MESSAGE_EVENT,
   WS_NEW_MESSAGE_EVENT,
   WS_READ_MESSAGE,
@@ -112,7 +112,8 @@ export class MessengerSwaggerController {
     description: `WebSocket server: \`wss://somegram.online/${MESSENGER_NAME_SPACE}\` 
     \n The access token must be passed in the \`'Authorization'\` header.
     \n To receive new messages listen the event name: \`"${WS_NEW_MESSAGE_EVENT}"\`  will return messages to the chat, , 
-    \n  To receive new messages inside the chat listen the event name: \`"${WS_NEW_CHAT_MESSAGE_EVENT}"\`  will return messages to the chat,`,
+    \n  To receive new messages inside the chat listen the event name: \`"${WS_NEW_CHAT_MESSAGE_EVENT}"\`  will return messages to the chat,
+    \n To receive a message about a read message: ${WS_MESSAGE_READ_EVENT} \`,`,
   })
   @Get()
   @ApiOkResponse({
@@ -131,6 +132,7 @@ export class MessengerSwaggerController {
     \n after auto connect to a chat between two users,
     \n if the connection is successful, listen the event name: \`"${WS_JOIN_ROOM_EVENT}\`" will return message to the chat, 
     \n To read message event name: \`"${WS_READ_MESSAGE}"\` message:  {"messageId": "uuid"}
+    \n To join the chat event name: \`"${WS_JOIN_CHAT}"\` message:  {"chatId": "uuid"}, 
     \n To exit the chat event name: \`"${WS_LEAVE_CHAT}"\` message:  {"chatId": "uuid"}, 
     \n if you successfully disconnect from the chat, listen the event name: \`"${WS_LEAVE_ROOM_EVENT}\`" will return message to the chat,
 `,

@@ -3,14 +3,31 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Pagination } from '@app/paginator';
 import { FileType } from '../../../../../../../../libs/common/enums/file-type.enum';
 import { UserAndUserBanInfoType } from '../../../../users/domain/types';
-import { ChatMessagesDto } from '../../../domain/types';
+import { ChatMessagesDto, MessageTypeEnum } from '../../../domain/types';
+
+export class ChatMessagesParticipantsOutputDto {
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  username: string;
+
+  @ApiProperty()
+  readStatus: boolean;
+
+  @ApiProperty()
+  readAt: Date | null;
+
+  @ApiProperty()
+  avatarUrl: string | null;
+
+  @ApiProperty()
+  isBan: boolean;
+}
 
 export class ChatMessagesOutputDto {
   @ApiProperty()
   id: string;
-
-  @ApiProperty()
-  isMine: boolean;
 
   @ApiProperty()
   content: string;
@@ -21,29 +38,17 @@ export class ChatMessagesOutputDto {
   @ApiProperty()
   createdAt: Date;
 
-  @ApiProperty()
-  senderId: string;
+  @ApiProperty({ type: ChatMessagesParticipantsOutputDto })
+  sender: ChatMessagesParticipantsOutputDto;
+
+  @ApiProperty({ type: ChatMessagesParticipantsOutputDto })
+  participant: ChatMessagesParticipantsOutputDto;
+
+  @ApiProperty({ enum: MessageTypeEnum })
+  messageType: MessageTypeEnum;
 
   @ApiProperty()
-  avatarUrl: string | null;
-
-  @ApiProperty()
-  isBan: boolean;
-
-  @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  myReadStatus: boolean;
-
-  @ApiProperty()
-  participantReadStatus: boolean;
-
-  @ApiProperty()
-  myReadAt: Date | null;
-
-  @ApiProperty()
-  participantReadAt: Date | null;
+  duration: number | null;
 }
 
 export class ChatMessagesOutputPaginationDto extends Pagination<ChatMessagesOutputDto> {
@@ -61,28 +66,60 @@ export class ChatMessagesOutputDtoMapper {
     avatars: FileType[],
     users: UserAndUserBanInfoType[],
   ): ChatMessagesOutputDto {
-    const avatar =
-      avatars?.find((a) => a.ownerId === message.senderId)?.url || null;
+    const {
+      chatId,
+      id,
+      content,
+      messageType,
+      duration,
+      createdAt,
+      sender,
+      participant,
+    } = message;
 
-    const isBan = !!users?.find((u) => u.id === message.senderId).userBanInfo;
+    const {
+      readStatus: senderReadStatus,
+      readAt: senderReadAt,
+      userId: senderUserId,
+    } = sender;
 
-    const username =
-      users?.find((u) => u.id == message.senderId)?.username || 'unknown';
+    const {
+      readStatus: participantReadStatus,
+      readAt: participantReadAt,
+      userId: participantUserId,
+    } = participant;
+
+    function getUserInfo(userId: string, readAt: Date, readStatus: boolean) {
+      const avatarUrl = avatars?.find((a) => a.ownerId === userId)?.url || null;
+
+      const isBan = !!users?.find((u) => u.id === userId).userBanInfo;
+
+      const username =
+        users?.find((u) => u.id === userId)?.username || 'unknown';
+
+      return {
+        username,
+        avatarUrl,
+        isBan,
+        userId,
+        readAt,
+        readStatus,
+      };
+    }
 
     return {
-      id: message.id,
-      content: message.content,
-      createdAt: message.createdAt,
-      chatId: message.chatId,
-      isMine: message.isMine,
-      senderId: message.senderId,
-      avatarUrl: isBan ? null : avatar,
-      username,
-      isBan,
-      myReadStatus: message.myReadStatus,
-      myReadAt: message.myReadAt,
-      participantReadStatus: message.participantReadStatus,
-      participantReadAt: message.participantReadAt,
+      id,
+      content,
+      createdAt,
+      chatId,
+      messageType,
+      duration: duration || null,
+      sender: getUserInfo(senderUserId, senderReadAt, senderReadStatus),
+      participant: getUserInfo(
+        participantUserId,
+        participantReadAt,
+        participantReadStatus,
+      ),
     };
   }
 
