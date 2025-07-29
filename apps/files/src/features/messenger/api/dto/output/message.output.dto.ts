@@ -1,6 +1,6 @@
-import { Sound } from '../../../models/sound-model';
+import { Message } from '../../../models/message-model';
 
-export class SoundOutputDto {
+export class MessageOutputDto {
   url: string;
   ownerId: string;
   size: number;
@@ -9,8 +9,8 @@ export class SoundOutputDto {
   duration: number;
   key: string;
 
-  constructor(url: string, sound: Sound) {
-    const { messageId, chatId, size, duration, ownerId, key } = sound;
+  constructor(url: string, message: Message) {
+    const { messageId, chatId, size, duration, ownerId, key } = message;
     this.url = url;
     this.size = size;
     this.messageId = messageId;

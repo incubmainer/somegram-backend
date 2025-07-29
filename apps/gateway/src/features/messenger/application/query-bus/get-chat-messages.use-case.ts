@@ -7,14 +7,9 @@ import {
 } from '@app/application-notification';
 import { Pagination } from '@app/paginator';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
-import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
-import { UsersQueryRepository } from '../../../users/infrastructure/users.query-repository';
-import {
-  ChatMessagesOutputDto,
-  ChatMessagesOutputDtoMapper,
-} from '../../api/dto/output-dto/get-chat-messages.output.dto';
+import { ChatMessagesOutputDto } from '../../api/dto/output-dto/get-chat-messages.output.dto';
 import { GetChatMessagesQueryParams } from '../../api/dto/input-dto/get-chat-messages.query.params';
-import { MessageTypeEnum } from '../../domain/types';
+import { MessengerService } from '../messenger.service';
 
 export class GetChatMessagesQuery implements IQuery {
   constructor(
@@ -37,9 +32,7 @@ export class GetChatMessagesQueryUseCase
     private readonly logger: LoggerService,
     private readonly appNotification: ApplicationNotification,
     private readonly messengerServiceAdapter: MessengerServiceAdapter,
-    private readonly photoServiceAdapter: PhotoServiceAdapter,
-    private readonly usersQueryRepository: UsersQueryRepository,
-    private readonly chatMessagesOutputDtoMapper: ChatMessagesOutputDtoMapper,
+    private readonly messengerService: MessengerService,
   ) {
     this.logger.setContext(GetChatMessagesQueryUseCase.name);
   }
@@ -60,51 +53,8 @@ export class GetChatMessagesQueryUseCase
       if (resultMessages.appResult !== AppNotificationResultEnum.Success)
         return resultMessages as AppNotificationResultType<null>;
 
-      const ids = [userId];
-
-      const secondParticipantMessage = resultMessages.data.items.find(
-        (i) => i.participant.userId !== userId || i.sender.userId !== userId,
-      );
-
-      let secondParticipantId: string | null = null;
-
-      if (secondParticipantMessage) {
-        if (secondParticipantMessage.participant.userId !== userId) {
-          secondParticipantId = secondParticipantMessage.participant.userId;
-        } else if (secondParticipantMessage.sender.userId !== userId) {
-          secondParticipantId = secondParticipantMessage.sender.userId;
-        }
-      }
-
-      if (secondParticipantId) {
-        ids.push(secondParticipantId);
-      }
-
-      const avatars = await this.photoServiceAdapter.getUsersAvatar(ids);
-
-      const users = await this.usersQueryRepository.getUsersAndUsersIsBan(ids);
-
       const promises = resultMessages.data.items.map(async (message) => {
-        const { messageType, id } = message;
-
-        switch (messageType) {
-          case MessageTypeEnum.VOICE:
-            const voiceMessage =
-              await this.photoServiceAdapter.getVoiceMessageById(id);
-
-            if (voiceMessage) {
-              message.content = voiceMessage.url;
-              message.duration = voiceMessage.duration;
-            }
-
-            break;
-        }
-
-        return this.chatMessagesOutputDtoMapper.mapMessage(
-          message,
-          avatars,
-          users,
-        );
+        return await this.messengerService.handleMessage(message);
       });
 
       const messages = await Promise.all(promises);

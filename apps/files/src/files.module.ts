@@ -6,7 +6,7 @@ import { MongooseConfigService } from './database/mongoose/mongoose.config.servi
 import { PhotosModule } from './features/files/photos.module';
 import { filesConfig } from './common/config/config';
 import { loadEnvFileNames } from './common/config/load-env-file-names';
-import { SoundModule } from './features/sound/sound.module';
+import { MessengerModule } from './features/messenger/messenger.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { SoundModule } from './features/sound/sound.module';
     }),
     MongooseModule.forRootAsync({ useClass: MongooseConfigService }),
     PhotosModule,
-    SoundModule,
+    MessengerModule,
   ],
   controllers: [],
   providers: [],

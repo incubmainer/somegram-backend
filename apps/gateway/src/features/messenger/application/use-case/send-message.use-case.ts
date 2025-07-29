@@ -11,7 +11,7 @@ import {
   CreateMessageDto,
   MessageTypeEnum,
   SendMessageDto,
-  UploadVoiceDto,
+  UploadFileMessageDto,
 } from '../../domain/types';
 import { MessengerServiceAdapter } from '../../../../common/adapter/messenger-service.adapter';
 import { PhotoServiceAdapter } from '../../../../common/adapter/photo-service.adapter';
@@ -23,6 +23,7 @@ export class SendMessageCommand implements ICommand {
     public participantId: string,
     public message: string | Express.Multer.File,
     public messageType: MessageTypeEnum,
+    public file?: Express.Multer.File,
   ) {}
 }
 
@@ -51,7 +52,8 @@ export class SendMessageUseCase
     command: SendMessageCommand,
   ): Promise<AppNotificationResultType<SendMessageDto>> {
     this.logger.debug('Execute: send message command', this.execute.name);
-    const { currentUserId, message, participantId, messageType } = command;
+    const { currentUserId, message, participantId, messageType, file } =
+      command;
     try {
       this.currentUserId = currentUserId;
       const participant = await this.usersRepository.getUserById(participantId);
@@ -68,6 +70,13 @@ export class SendMessageUseCase
         case MessageTypeEnum.VOICE:
           return await this.handleVoiceMessage(
             message as Express.Multer.File,
+            currentUserId,
+            participantId,
+          );
+        case MessageTypeEnum.FILE:
+          return await this.handleFileMessage(
+            (message as string) || null,
+            file,
             currentUserId,
             participantId,
           );
@@ -140,14 +149,56 @@ export class SendMessageUseCase
       originalname: message.originalname,
     };
 
-    const uploadVoiceDto: UploadVoiceDto = {
+    const uploadVoiceDto: UploadFileMessageDto = {
       message: file,
       messageId: result.data.messageId,
       chatId: result.data.chatId,
       participantId: participantId,
       ownerId: currentParticipantId,
+      type: MessageTypeEnum.VOICE,
     };
-    await this.photoServiceAdapter.uploadVoiceMessage(uploadVoiceDto);
+
+    await this.photoServiceAdapter.uploadFileMessage(uploadVoiceDto);
+
+    return this.appNotification.success(result.data);
+  }
+
+  private async handleFileMessage(
+    message: string | null,
+    file: Express.Multer.File,
+    currentParticipantId: string,
+    participantId: string,
+  ): Promise<AppNotificationResultType<SendMessageDto>> {
+    const data: CreateMessageDto = {
+      message,
+      currentParticipantId: currentParticipantId,
+      participantId: participantId,
+      type: MessageTypeEnum.FILE,
+    };
+
+    const result = await this.messengerServiceAdapter.sendMessage(data);
+
+    if (result.appResult !== AppNotificationResultEnum.Success)
+      return result as AppNotificationResultType<null>;
+
+    this.newMessageId = result.data.messageId;
+
+    const fileDto: FileDto = {
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      size: file.size,
+      originalname: file.originalname,
+    };
+
+    const uploadFileDto: UploadFileMessageDto = {
+      message: fileDto,
+      messageId: result.data.messageId,
+      chatId: result.data.chatId,
+      participantId: participantId,
+      ownerId: currentParticipantId,
+      type: MessageTypeEnum.FILE,
+    };
+    await this.photoServiceAdapter.uploadFileMessage(uploadFileDto);
 
     return this.appNotification.success(result.data);
   }

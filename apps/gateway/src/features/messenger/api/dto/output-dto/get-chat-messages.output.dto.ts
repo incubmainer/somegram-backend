@@ -49,6 +49,9 @@ export class ChatMessagesOutputDto {
 
   @ApiProperty()
   duration: number | null;
+
+  @ApiProperty()
+  fileUrl: string | null;
 }
 
 export class ChatMessagesOutputPaginationDto extends Pagination<ChatMessagesOutputDto> {
@@ -75,6 +78,7 @@ export class ChatMessagesOutputDtoMapper {
       createdAt,
       sender,
       participant,
+      fileUrl,
     } = message;
 
     const {
@@ -114,6 +118,7 @@ export class ChatMessagesOutputDtoMapper {
       chatId,
       messageType,
       duration: duration || null,
+      fileUrl: fileUrl || null,
       sender: getUserInfo(senderUserId, senderReadAt, senderReadStatus),
       participant: getUserInfo(
         participantUserId,
